@@ -11,7 +11,7 @@ export { RichTextEditor } from "./editor";
 export { TrustedBy } from "./common/trustedBy";
 export { Stats } from "./common/stats";
 export { WhyStudyWithUs } from "./common/whyStudyWithUs";
-export { BackToTop } from "./common/backToTop";
+export { ScrollToTop } from "./common/scrollToTop";
 export { PageHeader } from "./common/pageHeader";
 export { PageHeader as NewPageHeader } from "./common/page-header";
 export { Pagination } from "./common/pagination";
