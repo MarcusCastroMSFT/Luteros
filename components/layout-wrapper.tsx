@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/footer";
-import { BackToTop } from "@/components/common/backToTop";
+import { ScrollToTop } from "@/components/common/scrollToTop";
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -53,7 +53,7 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
         {children}
       </main>
       <Footer />
-      <BackToTop />
+      <ScrollToTop />
     </div>
   );
 }
