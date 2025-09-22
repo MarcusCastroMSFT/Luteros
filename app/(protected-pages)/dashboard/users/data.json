@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "name": "Ana Silva",
+    "username": "ana.silva",
+    "email": "ana.silva@email.com",
+    "profileImg": "/avatars/ana-silva.jpg",
+    "status": "Ativo",
+    "role": "Administrador"
+  },
+  {
+    "id": 2,
+    "name": "Carlos Mendes",
+    "username": "carlos.mendes",
+    "email": "carlos.mendes@email.com",
+    "profileImg": "/avatars/carlos-mendes.jpg",
+    "status": "Ativo",
+    "role": "Editor"
+  },
+  {
+    "id": 3,
+    "name": "Maria Santos",
+    "username": "maria.santos",
+    "email": "maria.santos@email.com",
+    "profileImg": "/avatars/maria-santos.jpg",
+    "status": "Ativo",
+    "role": "Usuário"
+  },
+  {
+    "id": 4,
+    "name": "João Oliveira",
+    "username": "joao.oliveira",
+    "email": "joao.oliveira@email.com",
+    "profileImg": "/avatars/joao-oliveira.jpg",
+    "status": "Inativo",
+    "role": "Usuário"
+  },
+  {
+    "id": 5,
+    "name": "Lucia Ferreira",
+    "username": "lucia.ferreira",
+    "email": "lucia.ferreira@email.com",
+    "profileImg": "/avatars/lucia-ferreira.jpg",
+    "status": "Ativo",
+    "role": "Moderador"
+  },
+  {
+    "id": 6,
+    "name": "Pedro Costa",
+    "username": "pedro.costa",
+    "email": "pedro.costa@email.com",
+    "profileImg": "/avatars/pedro-costa.jpg",
+    "status": "Ativo",
+    "role": "Premium"
+  },
+  {
+    "id": 7,
+    "name": "Isabella Rodrigues",
+    "username": "isabella.rodrigues",
+    "email": "isabella.rodrigues@email.com",
+    "profileImg": "/avatars/isabella-rodrigues.jpg",
+    "status": "Ativo",
+    "role": "Usuário"
+  },
+  {
+    "id": 8,
+    "name": "Gabriel Lima",
+    "username": "gabriel.lima",
+    "email": "gabriel.lima@email.com",
+    "profileImg": "/avatars/gabriel-lima.jpg",
+    "status": "Pendente",
+    "role": "Usuário"
+  },
+  {
+    "id": 9,
+    "name": "Fernanda Alves",
+    "username": "fernanda.alves",
+    "email": "fernanda.alves@email.com",
+    "profileImg": "/avatars/fernanda-alves.jpg",
+    "status": "Ativo",
+    "role": "Editor"
+  },
+  {
+    "id": 10,
+    "name": "Ricardo Sousa",
+    "username": "ricardo.sousa",
+    "email": "ricardo.sousa@email.com",
+    "profileImg": "/avatars/ricardo-sousa.jpg",
+    "status": "Suspenso",
+    "role": "Usuário"
+  },
+  {
+    "id": 11,
+    "name": "Camila Torres",
+    "username": "camila.torres",
+    "email": "camila.torres@email.com",
+    "profileImg": "/avatars/camila-torres.jpg",
+    "status": "Ativo",
+    "role": "Premium"
+  },
+  {
+    "id": 12,
+    "name": "Rafael Barbosa",
+    "username": "rafael.barbosa",
+    "email": "rafael.barbosa@email.com",
+    "profileImg": "/avatars/rafael-barbosa.jpg",
+    "status": "Ativo",
+    "role": "Moderador"
+  },
+  {
+    "id": 13,
+    "name": "Juliana Martins",
+    "username": "juliana.martins",
+    "email": "juliana.martins@email.com",
+    "profileImg": "/avatars/juliana-martins.jpg",
+    "status": "Ativo",
+    "role": "Usuário"
+  },
+  {
+    "id": 14,
+    "name": "Thiago Campos",
+    "username": "thiago.campos",
+    "email": "thiago.campos@email.com",
+    "profileImg": "/avatars/thiago-campos.jpg",
+    "status": "Inativo",
+    "role": "Usuário"
+  },
+  {
+    "id": 15,
+    "name": "Amanda Ribeiro",
+    "username": "amanda.ribeiro",
+    "email": "amanda.ribeiro@email.com",
+    "profileImg": "/avatars/amanda-ribeiro.jpg",
+    "status": "Ativo",
+    "role": "Premium"
+  },
+  {
+    "id": 16,
+    "name": "Diego Nascimento",
+    "username": "diego.nascimento",
+    "email": "diego.nascimento@email.com",
+    "profileImg": "/avatars/diego-nascimento.jpg",
+    "status": "Ativo",
+    "role": "Editor"
+  },
+  {
+    "id": 17,
+    "name": "Beatriz Carvalho",
+    "username": "beatriz.carvalho",
+    "email": "beatriz.carvalho@email.com",
+    "profileImg": "/avatars/beatriz-carvalho.jpg",
+    "status": "Ativo",
+    "role": "Usuário"
+  },
+  {
+    "id": 18,
+    "name": "Marcos Pereira",
+    "username": "marcos.pereira",
+    "email": "marcos.pereira@email.com",
+    "profileImg": "/avatars/marcos-pereira.jpg",
+    "status": "Pendente",
+    "role": "Usuário"
+  },
+  {
+    "id": 19,
+    "name": "Larissa Gonçalves",
+    "username": "larissa.goncalves",
+    "email": "larissa.goncalves@email.com",
+    "profileImg": "/avatars/larissa-goncalves.jpg",
+    "status": "Ativo",
+    "role": "Moderador"
+  },
+  {
+    "id": 20,
+    "name": "Bruno Araujo",
+    "username": "bruno.araujo",
+    "email": "bruno.araujo@email.com",
+    "profileImg": "/avatars/bruno-araujo.jpg",
+    "status": "Ativo",
+    "role": "Premium"
+  }
+]
