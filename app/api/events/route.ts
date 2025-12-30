@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
     ])
 
     // Transform data to match frontend interface
-    const transformedEvents: Event[] = events.map(event => ({
+    const transformedEvents: Event[] = events.map((event: typeof events[number]) => ({
       id: event.id,
       slug: event.slug,
       header: event.title,
