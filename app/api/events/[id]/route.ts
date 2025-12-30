@@ -219,7 +219,7 @@ export async function PUT(
     })
 
     // Revalidate public events page cache
-    revalidateTag('events-public')
+    await revalidateTag('events-public', {})
 
     return NextResponse.json({
       success: true,

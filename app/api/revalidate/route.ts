@@ -18,12 +18,12 @@ export async function POST(request: NextRequest) {
       case 'article':
         if (slug) {
           // Revalidate specific article
-          revalidateTag(`article-${slug}`);
+          await revalidateTag(`article-${slug}`, {});
           revalidatePath(`/blog/${slug}`);
           console.log(`Revalidated article: ${slug}`);
         } else {
           // Revalidate all articles
-          revalidateTag('articles');
+          await revalidateTag('articles', {});
           revalidatePath('/blog');
           console.log('Revalidated all articles');
         }
@@ -33,18 +33,18 @@ export async function POST(request: NextRequest) {
       case 'articles':
         // Revalidate entire blog section
         revalidatePath('/blog');
-        revalidateTag('articles');
-        revalidateTag('blog-listing');
+        await revalidateTag('articles', {});
+        await revalidateTag('blog-listing', {});
         console.log('Revalidated entire blog section');
         break;
       
       case 'new-article':
         // When a new article is created in the database
-        revalidateTag('articles');
-        revalidateTag('blog-listing');
+        await revalidateTag('articles', {});
+        await revalidateTag('blog-listing', {});
         revalidatePath('/blog');
         if (slug) {
-          revalidateTag(`article-${slug}`);
+          await revalidateTag(`article-${slug}`, {});
           revalidatePath(`/blog/${slug}`);
         }
         console.log(`New article created: ${slug || 'unknown'}`);
@@ -52,11 +52,11 @@ export async function POST(request: NextRequest) {
       
       case 'delete-article':
         // When an article is deleted from the database
-        revalidateTag('articles');
-        revalidateTag('blog-listing');
+        await revalidateTag('articles', {});
+        await revalidateTag('blog-listing', {});
         revalidatePath('/blog');
         if (slug) {
-          revalidateTag(`article-${slug}`);
+          await revalidateTag(`article-${slug}`, {});
         }
         console.log(`Article deleted: ${slug || 'unknown'}`);
         break;
