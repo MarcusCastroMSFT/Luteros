@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(totalArticles / limit);
 
     // Get unique categories for filter
-    const categories = ['Todos', ...allCategories.map(c => c.category)];
+    const categories = ['Todos', ...allCategories.map((c: { category: string }) => c.category)];
 
     return NextResponse.json({
       success: true,
