@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     const userIds = users.map((u: { id: string }) => u.id)
     
     // Use Promise.all to fetch all user emails in parallel
-    const emailPromises = userIds.map(async (userId) => {
+    const emailPromises = userIds.map(async (userId: string) => {
       const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
       if (error) {
         console.error(`Error fetching user ${userId}:`, error)
