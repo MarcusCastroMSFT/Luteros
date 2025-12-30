@@ -1,6 +1,8 @@
-import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
+
+// Use require for PrismaClient to avoid import issues in some environments
+const { PrismaClient } = require('@prisma/client')
 
 const prismaClientSingleton = () => {
   // Use connection pooling with Supavisor (DATABASE_URL with pgbouncer=true)
