@@ -72,8 +72,29 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Define the type for articles from Prisma query
+    type BlogArticleWithAuthor = {
+      id: string
+      slug: string
+      title: string
+      excerpt: string | null
+      image: string | null
+      category: string
+      readTime: number
+      commentCount: number
+      viewCount: number
+      publishedAt: Date | null
+      createdAt: Date
+      author: {
+        id: string
+        fullName: string | null
+        displayName: string | null
+        avatar: string | null
+      }
+    }
+
     // Transform articles to match frontend interface
-    const transformedArticles = articles.map(article => {
+    const transformedArticles = articles.map((article: BlogArticleWithAuthor) => {
       const articleDate = article.publishedAt || article.createdAt;
       const formattedDate = new Intl.DateTimeFormat('pt-BR', {
         day: 'numeric',
