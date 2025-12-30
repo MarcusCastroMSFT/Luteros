@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
 
     // Map database results to frontend format
     const formattedUsers = users.map((user: UserWithProfile) => {
-      const userRole: string = roleMap.get(user.id) || 'STUDENT'
+      const userRole = (roleMap.get(user.id) || 'STUDENT') as string
       return {
         id: user.id,
         name: user.displayName || user.fullName || 'No Name',
