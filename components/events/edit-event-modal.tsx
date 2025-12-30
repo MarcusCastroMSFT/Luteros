@@ -132,7 +132,7 @@ export function EditEventModal({
         isFree: event.isFree,
         isPublished: event.isPublished,
         isCancelled: event.isCancelled,
-        speakers: (event.speakers || []).map(speaker => ({
+        speakers: (event.speakers || []).map((speaker: { id: string; name: string | null; title: string | null; bio: string | null; image: string | null; linkedin: string | null; twitter: string | null; website: string | null; order: number }) => ({
           id: speaker.id,
           name: speaker.name || '',
           title: speaker.title || '',

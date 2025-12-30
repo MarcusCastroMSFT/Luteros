@@ -8,6 +8,7 @@ export interface Event {
   date: string;
   time: string;
   cost: string;
+  isFree?: boolean;
   totalSlots: number;
   bookedSlots: number;
   image: string;

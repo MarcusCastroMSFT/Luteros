@@ -62,7 +62,26 @@ export async function GET(request: NextRequest, { params }: Props) {
     });
 
     // Get related articles - prioritize manually selected ones, fallback to same category
-    let relatedArticles = [];
+    let relatedArticles: Array<{
+      id: string;
+      title: string;
+      slug: string;
+      excerpt: string;
+      content: string;
+      image: string | null;
+      category: string;
+      readTime: number;
+      viewCount: number;
+      commentCount: number;
+      publishedAt: Date | null;
+      createdAt: Date;
+      author: {
+        id: string;
+        fullName: string | null;
+        displayName: string | null;
+        avatar: string | null;
+      };
+    }> = [];
     
     if (article.relatedArticleIds && article.relatedArticleIds.length > 0) {
       // Fetch manually selected related articles

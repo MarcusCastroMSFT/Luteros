@@ -4,13 +4,18 @@ import { User } from '@supabase/supabase-js'
 
 const AUTH_CACHE_KEY = Symbol.for('supabase.auth.user')
 
+// Extend NextRequest to support our cache key
+interface CachedRequest extends NextRequest {
+  [AUTH_CACHE_KEY]?: User | null
+}
+
 /**
  * Get authenticated user with request-level caching
  * This prevents multiple auth checks within the same request
  */
 export async function getAuthUser(request: NextRequest): Promise<User | null> {
   // Check if user is already cached in the request context
-  const cached = (request as NextRequest & { [key: string]: unknown })[AUTH_CACHE_KEY] as User | null | undefined
+  const cached = (request as CachedRequest)[AUTH_CACHE_KEY]
   if (cached !== undefined) {
     return cached
   }
@@ -20,7 +25,7 @@ export async function getAuthUser(request: NextRequest): Promise<User | null> {
   const { data: { user } } = await supabase.auth.getUser()
   
   // Cache the result in the request object
-  ;(request as NextRequest & { [key: string]: unknown })[AUTH_CACHE_KEY] = user
+  ;(request as CachedRequest)[AUTH_CACHE_KEY] = user
   
   return user
 }

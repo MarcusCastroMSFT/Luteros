@@ -49,10 +49,14 @@ export async function GET(request: NextRequest) {
           duration: true,
           image: true,
           totalSlots: true,
-          bookedSlots: true,
           cost: true,
           isFree: true,
           createdAt: true,
+          _count: {
+            select: {
+              registrations: true,
+            },
+          },
         },
         orderBy: {
           eventDate: 'asc', // Upcoming events first
@@ -63,24 +67,27 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Transform events to match frontend interface
-    const transformedEvents = events.map(event => ({
-      id: event.id,
-      slug: event.slug,
-      title: event.title,
-      description: event.description || '',
-      fullDescription: event.fullDescription || '',
-      location: event.location,
-      date: event.eventDate.toISOString().split('T')[0],
-      time: event.eventTime,
-      duration: event.duration,
-      image: event.image || '',
-      totalSlots: event.totalSlots,
-      bookedSlots: event.bookedSlots,
-      availableSlots: event.totalSlots - event.bookedSlots,
-      cost: event.cost,
-      isFree: event.isFree,
-      paid: event.isFree ? 'Gratuito' : 'Pago',
-    }));
+    const transformedEvents = events.map(event => {
+      const bookedSlots = event._count.registrations;
+      return {
+        id: event.id,
+        slug: event.slug,
+        title: event.title,
+        description: event.description || '',
+        fullDescription: event.fullDescription || '',
+        location: event.location,
+        date: event.eventDate.toISOString().split('T')[0],
+        time: event.eventTime,
+        duration: event.duration,
+        image: event.image || '',
+        totalSlots: event.totalSlots,
+        bookedSlots,
+        availableSlots: event.totalSlots - bookedSlots,
+        cost: event.cost,
+        isFree: event.isFree,
+        paid: event.isFree ? 'Gratuito' : 'Pago',
+      };
+    });
 
     // Calculate pagination
     const totalPages = Math.ceil(totalEvents / limit);

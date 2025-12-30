@@ -9,7 +9,7 @@ export interface Event {
   id: string
   header: string
   type: string
-  status: "Ativo" | "Inativo" | "Pendente"
+  status: "Ativo" | "Cancelado" | "Pendente"
   location: string
   date: string
   time: string
