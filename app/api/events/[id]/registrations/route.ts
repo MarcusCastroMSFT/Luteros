@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-helpers';
 import { createClient } from '@supabase/supabase-js';
+import { Prisma } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -77,7 +78,7 @@ export async function GET(
       id: string
       registeredAt: Date
       attended: boolean
-      paidAmount: import('@prisma/client').Prisma.Decimal | null
+      paidAmount: Prisma.Decimal | null
       paymentStatus: string | null
       userId: string
       user: {

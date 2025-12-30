@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export const revalidate = 60; // ISR: Revalidate every 60 seconds
 
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       duration: number | null
       image: string | null
       totalSlots: number
-      cost: import('@prisma/client').Prisma.Decimal | null
+      cost: Prisma.Decimal | null
       isFree: boolean
       createdAt: Date
       _count: {
