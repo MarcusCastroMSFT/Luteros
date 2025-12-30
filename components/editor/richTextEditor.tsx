@@ -56,6 +56,7 @@ function InitialContentPlugin({ html }: { html?: string }) {
     });
 
     hasInitialized.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   return null;

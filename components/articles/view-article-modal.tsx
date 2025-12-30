@@ -50,19 +50,6 @@ export function ViewArticleModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open && articleId) {
-      // Check cache first
-      const cached = articleCache.get(articleId);
-      if (cached) {
-        setArticle(cached);
-        setLoading(false);
-        return;
-      }
-      fetchArticle();
-    }
-  }, [open, articleId]);
-
   const fetchArticle = async () => {
     setLoading(true);
     setError(null);
@@ -85,6 +72,20 @@ export function ViewArticleModal({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (open && articleId) {
+      // Check cache first
+      const cached = articleCache.get(articleId);
+      if (cached) {
+        setArticle(cached);
+        setLoading(false);
+        return;
+      }
+      fetchArticle();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, articleId]);
 
   const handleViewLive = () => {
     if (article) {

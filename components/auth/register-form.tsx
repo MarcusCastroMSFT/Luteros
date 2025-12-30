@@ -39,16 +39,18 @@ export function RegisterForm({
         full_name: fullName,
       })
       toast.success('Check your email to confirm your account!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create account')
+    } catch (error) {
+      const err = error as { message?: string }
+      toast.error(err.message || 'Failed to create account')
     }
   }
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with Google')
+    } catch (error) {
+      const err = error as { message?: string }
+      toast.error(err.message || 'Failed to sign in with Google')
     }
   }
 

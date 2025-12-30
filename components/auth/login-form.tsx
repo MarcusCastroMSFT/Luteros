@@ -25,16 +25,18 @@ export function LoginForm({
     try {
       await signIn(email, password)
       toast.success('Welcome back!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in')
+    } catch (error) {
+      const err = error as { message?: string }
+      toast.error(err.message || 'Failed to sign in')
     }
   }
 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign in with Google')
+    } catch (error) {
+      const err = error as { message?: string }
+      toast.error(err.message || 'Failed to sign in with Google')
     }
   }
 

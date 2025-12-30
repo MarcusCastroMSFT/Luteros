@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ExternalLink, Loader2, Calendar, Clock, MapPin, Users, DollarSign, User } from 'lucide-react';
+import { Loader2, Calendar, Clock, MapPin, Users, DollarSign, User } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StatusBadge } from '@/components/common/badges/status-badge';
 import { PaidBadge } from '@/components/common/badges/paid-badge';
@@ -83,6 +82,7 @@ export function ViewEventModal({
       }
       fetchEvent();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, eventId]);
 
   const fetchEvent = async () => {

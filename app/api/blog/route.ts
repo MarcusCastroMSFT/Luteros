@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Build where condition for Prisma query
-    const whereCondition: any = {
+    const whereCondition: Record<string, unknown> = {
       isPublished: true, // Only show published articles
     };
     

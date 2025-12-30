@@ -83,6 +83,7 @@ export function UserDetailsModal({ userId, open, onOpenChange, onUserUpdated }: 
       setUser(null)
       setError(null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, open])
 
   const fetchUserDetails = async () => {

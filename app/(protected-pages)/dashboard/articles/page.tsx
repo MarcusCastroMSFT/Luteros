@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { ServerSideDataTable } from "@/components/common/server-side-data-table"
 import { ArticlesStats } from "@/components/articles/articlesStats"
 import { articleColumns, type ArticleRow } from "@/components/articles/article-columns"
@@ -26,7 +27,6 @@ export default function ArticlesPage() {
     setSorting,
     setColumnFilters,
     setSearchValue,
-    refetch,
   } = useServerSideData<ArticleRow>({
     endpoint: '/api/articles',
     initialPageSize: 10,
@@ -77,12 +77,12 @@ export default function ArticlesPage() {
                     )}
                   </p>
                 </div>
-                <a 
+                <Link 
                   href="/dashboard/articles/new"
                   className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer"
                 >
                   Novo Artigo
-                </a>
+                </Link>
               </div>
             </div>
           </div>

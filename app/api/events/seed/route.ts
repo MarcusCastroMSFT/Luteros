@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
         cost: 650,
         isFree: false,
         totalSlots: 200,
-        bookedSlots: 156,
-        totalSlots: 200,
         isPublished: true,
+        image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
+        speakers: [
           { name: 'Dr. Carlos Mendes', title: 'Psicólogo Clínico', order: 1 },
         ]
       },
@@ -117,9 +117,11 @@ export async function POST(request: NextRequest) {
         cost: 0,
         isFree: true,
         totalSlots: 120,
-        bookedSlots: 0,
-        totalSlots: 120,
         isPublished: false,
+        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
+        speakers: [
+          { name: 'Dra. Beatriz Costa', title: 'Médica Preventiva', order: 1 },
+        ]
       }
     ]
 

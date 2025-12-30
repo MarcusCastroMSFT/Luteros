@@ -171,7 +171,7 @@ export const articleColumns: ColumnDef<ArticleRow>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row, table }) => {
+    cell: function ActionsCell({ row, table }) {
       const article = row.original
       const [viewModalOpen, setViewModalOpen] = useState(false)
       const [deleteModalOpen, setDeleteModalOpen] = useState(false)

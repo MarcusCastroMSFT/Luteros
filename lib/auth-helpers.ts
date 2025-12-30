@@ -10,7 +10,7 @@ const AUTH_CACHE_KEY = Symbol.for('supabase.auth.user')
  */
 export async function getAuthUser(request: NextRequest): Promise<User | null> {
   // Check if user is already cached in the request context
-  const cached = (request as any)[AUTH_CACHE_KEY]
+  const cached = (request as NextRequest & { [key: string]: unknown })[AUTH_CACHE_KEY] as User | null | undefined
   if (cached !== undefined) {
     return cached
   }
@@ -20,7 +20,7 @@ export async function getAuthUser(request: NextRequest): Promise<User | null> {
   const { data: { user } } = await supabase.auth.getUser()
   
   // Cache the result in the request object
-  ;(request as any)[AUTH_CACHE_KEY] = user
+  ;(request as NextRequest & { [key: string]: unknown })[AUTH_CACHE_KEY] = user
   
   return user
 }

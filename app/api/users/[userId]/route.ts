@@ -127,7 +127,7 @@ export async function PATCH(
     }
 
     // Prepare update data - only include fields that are provided
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (body.fullName !== undefined) updateData.fullName = body.fullName
     if (body.displayName !== undefined) updateData.displayName = body.displayName

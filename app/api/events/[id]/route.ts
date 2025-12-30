@@ -200,7 +200,7 @@ export async function PUT(
         // Create new speakers
         if (body.speakers && body.speakers.length > 0) {
           await tx.eventSpeaker.createMany({
-            data: body.speakers.map((speaker: any, index: number) => ({
+            data: body.speakers.map((speaker: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; order: number }, index: number) => ({
               eventId: id,
               name: speaker.name,
               title: speaker.title || null,

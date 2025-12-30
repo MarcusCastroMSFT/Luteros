@@ -167,19 +167,19 @@ export const createEventColumns = (onUpdate?: () => void): ColumnDef<Event>[] =>
     header: "Limite",
     enableHiding: true,
     enableSorting: false,
-    cell: ({ row }) => null,
+    cell: () => null,
   },
   {
     accessorKey: "reviewer",
     header: "Responsável",
-    cell: ({ row }) => (
-      <div>{row.getValue("reviewer")}</div>
+    cell: () => (
+      <div></div>
     ),
   },
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row, table }) => {
+    cell: function ActionsCell({ row, table }) {
       const event = row.original
       const [viewModalOpen, setViewModalOpen] = useState(false)
       const [editModalOpen, setEditModalOpen] = useState(false)

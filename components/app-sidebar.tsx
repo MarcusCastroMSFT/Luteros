@@ -20,6 +20,7 @@ import {
   IconCalendarEvent,
 } from "@tabler/icons-react"
 
+import { User } from '@supabase/supabase-js'
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -34,14 +35,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { sidebarData, SidebarData } from "@/data/menuDashboard"
-
-type User = {
-  id: string;
-  email: string;
-  fullName?: string | null;
-  displayName?: string | null;
-  avatar?: string | null;
-}
 
 // Icon mapping to convert string references to actual icons
 const iconMap = {

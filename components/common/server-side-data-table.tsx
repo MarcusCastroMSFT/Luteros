@@ -84,7 +84,7 @@ interface ServerSideDataTableProps<TData, TValue> {
   manualFiltering?: boolean
   
   // Table meta for passing custom data to cells
-  meta?: any
+  meta?: Record<string, unknown>
 }
 
 export function ServerSideDataTable<TData, TValue>({

@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Create speakers if provided
     if (speakers && speakers.length > 0) {
       await Promise.all(
-        speakers.map((speaker: any, index: number) =>
+        speakers.map((speaker: { name: string; title?: string; bio?: string; order: number }, index: number) =>
           prisma.eventSpeaker.create({
             data: {
               eventId: event.id,

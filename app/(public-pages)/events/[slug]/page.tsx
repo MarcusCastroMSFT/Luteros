@@ -46,7 +46,6 @@ export default function EventPage({ params }: EventPageProps) {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCheckingRegistration, setIsCheckingRegistration] = useState(true);
-  const [registrationData, setRegistrationData] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
@@ -84,7 +83,6 @@ export default function EventPage({ params }: EventPageProps) {
       
       if (data.success) {
         setIsRegistered(data.isRegistered);
-        setRegistrationData(data.registration);
       }
     } catch (error) {
       console.error('Error checking registration:', error);
@@ -147,7 +145,6 @@ export default function EventPage({ params }: EventPageProps) {
       if (data.success) {
         toast.success(data.data.message);
         setIsRegistered(true);
-        setRegistrationData(data.data.registration);
         
         // Refresh event data to update booked slots
         const updatedData = await getEvent(slug);
@@ -180,7 +177,6 @@ export default function EventPage({ params }: EventPageProps) {
       if (data.success) {
         toast.success('Inscrição cancelada com sucesso');
         setIsRegistered(false);
-        setRegistrationData(null);
         
         // Refresh event data to update booked slots
         const updatedData = await getEvent(slug);

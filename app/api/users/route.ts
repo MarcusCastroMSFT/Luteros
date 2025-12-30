@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where condition for Prisma query
-    const whereCondition: any = {}
+    const whereCondition: Record<string, unknown> = {}
     
     // Apply search filter
     if (search) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     
     // Build orderBy condition
     const orderByField = sortBy === 'name' ? 'fullName' : sortBy
-    const orderBy: any = { [orderByField]: sortOrder }
+    const orderBy: Record<string, unknown> = { [orderByField]: sortOrder }
     
     // Execute database queries in parallel for performance
     const [users, totalCount] = await Promise.all([

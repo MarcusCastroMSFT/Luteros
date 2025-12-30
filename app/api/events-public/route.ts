@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Build where clause for published events only
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       isPublished: true,
       isCancelled: false,
     };

@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { UserAvatar } from '@/components/ui/user-avatar'
 import { IconLoader2 } from '@tabler/icons-react'
 import {
   Select,
@@ -60,7 +59,7 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
   const [error, setError] = useState<string | null>(null)
   const [role, setRole] = useState<string>('STUDENT')
   
-  const { register, handleSubmit, reset, setValue, formState: { errors, isDirty } } = useForm<UserFormData>()
+  const { register, handleSubmit, reset, setValue, formState: { isDirty } } = useForm<UserFormData>()
 
   useEffect(() => {
     if (open && userId) {
@@ -69,6 +68,7 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
       reset()
       setError(null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, open])
 
   const fetchUserData = async () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { ServerSideDataTable } from "@/components/common/server-side-data-table"
 import { EventsStats } from "@/components/events/eventsStats"
 import { createEventColumns, type Event } from "@/components/events/event-columns"
@@ -33,10 +33,10 @@ export default function EventsPage() {
     initialPageSize: 10,
   })
 
-  const handleEventUpdate = () => {
+  const handleEventUpdate = useCallback(() => {
     // Refresh stats when event is updated or deleted
     setStatsRefreshKey(prev => prev + 1)
-  }
+  }, [])
 
   const handleDeleteEvent = (eventId: string) => {
     // Optimistic update: remove event from table immediately

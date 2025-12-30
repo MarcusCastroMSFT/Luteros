@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where condition
-    const whereCondition: any = {}
+    const whereCondition: Record<string, unknown> = {}
     
     // Apply search filter
     if (search) {
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build orderBy - map frontend fields to database fields
-    const orderByMap: Record<string, any> = {
+    const orderByMap: Record<string, Record<string, unknown>> = {
       header: { title: sortOrder },
       date: { eventDate: sortOrder },
       location: { location: sortOrder },

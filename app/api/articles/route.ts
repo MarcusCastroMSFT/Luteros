@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build where condition for Prisma query
-    const whereCondition: any = {}
+    const whereCondition: Record<string, unknown> = {}
     
     // Apply search filter
     if (search) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Build orderBy condition - map frontend fields to database fields
-    const orderByMap: Record<string, any> = {
+    const orderByMap: Record<string, Record<string, unknown>> = {
       title: { title: sortOrder },
       author: { author: { fullName: sortOrder } },
       category: { category: sortOrder },
@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
           title: true,
           slug: true,
           excerpt: true,
+          image: true,
           category: true,
           readTime: true,
           viewCount: true,

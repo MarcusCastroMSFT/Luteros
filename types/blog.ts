@@ -3,10 +3,12 @@ export interface Article {
   slug: string;
   title: string;
   excerpt: string;
+  content?: string;
   image: string;
   category: string;
   author: string;
   authorSlug: string;
+  authorAvatar?: string;
   date: string;
   readTime: string;
   commentCount?: number;

@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { notFound } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';

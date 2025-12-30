@@ -53,6 +53,7 @@ export function ViewRegistrationsModal({
     if (open && eventId) {
       fetchRegistrations()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, eventId])
 
   const fetchRegistrations = async () => {
