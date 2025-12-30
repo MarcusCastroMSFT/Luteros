@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 export const revalidate = 60; // ISR: Revalidate every 60 seconds
 
@@ -67,29 +66,8 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    // Define type for events from Prisma query
-    type PublicEvent = {
-      id: string
-      slug: string
-      title: string
-      description: string | null
-      fullDescription: string | null
-      location: string
-      eventDate: Date
-      eventTime: string
-      duration: number | null
-      image: string | null
-      totalSlots: number
-      cost: Prisma.Decimal | null
-      isFree: boolean
-      createdAt: Date
-      _count: {
-        registrations: number
-      }
-    }
-
     // Transform events to match frontend interface
-    const transformedEvents = events.map((event: PublicEvent) => {
+    const transformedEvents = events.map((event) => {
       const bookedSlots = event._count.registrations;
       return {
         id: event.id,

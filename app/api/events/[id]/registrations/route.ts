@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-helpers';
 import { createClient } from '@supabase/supabase-js';
-import { Prisma } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -72,24 +71,9 @@ export async function GET(
         }
       }
     }
-
-    // Define type for registration from Prisma query
-    type RegistrationWithUser = {
-      id: string
-      registeredAt: Date
-      attended: boolean
-      paidAmount: Prisma.Decimal | null
-      paymentStatus: string | null
-      userId: string
-      user: {
-        id: string
-        fullName: string | null
-        displayName: string | null
-      }
-    }
     
     // Combine registration data with emails
-    const registrationsWithEmails = registrations.map((reg: RegistrationWithUser) => ({
+    const registrationsWithEmails = registrations.map((reg) => ({
       id: reg.id,
       registeredAt: reg.registeredAt,
       attended: reg.attended,

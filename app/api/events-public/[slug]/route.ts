@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 export const revalidate = 60; // ISR: Revalidate every 60 seconds
 
@@ -106,25 +105,6 @@ export async function GET(request: NextRequest, { params }: Props) {
       take: 3,
     });
 
-    // Define type for related events from Prisma query
-    type RelatedEvent = {
-      id: string
-      slug: string
-      title: string
-      description: string | null
-      location: string
-      eventDate: Date
-      eventTime: string
-      duration: number | null
-      image: string | null
-      totalSlots: number
-      cost: Prisma.Decimal | null
-      isFree: boolean
-      _count: {
-        registrations: number
-      }
-    }
-
     // Transform event to match frontend interface
     const transformedEvent = {
       id: event.id,
@@ -147,7 +127,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     };
 
     // Transform related events
-    const transformedRelatedEvents = relatedEvents.map((e: RelatedEvent) => ({
+    const transformedRelatedEvents = relatedEvents.map((e) => ({
       id: e.id,
       slug: e.slug,
       title: e.title,
