@@ -73,7 +73,7 @@ export async function GET(
     }
     
     // Combine registration data with emails
-    const registrationsWithEmails = registrations.map((reg) => ({
+    const registrationsWithEmails = registrations.map((reg: typeof registrations[number]) => ({
       id: reg.id,
       registeredAt: reg.registeredAt,
       attended: reg.attended,

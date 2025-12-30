@@ -127,7 +127,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     };
 
     // Transform related events
-    const transformedRelatedEvents = relatedEvents.map((e) => ({
+    const transformedRelatedEvents = relatedEvents.map((e: typeof relatedEvents[number]) => ({
       id: e.id,
       slug: e.slug,
       title: e.title,

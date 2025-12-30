@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Transform events to match frontend interface
-    const transformedEvents = events.map((event) => {
+    const transformedEvents = events.map((event: typeof events[number]) => {
       const bookedSlots = event._count.registrations;
       return {
         id: event.id,
