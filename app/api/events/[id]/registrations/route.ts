@@ -71,9 +71,24 @@ export async function GET(
         }
       }
     }
+
+    // Define type for registration from Prisma query
+    type RegistrationWithUser = {
+      id: string
+      registeredAt: Date
+      attended: boolean
+      paidAmount: number | null
+      paymentStatus: string
+      userId: string
+      user: {
+        id: string
+        fullName: string | null
+        displayName: string | null
+      }
+    }
     
     // Combine registration data with emails
-    const registrationsWithEmails = registrations.map((reg) => ({
+    const registrationsWithEmails = registrations.map((reg: RegistrationWithUser) => ({
       id: reg.id,
       registeredAt: reg.registeredAt,
       attended: reg.attended,
