@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
-import { PrismaClient } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 1800 // Revalidate every 30 minutes
@@ -169,7 +168,7 @@ export async function PUT(
     }
 
     // Update event and speakers in a transaction
-    const updatedEvent = await prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
+    const updatedEvent = await prisma.$transaction(async (tx: Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
       // Update event
       const event = await tx.event.update({
         where: { id },
