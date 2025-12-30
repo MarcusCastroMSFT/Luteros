@@ -110,7 +110,7 @@ export async function GET(request: NextRequest, { params }: Props) {
         where: {
           category: article.category,
           slug: { not: slug },
-          id: { notIn: relatedArticles.map(a => a.id) },
+          id: { notIn: relatedArticles.map((a: { id: string }) => a.id) },
           isPublished: true,
         },
         take: 3 - relatedArticles.length,
@@ -156,8 +156,30 @@ export async function GET(request: NextRequest, { params }: Props) {
       viewCount: article.viewCount,
     };
 
+    // Define type for related articles from Prisma query
+    type RelatedArticle = {
+      id: string
+      slug: string
+      title: string
+      excerpt: string | null
+      content: string | null
+      image: string | null
+      category: string
+      readTime: number
+      commentCount: number
+      viewCount: number
+      publishedAt: Date | null
+      createdAt: Date
+      author: {
+        id: string
+        fullName: string | null
+        displayName: string | null
+        avatar: string | null
+      }
+    }
+
     // Transform related articles
-    const transformedRelatedArticles = relatedArticles.map(rel => {
+    const transformedRelatedArticles = relatedArticles.map((rel: RelatedArticle) => {
       const relDate = rel.publishedAt || rel.createdAt;
       const relFormattedDate = new Intl.DateTimeFormat('pt-BR', {
         day: 'numeric',

@@ -105,6 +105,25 @@ export async function GET(request: NextRequest, { params }: Props) {
       take: 3,
     });
 
+    // Define type for related events from Prisma query
+    type RelatedEvent = {
+      id: string
+      slug: string
+      title: string
+      description: string | null
+      location: string
+      eventDate: Date
+      eventTime: string
+      duration: string | null
+      image: string | null
+      totalSlots: number
+      cost: number
+      isFree: boolean
+      _count: {
+        registrations: number
+      }
+    }
+
     // Transform event to match frontend interface
     const transformedEvent = {
       id: event.id,
@@ -127,7 +146,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     };
 
     // Transform related events
-    const transformedRelatedEvents = relatedEvents.map(e => ({
+    const transformedRelatedEvents = relatedEvents.map((e: RelatedEvent) => ({
       id: e.id,
       slug: e.slug,
       title: e.title,

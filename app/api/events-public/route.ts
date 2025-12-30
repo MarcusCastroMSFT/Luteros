@@ -66,8 +66,29 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Define type for events from Prisma query
+    type PublicEvent = {
+      id: string
+      slug: string
+      title: string
+      description: string | null
+      fullDescription: string | null
+      location: string
+      eventDate: Date
+      eventTime: string
+      duration: string | null
+      image: string | null
+      totalSlots: number
+      cost: number
+      isFree: boolean
+      createdAt: Date
+      _count: {
+        registrations: number
+      }
+    }
+
     // Transform events to match frontend interface
-    const transformedEvents = events.map(event => {
+    const transformedEvents = events.map((event: PublicEvent) => {
       const bookedSlots = event._count.registrations;
       return {
         id: event.id,

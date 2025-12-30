@@ -57,7 +57,7 @@ export async function GET(
       );
 
       // Fetch users in batch for better performance
-      const userIds = registrations.map(r => r.userId);
+      const userIds = registrations.map((r: { userId: string }) => r.userId);
       
       if (userIds.length > 0) {
         const { data: users } = await supabaseAdmin.auth.admin.listUsers();
@@ -65,8 +65,8 @@ export async function GET(
         if (users?.users) {
           emailMap = new Map(
             users.users
-              .filter(u => userIds.includes(u.id))
-              .map(u => [u.id, u.email || ''])
+              .filter((u: { id: string }) => userIds.includes(u.id))
+              .map((u: { id: string; email?: string }) => [u.id, u.email || ''])
           );
         }
       }

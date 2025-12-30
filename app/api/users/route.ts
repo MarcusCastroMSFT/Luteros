@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Fetch emails from Supabase Auth using Admin API
     // Regular client cannot access auth.users table - must use admin API
     const supabaseAdmin = createAdminClient()
-    const userIds = users.map(u => u.id)
+    const userIds = users.map((u: { id: string }) => u.id)
     
     // Use Promise.all to fetch all user emails in parallel
     const emailPromises = userIds.map(async (userId) => {
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     })
     
     // Create a map for quick role lookup
-    const roleMap = new Map(roleAssignments.map(r => [r.userId, r.role]))
+    const roleMap = new Map(roleAssignments.map((r: { userId: string; role: string }) => [r.userId, r.role]))
     
     // Role label mapping
     const roleLabelMap: Record<string, string> = {
@@ -113,8 +113,17 @@ export async function GET(request: NextRequest) {
       'STUDENT': 'Estudante'
     }
     
+    // Define type for user from Prisma query
+    type UserWithProfile = {
+      id: string
+      displayName: string | null
+      fullName: string | null
+      avatar: string | null
+      lastLoginAt: Date | null
+    }
+
     // Map database results to frontend format
-    const formattedUsers = users.map(user => {
+    const formattedUsers = users.map((user: UserWithProfile) => {
       const userRole = roleMap.get(user.id) || 'STUDENT'
       return {
         id: user.id,
