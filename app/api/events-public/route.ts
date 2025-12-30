@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
       location: string
       eventDate: Date
       eventTime: string
-      duration: string | null
+      duration: number | null
       image: string | null
       totalSlots: number
-      cost: number
+      cost: import('@prisma/client').Prisma.Decimal | null
       isFree: boolean
       createdAt: Date
       _count: {

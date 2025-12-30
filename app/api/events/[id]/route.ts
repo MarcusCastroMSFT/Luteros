@@ -87,7 +87,7 @@ export async function GET(
       isCancelled: event.isCancelled,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString(),
-      speakers: event.speakers.map((speaker: { id: string; name: string; title: string; bio: string | null; image: string | null; linkedin: string | null; twitter: string | null; website: string | null }) => ({
+      speakers: event.speakers.map((speaker: { id: string; name: string; title: string | null; bio: string | null; image: string | null; linkedin: string | null; twitter: string | null; website: string | null }) => ({
         id: speaker.id,
         name: speaker.name,
         title: speaker.title,

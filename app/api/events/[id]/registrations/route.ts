@@ -77,8 +77,8 @@ export async function GET(
       id: string
       registeredAt: Date
       attended: boolean
-      paidAmount: number | null
-      paymentStatus: string
+      paidAmount: import('@prisma/client').Prisma.Decimal | null
+      paymentStatus: string | null
       userId: string
       user: {
         id: string
