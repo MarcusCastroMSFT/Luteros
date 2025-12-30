@@ -84,8 +84,33 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
+    // Define the type for articles from Prisma query
+    type ArticleWithAuthor = {
+      id: string
+      title: string
+      slug: string
+      excerpt: string | null
+      image: string | null
+      category: string
+      readTime: number
+      viewCount: number
+      commentCount: number
+      isPublished: boolean
+      publishedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+      accessType: string
+      targetAudience: string
+      author: {
+        id: string
+        fullName: string | null
+        displayName: string | null
+        avatar: string | null
+      }
+    }
+
     // Transform data to match frontend interface
-    const transformedArticles = articles.map((article) => ({
+    const transformedArticles = articles.map((article: ArticleWithAuthor) => ({
       id: article.id,
       title: article.title,
       slug: article.slug,
