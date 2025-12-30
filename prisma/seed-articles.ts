@@ -18,10 +18,13 @@ for (const path of envPaths) {
   }
 }
 
-import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import { sampleArticles } from '../data/articles'
+
+// Use require for PrismaClient to avoid import issues in some environments
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaClient } = require('@prisma/client')
 
 // Use DIRECT_URL for seeding (bypasses connection pooler)
 const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL
