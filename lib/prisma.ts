@@ -2,6 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 
 // Use require for PrismaClient to avoid import issues in some environments
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require('@prisma/client')
 
 const prismaClientSingleton = () => {
