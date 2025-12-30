@@ -65,14 +65,30 @@ export function ArticleHeader({
       </div>
 
       {/* Featured Image */}
-      <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden">
-        <Image
-          src={image}
-          alt={title}
-          fill
-          className="object-cover"
-          priority
-        />
+      <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800">
+        {image.startsWith('data:') ? (
+          // Use regular img tag for data URLs (base64)
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        ) : (
+          // Use Next.js Image for external URLs with optimizations
+          <Image
+            src={image}
+            alt={title}
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+            quality={85}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI2MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEyMDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjZjBmMGYwIi8+PC9zdmc+"
+          />
+        )}
       </div>
     </div>
   );

@@ -28,6 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <meta name="msvalidate.01" content="6C03218AE7BE2638A8849204962D4C4E" />
+      </head>
       <body
         className={`${dmSans.variable} ${cardo.variable} antialiased min-h-screen font-sans`}
       >

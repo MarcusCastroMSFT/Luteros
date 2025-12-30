@@ -16,8 +16,11 @@ import {
 import { navigationMenu } from "@/data/menu";
 import { Logo } from "@/components/common/logo";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import { useAuth } from "@/contexts/auth-context";
+import { HeaderUserMenu } from "@/components/header-user-menu";
 
 export function SiteHeader() {
+  const { user } = useAuth();
   return (
     <header className="w-full border-b border-border bg-background/80 backdrop-blur-sm relative z-50">
       <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10">
@@ -93,18 +96,22 @@ export function SiteHeader() {
             <ModeToggle />
 
             {/* Authentication */}
-            <div className="flex items-center space-x-2">
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="text-text-primary hover:text-cta-highlight hover:bg-transparent cursor-pointer">
-                  Log In
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm" className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded-lg px-4 py-2 cursor-pointer transition-colors">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
+            {user ? (
+              <HeaderUserMenu />
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-text-primary hover:text-cta-highlight hover:bg-transparent cursor-pointer">
+                    Log In
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm" className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded-lg px-4 py-2 cursor-pointer transition-colors">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

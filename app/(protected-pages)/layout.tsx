@@ -44,7 +44,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar variant="inset" user={user} />
       <SidebarInset>
         {children}
       </SidebarInset>

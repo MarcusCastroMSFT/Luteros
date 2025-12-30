@@ -120,7 +120,7 @@ export const sampleArticles: Article[] = [
   },
   {
     id: '10',
-    slug: 'menopausa-mudancas-sexualidade',
+    slug: 'menopausa-mudancas-na-sexualidade-e-como-lidar',
     title: 'Menopausa: Mudanças na Sexualidade e Como Lidar',
     excerpt: 'Entenda as mudanças que a menopausa traz para a sexualidade feminina e como manter o bem-estar.',
     image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
@@ -208,5 +208,57 @@ export const sampleArticles: Article[] = [
     date: '08 Agosto 2024',
     readTime: '9 min de leitura',
     commentCount: 67
+  },
+  {
+    id: '17',
+    slug: 'saude-mental-sexualidade-conexao',
+    title: 'Saúde Mental e Sexualidade: A Conexão que Poucos Falam',
+    excerpt: 'Entenda como a saúde mental afeta a sexualidade e vice-versa, e aprenda a cuidar de ambos os aspectos.',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    category: 'Saúde',
+    author: 'Dr. Paulo Mendes',
+    authorSlug: 'paulo-mendes',
+    date: '05 Agosto 2024',
+    readTime: '14 min de leitura',
+    commentCount: 52
+  },
+  {
+    id: '18',
+    slug: 'primeira-vez-guia-completo',
+    title: 'Primeira Vez: Guia Completo Para uma Experiência Positiva',
+    excerpt: 'Todas as informações que você precisa saber sobre a primeira relação sexual, incluindo preparação física e emocional.',
+    image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    category: 'Educação',
+    author: 'Julia Ferreira',
+    authorSlug: 'julia-ferreira',
+    date: '02 Agosto 2024',
+    readTime: '15 min de leitura',
+    commentCount: 89
+  },
+  {
+    id: '19',
+    slug: 'relacionamento-aberto-polimor-entenda',
+    title: 'Relacionamento Aberto e Poliamor: Entenda as Diferenças',
+    excerpt: 'Explore os diferentes tipos de relacionamentos não-monogâmicos e como estabelecer acordos saudáveis.',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    category: 'Relacionamentos',
+    author: 'Tiago Alves',
+    authorSlug: 'tiago-alves',
+    date: '30 Julho 2024',
+    readTime: '11 min de leitura',
+    commentCount: 76
+  },
+  {
+    id: '20',
+    slug: 'educacao-sexual-infantil-conversar-criancas',
+    title: 'Educação Sexual Infantil: Como Conversar com Crianças sobre o Corpo',
+    excerpt: 'Aprenda a abordar temas de sexualidade com crianças de forma adequada à idade, promovendo conhecimento e proteção.',
+    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    category: 'Educação',
+    author: 'Sofia Martinez',
+    authorSlug: 'sofia-martinez',
+    date: '28 Julho 2024',
+    readTime: '10 min de leitura',
+    commentCount: 43
   }
 ];

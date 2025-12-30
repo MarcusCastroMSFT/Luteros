@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sampleEvents } from '@/data/events';
+import prisma from '@/lib/prisma';
+
+export const revalidate = 60; // ISR: Revalidate every 60 seconds
 
 export async function GET(request: NextRequest) {
+  // Add cache tag for manual invalidation
+  const headers = new Headers({
+    'Cache-Tag': 'events-public',
+  });
   const { searchParams } = new URL(request.url);
   
   // Extract query parameters
@@ -10,35 +16,79 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search');
 
   try {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Build where clause for published events only
+    const whereClause: any = {
+      isPublished: true,
+      isCancelled: false,
+    };
 
-    // Filter events by search term
-    let filteredEvents = [...sampleEvents];
-    
+    // Add search filter if provided
     if (search) {
-      filteredEvents = filteredEvents.filter(event =>
-        event.title.toLowerCase().includes(search.toLowerCase()) ||
-        event.location.toLowerCase().includes(search.toLowerCase()) ||
-        event.description?.toLowerCase().includes(search.toLowerCase()) ||
-        event.fullDescription?.toLowerCase().includes(search.toLowerCase())
-      );
+      whereClause.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { location: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { fullDescription: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    // Sort by date (upcoming events first)
-    filteredEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Get total count and paginated events in parallel
+    const [totalEvents, events] = await Promise.all([
+      prisma.event.count({ where: whereClause }),
+      prisma.event.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          fullDescription: true,
+          location: true,
+          eventDate: true,
+          eventTime: true,
+          duration: true,
+          image: true,
+          totalSlots: true,
+          bookedSlots: true,
+          cost: true,
+          isFree: true,
+          createdAt: true,
+        },
+        orderBy: {
+          eventDate: 'asc', // Upcoming events first
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
 
-    // Apply pagination
-    const totalEvents = filteredEvents.length;
+    // Transform events to match frontend interface
+    const transformedEvents = events.map(event => ({
+      id: event.id,
+      slug: event.slug,
+      title: event.title,
+      description: event.description || '',
+      fullDescription: event.fullDescription || '',
+      location: event.location,
+      date: event.eventDate.toISOString().split('T')[0],
+      time: event.eventTime,
+      duration: event.duration,
+      image: event.image || '',
+      totalSlots: event.totalSlots,
+      bookedSlots: event.bookedSlots,
+      availableSlots: event.totalSlots - event.bookedSlots,
+      cost: event.cost,
+      isFree: event.isFree,
+      paid: event.isFree ? 'Gratuito' : 'Pago',
+    }));
+
+    // Calculate pagination
     const totalPages = Math.ceil(totalEvents / limit);
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
 
     return NextResponse.json({
       success: true,
       data: {
-        events: paginatedEvents,
+        events: transformedEvents,
         pagination: {
           currentPage: page,
           totalPages,
@@ -48,7 +98,7 @@ export async function GET(request: NextRequest) {
           hasPrevPage: page > 1,
         },
       },
-    });
+    }, { headers });
 
   } catch (error) {
     console.error('Error fetching events:', error);

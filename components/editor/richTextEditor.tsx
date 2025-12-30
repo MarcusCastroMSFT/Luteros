@@ -10,6 +10,8 @@ import { AutoLinkPlugin } from '@lexical/react/LexicalAutoLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
+import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { 
   TEXT_FORMAT_TRANSFORMERS,
   ELEMENT_TRANSFORMERS,
@@ -22,6 +24,9 @@ import { CodeNode, CodeHighlightNode } from '@lexical/code';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { HashtagNode } from '@lexical/hashtag';
 import { HorizontalRuleNode } from '@lexical/react/LexicalHorizontalRuleNode';
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
+import { $getRoot, $insertNodes } from 'lexical';
+import type { EditorState, LexicalEditor } from 'lexical';
 
 import { ToolbarPlugin } from './plugins/toolbarPluginSimple';
 import { FileOperationsBar } from './plugins/fileOperationsBar';
@@ -30,8 +35,31 @@ import { VideoPlugin, VideoNode } from './plugins/videoPlugin';
 import { FilePlugin } from './plugins/filePlugin';
 import { ClickableLinkPlugin } from './plugins/clickableLinkPlugin';
 import { PreviewContent } from './plugins/previewContent';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+
+// Plugin to initialize editor with HTML content
+function InitialContentPlugin({ html }: { html?: string }) {
+  const [editor] = useLexicalComposerContext();
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!html || hasInitialized.current) return;
+
+    editor.update(() => {
+      const parser = new DOMParser();
+      const dom = parser.parseFromString(html, 'text/html');
+      const nodes = $generateNodesFromDOM(editor, dom);
+      const root = $getRoot();
+      root.clear();
+      $insertNodes(nodes);
+    });
+
+    hasInitialized.current = true;
+  }, []); // Only run once on mount
+
+  return null;
+}
 
 // URL matchers for AutoLinkPlugin
 const URL_MATCHER = /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/;
@@ -197,6 +225,8 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({
+  initialValue,
+  onChange,
   placeholder = 'Digite seu conteúdo...',
   className,
   autoFocus = false,
@@ -206,6 +236,16 @@ export function RichTextEditor({
 
   const togglePreviewMode = () => {
     setIsPreviewMode(!isPreviewMode);
+  };
+
+  // Handle editor state changes
+  const handleEditorChange = (editorState: EditorState, editor: LexicalEditor) => {
+    if (onChange) {
+      editorState.read(() => {
+        const htmlString = $generateHtmlFromNodes(editor);
+        onChange(htmlString);
+      });
+    }
   };
 
   const editorConfig = {
@@ -270,6 +310,8 @@ export function RichTextEditor({
           <VideoPlugin />
           <FilePlugin />
           <MarkdownShortcutPlugin transformers={customTransformers} />
+          <OnChangePlugin onChange={handleEditorChange} />
+          <InitialContentPlugin html={initialValue} />
         </div>
         
         {!readOnly && <FileOperationsBar isPreviewMode={isPreviewMode} onTogglePreview={togglePreviewMode} />}

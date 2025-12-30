@@ -11,16 +11,16 @@ interface SpecialistCardProps {
 
 export function SpecialistCard({ specialist }: SpecialistCardProps) {
   return (
-    <Link href={`/especialists/${specialist.slug}`}>
-      <Card className="group hover:shadow-lg transition-all py-0 duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-[var(--cta-highlight)] overflow-hidden dark:bg-gray-800">
+    <Link href={`/specialists/${specialist.slug}`} className="cursor-pointer">
+      <Card className="group hover:shadow-lg transition-all py-0 duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-cta-highlight overflow-hidden dark:bg-gray-800">
         <CardContent className="p-0">
           {/* Avatar Image - Full width */}
-          <div className="relative w-full h-48 bg-gradient-to-br from-orange-100 to-pink-100">
+          <div className="relative w-full h-48 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20">
             <Image
               src={specialist.avatar}
               alt={specialist.name}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </div>
 
@@ -30,16 +30,16 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
             <div className="flex items-center gap-4 mb-3 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                <span>{specialist.studentsCount} Students</span>
+                <span>{specialist.studentsCount} Estudantes</span>
               </div>
               <div className="flex items-center gap-1">
                 <BookOpen className="w-4 h-4" />
-                <span>{specialist.coursesCount} Course{specialist.coursesCount !== 1 ? 's' : ''}</span>
+                <span>{specialist.coursesCount} Curso{specialist.coursesCount !== 1 ? 's' : ''}</span>
               </div>
             </div>
 
             {/* Name */}
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1 group-hover:text-[var(--cta-highlight)] transition-colors">
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1 group-hover:text-cta-highlight transition-colors">
               {specialist.name}
             </h3>
             
@@ -48,10 +48,30 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
               {specialist.profession}
             </p>
 
-            {/* Rating */}
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-medium text-gray-900 dark:text-white">{specialist.rating}</span>
+            {/* Specialties */}
+            <div className="flex flex-wrap gap-1 mb-3">
+              {specialist.specialties.slice(0, 2).map((specialty, index) => (
+                <span 
+                  key={index}
+                  className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+                >
+                  {specialty}
+                </span>
+              ))}
+              {specialist.specialties.length > 2 && (
+                <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                  +{specialist.specialties.length - 2}
+                </span>
+              )}
+            </div>
+
+            {/* Rating and Experience */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium text-gray-900 dark:text-white">{specialist.rating}</span>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{specialist.experience}</span>
             </div>
           </div>
         </CardContent>

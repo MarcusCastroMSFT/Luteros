@@ -1,21 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sampleEvents } from '@/data/events'
+import { requireAuth } from '@/lib/auth-helpers'
+import prisma from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 1800 // Revalidate every 30 minutes
 
 export interface Event {
-  id: number
+  id: string
   header: string
   type: string
-  status: "Active" | "Inactive" | "Pending"
+  status: "Ativo" | "Inativo" | "Pendente"
   location: string
   date: string
   time: string
-  paid: "Free" | "Paid"
+  paid: "Gratuito" | "Pago"
   target: string
   limit: string
   reviewer: string
 }
 
-// Function to determine event type from title
+// Helper functions
 function getEventType(title: string): string {
   const titleLower = title.toLowerCase()
   if (titleLower.includes('conferência')) return 'Conferência'
@@ -31,118 +35,118 @@ function getEventType(title: string): string {
   return 'Evento'
 }
 
-// Function to determine status based on booking percentage
-function getEventStatus(bookedSlots: number, totalSlots: number): "Active" | "Inactive" | "Pending" {
-  const percentage = (bookedSlots / totalSlots) * 100
-  if (percentage === 0) return 'Pending'
-  if (percentage >= 80) return 'Active'
-  return 'Active' // Most events are active if they have some bookings
+function getEventStatus(isPublished: boolean, isCancelled: boolean): "Ativo" | "Cancelado" | "Pendente" {
+  if (isCancelled) return 'Cancelado'
+  if (isPublished) return 'Ativo'
+  return 'Pendente'
 }
-
-// Function to get reviewer from speakers (use first speaker's name)
-function getReviewer(speakers: { name: string }[]): string {
-  if (speakers && speakers.length > 0) {
-    return speakers[0].name || 'Não Atribuído'
-  }
-  return 'Não Atribuído'
-}
-
-// Function to determine if event is paid or free
-function getEventPaidStatus(cost: string): "Free" | "Paid" {
-  // Check if cost is "Gratuito", "Free", or contains "R$0" or similar
-  const costLower = cost.toLowerCase()
-  if (costLower.includes('gratuito') || costLower.includes('free') || cost === 'R$0' || cost === '0') {
-    return 'Free'
-  }
-  return 'Paid'
-}
-
-// Convert sampleEvents to the Event interface expected by the table
-const mockEvents: Event[] = sampleEvents.map((event) => ({
-  id: parseInt(event.id),
-  header: event.title,
-  type: getEventType(event.title),
-  status: getEventStatus(event.bookedSlots, event.totalSlots),
-  location: event.location,
-  date: event.date,
-  time: event.time,
-  paid: getEventPaidStatus(event.cost),
-  target: event.bookedSlots.toString(),
-  limit: event.totalSlots.toString(),
-  reviewer: getReviewer(event.speakers)
-}))
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  
+  // Extract pagination parameters with validation
+  const page = Math.max(0, parseInt(searchParams.get('page') || '0'))
+  const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '10')))
+  const search = searchParams.get('search') || ''
+  
+  // Extract sorting parameters
+  const sortBy = searchParams.get('sortBy') || 'eventDate'
+  const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
+
   try {
-    const { searchParams } = new URL(request.url)
-    
-    // Parse query parameters
-    const page = parseInt(searchParams.get('page') || '0')
-    const pageSize = parseInt(searchParams.get('pageSize') || '10')
-    const search = searchParams.get('search') || ''
-    const sortBy = searchParams.get('sortBy') || ''
-    const sortOrder = searchParams.get('sortOrder') || 'asc'
+    // Verify authentication
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) {
+      return authUser
+    }
 
-    // Filter data based on search
-    let filteredEvents = mockEvents
+    // Build where condition
+    const whereCondition: any = {}
     
+    // Apply search filter
     if (search) {
-      const searchLower = search.toLowerCase()
-      filteredEvents = mockEvents.filter(event =>
-        event.header.toLowerCase().includes(searchLower) ||
-        event.type.toLowerCase().includes(searchLower) ||
-        event.status.toLowerCase().includes(searchLower) ||
-        event.reviewer.toLowerCase().includes(searchLower)
-      )
+      whereCondition.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { location: { contains: search, mode: 'insensitive' } },
+      ]
     }
 
-    // Sort data
-    if (sortBy) {
-      filteredEvents.sort((a, b) => {
-        const aValue = a[sortBy as keyof Event]
-        const bValue = b[sortBy as keyof Event]
-        
-        // Handle numeric fields
-        if (sortBy === 'id') {
-          const numA = parseInt(aValue as string)
-          const numB = parseInt(bValue as string)
-          return sortOrder === 'asc' ? numA - numB : numB - numA
-        }
-        
-        // Handle string fields
-        const strA = String(aValue).toLowerCase()
-        const strB = String(bValue).toLowerCase()
-        
-        if (sortOrder === 'asc') {
-          return strA.localeCompare(strB)
-        } else {
-          return strB.localeCompare(strA)
-        }
-      })
+    // Build orderBy - map frontend fields to database fields
+    const orderByMap: Record<string, any> = {
+      header: { title: sortOrder },
+      date: { eventDate: sortOrder },
+      location: { location: sortOrder },
+      createdAt: { createdAt: sortOrder },
     }
+    
+    const orderBy = orderByMap[sortBy] || { eventDate: sortOrder }
 
-    // Calculate pagination
-    const totalItems = filteredEvents.length
-    const totalPages = Math.ceil(totalItems / pageSize)
-    const startIndex = page * pageSize
-    const endIndex = startIndex + pageSize
-    const paginatedEvents = filteredEvents.slice(startIndex, endIndex)
+    // Execute queries in parallel for performance
+    const [events, totalCount] = await Promise.all([
+      prisma.event.findMany({
+        where: whereCondition,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          location: true,
+          eventDate: true,
+          eventTime: true,
+          totalSlots: true,
+          isFree: true,
+          cost: true,
+          isPublished: true,
+          isCancelled: true,
+          speakers: {
+            select: {
+              name: true,
+            },
+            orderBy: {
+              order: 'asc',
+            },
+            take: 1,
+          },
+          _count: {
+            select: {
+              registrations: true,
+            },
+          },
+        },
+        orderBy,
+        skip: page * pageSize,
+        take: pageSize,
+      }),
+      prisma.event.count({
+        where: whereCondition,
+      }),
+    ])
 
-    // Simulate network delay for demonstration
-    await new Promise(resolve => setTimeout(resolve, 100))
+    // Transform data to match frontend interface
+    const transformedEvents: Event[] = events.map(event => ({
+      id: event.id,
+      slug: event.slug,
+      header: event.title,
+      type: getEventType(event.title),
+      status: getEventStatus(event.isPublished, event.isCancelled),
+      isPublished: event.isPublished,
+      location: event.location,
+      date: event.eventDate.toISOString().split('T')[0],
+      time: event.eventTime,
+      paid: event.isFree ? 'Gratuito' : 'Pago',
+      target: event._count.registrations.toString(),
+      limit: event.totalSlots.toString(),
+      reviewer: event.speakers[0]?.name || 'Não Atribuído',
+    }))
+
+    const pageCount = Math.ceil(totalCount / pageSize)
 
     return NextResponse.json({
-      data: paginatedEvents,
-      totalCount: totalItems,
-      pageCount: totalPages,
-      pagination: {
-        page,
-        pageSize,
-        totalItems,
-        totalPages,
-        hasNextPage: page < totalPages - 1,
-        hasPreviousPage: page > 0
-      }
+      data: transformedEvents,
+      totalCount,
+      pageCount,
+      page,
+      pageSize,
     })
   } catch (error) {
     console.error('Error fetching events:', error)

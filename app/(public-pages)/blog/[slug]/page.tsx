@@ -1,12 +1,28 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
-import { ArticleShare } from '@/components/blog/articleShare';
-import { AuthorBio } from '@/components/blog/authorBio';
-import { RelatedArticles } from '@/components/blog/relatedArticles';
 import { sampleArticles } from '@/data/articles';
 import { type Article } from '@/types/blog';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Dynamically import non-critical components for better performance
+const ArticleShare = dynamic(() => import('@/components/blog/articleShare').then(mod => ({ default: mod.ArticleShare })), {
+  loading: () => <Skeleton className="h-24 w-full" />
+});
+const AuthorBio = dynamic(() => import('@/components/blog/authorBio').then(mod => ({ default: mod.AuthorBio })), {
+  loading: () => <Skeleton className="h-32 w-full" />
+});
+const RelatedArticles = dynamic(() => import('@/components/blog/relatedArticles').then(mod => ({ default: mod.RelatedArticles })), {
+  loading: () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Skeleton className="h-80 w-full" />
+      <Skeleton className="h-80 w-full" />
+      <Skeleton className="h-80 w-full" />
+    </div>
+  )
+});
 
 interface ArticlePageProps {
   params: Promise<{
@@ -21,11 +37,13 @@ async function getArticleData(slug: string): Promise<{ article: Article; related
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
     const response = await fetch(`${baseUrl}/api/blog/${slug}`, {
-      // ISR: Revalidate every hour, serve stale content while revalidating
+      // ISR: Revalidate every 30 minutes, serve stale content while revalidating
       next: { 
-        revalidate: 3600, // 1 hour
+        revalidate: 1800, // 30 minutes
         tags: [`article-${slug}`, 'articles'] // Tags for on-demand revalidation
-      }
+      },
+      // Add timeout to prevent hanging
+      signal: AbortSignal.timeout(15000) // Increased to 15 seconds
     });
     
     if (response.ok) {
@@ -117,8 +135,36 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // Generate full URL for sharing (in a real app, this would be dynamic)
   const articleUrl = `https://luteros.com/blog/${article.slug}`;
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.excerpt,
+    image: article.image,
+    author: {
+      '@type': 'Person',
+      name: article.author,
+    },
+    datePublished: article.date,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Luteros',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://luteros.com/logo.png',
+      },
+    },
+  };
+
   return (
     <>
+      {/* JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      
       {/* Article Content */}
       <div className="container mx-auto px-4 max-w-[1428px] py-16">
         <div className="max-w-4xl mx-auto">
@@ -135,7 +181,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           />
 
           {/* Article Content */}
-          <ArticleContent className="mb-12" />
+          <ArticleContent content={article.content} className="mb-12" />
 
           {/* Share Section */}
           <div className="border-t border-b border-gray-200 dark:border-gray-700 py-8 mb-12">
@@ -148,7 +194,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           {/* Author Bio */}
           <AuthorBio
             author={article.author}
-            authorSlug={article.authorSlug}
+            avatar={article.authorAvatar}
+            authorSlug={article.authorSlug || ''}
             className="mb-16"
           />
         </div>

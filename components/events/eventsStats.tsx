@@ -1,67 +1,143 @@
-import { IconTrendingDown, IconTrendingUp, IconCalendar } from "@tabler/icons-react"
+'use client'
+
+import { useEffect, useState } from 'react'
+import { IconTrendingDown, IconTrendingUp, IconCalendar, IconUsers, IconCurrencyReal } from "@tabler/icons-react"
 import { StatsCard } from "@/components/common/stats-card"
 import { StatsContainer } from "@/components/common/stats-container"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export function EventsStats() {
+interface EventStats {
+  totalEvents: number
+  totalEventsGrowth: string
+  newEventsThisMonth: number
+  totalRegistrations: number
+  totalRegistrationsGrowth: string
+  registrationsThisMonth: number
+  totalRevenue: number
+  totalRevenueGrowth: string
+  revenueThisMonth: number
+  averageAttendance: string
+  attendanceGrowth: string
+}
+
+interface EventsStatsProps {
+  refreshKey?: number
+}
+
+export function EventsStats({ refreshKey }: EventsStatsProps = {}) {
+  const [stats, setStats] = useState<EventStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch('/api/events/stats')
+        if (!response.ok) {
+          throw new Error('Failed to fetch event statistics')
+        }
+        const data = await response.json()
+        setStats(data)
+      } catch (err) {
+        console.error('Error fetching event stats:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load stats')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [refreshKey])
+
+  if (loading) {
+    return (
+      <StatsContainer>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-lg border bg-card p-6 flex flex-col gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+            <div className="space-y-1.5 pt-2 border-t">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        ))}
+      </StatsContainer>
+    )
+  }
+
+  if (error || !stats) {
+    return null
+  }
+
+  const totalEventsGrowthNum = parseFloat(stats.totalEventsGrowth)
+  const totalRegistrationsGrowthNum = parseFloat(stats.totalRegistrationsGrowth)
+  const totalRevenueGrowthNum = parseFloat(stats.totalRevenueGrowth)
+  const attendanceGrowthNum = parseFloat(stats.attendanceGrowth)
+
   return (
     <StatsContainer>
       <StatsCard
-        title="Total Events"
-        value="12"
+        title="Total de Eventos"
+        value={stats.totalEvents.toString()}
         trend={{
-          value: "+25%",
-          isPositive: true,
+          value: `${totalEventsGrowthNum >= 0 ? '+' : ''}${stats.totalEventsGrowth}%`,
+          isPositive: totalEventsGrowthNum >= 0,
           icon: IconTrendingUp
         }}
         footer={{
-          label: "Growing events portfolio",
-          detail: "3 new events added this month",
+          label: "Crescimento de eventos",
+          detail: `${stats.newEventsThisMonth} novos eventos este mês`,
           icon: IconCalendar
         }}
       />
       
       <StatsCard
-        title="Total Registrations"
-        value="1,847"
+        title="Total de Inscrições"
+        value={stats.totalRegistrations.toLocaleString()}
         trend={{
-          value: "+18.2%",
-          isPositive: true,
+          value: `${totalRegistrationsGrowthNum >= 0 ? '+' : ''}${stats.totalRegistrationsGrowth}%`,
+          isPositive: totalRegistrationsGrowthNum >= 0,
           icon: IconTrendingUp
         }}
         footer={{
-          label: "Strong registration growth",
-          detail: "+284 registrations this month",
-          icon: IconTrendingUp
+          label: "Crescimento de inscrições",
+          detail: `+${stats.registrationsThisMonth} inscrições este mês`,
+          icon: IconUsers
         }}
       />
       
       <StatsCard
-        title="Revenue Generated"
-        value="R$89,520"
+        title="Receita Gerada"
+        value={`R$${stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         trend={{
-          value: "+22.1%",
-          isPositive: true,
+          value: `${totalRevenueGrowthNum >= 0 ? '+' : ''}${stats.totalRevenueGrowth}%`,
+          isPositive: totalRevenueGrowthNum >= 0,
           icon: IconTrendingUp
         }}
         footer={{
-          label: "Revenue targets exceeded",
-          detail: "Above monthly projections",
-          icon: IconTrendingUp
+          label: "Performance de receita",
+          detail: `R$${stats.revenueThisMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} este mês`,
+          icon: IconCurrencyReal
         }}
       />
       
       <StatsCard
-        title="Average Attendance"
-        value="87%"
+        title="Taxa de Presença"
+        value={`${stats.averageAttendance}%`}
         trend={{
-          value: "-3.2%",
-          isPositive: false,
-          icon: IconTrendingDown
+          value: `${attendanceGrowthNum >= 0 ? '+' : ''}${stats.attendanceGrowth}%`,
+          isPositive: attendanceGrowthNum >= 0,
+          icon: attendanceGrowthNum >= 0 ? IconTrendingUp : IconTrendingDown
         }}
         footer={{
-          label: "Slight attendance dip",
-          detail: "Still above industry average",
-          icon: IconTrendingDown
+          label: attendanceGrowthNum >= 0 ? "Presença crescendo" : "Presença em queda",
+          detail: attendanceGrowthNum >= 0 ? "Acima da média" : "Requer atenção",
+          icon: attendanceGrowthNum >= 0 ? IconTrendingUp : IconTrendingDown
         }}
       />
     </StatsContainer>

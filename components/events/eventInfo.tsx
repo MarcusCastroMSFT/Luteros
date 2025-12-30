@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Clock, DollarSign, Facebook, Linkedin, Link } from 'lucide-react';
+import { Users, Clock, BadgeDollarSign, Facebook, Linkedin, Link } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Custom X (Twitter) Logo Component
@@ -24,6 +24,10 @@ interface EventInfoProps {
   totalSlots: number;
   bookedSlots: number;
   onBookNow?: () => void;
+  isRegistered?: boolean;
+  isRegistering?: boolean;
+  isCheckingRegistration?: boolean;
+  onCancelRegistration?: () => void;
 }
 
 export function EventInfo({ 
@@ -31,7 +35,11 @@ export function EventInfo({
   cost, 
   totalSlots, 
   bookedSlots, 
-  onBookNow 
+  onBookNow,
+  isRegistered = false,
+  isRegistering = false,
+  isCheckingRegistration = false,
+  onCancelRegistration
 }: EventInfoProps) {
   const handleFacebookShare = () => {
     const url = encodeURIComponent(window.location.href);
@@ -88,11 +96,11 @@ export function EventInfo({
           {/* Cost */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-              <DollarSign className="w-4 h-4" />
+              <BadgeDollarSign className="w-4 h-4" />
               <span className="text-sm font-medium">Preço:</span>
             </div>
             <span className="text-lg font-bold" style={{ color: 'var(--cta-highlight)' }}>
-              {cost}
+              {cost === '0' || cost === 'Gratuito' ? 'Gratuito' : `R$ ${cost}`}
             </span>
           </div>
 
@@ -121,16 +129,59 @@ export function EventInfo({
           {/* Separator */}
           <hr className="border-gray-200 dark:border-gray-600 mb-6" />
 
-          {/* Book Now Button */}
-          <button 
-            onClick={onBookNow}
-            className="w-full bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold py-3 rounded-lg mb-6 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-          >
-            Participar
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          {/* Registration Buttons */}
+          {isCheckingRegistration ? (
+            <div className="w-full mb-6">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 animate-pulse"></div>
+            </div>
+          ) : !isRegistered ? (
+            <button 
+              onClick={onBookNow}
+              disabled={isRegistering || bookedSlots >= totalSlots}
+              className={`w-full font-semibold py-3 rounded-lg mb-6 transition-colors flex items-center justify-center gap-2 ${
+                bookedSlots >= totalSlots
+                  ? 'bg-gray-400 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-not-allowed'
+                  : isRegistering
+                  ? 'bg-slate-600 dark:bg-slate-600 text-white cursor-wait'
+                  : 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white cursor-pointer'
+              }`}
+            >
+              {isRegistering ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processando...
+                </>
+              ) : bookedSlots >= totalSlots ? (
+                'Evento Lotado'
+              ) : (
+                <>
+                  Participar
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="mb-6 space-y-3">
+              <div className="w-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 border border-green-300 dark:border-green-700">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Inscrição Confirmada
+              </div>
+              <button 
+                onClick={onCancelRegistration}
+                disabled={isRegistering}
+                className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRegistering ? 'Cancelando...' : 'Cancelar Inscrição'}
+              </button>
+            </div>
+          )}
 
           {/* Share Section */}
           <div className="text-center">

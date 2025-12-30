@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/pageHeader';
 import { EventInfo } from '@/components/events/eventInfo';
 import { Speakers } from '@/components/common/speakers';
 import { EventDetailSkeleton } from '@/components/events/eventDetailSkeleton';
+import { ConfirmationDialog } from '@/components/common/confirmation-dialog';
 import { MapPin, Calendar, Clock } from 'lucide-react';
 import { type Event, type EventApiResponse } from '@/types/event';
+import { useAuth } from '@/contexts/auth-context';
+import { toast } from 'sonner';
 
 interface EventPageProps {
   params: Promise<{
@@ -35,9 +38,16 @@ async function getEvent(slug: string) {
 
 export default function EventPage({ params }: EventPageProps) {
   const { slug } = React.use(params);
+  const router = useRouter();
+  const { user } = useAuth();
   const [eventData, setEventData] = useState<{ event: Event; relatedEvents: Event[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(true);
+  const [registrationData, setRegistrationData] = useState<any>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -48,6 +58,14 @@ export default function EventPage({ params }: EventPageProps) {
       
       if (data) {
         setEventData(data);
+        
+        // Check if user is already registered
+        if (user) {
+          checkRegistrationStatus(data.event.id);
+        } else {
+          // If no user, no need to check registration
+          setIsCheckingRegistration(false);
+        }
       } else {
         setError('Event not found');
       }
@@ -56,7 +74,24 @@ export default function EventPage({ params }: EventPageProps) {
     };
 
     fetchEvent();
-  }, [slug]);
+  }, [slug, user]);
+
+  const checkRegistrationStatus = async (eventId: string) => {
+    setIsCheckingRegistration(true);
+    try {
+      const response = await fetch(`/api/events/${eventId}/register`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsRegistered(data.isRegistered);
+        setRegistrationData(data.registration);
+      }
+    } catch (error) {
+      console.error('Error checking registration:', error);
+    } finally {
+      setIsCheckingRegistration(false);
+    }
+  };
 
   if (isLoading) {
     return <EventDetailSkeleton />;
@@ -75,28 +110,124 @@ export default function EventPage({ params }: EventPageProps) {
     year: 'numeric'
   });
 
-  const handleBookNow = () => {
-    // Handle booking logic
-    console.log('Book now clicked for event:', event.id);
+  const handleBookNow = async () => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error('Você precisa estar logado para se inscrever no evento');
+      router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
+    if (!eventData) return;
+
+    // Check if already registered
+    if (isRegistered) {
+      toast.info('Você já está inscrito neste evento');
+      return;
+    }
+
+    // Check if event is full
+    if (eventData.event.bookedSlots >= eventData.event.totalSlots) {
+      toast.error('Desculpe, este evento está lotado');
+      return;
+    }
+
+    setIsRegistering(true);
+
+    try {
+      const response = await fetch(`/api/events/${eventData.event.id}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(data.data.message);
+        setIsRegistered(true);
+        setRegistrationData(data.data.registration);
+        
+        // Refresh event data to update booked slots
+        const updatedData = await getEvent(slug);
+        if (updatedData) {
+          setEventData(updatedData);
+        }
+      } else {
+        toast.error(data.error || 'Falha ao se inscrever no evento');
+      }
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      toast.error('Ocorreu um erro ao processar sua inscrição');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    if (!eventData || !user) return;
+
+    setIsRegistering(true);
+
+    try {
+      const response = await fetch(`/api/events/${eventData.event.id}/register`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Inscrição cancelada com sucesso');
+        setIsRegistered(false);
+        setRegistrationData(null);
+        
+        // Refresh event data to update booked slots
+        const updatedData = await getEvent(slug);
+        if (updatedData) {
+          setEventData(updatedData);
+        }
+      } else {
+        toast.error(data.error || 'Falha ao cancelar inscrição');
+      }
+    } catch (error) {
+      console.error('Error cancelling registration:', error);
+      toast.error('Ocorreu um erro ao cancelar sua inscrição');
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">{/* Page Header */}
-      <PageHeader
-        title={event.title}
-        description={event.description}
-        align="left"
-        breadcrumbs={[
-          { label: 'Home', href: '/' },
-          { label: 'Events', href: '/events' },
-          { label: 'Instructor' }
-        ]}
+    <>
+      <ConfirmationDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        title="Cancelar Inscrição"
+        description="Tem certeza de que deseja cancelar sua inscrição neste evento? Esta ação não pode ser desfeita."
+        confirmText="Sim, cancelar"
+        cancelText="Não, manter inscrição"
+        onConfirm={handleCancelRegistration}
+        variant="destructive"
       />
       
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
+      <div className="bg-gray-50 dark:bg-gray-900">
+        {/* Page Header */}
+        <PageHeader
+          title={event.title}
+          description={event.description}
+          align="left"
+          breadcrumbs={[
+            { label: 'Home', href: '/' },
+            { label: 'Eventos', href: '/events' },
+            { label: event.title }
+          ]}
+        />
+      
+      <div className="container mx-auto px-4 max-w-[1428px] pt-8 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-12">
+          <div className="lg:col-span-2 space-y-8">
             {/* Event Meta Info */}
             <div className="flex flex-wrap items-center gap-6 text-gray-600 dark:text-gray-300 mb-8">
               <div className="flex items-center gap-2">
@@ -167,11 +298,16 @@ export default function EventPage({ params }: EventPageProps) {
                 totalSlots={event.totalSlots}
                 bookedSlots={event.bookedSlots}
                 onBookNow={handleBookNow}
+                isRegistered={isRegistered}
+                isRegistering={isRegistering}
+                isCheckingRegistration={isCheckingRegistration}
+                onCancelRegistration={() => setShowCancelDialog(true)}
               />
             </div>
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

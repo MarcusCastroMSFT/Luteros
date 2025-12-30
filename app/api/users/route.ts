@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// This is a demo API route showing how to handle server-side data fetching
-// You would replace this with your actual database queries
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAuth } from '@/lib/auth-helpers'
+import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') || ''
   
   // Extract sorting parameters
-  const sortBy = searchParams.get('sortBy') || 'id'
-  const sortOrder = searchParams.get('sortOrder') || 'asc'
+  const sortBy = searchParams.get('sortBy') || 'createdAt'
+  const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
   
   // Extract column filters
   const filters: Record<string, string> = {}
@@ -25,82 +25,110 @@ export async function GET(request: NextRequest) {
   }
   
   try {
-    // Simulate database query delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // This is where you would perform your actual database query
-    // Example with Prisma:
-    /*
-    const whereCondition = {
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-        ]
-      }),
-      ...(filters.status && { status: filters.status }),
-      ...(filters.role && { role: filters.role }),
+    // Verify authentication (with caching)
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) {
+      return authUser // Return 401 response
     }
-    
-    const [data, totalCount] = await Promise.all([
-      prisma.user.findMany({
-        where: whereCondition,
-        orderBy: { [sortBy]: sortOrder },
-        skip: page * pageSize,
-        take: pageSize,
-      }),
-      prisma.user.count({ where: whereCondition })
-    ])
-    */
-    
-    // For demo purposes, we'll use mock data
-    const mockUsers = Array.from({ length: 1000 }, (_, i) => ({
-      id: i + 1,
-      name: `User ${i + 1}`,
-      username: `user${i + 1}`,
-      email: `user${i + 1}@example.com`,
-      profileImg: `/avatars/user-${i + 1}.jpg`,
-      status: ['Ativo', 'Inativo', 'Pendente', 'Suspenso'][i % 4],
-      role: ['Usuário', 'Editor', 'Moderador', 'Administrador', 'Premium'][i % 5],
-    }))
+
+    // Build where condition for Prisma query
+    const whereCondition: any = {}
     
     // Apply search filter
-    let filteredUsers = mockUsers
     if (search) {
-      filteredUsers = mockUsers.filter(user => 
-        user.name.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase()) ||
-        user.username.toLowerCase().includes(search.toLowerCase())
-      )
+      whereCondition.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { displayName: { contains: search, mode: 'insensitive' } },
+      ]
     }
     
-    // Apply column filters
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        filteredUsers = filteredUsers.filter(user => 
-          user[key as keyof typeof user]?.toString().toLowerCase() === value.toLowerCase()
-        )
-      }
-    })
+    // Build orderBy condition
+    const orderByField = sortBy === 'name' ? 'fullName' : sortBy
+    const orderBy: any = { [orderByField]: sortOrder }
     
-    // Apply sorting
-    filteredUsers.sort((a, b) => {
-      const aVal = a[sortBy as keyof typeof a] || ''
-      const bVal = b[sortBy as keyof typeof b] || ''
-      
-      if (sortOrder === 'desc') {
-        return bVal.toString().localeCompare(aVal.toString())
-      }
-      return aVal.toString().localeCompare(bVal.toString())
-    })
+    // Execute database queries in parallel for performance
+    const [users, totalCount] = await Promise.all([
+      prisma.userProfile.findMany({
+        where: whereCondition,
+        orderBy,
+        skip: page * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          fullName: true,
+          displayName: true,
+          avatar: true,
+          title: true,
+          company: true,
+          createdAt: true,
+          updatedAt: true,
+          lastLoginAt: true,
+        }
+      }),
+      prisma.userProfile.count({ where: whereCondition })
+    ])
     
-    // Apply pagination
-    const totalCount = filteredUsers.length
     const pageCount = Math.ceil(totalCount / pageSize)
-    const paginatedUsers = filteredUsers.slice(page * pageSize, (page + 1) * pageSize)
+    
+    // Fetch emails from Supabase Auth using Admin API
+    // Regular client cannot access auth.users table - must use admin API
+    const supabaseAdmin = createAdminClient()
+    const userIds = users.map(u => u.id)
+    
+    // Use Promise.all to fetch all user emails in parallel
+    const emailPromises = userIds.map(async (userId) => {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
+      if (error) {
+        console.error(`Error fetching user ${userId}:`, error)
+        return [userId, null]
+      }
+      return [userId, data.user?.email]
+    })
+    
+    const emailResults = await Promise.all(emailPromises)
+    
+    // Create a map for quick lookup
+    const emailMap = new Map(emailResults as [string, string | null][])
+    
+    // Fetch roles for all users
+    const roleAssignments = await prisma.userRoleAssignment.findMany({
+      where: {
+        userId: {
+          in: userIds
+        }
+      },
+      select: {
+        userId: true,
+        role: true
+      }
+    })
+    
+    // Create a map for quick role lookup
+    const roleMap = new Map(roleAssignments.map(r => [r.userId, r.role]))
+    
+    // Role label mapping
+    const roleLabelMap: Record<string, string> = {
+      'ADMIN': 'Administrador',
+      'INSTRUCTOR': 'Instrutor',
+      'STUDENT': 'Estudante'
+    }
+    
+    // Map database results to frontend format
+    const formattedUsers = users.map(user => {
+      const userRole = roleMap.get(user.id) || 'STUDENT'
+      return {
+        id: user.id,
+        name: user.displayName || user.fullName || 'No Name',
+        username: user.displayName || user.fullName?.split(' ')[0] || 'user',
+        email: emailMap.get(user.id) || 'N/A',
+        profileImg: user.avatar || null,
+        status: user.lastLoginAt ? 'Ativo' : 'Inativo',
+        role: roleLabelMap[userRole] || 'Usuário',
+      }
+    })
     
     return NextResponse.json({
-      data: paginatedUsers,
+      data: formattedUsers,
       totalCount,
       pageCount,
       currentPage: page,
@@ -109,8 +137,21 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Error fetching users:', error)
+    
+    // Log detailed error for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch users' },
+      { 
+        error: 'Failed to fetch users',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

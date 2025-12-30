@@ -35,6 +35,14 @@ import {
 } from "@/components/ui/sidebar"
 import { sidebarData, SidebarData } from "@/data/menuDashboard"
 
+type User = {
+  id: string;
+  email: string;
+  fullName?: string | null;
+  displayName?: string | null;
+  avatar?: string | null;
+}
+
 // Icon mapping to convert string references to actual icons
 const iconMap = {
   IconDashboard,
@@ -71,7 +79,11 @@ const processDocuments = (documents: SidebarData['documents']) => {
   }))
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: User | null;
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const processedData = {
     ...sidebarData,
     navMain: processNavItems(sidebarData.navMain),
@@ -101,7 +113,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={processedData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={processedData.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

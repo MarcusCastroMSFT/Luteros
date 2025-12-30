@@ -1,19 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sampleArticles } from '@/data/articles';
+import prisma from '@/lib/prisma';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+
 export async function GET(request: NextRequest, { params }: Props) {
   try {
     const { slug } = await params;
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Find article by slug
-    const article = sampleArticles.find(article => article.slug === slug);
+    // Fetch published article by slug from database
+    const article = await prisma.blogArticle.findFirst({
+      where: { 
+        slug,
+        isPublished: true, // Only show published articles
+      },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        content: true,
+        image: true,
+        category: true,
+        readTime: true,
+        viewCount: true,
+        commentCount: true,
+        isPublished: true,
+        publishedAt: true,
+        createdAt: true,
+        relatedArticleIds: true, // Explicitly include related article IDs
+        author: {
+          select: {
+            id: true,
+            fullName: true,
+            displayName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
 
     if (!article) {
       return NextResponse.json(
@@ -26,16 +55,120 @@ export async function GET(request: NextRequest, { params }: Props) {
       );
     }
 
-    // Get related articles (same category, excluding current article)
-    const relatedArticles = sampleArticles
-      .filter(a => a.category === article.category && a.slug !== slug)
-      .slice(0, 3);
+    // Increment view count
+    await prisma.blogArticle.update({
+      where: { id: article.id },
+      data: { viewCount: { increment: 1 } },
+    });
+
+    // Get related articles - prioritize manually selected ones, fallback to same category
+    let relatedArticles = [];
+    
+    if (article.relatedArticleIds && article.relatedArticleIds.length > 0) {
+      // Fetch manually selected related articles
+      relatedArticles = await prisma.blogArticle.findMany({
+        where: {
+          id: { in: article.relatedArticleIds },
+          isPublished: true,
+        },
+        take: 3,
+        include: {
+          author: {
+            select: {
+              id: true,
+              fullName: true,
+              displayName: true,
+              avatar: true,
+            },
+          },
+        },
+      });
+    }
+    
+    // If we don't have 3 related articles, fill with same category articles
+    if (relatedArticles.length < 3) {
+      const additionalArticles = await prisma.blogArticle.findMany({
+        where: {
+          category: article.category,
+          slug: { not: slug },
+          id: { notIn: relatedArticles.map(a => a.id) },
+          isPublished: true,
+        },
+        take: 3 - relatedArticles.length,
+        orderBy: { publishedAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              fullName: true,
+              displayName: true,
+              avatar: true,
+            },
+          },
+        },
+      });
+      
+      relatedArticles = [...relatedArticles, ...additionalArticles];
+    }
+
+    // Format article date
+    const articleDate = article.publishedAt || article.createdAt;
+    const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(articleDate));
+
+    // Transform to match frontend Article type
+    const transformedArticle = {
+      id: article.id,
+      slug: article.slug,
+      title: article.title,
+      excerpt: article.excerpt,
+      content: article.content,
+      image: article.image || '',
+      category: article.category,
+      author: article.author.fullName || article.author.displayName || 'Unknown',
+      authorAvatar: article.author.avatar || '/images/default-avatar.jpg',
+      authorSlug: '',
+      date: formattedDate,
+      readTime: `${article.readTime} min`,
+      commentCount: article.commentCount,
+      viewCount: article.viewCount,
+    };
+
+    // Transform related articles
+    const transformedRelatedArticles = relatedArticles.map(rel => {
+      const relDate = rel.publishedAt || rel.createdAt;
+      const relFormattedDate = new Intl.DateTimeFormat('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(new Date(relDate));
+
+      return {
+        id: rel.id,
+        slug: rel.slug,
+        title: rel.title,
+        excerpt: rel.excerpt,
+        content: rel.content,
+        image: rel.image || '',
+        category: rel.category,
+        author: rel.author.fullName || rel.author.displayName || 'Unknown',
+        authorAvatar: rel.author.avatar || '/images/default-avatar.jpg',
+        authorSlug: '',
+        date: relFormattedDate,
+        readTime: `${rel.readTime} min`,
+        commentCount: rel.commentCount,
+        viewCount: rel.viewCount,
+      };
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        article,
-        relatedArticles,
+        article: transformedArticle,
+        relatedArticles: transformedRelatedArticles,
       },
     });
 

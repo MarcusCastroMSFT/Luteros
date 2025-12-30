@@ -1,7 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, ExternalLink, Eye, Users, Edit, Trash2 } from "lucide-react"
 import { PaidBadge } from "@/components/common/badges/paid-badge"
 import { StatusBadge } from "@/components/common/badges/status-badge"
 import { Button } from "@/components/ui/button"
@@ -13,22 +14,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ViewEventModal } from "./view-event-modal"
+import { EditEventModal } from "./edit-event-modal"
+import { DeleteEventModal } from "./delete-event-modal"
+import { ViewRegistrationsModal } from "./view-registrations-modal"
 
 export interface Event {
-  id: number
+  id: string
+  slug: string
   header: string
   type: string
-  status: "Active" | "Inactive" | "Pending"
+  status: "Ativo" | "Cancelado" | "Pendente"
+  isPublished: boolean
   location: string
   date: string
   time: string
-  paid: "Free" | "Paid"
+  paid: "Gratuito" | "Pago"
   target: string
   limit: string
   reviewer: string
 }
 
-export const eventColumns: ColumnDef<Event>[] = [
+export const createEventColumns = (onUpdate?: () => void): ColumnDef<Event>[] => {
+  return [
   {
     accessorKey: "header",
     header: ({ column }) => {
@@ -73,8 +81,8 @@ export const eventColumns: ColumnDef<Event>[] = [
           value={status}
           labels={{
             active: "Ativo",
-            draft: "Pendente", // Map "Pending" to "Pendente"
-            inactive: "Inativo"
+            draft: "Pendente",
+            inactive: "Cancelado"
           }}
         />
       )
@@ -146,7 +154,7 @@ export const eventColumns: ColumnDef<Event>[] = [
     },
     cell: ({ row }) => {
       const target = row.getValue("target") as string
-      const limit = row.getValue("limit") as string
+      const limit = row.original.limit
       return (
         <div className="text-right font-medium">
           {target}/{limit}
@@ -157,10 +165,9 @@ export const eventColumns: ColumnDef<Event>[] = [
   {
     accessorKey: "limit",
     header: "Limite",
-    cell: ({ row }) => {
-      const limit = row.getValue("limit") as string
-      return <div className="text-right">{limit}</div>
-    },
+    enableHiding: true,
+    enableSorting: false,
+    cell: ({ row }) => null,
   },
   {
     accessorKey: "reviewer",
@@ -172,33 +179,96 @@ export const eventColumns: ColumnDef<Event>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const event = row.original
+      const [viewModalOpen, setViewModalOpen] = useState(false)
+      const [editModalOpen, setEditModalOpen] = useState(false)
+      const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+      const [registrationsModalOpen, setRegistrationsModalOpen] = useState(false)
+      const meta = table.options.meta as { onDeleteEvent?: (eventId: string) => void } | undefined
+
+      const handleDeleteSuccess = () => {
+        onUpdate?.()
+        meta?.onDeleteEvent?.(event.id)
+      }
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(event.id.toString())}
-            >
-              Copiar ID do evento
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-            <DropdownMenuItem>Editar evento</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              Excluir evento
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Abrir menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+              {event.isPublished && event.slug && (
+                <>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => window.open(`/events/${event.slug}`, '_blank')}
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Abrir evento publicado
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setViewModalOpen(true)}>
+                <Eye className="mr-2 h-4 w-4" />
+                Ver detalhes
+              </DropdownMenuItem>
+              {parseInt(event.target) > 0 && (
+                <DropdownMenuItem className="cursor-pointer" onClick={() => setRegistrationsModalOpen(true)}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Ver inscritos
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setEditModalOpen(true)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Editar evento
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setDeleteModalOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
+                <span className="text-red-600 dark:text-red-400">Excluir evento</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <ViewEventModal
+            eventId={event.id}
+            open={viewModalOpen}
+            onOpenChange={setViewModalOpen}
+          />
+
+          <ViewRegistrationsModal
+            eventId={event.id}
+            eventTitle={event.header}
+            open={registrationsModalOpen}
+            onOpenChange={setRegistrationsModalOpen}
+          />
+
+          <EditEventModal
+            eventId={event.id}
+            open={editModalOpen}
+            onOpenChange={setEditModalOpen}
+            onSuccess={onUpdate}
+          />
+
+          <DeleteEventModal
+            eventId={event.id}
+            eventTitle={event.header}
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            onSuccess={handleDeleteSuccess}
+          />
+        </>
       )
     },
   },
 ]
+}
+
+// For backwards compatibility
+export const eventColumns = createEventColumns()

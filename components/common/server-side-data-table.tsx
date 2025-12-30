@@ -82,6 +82,9 @@ interface ServerSideDataTableProps<TData, TValue> {
   manualPagination?: boolean
   manualSorting?: boolean
   manualFiltering?: boolean
+  
+  // Table meta for passing custom data to cells
+  meta?: any
 }
 
 export function ServerSideDataTable<TData, TValue>({
@@ -104,6 +107,7 @@ export function ServerSideDataTable<TData, TValue>({
   manualPagination = true,
   manualSorting = true,
   manualFiltering = true,
+  meta,
 }: ServerSideDataTableProps<TData, TValue>) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
@@ -153,6 +157,7 @@ export function ServerSideDataTable<TData, TValue>({
     manualPagination,
     manualSorting,
     manualFiltering,
+    meta,
   })
 
   // Debounced search
@@ -188,10 +193,10 @@ export function ServerSideDataTable<TData, TValue>({
           {/* Column Visibility Toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="cursor-pointer">
                 <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
+                <span className="hidden lg:inline">Personalizar Colunas</span>
+                <span className="lg:hidden">Colunas</span>
                 <IconChevronDown />
               </Button>
             </DropdownMenuTrigger>
@@ -200,6 +205,26 @@ export function ServerSideDataTable<TData, TValue>({
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => {
+                  // Portuguese labels for column names
+                  const columnLabels: Record<string, string> = {
+                    title: "Título",
+                    header: "Evento",
+                    author: "Autor",
+                    type: "Tipo",
+                    category: "Categoria",
+                    status: "Status",
+                    paid: "Tipo",
+                    audience: "Público",
+                    location: "Local",
+                    date: "Data",
+                    time: "Horário",
+                    target: "Inscritos",
+                    limit: "Limite",
+                    reviewer: "Responsável",
+                    readTime: "Tempo de Leitura",
+                    commentCount: "Comentários",
+                  }
+                  
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -209,7 +234,7 @@ export function ServerSideDataTable<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      {columnLabels[column.id] || column.id}
                     </DropdownMenuCheckboxItem>
                   )
                 })}
@@ -344,12 +369,12 @@ export function ServerSideDataTable<TData, TValue>({
                 }}
                 disabled={loading}
               >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+                <SelectTrigger size="sm" className="w-20 cursor-pointer" id="rows-per-page">
                   <SelectValue placeholder={pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
                   {[10, 20, 30, 40, 50, 100].map((size) => (
-                    <SelectItem key={size} value={`${size}`}>
+                    <SelectItem key={size} value={`${size}`} className="cursor-pointer">
                       {size}
                     </SelectItem>
                   ))}
@@ -357,49 +382,49 @@ export function ServerSideDataTable<TData, TValue>({
               </Select>
             </div>
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Page {pageIndex + 1} of {pageCount}
+              Página {pageIndex + 1} de {pageCount}
             </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 cursor-pointer"
                 onClick={() => onPaginationChange({ pageIndex: 0, pageSize })}
                 disabled={!table.getCanPreviousPage() || loading}
               >
-                <span className="sr-only">Go to first page</span>
+                <span className="sr-only">Ir para primeira página</span>
                 <IconChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 cursor-pointer"
                 onClick={() =>
                   onPaginationChange({ pageIndex: pageIndex - 1, pageSize })
                 }
                 disabled={!table.getCanPreviousPage() || loading}
               >
-                <span className="sr-only">Go to previous page</span>
+                <span className="sr-only">Ir para página anterior</span>
                 <IconChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 cursor-pointer"
                 onClick={() =>
                   onPaginationChange({ pageIndex: pageIndex + 1, pageSize })
                 }
                 disabled={!table.getCanNextPage() || loading}
               >
-                <span className="sr-only">Go to next page</span>
+                <span className="sr-only">Ir para próxima página</span>
                 <IconChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 cursor-pointer"
                 onClick={() =>
                   onPaginationChange({ pageIndex: pageCount - 1, pageSize })
                 }
                 disabled={!table.getCanNextPage() || loading}
               >
-                <span className="sr-only">Go to last page</span>
+                <span className="sr-only">Ir para última página</span>
                 <IconChevronsRight className="h-4 w-4" />
               </Button>
             </div>

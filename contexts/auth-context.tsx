@@ -1,104 +1,183 @@
-'use client';
+'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react'
+import { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role: 'admin' | 'user' | 'instructor';
+interface UserProfile {
+  id: string
+  fullName: string | null
+  displayName: string | null
+  avatar: string | null
+  bio: string | null
+  email?: string
 }
 
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  updateUser: (user: Partial<User>) => void;
+  user: User | null
+  userProfile: UserProfile | null
+  isLoading: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
+  signUp: (email: string, password: string, metadata?: any) => Promise<void>
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/users/${userId}/profile`)
+      if (response.ok) {
+        const profile = await response.json()
+        setUserProfile(profile)
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    }
+  }
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserProfile(user.id)
+    }
+  }
 
   useEffect(() => {
-    // Simulate checking for existing session
-    const checkAuth = async () => {
+    // Get initial session
+    const initAuth = async () => {
       try {
-        // In a real app, this would check localStorage, cookies, or make an API call
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error('Error fetching session:', error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    checkAuth();
-  }, []);
+    initAuth()
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        } else {
+          setUserProfile(null)
+        }
+        
+        if (event === 'SIGNED_IN') {
+          router.refresh()
+        } else if (event === 'SIGNED_OUT') {
+          setUserProfile(null)
+          router.push('/login')
+        }
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase, router])
+
+  const signIn = async (email: string, password: string) => {
+    setIsLoading(true)
     try {
-      // Simulate API call
-      const mockUser: User = {
-        id: '1',
-        name: 'John Doe',
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        role: 'admin'
-      };
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+        password,
+      })
+      if (error) throw error
+      router.push('/dashboard')
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      console.error('Sign in error:', error)
+      throw error
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    })
+    if (error) throw error
+  }
 
-  const updateUser = (updatedUser: Partial<User>) => {
-    if (user) {
-      const newUser = { ...user, ...updatedUser };
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    setIsLoading(true)
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`,
+        },
+      })
+      if (error) throw error
+    } catch (error) {
+      console.error('Sign up error:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+  }
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoading,
-      login,
-      logout,
-      updateUser
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        userProfile,
+        isLoading,
+        signIn,
+        signInWithGoogle,
+        signUp,
+        signOut,
+        refreshProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  );
+  )
 }

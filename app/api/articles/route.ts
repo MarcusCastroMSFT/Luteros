@@ -1,20 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sampleArticles } from '@/data/articles'
-
-// Helper function to map article data to table format
-function getArticleStatus(index: number): "Ativo" | "Rascunho" | "Inativo" {
-  const statuses = ["Ativo", "Ativo", "Ativo", "Rascunho", "Ativo", "Inativo", "Ativo", "Ativo", "Rascunho", "Ativo", "Ativo", "Ativo", "Ativo", "Rascunho", "Ativo", "Ativo"]
-  return statuses[index % statuses.length] as "Ativo" | "Rascunho" | "Inativo"
-}
-
-function getArticlePaidStatus(index: number): "Gratuito" | "Pago" {
-  // Make some articles paid (premium content)
-  const paidIndices = [1, 4, 7, 10, 13] // 5 out of 16 articles are paid
-  return paidIndices.includes(index) ? "Pago" : "Gratuito"
-}
-
-// This is a demo API route showing how to handle server-side data fetching
-// You would replace this with your actual database queries
+import { requireAuth } from '@/lib/auth-helpers'
+import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -25,82 +11,197 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') || ''
   
   // Extract sorting parameters
-  const sortBy = searchParams.get('sortBy') || 'id'
-  const sortOrder = searchParams.get('sortOrder') || 'asc'
-  
-  // Extract column filters
-  const filters: Record<string, string> = {}
-  for (const [key, value] of searchParams.entries()) {
-    if (key.startsWith('filter_')) {
-      const filterKey = key.replace('filter_', '')
-      filters[filterKey] = value
-    }
-  }
+  const sortBy = searchParams.get('sortBy') || 'createdAt'
+  const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
   
   try {
-    // Simulate database query delay
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    // Transform articles data to match table structure
-    const mockArticles = sampleArticles.map((article, index) => ({
-      id: article.id,
-      title: article.title,
-      author: article.author,
-      category: article.category,
-      status: getArticleStatus(index),
-      paid: getArticlePaidStatus(index),
-      date: article.date,
-      readTime: article.readTime,
-      commentCount: article.commentCount || 0
-    }))
+    // Verify authentication (with caching)
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) {
+      return authUser // Return 401 response
+    }
+
+    // Build where condition for Prisma query
+    const whereCondition: any = {}
     
     // Apply search filter
-    let filteredArticles = mockArticles
     if (search) {
-      filteredArticles = mockArticles.filter(article => 
-        article.title.toLowerCase().includes(search.toLowerCase()) ||
-        article.author.toLowerCase().includes(search.toLowerCase()) ||
-        article.category.toLowerCase().includes(search.toLowerCase())
-      )
+      whereCondition.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { excerpt: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } },
+      ]
     }
     
-    // Apply column filters
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        filteredArticles = filteredArticles.filter(article => 
-          article[key as keyof typeof article]?.toString().toLowerCase() === value.toLowerCase()
-        )
-      }
-    })
+    // Build orderBy condition - map frontend fields to database fields
+    const orderByMap: Record<string, any> = {
+      title: { title: sortOrder },
+      author: { author: { fullName: sortOrder } },
+      category: { category: sortOrder },
+      date: { publishedAt: sortOrder },
+      createdAt: { createdAt: sortOrder },
+      viewCount: { viewCount: sortOrder },
+      commentCount: { commentCount: sortOrder },
+    }
     
-    // Apply sorting
-    filteredArticles.sort((a, b) => {
-      const aVal = a[sortBy as keyof typeof a] || ''
-      const bVal = b[sortBy as keyof typeof b] || ''
-      
-      if (sortOrder === 'desc') {
-        return bVal.toString().localeCompare(aVal.toString())
-      }
-      return aVal.toString().localeCompare(bVal.toString())
-    })
-    
-    // Apply pagination
-    const totalCount = filteredArticles.length
+    const orderBy = orderByMap[sortBy] || { createdAt: sortOrder }
+
+    // Execute queries in parallel for performance
+    const [articles, totalCount] = await Promise.all([
+      prisma.blogArticle.findMany({
+        where: whereCondition,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          category: true,
+          readTime: true,
+          viewCount: true,
+          commentCount: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          accessType: true,
+          targetAudience: true,
+          author: {
+            select: {
+              id: true,
+              fullName: true,
+              displayName: true,
+              avatar: true,
+            }
+          }
+        },
+        orderBy,
+        skip: page * pageSize,
+        take: pageSize,
+      }),
+      prisma.blogArticle.count({
+        where: whereCondition,
+      }),
+    ])
+
+    // Transform data to match frontend interface
+    const transformedArticles = articles.map(article => ({
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      image: article.image,
+      author: article.author.fullName || article.author.displayName || 'Unknown',
+      authorId: article.author.id,
+      authorAvatar: article.author.avatar,
+      category: article.category,
+      status: article.isPublished ? 'Ativo' : 'Rascunho',
+      paid: article.accessType === 'paid' ? 'Pago' : 'Gratuito',
+      audience: article.targetAudience === 'doctors' ? 'Médicos' : 'Público Geral',
+      date: article.publishedAt?.toISOString() || article.createdAt.toISOString(),
+      readTime: `${article.readTime} min`,
+      commentCount: article.commentCount,
+      viewCount: article.viewCount,
+    }))
+
     const pageCount = Math.ceil(totalCount / pageSize)
-    const paginatedArticles = filteredArticles.slice(page * pageSize, (page + 1) * pageSize)
-    
+
     return NextResponse.json({
-      data: paginatedArticles,
+      data: transformedArticles,
       totalCount,
       pageCount,
-      currentPage: page,
+      page,
       pageSize,
     })
-    
   } catch (error) {
     console.error('Error fetching articles:', error)
     return NextResponse.json(
       { error: 'Failed to fetch articles' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verify authentication (with caching)
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) {
+      return authUser // Return 401 response
+    }
+
+    // Parse request body
+    const body = await request.json()
+    const { title, slug, excerpt, content, image, category, readTime, isPublished, authorId, relatedArticleIds = [], accessType = 'free', targetAudience = 'general' } = body
+
+    // Validation
+    if (!title || !slug || !excerpt || !content || !category) {
+      return NextResponse.json(
+        { success: false, error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      )
+    }
+
+    // Validate relatedArticleIds (max 3)
+    if (relatedArticleIds && relatedArticleIds.length > 3) {
+      return NextResponse.json(
+        { success: false, error: 'Máximo de 3 artigos relacionados permitidos' },
+        { status: 400 }
+      )
+    }
+
+    // Use provided authorId or default to the authenticated user
+    const finalAuthorId = authorId || authUser.id
+
+    // Check if slug already exists
+    const existingArticle = await prisma.blogArticle.findUnique({
+      where: { slug }
+    })
+
+    if (existingArticle) {
+      return NextResponse.json(
+        { success: false, error: 'Já existe um artigo com esse slug' },
+        { status: 400 }
+      )
+    }
+
+    // Create article
+    const article = await prisma.blogArticle.create({
+      data: {
+        title,
+        slug,
+        excerpt,
+        content,
+        image: image || null,
+        category,
+        readTime: readTime || 5,
+        isPublished,
+        publishedAt: isPublished ? new Date() : null,
+        authorId: finalAuthorId,
+        relatedArticleIds: relatedArticleIds || [],
+        accessType,
+        targetAudience,
+        viewCount: 0,
+        commentCount: 0,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            fullName: true,
+            displayName: true,
+            avatar: true,
+          }
+        }
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: article,
+    })
+  } catch (error) {
+    console.error('Error creating article:', error)
+    return NextResponse.json(
+      { success: false, error: 'Erro ao criar artigo' },
       { status: 500 }
     )
   }

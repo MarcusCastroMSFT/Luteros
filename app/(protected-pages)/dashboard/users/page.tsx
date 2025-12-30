@@ -1,8 +1,9 @@
 "use client"
 
+import { useMemo } from "react"
 import { ServerSideDataTable } from "@/components/common/server-side-data-table"
 import { UsersStats } from "@/components/users/usersStats"
-import { userColumns, type User } from "@/components/users/user-columns"
+import { getUserColumns, type User } from "@/components/users/user-columns"
 import { useServerSideData } from "@/hooks/use-server-side-data"
 
 export default function UsersPage() {
@@ -21,10 +22,13 @@ export default function UsersPage() {
     setSorting,
     setColumnFilters,
     setSearchValue,
+    refetch,
   } = useServerSideData<User>({
     endpoint: '/api/users',
     initialPageSize: 10,
   })
+
+  const columns = useMemo(() => getUserColumns(refetch), [refetch])
 
   if (error) {
     return (
@@ -67,7 +71,7 @@ export default function UsersPage() {
           
           {/* Server-Side Users Table */}
           <ServerSideDataTable
-            columns={userColumns}
+            columns={columns}
             data={users}
             totalCount={totalCount}
             pageCount={pageCount}

@@ -12,7 +12,9 @@ export interface UseServerSideDataParams {
 
 export interface ServerSideDataState<T> {
   data: T[]
+  setData: React.Dispatch<React.SetStateAction<T[]>>
   totalCount: number
+  setTotalCount: React.Dispatch<React.SetStateAction<number>>
   pageCount: number
   loading: boolean
   error: string | null
@@ -142,7 +144,9 @@ export function useServerSideData<T>({
   return {
     // State
     data,
+    setData,
     totalCount,
+    setTotalCount,
     pageCount,
     loading,
     error,
