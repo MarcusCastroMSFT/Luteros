@@ -4,7 +4,8 @@ import ArticleCard from '@/components/blog/articleCard';
 import { ArticleListSkeleton } from '@/components/blog/articleSkeleton';
 import { Pagination } from '@/components/common/pagination';
 import { CategoryFilter } from '@/components/blog/categoryFilter';
-import { type Article, type BlogApiResponse } from '@/types/blog';
+import { type Article } from '@/types/blog';
+import { getArticles } from '@/lib/articles';
 
 // ISR: Revalidate every 30 minutes
 export const revalidate = 1800;
@@ -16,39 +17,6 @@ interface BlogPageProps {
     page?: string;
     category?: string;
   }>;
-}
-
-// Server-side data fetching with ISR
-async function getArticles(page: number, category: string): Promise<BlogApiResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: ARTICLES_PER_PAGE.toString(),
-  });
-
-  if (category && category !== 'Todos') {
-    params.append('category', category);
-  }
-
-  try {
-    const response = await fetch(`${baseUrl}/api/blog?${params}`, {
-      next: { revalidate: 1800, tags: ['articles'] },
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch articles');
-    }
-    
-    return response.json();
-  } catch (error) {
-    console.error('Error fetching articles:', error);
-    return {
-      success: false,
-      error: 'Erro ao carregar artigos',
-      data: null,
-    };
-  }
 }
 
 // Articles Grid Component
@@ -80,14 +48,52 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const page = Math.max(1, parseInt(params.page || '1'));
   const category = params.category || 'Todos';
   
-  const result = await getArticles(page, category);
-  
   const breadcrumbs = [
     { label: 'Home', href: '/' },
     { label: 'Blog' }
   ];
 
-  if (!result.success || !result.data) {
+  try {
+    const { articles, pagination, categories } = await getArticles(page, ARTICLES_PER_PAGE, category);
+
+    return (
+      <div className="min-h-screen">
+        {/* Page Header */}
+        <PageHeader
+          title="Blog"
+          description="Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar."
+          breadcrumbs={breadcrumbs}
+        />
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 max-w-[1428px] py-16">
+          {/* Category Filter - URL-based navigation for Server Component */}
+          <Suspense fallback={<div className="h-12 mb-8" />}>
+            <CategoryFilter
+              categories={categories}
+              activeCategory={category}
+            />
+          </Suspense>
+
+          {/* Articles Grid */}
+          <Suspense fallback={<ArticleListSkeleton count={ARTICLES_PER_PAGE} />}>
+            <ArticlesGrid articles={articles} />
+          </Suspense>
+
+          {/* Pagination - URL-based navigation for Server Component */}
+          {pagination && pagination.totalPages > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              basePath="/blog"
+              queryParams={{ category: category !== 'Todos' ? category : undefined }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  } catch (error) {
+    console.error('Error loading blog:', error);
     return (
       <div className="min-h-screen">
         <PageHeader
@@ -99,51 +105,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         <div className="container mx-auto px-4 py-16 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Erro</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {result.error || 'Erro ao carregar artigos'}
+            Erro ao carregar artigos. Tente novamente mais tarde.
           </p>
         </div>
       </div>
     );
   }
-
-  const { articles, pagination, categories } = result.data;
-
-  return (
-    <div className="min-h-screen">
-      {/* Page Header */}
-      <PageHeader
-        title="Blog"
-        description="Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar."
-        breadcrumbs={breadcrumbs}
-      />
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 max-w-[1428px] py-16">
-        {/* Category Filter - URL-based navigation for Server Component */}
-        <Suspense fallback={<div className="h-12 mb-8" />}>
-          <CategoryFilter
-            categories={categories}
-            activeCategory={category}
-          />
-        </Suspense>
-
-        {/* Articles Grid */}
-        <Suspense fallback={<ArticleListSkeleton count={ARTICLES_PER_PAGE} />}>
-          <ArticlesGrid articles={articles} />
-        </Suspense>
-
-        {/* Pagination - URL-based navigation for Server Component */}
-        {pagination && pagination.totalPages > 1 && (
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            basePath="/blog"
-            queryParams={{ category: category !== 'Todos' ? category : undefined }}
-          />
-        )}
-      </div>
-    </div>
-  );
 }
 
 // Generate metadata for SEO

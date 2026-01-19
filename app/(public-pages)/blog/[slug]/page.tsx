@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation';
 import nextDynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
-import { type Article } from '@/types/blog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getArticleBySlug, getArticleMetadata } from '@/lib/articles';
 
 // ISR: Revalidate every 30 minutes, with on-demand revalidation when articles are updated
 export const revalidate = 1800; // 30 minutes in seconds
@@ -32,41 +32,11 @@ interface ArticlePageProps {
   }>;
 }
 
-// Fetch article data from database
-async function getArticleData(slug: string): Promise<{ article: Article; relatedArticles: Article[] } | null> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    
-    const response = await fetch(`${baseUrl}/api/blog/${slug}`, {
-      // Use ISR cache - revalidates based on route segment config
-      next: { revalidate: 1800, tags: ['articles', `article-${slug}`] },
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(15000)
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      if (result.success && result.data) {
-        return {
-          article: result.data.article,
-          relatedArticles: result.data.relatedArticles || []
-        };
-      }
-    }
-
-    console.error(`API fetch failed for article ${slug}`);
-    return null;
-  } catch (error) {
-    console.error('Error fetching article data:', error);
-    return null;
-  }
-}
-
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
   
-  // Fetch article data from database
-  const articleData = await getArticleData(slug);
+  // Fetch article data directly from database
+  const articleData = await getArticleBySlug(slug);
   
   if (!articleData) {
     notFound();
@@ -175,9 +145,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 // Generate metadata for SEO with ISR support
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const articleData = await getArticleData(slug);
+  const article = await getArticleMetadata(slug);
   
-  if (!articleData) {
+  if (!article) {
     return {
       title: 'Artigo não encontrado',
       robots: {
@@ -187,7 +157,6 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     };
   }
 
-  const { article } = articleData;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
   const articleUrl = `${baseUrl}/blog/${slug}`;
   const imageUrl = article.image?.startsWith('http') 
