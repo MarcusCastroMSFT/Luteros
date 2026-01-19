@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 
@@ -93,6 +94,18 @@ export async function POST(
         paymentStatus: event.isFree ? 'COMPLETED' : 'PENDING',
       },
     });
+
+    // Get event slug for cache invalidation
+    const eventWithSlug = await prisma.event.findUnique({
+      where: { id },
+      select: { slug: true }
+    });
+
+    // Revalidate event cache to update slot count
+    revalidateTag('events', {});
+    if (eventWithSlug?.slug) {
+      revalidateTag(`event-${eventWithSlug.slug}`, {});
+    }
 
     return NextResponse.json({
       success: true,
@@ -203,6 +216,18 @@ export async function DELETE(
         id: registration.id,
       },
     });
+
+    // Get event slug for cache invalidation
+    const eventWithSlug = await prisma.event.findUnique({
+      where: { id },
+      select: { slug: true }
+    });
+
+    // Revalidate event cache to update slot count
+    revalidateTag('events', {});
+    if (eventWithSlug?.slug) {
+      revalidateTag(`event-${eventWithSlug.slug}`, {});
+    }
 
     return NextResponse.json({
       success: true,

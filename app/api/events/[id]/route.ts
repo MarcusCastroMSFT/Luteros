@@ -218,8 +218,12 @@ export async function PUT(
       return event
     })
 
-    // Revalidate public events page cache
-    await revalidateTag('events-public', {})
+    // Revalidate events cache
+    revalidateTag('events', {})
+    revalidateTag(`event-${existingEvent.slug}`, {})
+    if (body.slug && body.slug !== existingEvent.slug) {
+      revalidateTag(`event-${body.slug}`, {})
+    }
 
     return NextResponse.json({
       success: true,
@@ -268,10 +272,22 @@ export async function DELETE(
       )
     }
 
+    // Get slug before deleting for cache invalidation
+    const eventToDelete = await prisma.event.findUnique({
+      where: { id },
+      select: { slug: true }
+    })
+
     // Delete event (cascade will delete related registrations and speakers)
     await prisma.event.delete({
       where: { id }
     })
+
+    // Revalidate events cache
+    revalidateTag('events', {})
+    if (eventToDelete?.slug) {
+      revalidateTag(`event-${eventToDelete.slug}`, {})
+    }
 
     return NextResponse.json({
       success: true,

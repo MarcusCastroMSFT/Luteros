@@ -1,0 +1,331 @@
+import { cache } from 'react'
+import prisma from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
+import { type Event, type EventsPagination } from '@/types/event'
+import { type Speaker } from '@/components/common/speakers'
+
+// Type for event with count from Prisma
+type EventWithCount = {
+  id: string
+  slug: string
+  title: string
+  description: string | null
+  fullDescription: string | null
+  location: string
+  eventDate: Date
+  eventTime: string
+  duration: string
+  image: string | null
+  totalSlots: number
+  cost: string
+  isFree: boolean
+  createdAt: Date
+  _count: {
+    registrations: number
+  }
+}
+
+// Type for event with speakers
+type EventWithSpeakers = EventWithCount & {
+  speakers: {
+    id: string
+    name: string
+    title: string
+    bio: string | null
+    image: string | null
+    linkedin: string | null
+    twitter: string | null
+    website: string | null
+    order: number
+  }[]
+}
+
+// Transform Prisma event to frontend Event type
+function transformEvent(event: EventWithCount | EventWithSpeakers): Event {
+  const bookedSlots = event._count.registrations
+  
+  const baseEvent: Event = {
+    id: event.id,
+    slug: event.slug,
+    title: event.title,
+    description: event.description || '',
+    fullDescription: event.fullDescription || '',
+    location: event.location,
+    date: event.eventDate.toISOString().split('T')[0],
+    time: event.eventTime,
+    cost: event.cost,
+    isFree: event.isFree,
+    totalSlots: event.totalSlots,
+    bookedSlots,
+    image: event.image || '',
+  }
+
+  // Add speakers if present
+  if ('speakers' in event && event.speakers) {
+    baseEvent.speakers = event.speakers as Speaker[]
+  }
+
+  return baseEvent
+}
+
+// Internal function to fetch events from database
+async function fetchEvents(page: number, limit: number, search?: string) {
+  // Build where clause for published events only
+  const whereClause: Record<string, unknown> = {
+    isPublished: true,
+    isCancelled: false,
+  }
+
+  // Add search filter if provided
+  if (search && search.trim()) {
+    whereClause.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { location: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+      { fullDescription: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
+  // Get total count and paginated events in parallel
+  const [totalEvents, events] = await Promise.all([
+    prisma.event.count({ where: whereClause }),
+    prisma.event.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        description: true,
+        fullDescription: true,
+        location: true,
+        eventDate: true,
+        eventTime: true,
+        duration: true,
+        image: true,
+        totalSlots: true,
+        cost: true,
+        isFree: true,
+        createdAt: true,
+        _count: {
+          select: {
+            registrations: true,
+          },
+        },
+      },
+      orderBy: {
+        eventDate: 'asc', // Upcoming events first
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ])
+
+  const transformedEvents = events.map((event: EventWithCount) => transformEvent(event))
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalEvents / limit)
+
+  return {
+    events: transformedEvents,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalEvents,
+      eventsPerPage: limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    } as EventsPagination,
+  }
+}
+
+// Get paginated events with optional search filter (with caching)
+// Uses React cache for request memoization + unstable_cache for persistent caching
+export const getEvents = cache(async (page: number, limit: number, search?: string) => {
+  const getCachedEvents = unstable_cache(
+    () => fetchEvents(page, limit, search),
+    [`events-list-${page}-${limit}-${search || 'all'}`],
+    {
+      revalidate: 60, // 1 minute - events might have real-time booking updates
+      tags: ['events'],
+    }
+  )
+  
+  return getCachedEvents()
+})
+
+// Internal function to fetch single event
+async function fetchEventBySlug(slug: string) {
+  // Find event by slug (only published, non-cancelled events)
+  const event = await prisma.event.findFirst({
+    where: {
+      slug,
+      isPublished: true,
+      isCancelled: false,
+    },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      fullDescription: true,
+      location: true,
+      eventDate: true,
+      eventTime: true,
+      duration: true,
+      image: true,
+      totalSlots: true,
+      cost: true,
+      isFree: true,
+      createdAt: true,
+      _count: {
+        select: {
+          registrations: true,
+        },
+      },
+      speakers: {
+        select: {
+          id: true,
+          name: true,
+          title: true,
+          bio: true,
+          image: true,
+          linkedin: true,
+          twitter: true,
+          website: true,
+          order: true,
+        },
+        orderBy: {
+          order: 'asc',
+        },
+      },
+    },
+  })
+
+  if (!event) {
+    return null
+  }
+
+  // Get related events (upcoming published events, excluding current event)
+  const relatedEvents = await prisma.event.findMany({
+    where: {
+      slug: { not: slug },
+      isPublished: true,
+      isCancelled: false,
+      eventDate: { gte: new Date() },
+    },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      fullDescription: true,
+      location: true,
+      eventDate: true,
+      eventTime: true,
+      duration: true,
+      image: true,
+      totalSlots: true,
+      cost: true,
+      isFree: true,
+      createdAt: true,
+      _count: {
+        select: {
+          registrations: true,
+        },
+      },
+    },
+    orderBy: {
+      eventDate: 'asc',
+    },
+    take: 3,
+  })
+
+  return {
+    event: transformEvent(event as EventWithSpeakers),
+    relatedEvents: relatedEvents.map((e: EventWithCount) => transformEvent(e)),
+  }
+}
+
+// Get single event by slug with related events (with caching)
+// Uses React cache for request memoization + unstable_cache for persistent caching
+export const getEventBySlug = cache(async (slug: string) => {
+  const getCachedEvent = unstable_cache(
+    () => fetchEventBySlug(slug),
+    [`event-${slug}`],
+    {
+      revalidate: 60, // 1 minute
+      tags: ['events', `event-${slug}`],
+    }
+  )
+  
+  return getCachedEvent()
+})
+
+// Internal function to fetch event metadata
+async function fetchEventMetadata(slug: string) {
+  const event = await prisma.event.findFirst({
+    where: { 
+      slug,
+      isPublished: true,
+      isCancelled: false,
+    },
+    select: {
+      title: true,
+      description: true,
+      image: true,
+      location: true,
+      eventDate: true,
+      eventTime: true,
+    },
+  })
+
+  if (!event) {
+    return null
+  }
+
+  return {
+    title: event.title,
+    description: event.description,
+    image: event.image,
+    location: event.location,
+    date: event.eventDate?.toISOString(),
+    time: event.eventTime,
+  }
+}
+
+// Get event metadata only (for generateMetadata) with caching
+// Uses React cache for request memoization + unstable_cache for persistent caching
+export const getEventMetadata = cache(async (slug: string) => {
+  const getCachedMetadata = unstable_cache(
+    () => fetchEventMetadata(slug),
+    [`event-metadata-${slug}`],
+    {
+      revalidate: 60,
+      tags: ['events', `event-${slug}`],
+    }
+  )
+  
+  return getCachedMetadata()
+})
+
+// Get upcoming events count (useful for homepage or navigation)
+export const getUpcomingEventsCount = cache(async () => {
+  const getCachedCount = unstable_cache(
+    async () => {
+      return prisma.event.count({
+        where: {
+          isPublished: true,
+          isCancelled: false,
+          eventDate: { gte: new Date() },
+        },
+      })
+    },
+    ['upcoming-events-count'],
+    {
+      revalidate: 300, // 5 minutes
+      tags: ['events'],
+    }
+  )
+  
+  return getCachedCount()
+})

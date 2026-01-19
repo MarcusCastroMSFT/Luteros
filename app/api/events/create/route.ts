@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Revalidate public events page cache
-    await revalidateTag('events-public', {})
+    // Revalidate events cache
+    revalidateTag('events', {})
 
     return NextResponse.json({
       success: true,
