@@ -62,10 +62,10 @@ export async function POST(request: NextRequest) {
         location,
         eventDate: new Date(eventDate),
         eventTime,
-        duration,
+        duration: duration ? parseInt(duration, 10) : null,
         cost,
         isFree,
-        totalSlots,
+        totalSlots: parseInt(totalSlots, 10),
 
         isPublished,
         isCancelled,

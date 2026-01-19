@@ -63,6 +63,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
     ],
     // Allow unoptimized images for data URLs (base64) from file uploads
     unoptimized: false,
