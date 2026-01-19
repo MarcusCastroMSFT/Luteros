@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication (with caching)
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser // Return 401 response
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // Calculate date ranges

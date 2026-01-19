@@ -43,6 +43,14 @@ export async function GET(
       },
     })
 
+    // Get user role from UserRoleAssignment table
+    const roleAssignment = await prisma.userRoleAssignment.findFirst({
+      where: { userId },
+      select: { role: true },
+      orderBy: { createdAt: 'desc' }
+    })
+    const role = roleAssignment?.role || 'STUDENT'
+
     if (!profile) {
       // Profile doesn't exist yet, create it
       const newProfile = await prisma.userProfile.create({
@@ -58,12 +66,14 @@ export async function GET(
       return NextResponse.json({
         ...newProfile,
         email: user.email,
+        role,
       })
     }
 
     return NextResponse.json({
       ...profile,
       email: user.email,
+      role,
     })
   } catch (error) {
     console.error('Error fetching user profile:', error)

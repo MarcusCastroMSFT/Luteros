@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // Parse request body

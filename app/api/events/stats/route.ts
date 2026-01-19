@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -7,10 +7,10 @@ export const revalidate = 300 // Revalidate every 5 minutes
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // Get date ranges

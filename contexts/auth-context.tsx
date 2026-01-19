@@ -12,6 +12,7 @@ interface UserProfile {
   avatar: string | null
   bio: string | null
   email?: string
+  role?: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT'
 }
 
 interface AuthContextType {

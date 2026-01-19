@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function GET(
@@ -8,10 +8,10 @@ export async function GET(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication (with caching)
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser // Return 401 response
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // In Next.js 15, params is a Promise
@@ -100,10 +100,10 @@ export async function PATCH(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication (with caching)
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser // Return 401 response
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // In Next.js 15, params is a Promise
@@ -206,11 +206,12 @@ export async function DELETE(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication (with caching)
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser // Return 401 response
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
+    const { user: authUser } = authResult
 
     // In Next.js 15, params is a Promise
     const params = await context.params

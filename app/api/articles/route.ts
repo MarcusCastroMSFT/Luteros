@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
   const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
   
   try {
-    // Verify authentication (with caching)
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser // Return 401 response
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // Build where condition for Prisma query
@@ -145,10 +145,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication (with caching)
-    const authUser = await requireAuth(request)
-    if (authUser instanceof NextResponse) {
-      return authUser // Return 401 response
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
     }
 
     // Parse request body
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use provided authorId or default to the authenticated user
-    const finalAuthorId = authorId || authUser.id
+    const finalAuthorId = authorId || authResult.user.id
 
     // Check if slug already exists
     const existingArticle = await prisma.blogArticle.findUnique({

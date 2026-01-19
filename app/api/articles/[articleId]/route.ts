@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { requireAuth } from '@/lib/auth-helpers';
+import { requireAdminOrInstructor } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
 
 // This route requires authentication, so it must be dynamic (no ISR)
@@ -11,10 +11,10 @@ export async function GET(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication
-    const authUser = await requireAuth(request);
-    if (authUser instanceof NextResponse) {
-      return authUser; // Return 401 response
+    // Require authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request);
+    if (authResult instanceof NextResponse) {
+      return authResult; // Return 401/403 response
     }
     
     // In Next.js 15, params is a Promise
@@ -87,10 +87,10 @@ export async function PUT(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication
-    const authUser = await requireAuth(request);
-    if (authUser instanceof NextResponse) {
-      return authUser; // Return 401 response
+    // Require authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request);
+    if (authResult instanceof NextResponse) {
+      return authResult; // Return 401/403 response
     }
     
     // In Next.js 15, params is a Promise
@@ -201,10 +201,10 @@ export async function DELETE(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication
-    const authUser = await requireAuth(request);
-    if (authUser instanceof NextResponse) {
-      return authUser; // Return 401 response
+    // Require authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request);
+    if (authResult instanceof NextResponse) {
+      return authResult; // Return 401/403 response
     }
     
     // In Next.js 15, params is a Promise

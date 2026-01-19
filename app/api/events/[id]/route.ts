@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
-import { requireAuth } from '@/lib/auth-helpers'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
@@ -17,8 +17,11 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    // Require authentication
-    await requireAuth(request)
+    // Require authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
+    }
 
     const { id } = await params
 
@@ -127,8 +130,11 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
-    // Require authentication
-    await requireAuth(request)
+    // Require authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
+    }
 
     const { id } = await params
     const body = await request.json()
@@ -251,8 +257,11 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    // Require authentication
-    await requireAuth(request)
+    // Require authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request)
+    if (authResult instanceof NextResponse) {
+      return authResult // Return 401/403 response
+    }
 
     const { id } = await params
 
