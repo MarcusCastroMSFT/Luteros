@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
 @theme inline {
   --font-family-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-family-cardo: var(--font-cardo), serif;
