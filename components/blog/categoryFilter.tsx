@@ -13,7 +13,7 @@ export function CategoryFilter({ categories, activeCategory, onCategoryChange, b
   // If onCategoryChange is provided, use client-side navigation
   if (onCategoryChange) {
     return (
-      <div className="flex flex-wrap gap-2 justify-center mb-12">
+      <div className="flex flex-wrap gap-2 justify-center">
         {categories.map((category) => (
           <Button
             key={category}
@@ -30,7 +30,7 @@ export function CategoryFilter({ categories, activeCategory, onCategoryChange, b
 
   // Server-side navigation via URL
   return (
-    <div className="flex flex-wrap gap-2 justify-center mb-12">
+    <div className="flex flex-wrap gap-2 justify-center">
       {categories.map((category) => {
         const href = category === 'Todos' 
           ? basePath 

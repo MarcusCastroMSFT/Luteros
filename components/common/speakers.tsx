@@ -15,7 +15,7 @@ interface SpeakersProps {
   className?: string;
 }
 
-export function Speakers({ speakers, title = "Event Speakers", className = "" }: SpeakersProps) {
+export function Speakers({ speakers, title = "Palestrantes do Evento", className = "" }: SpeakersProps) {
   if (speakers.length === 0) return null;
 
   return (
@@ -25,7 +25,7 @@ export function Speakers({ speakers, title = "Event Speakers", className = "" }:
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {speakers.map((speaker) => (
           <div key={speaker.id} className="text-center">
-            <div className="relative w-36 h-36 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-pink-200 to-orange-200">
+            <div className="relative w-36 h-36 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-brand-secondary-200 to-brand-200">
               <Image
                 src={speaker.image}
                 alt={speaker.name}

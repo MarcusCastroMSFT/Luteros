@@ -16,7 +16,7 @@ export function SpecialistContact({ specialist }: SpecialistContactProps) {
         <CardContent className="p-6">
           <div className="text-center">
             {/* Avatar */}
-            <div className="relative w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-200 to-orange-200">
+            <div className="relative w-32 h-32 mx-auto mb-4 rounded-2xl overflow-hidden bg-gradient-to-br from-brand-200 to-brand-secondary-200">
               <Image
                 src={specialist.avatar}
                 alt={specialist.name}

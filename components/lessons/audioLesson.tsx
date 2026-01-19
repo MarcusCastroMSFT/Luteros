@@ -122,13 +122,13 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
   return (
     <div className="space-y-6">
       {/* Audio Player */}
-      <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-6 border border-orange-200 dark:border-orange-700">
+      <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 rounded-lg p-6 border border-brand-200 dark:border-brand-700">
         <audio ref={audioRef} src={getAudioUrl()} preload="metadata" />
         
         {/* Audio Info */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-orange-200 dark:bg-orange-800 rounded-full flex items-center justify-center">
-            <Headphones size={24} className="text-orange-600 dark:text-orange-400" />
+          <div className="w-16 h-16 bg-brand-200 dark:bg-brand-800 rounded-full flex items-center justify-center">
+            <Headphones size={24} className="text-cta-highlight dark:text-brand-400" />
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">{lesson.title}</h3>
@@ -175,7 +175,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
 
           <Button
             onClick={togglePlay}
-            className="w-12 h-12 rounded-full bg-orange-600 hover:bg-orange-700 text-white"
+            className="w-12 h-12 rounded-full bg-cta-highlight hover:bg-cta-highlight/90 text-white"
           >
             {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </Button>
@@ -232,7 +232,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
                 onClick={() => changePlaybackRate(rate)}
                 className={`text-xs ${
                   playbackRate === rate 
-                    ? 'bg-orange-600 text-white' 
+                    ? 'bg-cta-highlight text-white' 
                     : 'text-gray-600 dark:text-gray-400'
                 }`}
               >
@@ -270,7 +270,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
           Anotações de Escuta
         </h3>
         <textarea
-          className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
           placeholder="Faça anotações enquanto escuta esta audioaula..."
         />
       </div>

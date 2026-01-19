@@ -93,7 +93,7 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
             variant="ghost"
             size="sm"
             onClick={() => setIsBookmarked(!isBookmarked)}
-            className={`${isBookmarked ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400'}`}
+            className={`${isBookmarked ? 'text-cta-highlight dark:text-brand-400' : 'text-gray-600 dark:text-gray-400'}`}
           >
             <Bookmark size={16} className={isBookmarked ? 'fill-current' : ''} />
           </Button>
@@ -118,17 +118,17 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
           Anotações do Artigo
         </h3>
         <textarea
-          className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
           placeholder="Faça anotações enquanto lê este artigo..."
         />
       </div>
 
       {/* Article Summary */}
-      <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
-        <h3 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
+      <div className="bg-brand-50 dark:bg-brand-900/20 rounded-lg p-4 border border-brand-200 dark:border-brand-700">
+        <h3 className="font-semibold text-brand-800 dark:text-brand-200 mb-2">
           Pontos Principais
         </h3>
-        <ul className="text-orange-700 dark:text-orange-300 text-sm space-y-1">
+        <ul className="text-brand-700 dark:text-brand-300 text-sm space-y-1">
           <li>• Domine os conceitos fundamentais antes de avançar para tópicos mais complexos</li>
           <li>• Pratique regularmente com exemplos do mundo real</li>
           <li>• Evite armadilhas comuns seguindo as melhores práticas</li>

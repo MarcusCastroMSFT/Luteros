@@ -163,7 +163,7 @@ const theme = {
     constant: 'text-red-600',
     deleted: 'text-red-600',
     doctype: 'text-gray-600',
-    entity: 'text-orange-600',
+    entity: 'text-brand-600',
     function: 'text-blue-600',
     important: 'text-red-600',
     inserted: 'text-green-600',
@@ -180,7 +180,7 @@ const theme = {
     symbol: 'text-red-600',
     tag: 'text-red-600',
     url: 'text-blue-600',
-    variable: 'text-orange-600',
+    variable: 'text-brand-600',
   },
   
   // Links

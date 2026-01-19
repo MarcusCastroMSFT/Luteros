@@ -31,8 +31,8 @@ export function PostCard({
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-orange-600 dark:text-orange-400 font-medium text-sm">
+        <div className="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-cta-highlight dark:text-brand-400 font-medium text-sm">
             {post.isAnonymous ? 'A' : post.author.charAt(0).toUpperCase()}
           </span>
         </div>

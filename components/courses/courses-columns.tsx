@@ -68,7 +68,7 @@ export const coursesColumns: ColumnDef<CourseRow>[] = [
         <div className="flex items-center gap-2">
           <span className="truncate">{row.getValue("title")}</span>
           {row.original.isBestSeller && (
-            <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
+            <Badge variant="secondary" className="text-xs bg-brand-100 text-brand-700">
               Best Seller
             </Badge>
           )}

@@ -44,7 +44,34 @@
   --color-text-secondary: var(--text-secondary);
   --color-cta-background: var(--cta-background);
   --color-cta-highlight: var(--cta-highlight);
+  --color-cta-secondary: var(--cta-secondary);
   --color-app-button-dark: var(--app-button-dark);
+
+  /* Brand Primary Color Palette (Teal) - Change these to update the entire app */
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  /* Brand Secondary Color Palette (Purple) - Change these to update the entire app */
+  --color-brand-secondary-50: var(--brand-secondary-50);
+  --color-brand-secondary-100: var(--brand-secondary-100);
+  --color-brand-secondary-200: var(--brand-secondary-200);
+  --color-brand-secondary-300: var(--brand-secondary-300);
+  --color-brand-secondary-400: var(--brand-secondary-400);
+  --color-brand-secondary-500: var(--brand-secondary-500);
+  --color-brand-secondary-600: var(--brand-secondary-600);
+  --color-brand-secondary-700: var(--brand-secondary-700);
+  --color-brand-secondary-800: var(--brand-secondary-800);
+  --color-brand-secondary-900: var(--brand-secondary-900);
+  --color-brand-secondary-950: var(--brand-secondary-950);
 
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-cardo: var(--font-cardo), serif;
@@ -74,7 +101,7 @@
   --card-foreground: oklch(0.1908 0.0020 106.5859);
   --popover: oklch(1.0000 0 0);
   --popover-foreground: oklch(0.2671 0.0196 98.9390);
-  --primary: oklch(0.6776 0.1494 42.0558);
+  --primary: oklch(0.52 0.1 195);  /* Teal brand color #198189 */
   --primary-foreground: oklch(1.0000 0 0);
   --secondary: oklch(0.9245 0.0138 92.9892);
   --secondary-foreground: oklch(0.4334 0.0177 98.6048);
@@ -86,15 +113,15 @@
   --destructive-foreground: oklch(1.0000 0 0);
   --border: oklch(0.9197 0.0040 286.3202);
   --input: oklch(0.7621 0.0156 98.3528);
-  --ring: oklch(0.6171 0.1375 39.0427);
-  --chart-1: oklch(0.5583 0.1276 42.9956);
+  --ring: oklch(0.52 0.1 195);  /* Teal brand color #198189 */
+  --chart-1: oklch(0.52 0.1 195);  /* Teal brand color */
   --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.8816 0.0276 93.1280);
   --chart-4: oklch(0.8822 0.0403 298.1792);
-  --chart-5: oklch(0.5608 0.1348 42.0584);
+  --chart-5: oklch(0.45 0.12 320);  /* Purple brand secondary */
   --sidebar: oklch(0.9663 0.0080 98.8792);
   --sidebar-foreground: oklch(0.3590 0.0051 106.6524);
-  --sidebar-primary: oklch(0.6171 0.1375 39.0427);
+  --sidebar-primary: oklch(0.52 0.1 195);  /* Teal brand color */
   --sidebar-primary-foreground: oklch(0.9881 0 0);
   --sidebar-accent: oklch(0.9245 0.0138 92.9892);
   --sidebar-accent-foreground: oklch(0.3250 0 0);
@@ -102,9 +129,50 @@
   --sidebar-ring: oklch(0.7731 0 0);
   --text-primary: #131836;
   --text-secondary: #6b7280;
-  --cta-background: #ffefea;
-  --cta-highlight: #e27447;
+  --cta-background: #e6f4f5;
+  --cta-highlight: #198189;
+  --cta-secondary: #630a79;
   --app-button-dark: #131836;
+
+  /* 
+   * ========================================
+   * BRAND COLOR PALETTE - PRIMARY (Teal)
+   * ========================================
+   * Main brand color: #198189
+   * To change the brand color, update all values below.
+   * Use a tool like https://uicolors.app to generate shades.
+   */
+  --brand-50: #e6f4f5;
+  --brand-100: #ccf0f2;
+  --brand-200: #99e1e5;
+  --brand-300: #66cdd4;
+  --brand-400: #33b5be;
+  --brand-500: #198189;
+  --brand-600: #146b71;
+  --brand-700: #0f5459;
+  --brand-800: #0a3d41;
+  --brand-900: #052628;
+  --brand-950: #031617;
+
+  /* 
+   * ========================================
+   * BRAND COLOR PALETTE - SECONDARY (Purple)
+   * ========================================
+   * Secondary brand color: #630a79
+   * To change the secondary color, update all values below.
+   */
+  --brand-secondary-50: #f5e6f9;
+  --brand-secondary-100: #eaccf3;
+  --brand-secondary-200: #d599e7;
+  --brand-secondary-300: #c066db;
+  --brand-secondary-400: #8f2ba6;
+  --brand-secondary-500: #630a79;
+  --brand-secondary-600: #520864;
+  --brand-secondary-700: #41064f;
+  --brand-secondary-800: #30043a;
+  --brand-secondary-900: #1f0225;
+  --brand-secondary-950: #100113;
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -128,7 +196,7 @@
   --card-foreground: oklch(0.9818 0.0054 95.0986);
   --popover: oklch(0.3085 0.0035 106.6039);
   --popover-foreground: oklch(0.9211 0.0040 106.4781);
-  --primary: oklch(0.6724 0.1308 38.7559);
+  --primary: oklch(0.58 0.1 195);  /* Teal brand color - slightly lighter for dark mode */
   --primary-foreground: oklch(1.0000 0 0);
   --secondary: oklch(0.9818 0.0054 95.0986);
   --secondary-foreground: oklch(0.3085 0.0035 106.6039);
@@ -140,15 +208,15 @@
   --destructive-foreground: oklch(1.0000 0 0);
   --border: oklch(0.3618 0.0101 106.8928);
   --input: oklch(0.4336 0.0113 100.2195);
-  --ring: oklch(0.6724 0.1308 38.7559);
-  --chart-1: oklch(0.5583 0.1276 42.9956);
+  --ring: oklch(0.58 0.1 195);  /* Teal brand color */
+  --chart-1: oklch(0.58 0.1 195);  /* Teal brand color */
   --chart-2: oklch(0.6898 0.1581 290.4107);
   --chart-3: oklch(0.2130 0.0078 95.4245);
   --chart-4: oklch(0.3074 0.0516 289.3230);
-  --chart-5: oklch(0.5608 0.1348 42.0584);
+  --chart-5: oklch(0.45 0.12 320);  /* Purple brand secondary */
   --sidebar: oklch(0.2357 0.0024 67.7077);
   --sidebar-foreground: oklch(0.8074 0.0142 93.0137);
-  --sidebar-primary: oklch(0.3250 0 0);
+  --sidebar-primary: oklch(0.58 0.1 195);  /* Teal brand color */
   --sidebar-primary-foreground: oklch(0.9881 0 0);
   --sidebar-accent: oklch(0.1680 0.0020 106.6177);
   --sidebar-accent-foreground: oklch(0.8074 0.0142 93.0137);
@@ -156,9 +224,37 @@
   --sidebar-ring: oklch(0.7731 0 0);
   --text-primary: #e5e7eb;
   --text-secondary: #9ca3af;
-  --cta-background: #2d1b16;
-  --cta-highlight: #e27447;
+  --cta-background: #0d2f31;
+  --cta-highlight: #198189;
+  --cta-secondary: #630a79;
   --app-button-dark: #131836;
+
+  /* Dark mode brand palette - same base colors work well */
+  --brand-50: #e6f4f5;
+  --brand-100: #ccf0f2;
+  --brand-200: #99e1e5;
+  --brand-300: #66cdd4;
+  --brand-400: #33b5be;
+  --brand-500: #198189;
+  --brand-600: #146b71;
+  --brand-700: #0f5459;
+  --brand-800: #0a3d41;
+  --brand-900: #052628;
+  --brand-950: #031617;
+
+  /* Dark mode secondary palette */
+  --brand-secondary-50: #f5e6f9;
+  --brand-secondary-100: #eaccf3;
+  --brand-secondary-200: #d599e7;
+  --brand-secondary-300: #c066db;
+  --brand-secondary-400: #8f2ba6;
+  --brand-secondary-500: #630a79;
+  --brand-secondary-600: #520864;
+  --brand-secondary-700: #41064f;
+  --brand-secondary-800: #30043a;
+  --brand-secondary-900: #1f0225;
+  --brand-secondary-950: #100113;
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -290,7 +386,7 @@ input[type="range"].slider::-webkit-slider-track {
 
 input[type="range"].slider::-webkit-slider-thumb {
   appearance: none;
-  background: #ea580c;
+  background: #198189;
   height: 16px;
   width: 16px;
   border-radius: 50%;
@@ -309,7 +405,7 @@ input[type="range"].slider::-moz-range-track {
 }
 
 input[type="range"].slider::-moz-range-thumb {
-  background: #ea580c;
+  background: #198189;
   height: 16px;
   width: 16px;
   border-radius: 50%;

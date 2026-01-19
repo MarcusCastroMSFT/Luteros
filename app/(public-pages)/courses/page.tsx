@@ -19,10 +19,17 @@ export default function CoursesPage() {
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  const fetchCourses = async (page: number = 1, category: string = 'Todos') => {
-    setLoading(true);
+  const fetchCourses = async (page: number = 1, category: string = 'Todos', isInitial: boolean = false) => {
+    // Only show full loading on initial load
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setLoadingCourses(true);
+    }
     setError(null);
 
     try {
@@ -41,7 +48,10 @@ export default function CoursesPage() {
       if (data.success && data.data) {
         setCourses(data.data.courses);
         setPagination(data.data.pagination);
-        setCategories(data.data.categories);
+        // Only set categories on initial load
+        if (isInitial || categories.length === 0) {
+          setCategories(data.data.categories);
+        }
       } else {
         setError(data.error || 'Erro ao carregar cursos');
       }
@@ -50,12 +60,24 @@ export default function CoursesPage() {
       console.error('Error fetching courses:', err);
     } finally {
       setLoading(false);
+      setLoadingCourses(false);
+      setInitialLoad(false);
     }
   };
 
+  // Initial load
   useEffect(() => {
-    fetchCourses(1, activeCategory);
-    setCurrentPage(1);
+    fetchCourses(1, 'Todos', true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Category change - only fetch courses, not categories
+  useEffect(() => {
+    if (!initialLoad) {
+      fetchCourses(1, activeCategory, false);
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory]);
 
   const handleCategoryChange = (category: string) => {
@@ -87,12 +109,12 @@ export default function CoursesPage() {
         <div className="container mx-auto px-4 max-w-[1428px] py-16 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Erro</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <button 
-            onClick={() => fetchCourses(currentPage, activeCategory)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          <Button 
+            onClick={() => fetchCourses(currentPage, activeCategory, true)}
+            className="cursor-pointer"
           >
             Tentar novamente
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -109,10 +131,9 @@ export default function CoursesPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 max-w-[1428px] py-16">
-        {/* Filters Section */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Category Filter */}
-          {loading ? (
+        {/* Filters Section - Centered */}
+        <div className="flex justify-center mb-12">
+          {loading && categories.length === 0 ? (
             <CategoryFilterSkeleton />
           ) : (
             <CategoryFilter
@@ -124,15 +145,34 @@ export default function CoursesPage() {
         </div>
 
         {/* Courses Grid */}
-        {loading ? (
+        {loading || loadingCourses ? (
           <CourseListSkeleton count={COURSES_PER_PAGE} />
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
-              {courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
+            {courses.length === 0 ? (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Nenhum curso encontrado
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {activeCategory !== 'Todos' 
+                    ? `Não encontramos cursos na categoria "${activeCategory}".`
+                    : 'Não há cursos disponíveis no momento.'
+                  }
+                </p>
+                {activeCategory !== 'Todos' && (
+                  <Button onClick={() => handleCategoryChange('Todos')} className="cursor-pointer">
+                    Ver todos os cursos
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                {courses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            )}
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
@@ -143,26 +183,6 @@ export default function CoursesPage() {
               />
             )}
           </>
-        )}
-
-        {/* No Results */}
-        {!loading && courses.length === 0 && !error && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Nenhum curso encontrado
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {activeCategory !== 'Todos' 
-                ? `Não foram encontrados cursos na categoria "${activeCategory}".`
-                : 'Não há cursos disponíveis no momento.'
-              }
-            </p>
-            {activeCategory !== 'Todos' && (
-              <Button onClick={() => handleCategoryChange('Todos')}>
-                Ver todos os cursos
-              </Button>
-            )}
-          </div>
         )}
       </div>
     </div>

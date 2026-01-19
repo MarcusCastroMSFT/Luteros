@@ -82,7 +82,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-cta-highlight dark:group-hover:text-brand-400 transition-colors">
             {product.title}
           </h3>
 
@@ -127,7 +127,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Promo Code */}
           <div className="flex items-center gap-2 mb-3 p-2 bg-gray-50 dark:bg-gray-700 rounded">
-            <Tag size={14} className="text-orange-600 dark:text-orange-400" />
+            <Tag size={14} className="text-cta-highlight dark:text-brand-400" />
             <span className="text-sm font-mono font-medium text-gray-900 dark:text-white">
               {product.promoCode}
             </span>

@@ -28,7 +28,7 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
     {
       title: 'GRAVIDEZ E CUIDADOS COM RECÉM-NASCIDOS',
       items: [
-        { id: 'pregnancy', label: 'Gravidez', icon: Baby, color: 'text-teal-600 dark:text-teal-400' },
+        { id: 'pregnancy', label: 'Gravidez', icon: Baby, color: 'text-brand-600 dark:text-brand-400' },
         { id: 'birth-month-groups', label: 'Grupos por mês de nascimento', icon: Users, color: 'text-blue-600 dark:text-blue-400' },
         { id: 'postpartum', label: 'Pós-parto', icon: Heart, color: 'text-pink-600 dark:text-pink-400' },
       ]
@@ -50,7 +50,7 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
       title: 'FERTILIDADE E CONSTRUÇÃO FAMILIAR',
       items: [
         { id: 'ttc-fertility', label: 'TTC e fertilidade', icon: Flower, color: 'text-purple-600 dark:text-purple-400' },
-        { id: 'fertility-treatment', label: 'Tratamento de fertilidade', icon: Sparkles, color: 'text-orange-600 dark:text-orange-400' },
+        { id: 'fertility-treatment', label: 'Tratamento de fertilidade', icon: Sparkles, color: 'text-brand-600 dark:text-brand-400' },
         { id: 'adoption-surrogacy', label: 'Adoção e barriga de aluguel', icon: Heart, color: 'text-rose-600 dark:text-rose-400' },
       ]
     },
@@ -78,7 +78,7 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
                 onClick={() => onCategorySelect(section.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
                   selectedCategory === section.id
-                    ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
+                    ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
@@ -105,7 +105,7 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
                   onClick={() => onCategorySelect(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
                     selectedCategory === item.id
-                      ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
+                      ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >

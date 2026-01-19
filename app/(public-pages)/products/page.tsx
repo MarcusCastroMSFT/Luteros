@@ -123,7 +123,7 @@ export default function ProductsPage() {
               <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
               >
                 <option value="">Todas as categorias</option>
                 {categories.map((category) => (
@@ -139,7 +139,7 @@ export default function ProductsPage() {
               <select
                 value={filters.availability}
                 onChange={(e) => handleFilterChange('availability', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
               >
                 <option value="">Todos</option>
                 <option value="all">Para Todos</option>

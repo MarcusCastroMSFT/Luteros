@@ -23,7 +23,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               className="w-full h-60 object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <div className="w-full h-60 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-rose-950/30 flex flex-col items-center justify-center transition-transform duration-700 group-hover:scale-105">
+            <div className="w-full h-60 bg-gradient-to-br from-brand-50 via-brand-100 to-brand-secondary-50 dark:from-brand-950/30 dark:via-brand-900/30 dark:to-brand-secondary-950/30 flex flex-col items-center justify-center transition-transform duration-700 group-hover:scale-105">
               <FileText className="w-16 h-16 text-amber-400/60 dark:text-amber-500/40 mb-2" strokeWidth={1.5} />
               <span className="text-sm text-amber-600/60 dark:text-amber-400/50 font-medium">Artigo</span>
             </div>

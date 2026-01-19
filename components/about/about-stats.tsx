@@ -28,11 +28,11 @@ export const AboutStatsSection = memo<AboutStatsProps>(function AboutStatsSectio
               key={stat.id}
               className="text-center group"
             >
-              <div className="bg-gradient-to-br from-cta-highlight via-cta-highlight/95 to-cta-highlight/90 dark:bg-gradient-to-br dark:from-orange-900/80 dark:via-orange-800/70 dark:to-orange-900/60 rounded-xl p-8 mb-4 group-hover:scale-105 transition-transform duration-300">
+              <div className="bg-gradient-to-br from-cta-highlight via-cta-highlight/95 to-cta-highlight/90 dark:bg-gradient-to-br dark:from-brand-900/80 dark:via-brand-800/70 dark:to-brand-900/60 rounded-xl p-8 mb-4 group-hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl md:text-5xl font-bold text-white mb-2">
                   {stat.number}
                 </div>
-                <div className="text-lg font-semibold text-white/90 dark:text-orange-200/90">
+                <div className="text-lg font-semibold text-white/90 dark:text-brand-200/90">
                   {stat.label}
                 </div>
               </div>

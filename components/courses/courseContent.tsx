@@ -65,7 +65,7 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
     <div 
       className={`flex items-center justify-between py-3 px-4 transition-colors cursor-pointer ${
         isActive 
-          ? 'bg-orange-50 dark:bg-orange-900/20 border-r-2 border-orange-500' 
+          ? 'bg-brand-50 dark:bg-brand-900/20 border-r-2 border-brand-500' 
           : 'hover:bg-gray-50 dark:hover:bg-gray-700'
       }`}
       onClick={handleClick}
@@ -74,7 +74,7 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
         <LessonTypeIcon type={type} />
         <span className={`text-sm font-medium truncate ${
           isActive 
-            ? 'text-orange-700 dark:text-orange-300' 
+            ? 'text-brand-700 dark:text-brand-300' 
             : 'text-gray-700 dark:text-gray-300'
         }`}>
           {title}
@@ -90,7 +90,7 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
         <span className="text-sm text-gray-500 dark:text-gray-400">{duration}</span>
         
         {isPreview ? (
-          <Badge variant="outline" className="text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20">
+          <Badge variant="outline" className="text-brand-600 dark:text-brand-400 border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-900/20">
             Prévia
           </Badge>
         ) : (
@@ -226,7 +226,7 @@ export function CourseContent({
               <Button 
                 variant="outline" 
                 onClick={handleShowMore}
-                className="w-full text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                className="w-full text-brand-600 dark:text-brand-400 border-brand-200 dark:border-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900/20"
               >
                 {remainingSections} Mais Seções →
               </Button>

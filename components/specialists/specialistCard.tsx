@@ -15,7 +15,7 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
       <Card className="group hover:shadow-lg transition-all py-0 duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-cta-highlight overflow-hidden dark:bg-gray-800">
         <CardContent className="p-0">
           {/* Avatar Image - Full width */}
-          <div className="relative w-full h-48 bg-gradient-to-br from-orange-100 to-pink-100 dark:from-orange-900/20 dark:to-pink-900/20">
+          <div className="relative w-full h-48 bg-gradient-to-br from-brand-100 to-brand-secondary-100 dark:from-brand-900/20 dark:to-brand-secondary-900/20">
             <Image
               src={specialist.avatar}
               alt={specialist.name}

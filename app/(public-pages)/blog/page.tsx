@@ -1,99 +1,113 @@
-import React, { Suspense } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/pageHeader';
 import ArticleCard from '@/components/blog/articleCard';
 import { ArticleListSkeleton } from '@/components/blog/articleSkeleton';
+import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton';
 import { Pagination } from '@/components/common/pagination';
 import { CategoryFilter } from '@/components/blog/categoryFilter';
-import { type Article } from '@/types/blog';
-import { getArticles } from '@/lib/articles';
-
-// ISR: Revalidate every 30 minutes
-export const revalidate = 1800;
+import { Button } from '@/components/ui/button';
+import { type Article, type BlogPagination } from '@/types/blog';
 
 const ARTICLES_PER_PAGE = 12;
 
-interface BlogPageProps {
-  searchParams: Promise<{
-    page?: string;
-    category?: string;
-  }>;
+interface BlogApiResponse {
+  success: boolean;
+  data?: {
+    articles: Article[];
+    pagination: BlogPagination;
+    categories: string[];
+  };
+  error?: string;
 }
 
-// Articles Grid Component
-function ArticlesGrid({ articles }: { articles: Article[] }) {
-  if (articles.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-          Nenhum artigo encontrado
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Não encontramos artigos para a categoria selecionada.
-        </p>
-      </div>
-    );
-  }
+export default function BlogPage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [pagination, setPagination] = useState<BlogPagination | null>(null);
+  const [activeCategory, setActiveCategory] = useState('Todos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [loadingArticles, setLoadingArticles] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-      {articles.map((article) => (
-        <ArticleCard key={article.id} article={article} />
-      ))}
-    </div>
-  );
-}
+  const fetchArticles = async (page: number = 1, category: string = 'Todos', isInitial: boolean = false) => {
+    // Only show full loading on initial load
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setLoadingArticles(true);
+    }
+    setError(null);
 
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page || '1'));
-  const category = params.category || 'Todos';
-  
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: ARTICLES_PER_PAGE.toString(),
+      });
+
+      if (category !== 'Todos') {
+        params.append('category', category);
+      }
+
+      const response = await fetch(`/api/blog?${params}`);
+      const data: BlogApiResponse = await response.json();
+
+      if (data.success && data.data) {
+        setArticles(data.data.articles);
+        setPagination(data.data.pagination);
+        // Only set categories on initial load
+        if (isInitial || categories.length === 0) {
+          setCategories(data.data.categories);
+        }
+      } else {
+        setError(data.error || 'Erro ao carregar artigos');
+      }
+    } catch (err) {
+      setError('Erro ao carregar artigos');
+      console.error('Error fetching articles:', err);
+    } finally {
+      setLoading(false);
+      setLoadingArticles(false);
+      setInitialLoad(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchArticles(1, 'Todos', true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Category change - only fetch articles, not categories
+  useEffect(() => {
+    if (!initialLoad) {
+      fetchArticles(1, activeCategory, false);
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory]);
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchArticles(page, activeCategory, false);
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const breadcrumbs = [
     { label: 'Home', href: '/' },
     { label: 'Blog' }
   ];
 
-  try {
-    const { articles, pagination, categories } = await getArticles(page, ARTICLES_PER_PAGE, category);
-
-    return (
-      <div className="min-h-screen">
-        {/* Page Header */}
-        <PageHeader
-          title="Blog"
-          description="Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar."
-          breadcrumbs={breadcrumbs}
-        />
-
-        {/* Main Content */}
-        <div className="container mx-auto px-4 max-w-[1428px] py-16">
-          {/* Category Filter - URL-based navigation for Server Component */}
-          <Suspense fallback={<div className="h-12 mb-8" />}>
-            <CategoryFilter
-              categories={categories}
-              activeCategory={category}
-            />
-          </Suspense>
-
-          {/* Articles Grid */}
-          <Suspense fallback={<ArticleListSkeleton count={ARTICLES_PER_PAGE} />}>
-            <ArticlesGrid articles={articles} />
-          </Suspense>
-
-          {/* Pagination - URL-based navigation for Server Component */}
-          {pagination && pagination.totalPages > 1 && (
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              basePath="/blog"
-              queryParams={{ category: category !== 'Todos' ? category : undefined }}
-            />
-          )}
-        </div>
-      </div>
-    );
-  } catch (error) {
-    console.error('Error loading blog:', error);
+  if (error) {
     return (
       <div className="min-h-screen">
         <PageHeader
@@ -102,70 +116,85 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           breadcrumbs={breadcrumbs}
         />
         
-        <div className="container mx-auto px-4 py-16 text-center">
+        <div className="container mx-auto px-4 max-w-[1428px] py-16 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Erro</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Erro ao carregar artigos. Tente novamente mais tarde.
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <button 
+            onClick={() => fetchArticles(currentPage, activeCategory, true)}
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            Tentar novamente
+          </button>
         </div>
       </div>
     );
   }
-}
 
-// Generate metadata for SEO
-export async function generateMetadata({ searchParams }: BlogPageProps) {
-  const params = await searchParams;
-  const category = params.category;
-  const page = params.page ? parseInt(params.page) : 1;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
-  
-  const title = category && category !== 'Todos' 
-    ? `${category} - Blog`
-    : 'Blog';
-  
-  const description = category && category !== 'Todos'
-    ? `Artigos sobre ${category}. Conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.`
-    : 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.';
+  return (
+    <div className="min-h-screen">
+      {/* Page Header */}
+      <PageHeader
+        title="Blog"
+        description="Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar."
+        breadcrumbs={breadcrumbs}
+      />
 
-  // Build canonical URL
-  const canonicalParams = new URLSearchParams();
-  if (category && category !== 'Todos') canonicalParams.set('category', category);
-  if (page > 1) canonicalParams.set('page', page.toString());
-  const canonicalUrl = canonicalParams.toString() 
-    ? `${baseUrl}/blog?${canonicalParams}` 
-    : `${baseUrl}/blog`;
+      {/* Main Content */}
+      <div className="container mx-auto px-4 max-w-[1428px] py-16">
+        {/* Filters Section - Centered */}
+        <div className="flex justify-center mb-12">
+          {loading && categories.length === 0 ? (
+            <CategoryFilterSkeleton />
+          ) : (
+            <CategoryFilter
+              categories={categories}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+            />
+          )}
+        </div>
 
-  return {
-    title,
-    description,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    openGraph: {
-      title: `${title} | Luteros`,
-      description,
-      url: canonicalUrl,
-      siteName: 'Luteros',
-      type: 'website',
-      locale: 'pt_BR',
-      images: [
-        {
-          url: `${baseUrl}/images/og-blog.jpg`,
-          width: 1200,
-          height: 630,
-          alt: 'Luteros Blog',
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${title} | Luteros`,
-      description,
-    },
-    robots: {
-      index: page === 1, // Only index first page to avoid duplicate content
-      follow: true,
-    },
-  };
+        {/* Articles Grid */}
+        {loading || loadingArticles ? (
+          <ArticleListSkeleton count={ARTICLES_PER_PAGE} />
+        ) : (
+          <>
+            {articles.length === 0 ? (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Nenhum artigo encontrado
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {activeCategory !== 'Todos' 
+                    ? `Não encontramos artigos na categoria "${activeCategory}".`
+                    : 'Não há artigos disponíveis no momento.'
+                  }
+                </p>
+                {activeCategory !== 'Todos' && (
+                  <Button onClick={() => handleCategoryChange('Todos')} className="cursor-pointer">
+                    Ver todos os artigos
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                {articles.map((article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
 }

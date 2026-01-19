@@ -70,7 +70,7 @@ export const newsletterColumns: ColumnDef<NewsletterRow>[] = [
       
       const typeColors = {
         "Newsletter": "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
-        "Promocional": "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400",
+        "Promocional": "bg-brand-100 text-brand-800 dark:bg-brand-900/20 dark:text-brand-400",
         "Educacional": "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
         "Anúncio": "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
       }

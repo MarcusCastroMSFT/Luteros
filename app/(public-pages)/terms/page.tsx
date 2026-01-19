@@ -28,8 +28,8 @@ export default function TermsPage() {
                 Ao acessar e usar a plataforma Luteros, você concorda em cumprir e estar vinculado a estes 
                 Termos de Uso. Se você não concorda com qualquer parte destes termos, não deve usar nossos serviços.
               </p>
-              <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border-l-4 border-orange-500 dark:border-orange-400 p-4 my-6 rounded-lg">
-                <p className="text-orange-800 dark:text-orange-200 font-medium">
+              <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/30 border-l-4 border-brand-500 dark:border-brand-400 p-4 my-6 rounded-lg">
+                <p className="text-brand-800 dark:text-brand-200 font-medium">
                   <strong>Importante:</strong> Nossa plataforma trata de temas sensíveis relacionados à saúde sexual. 
                   Ao usar nossos serviços, você confirma ter idade mínima de 18 anos ou consentimento parental 
                   se for menor de idade.
@@ -195,7 +195,7 @@ export default function TermsPage() {
             <div className="space-y-4">
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 A proteção de sua privacidade é fundamental para nós. Consulte nossa 
-                <a href="/privacy" className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 underline">
+                <a href="/privacy" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 underline">
                   Política de Privacidade
                 </a> para detalhes completos sobre como protegemos suas informações pessoais.
               </p>

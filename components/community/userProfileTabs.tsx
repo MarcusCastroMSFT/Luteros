@@ -175,7 +175,7 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary bg-orange-50 dark:bg-orange-900/10'
+                  ? 'border-primary text-primary bg-brand-50 dark:bg-brand-900/10'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
@@ -183,7 +183,7 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
                 <span>{tab.label}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   activeTab === tab.id
-                    ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+                    ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                 }`}>
                   {tab.count}

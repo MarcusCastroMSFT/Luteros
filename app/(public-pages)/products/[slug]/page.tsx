@@ -230,7 +230,7 @@ export default function ProductPage({ params }: Props) {
                   <ol className="space-y-2">
                     {product.howToUse.map((step, index) => (
                       <li key={index} className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        <div className="flex-shrink-0 w-6 h-6 bg-brand-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                           {index + 1}
                         </div>
                         <span className="text-gray-700 dark:text-gray-300">{step}</span>
@@ -381,7 +381,7 @@ export default function ProductPage({ params }: Props) {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 line-clamp-2 text-sm">
+                          <h4 className="font-medium text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 line-clamp-2 text-sm">
                             {relatedProduct.title}
                           </h4>
                           <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 mt-1">

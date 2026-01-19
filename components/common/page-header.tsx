@@ -11,7 +11,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ preTitle, title, description, imageSrc }: PageHeaderProps) {
   return (
-    <div className="relative bg-gradient-to-br from-pink-50 to-orange-50 py-16 lg:py-24">
+    <div className="relative bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 py-16 lg:py-24">
       {imageSrc && (
         <div className="absolute inset-0 opacity-10">
           <Image

@@ -121,7 +121,7 @@ export function CourseInfo({ course, onEnroll }: CourseInfoProps) {
                   <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
                     {formatPrice(course.originalPrice)}
                   </span>
-                  <span className="text-sm bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 px-2 py-1 rounded">
+                  <span className="text-sm bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-400 px-2 py-1 rounded">
                     {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% OFF
                   </span>
                 </>

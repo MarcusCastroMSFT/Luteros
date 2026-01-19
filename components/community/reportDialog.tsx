@@ -99,7 +99,7 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
                   key={reason.id}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     selectedReason === reason.id
-                      ? 'border-primary bg-orange-50 dark:bg-orange-900/20'
+                      ? 'border-primary bg-brand-50 dark:bg-brand-900/20'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >

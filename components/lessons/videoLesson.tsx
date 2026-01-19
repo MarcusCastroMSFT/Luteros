@@ -75,7 +75,7 @@ export function VideoLesson({ lesson }: VideoLessonProps) {
           Fazer Anotações
         </h3>
         <textarea
-          className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           placeholder="Adicione suas anotações para esta videoaula..."
         />
       </div>

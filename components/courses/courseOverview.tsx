@@ -111,7 +111,7 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
             <Button
               variant="link"
               onClick={() => setShowMoreAbout(!showMoreAbout)}
-              className="cursor-pointer text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 p-0 h-auto font-normal mt-2 flex items-center gap-1"
+              className="cursor-pointer text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 p-0 h-auto font-normal mt-2 flex items-center gap-1"
             >
               {showMoreAbout ? 'Mostrar menos' : 'Mostrar mais'}
               {showMoreAbout ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

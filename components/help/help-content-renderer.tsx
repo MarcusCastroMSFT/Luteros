@@ -81,9 +81,9 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
               <Link href="/help/first-steps" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer"> guia de primeiros passos</Link>.
             </p>
 
-            <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700/50 rounded-lg p-6 mt-8">
-              <h4 className="text-orange-800 dark:text-orange-200 font-medium mb-3">Problemas com o registro?</h4>
-              <p className="text-orange-700 dark:text-orange-300 text-sm mb-4">
+            <div className="bg-brand-50 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-700/50 rounded-lg p-6 mt-8">
+              <h4 className="text-brand-800 dark:text-brand-200 font-medium mb-3">Problemas com o registro?</h4>
+              <p className="text-brand-700 dark:text-brand-300 text-sm mb-4">
                 Se você encontrar dificuldades durante o processo de registro, nossa equipe está pronta para ajudar.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -219,9 +219,9 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
               <li><strong className="font-semibold text-gray-900 dark:text-gray-100">Valores:</strong> Preços para diferentes tipos de consulta</li>
             </ul>
 
-            <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700/50 rounded-lg p-6 mt-8">
-              <h4 className="text-orange-800 dark:text-orange-200 font-medium mb-3">Precisa de ajuda com o agendamento?</h4>
-              <p className="text-orange-700 dark:text-orange-300 text-sm mb-4">
+            <div className="bg-brand-50 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-700/50 rounded-lg p-6 mt-8">
+              <h4 className="text-brand-800 dark:text-brand-200 font-medium mb-3">Precisa de ajuda com o agendamento?</h4>
+              <p className="text-brand-700 dark:text-brand-300 text-sm mb-4">
                 Nossa equipe pode ajudar você a encontrar o especialista ideal e agendar sua consulta.
               </p>
               <Link href="/contact" className="bg-cta-highlight hover:bg-cta-highlight/90 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer shadow-sm">

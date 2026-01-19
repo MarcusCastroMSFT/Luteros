@@ -98,7 +98,7 @@ export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialog
           ) : lesson.type === 'article' ? (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-4">
-                <Play size={16} className="text-orange-600 dark:text-orange-400" />
+                <Play size={16} className="text-brand-600 dark:text-brand-400" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">Preview do Artigo</span>
               </div>
               <div className="prose prose-gray dark:prose-invert max-w-none">
@@ -111,9 +111,9 @@ export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialog
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg p-6 mb-6 border border-orange-200 dark:border-orange-700/50">
+            <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/30 rounded-lg p-6 mb-6 border border-brand-200 dark:border-brand-700/50">
               <div className="flex items-center gap-2 mb-4">
-                <Play size={16} className="text-orange-600 dark:text-orange-400" />
+                <Play size={16} className="text-brand-600 dark:text-brand-400" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">Preview do Áudio</span>
               </div>
               <p className="text-gray-700 dark:text-gray-300 mb-4">

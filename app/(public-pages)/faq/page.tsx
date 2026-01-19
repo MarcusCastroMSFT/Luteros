@@ -254,9 +254,9 @@ function FAQAccordion({ item }: { item: FAQItem }) {
           {item.question}
         </span>
         {isOpen ? (
-          <ChevronUp className="text-orange-600 dark:text-orange-400 flex-shrink-0" size={20} />
+          <ChevronUp className="text-brand-600 dark:text-brand-400 flex-shrink-0" size={20} />
         ) : (
-          <ChevronDown className="text-orange-600 dark:text-orange-400 flex-shrink-0" size={20} />
+          <ChevronDown className="text-brand-600 dark:text-brand-400 flex-shrink-0" size={20} />
         )}
       </button>
       {isOpen && (
@@ -348,21 +348,21 @@ export default function FAQPage() {
                 Acesso Rápido
               </h3>
               <div className="space-y-3">
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border-l-4 border-orange-500 dark:border-orange-400 p-4 rounded-lg">
-                  <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-2">
+                <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/30 border-l-4 border-brand-500 dark:border-brand-400 p-4 rounded-lg">
+                  <h4 className="font-medium text-brand-800 dark:text-brand-200 mb-2">
                     Precisa de Ajuda Imediata?
                   </h4>
-                  <p className="text-sm text-orange-700 dark:text-orange-300 mb-3">
+                  <p className="text-sm text-brand-700 dark:text-brand-300 mb-3">
                     Nossa equipe está sempre disponível para ajudar você.
                   </p>
                   <div className="space-y-2 text-sm">
-                    <p className="text-orange-800 dark:text-orange-200">
+                    <p className="text-brand-800 dark:text-brand-200">
                       <strong>Chat:</strong> Disponível 24/7
                     </p>
-                    <p className="text-orange-800 dark:text-orange-200">
+                    <p className="text-brand-800 dark:text-brand-200">
                       <strong>Email:</strong> suporte@luteros.com
                     </p>
-                    <p className="text-orange-800 dark:text-orange-200">
+                    <p className="text-brand-800 dark:text-brand-200">
                       <strong>WhatsApp:</strong> (11) 9999-9999
                     </p>
                   </div>
@@ -425,7 +425,7 @@ export default function FAQPage() {
 
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border border-orange-200 dark:border-orange-700/50 rounded-lg p-8">
+          <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/30 border border-brand-200 dark:border-brand-700/50 rounded-lg p-8">
             <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Não encontrou sua resposta?
             </h3>

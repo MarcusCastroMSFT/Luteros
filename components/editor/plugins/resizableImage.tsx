@@ -287,14 +287,14 @@ export function ResizableImage({ src, alt, width: initialWidth, height: initialH
               setCaption(e.target.value);
               updateNodeCaption(e.target.value);
             }}
-            className="w-full px-3 py-2 text-sm text-center italic text-gray-600 dark:text-gray-400 bg-orange-50 dark:bg-orange-900/20 rounded-md focus:bg-orange-100 dark:focus:bg-orange-900/30 outline-none"
+            className="w-full px-3 py-2 text-sm text-center italic text-gray-600 dark:text-gray-400 bg-brand-50 dark:bg-brand-900/20 rounded-md focus:bg-brand-100 dark:focus:bg-brand-900/30 outline-none"
           />
         </div>
       )}
       
       {/* Display caption */}
       {caption && !showCaption && (
-        <div className="mt-3 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-md text-sm text-center italic text-gray-600 dark:text-gray-400">
+        <div className="mt-3 px-3 py-2 bg-brand-50 dark:bg-brand-900/20 rounded-md text-sm text-center italic text-gray-600 dark:text-gray-400">
           {caption}
         </div>
       )}

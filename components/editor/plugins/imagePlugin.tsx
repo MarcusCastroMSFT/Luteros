@@ -162,7 +162,7 @@ export class ImageNode extends DecoratorNode<ReactElement> {
       captionElement.setAttribute('itemProp', 'caption');
       captionElement.style.marginTop = '0.75rem'; // mt-3
       captionElement.style.padding = '0.5rem 0.75rem'; // px-3 py-2
-      captionElement.style.backgroundColor = '#fff7ed'; // bg-orange-50
+      captionElement.style.backgroundColor = '#e6f4f5'; // bg-brand-50 (teal)
       captionElement.style.borderRadius = '0.375rem'; // rounded-md
       captionElement.style.fontSize = '0.875rem'; // text-sm
       captionElement.style.textAlign = 'center';

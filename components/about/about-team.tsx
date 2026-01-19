@@ -41,8 +41,8 @@ export const AboutTeam = memo<AboutTeamProps>(function AboutTeam({
             >
               {/* Profile Image */}
               <div className="relative w-24 h-24 mx-auto mb-4 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                <div className="w-full h-full bg-gradient-to-br from-cta-highlight/20 to-cta-highlight/40 dark:from-orange-600/30 dark:to-orange-500/50 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-cta-highlight dark:text-orange-300">
+                <div className="w-full h-full bg-gradient-to-br from-cta-highlight/20 to-cta-highlight/40 dark:from-brand-600/30 dark:to-brand-500/50 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-cta-highlight dark:text-brand-300">
                     {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </span>
                 </div>
