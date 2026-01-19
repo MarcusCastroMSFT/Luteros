@@ -1,79 +1,93 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { PageHeader } from '@/components/common/pageHeader';
-import { CategoryFilter } from '@/components/blog/categoryFilter';
 import ArticleCard from '@/components/blog/articleCard';
 import { ArticleListSkeleton } from '@/components/blog/articleSkeleton';
 import { Pagination } from '@/components/common/pagination';
-import { type Article, type BlogApiResponse, type BlogPagination } from '@/types/blog';
+import { CategoryFilter } from '@/components/blog/categoryFilter';
+import { type Article, type BlogApiResponse } from '@/types/blog';
+
+// ISR: Revalidate every 30 minutes
+export const revalidate = 1800;
 
 const ARTICLES_PER_PAGE = 12;
 
-export default function BlogPage() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [pagination, setPagination] = useState<BlogPagination | null>(null);
-  const [activeCategory, setActiveCategory] = useState('Todos');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface BlogPageProps {
+  searchParams: Promise<{
+    page?: string;
+    category?: string;
+  }>;
+}
 
-  const fetchArticles = async (page: number = 1, category: string = 'Todos') => {
-    setLoading(true);
-    setError(null);
+// Server-side data fetching with ISR
+async function getArticles(page: number, category: string): Promise<BlogApiResponse> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: ARTICLES_PER_PAGE.toString(),
+  });
 
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: ARTICLES_PER_PAGE.toString(),
-      });
+  if (category && category !== 'Todos') {
+    params.append('category', category);
+  }
 
-      if (category !== 'Todos') {
-        params.append('category', category);
-      }
-
-      const response = await fetch(`/api/blog?${params}`);
-      const data: BlogApiResponse = await response.json();
-
-      if (data.success && data.data) {
-        setArticles(data.data.articles);
-        setPagination(data.data.pagination);
-        setCategories(data.data.categories);
-      } else {
-        setError(data.error || 'Erro ao carregar artigos');
-      }
-    } catch (err) {
-      setError('Erro ao carregar artigos');
-      console.error('Error fetching articles:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchArticles(1, activeCategory);
-    setCurrentPage(1);
-  }, [activeCategory]);
-
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(category);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchArticles(page, activeCategory);
+  try {
+    const response = await fetch(`${baseUrl}/api/blog?${params}`, {
+      next: { revalidate: 1800, tags: ['articles'] },
+    });
     
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    if (!response.ok) {
+      throw new Error('Failed to fetch articles');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching articles:', error);
+    return {
+      success: false,
+      error: 'Erro ao carregar artigos',
+      data: null,
+    };
+  }
+}
 
+// Articles Grid Component
+function ArticlesGrid({ articles }: { articles: Article[] }) {
+  if (articles.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          Nenhum artigo encontrado
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400">
+          Não encontramos artigos para a categoria selecionada.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+      {articles.map((article) => (
+        <ArticleCard key={article.id} article={article} />
+      ))}
+    </div>
+  );
+}
+
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page || '1'));
+  const category = params.category || 'Todos';
+  
+  const result = await getArticles(page, category);
+  
   const breadcrumbs = [
     { label: 'Home', href: '/' },
     { label: 'Blog' }
   ];
 
-  if (error) {
+  if (!result.success || !result.data) {
     return (
       <div className="min-h-screen">
         <PageHeader
@@ -84,17 +98,15 @@ export default function BlogPage() {
         
         <div className="container mx-auto px-4 py-16 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Erro</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <button 
-            onClick={() => fetchArticles(currentPage, activeCategory)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Tentar novamente
-          </button>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {result.error || 'Erro ao carregar artigos'}
+          </p>
         </div>
       </div>
     );
   }
+
+  const { articles, pagination, categories } = result.data;
 
   return (
     <div className="min-h-screen">
@@ -107,47 +119,86 @@ export default function BlogPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 max-w-[1428px] py-16">
-        {/* Category Filter */}
-        <CategoryFilter
-          categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={handleCategoryChange}
-        />
+        {/* Category Filter - URL-based navigation for Server Component */}
+        <Suspense fallback={<div className="h-12 mb-8" />}>
+          <CategoryFilter
+            categories={categories}
+            activeCategory={category}
+          />
+        </Suspense>
 
         {/* Articles Grid */}
-        {loading ? (
-          <ArticleListSkeleton count={ARTICLES_PER_PAGE} />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-              {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </div>
+        <Suspense fallback={<ArticleListSkeleton count={ARTICLES_PER_PAGE} />}>
+          <ArticlesGrid articles={articles} />
+        </Suspense>
 
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-
-            {/* No articles message */}
-            {articles.length === 0 && !error && (
-              <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Nenhum artigo encontrado
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Não encontramos artigos para a categoria selecionada.
-                </p>
-              </div>
-            )}
-          </>
+        {/* Pagination - URL-based navigation for Server Component */}
+        {pagination && pagination.totalPages > 1 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            basePath="/blog"
+            queryParams={{ category: category !== 'Todos' ? category : undefined }}
+          />
         )}
       </div>
     </div>
   );
+}
+
+// Generate metadata for SEO
+export async function generateMetadata({ searchParams }: BlogPageProps) {
+  const params = await searchParams;
+  const category = params.category;
+  const page = params.page ? parseInt(params.page) : 1;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  
+  const title = category && category !== 'Todos' 
+    ? `${category} - Blog`
+    : 'Blog';
+  
+  const description = category && category !== 'Todos'
+    ? `Artigos sobre ${category}. Conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.`
+    : 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.';
+
+  // Build canonical URL
+  const canonicalParams = new URLSearchParams();
+  if (category && category !== 'Todos') canonicalParams.set('category', category);
+  if (page > 1) canonicalParams.set('page', page.toString());
+  const canonicalUrl = canonicalParams.toString() 
+    ? `${baseUrl}/blog?${canonicalParams}` 
+    : `${baseUrl}/blog`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${title} | Luteros`,
+      description,
+      url: canonicalUrl,
+      siteName: 'Luteros',
+      type: 'website',
+      locale: 'pt_BR',
+      images: [
+        {
+          url: `${baseUrl}/images/og-blog.jpg`,
+          width: 1200,
+          height: 630,
+          alt: 'Luteros Blog',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Luteros`,
+      description,
+    },
+    robots: {
+      index: page === 1, // Only index first page to avoid duplicate content
+      follow: true,
+    },
+  };
 }

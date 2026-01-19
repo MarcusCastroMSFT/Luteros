@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sampleArticles } from '@/data/articles'
+import prisma from '@/lib/prisma'
 
 // API Response types for better TypeScript support across platforms
 export interface APIResponse<T> {
@@ -37,17 +37,6 @@ export interface MobileArticle {
   slug?: string
 }
 
-// Helper functions (same as before)
-function getArticleStatus(index: number): "Ativo" | "Rascunho" | "Inativo" {
-  const statuses = ["Ativo", "Ativo", "Ativo", "Rascunho", "Ativo", "Inativo", "Ativo", "Ativo", "Rascunho", "Ativo", "Ativo", "Ativo", "Ativo", "Rascunho", "Ativo", "Ativo"]
-  return statuses[index % statuses.length] as "Ativo" | "Rascunho" | "Inativo"
-}
-
-function getArticlePaidStatus(index: number): "Gratuito" | "Pago" {
-  const paidIndices = [1, 4, 7, 10, 13]
-  return paidIndices.includes(index) ? "Pago" : "Gratuito"
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   
@@ -55,7 +44,7 @@ export async function GET(request: NextRequest) {
   const page = Math.max(0, parseInt(searchParams.get('page') || '0'))
   const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '10'))) // Limit max page size
   const search = searchParams.get('search') || ''
-  const sortBy = searchParams.get('sortBy') || 'date'
+  const sortBy = searchParams.get('sortBy') || 'createdAt'
   const sortOrder = searchParams.get('sortOrder') || 'desc'
   
   // Mobile-specific parameters
@@ -72,67 +61,116 @@ export async function GET(request: NextRequest) {
   }
   
   try {
-    // Shorter delay for mobile
-    const delay = platform === 'mobile' ? 100 : 300
-    await new Promise(resolve => setTimeout(resolve, delay))
+    // Build where clause for search and filters
+    const where: any = {}
     
-    // Transform articles data
-    const mockArticles: MobileArticle[] = sampleArticles.map((article, index) => ({
-      id: article.id,
-      title: article.title,
-      excerpt: article.excerpt,
-      author: article.author,
-      category: article.category,
-      status: getArticleStatus(index),
-      paid: getArticlePaidStatus(index),
-      date: article.date,
-      readTime: article.readTime,
-      commentCount: article.commentCount || 0,
-      // Include optional fields based on platform needs
-      ...(includeImages && { imageUrl: article.image }),
-      ...(platform === 'web' && { slug: article.slug })
-    }))
-    
-    // Apply search filter
-    let filteredArticles = mockArticles
     if (search) {
-      filteredArticles = mockArticles.filter(article => 
-        article.title.toLowerCase().includes(search.toLowerCase()) ||
-        article.author.toLowerCase().includes(search.toLowerCase()) ||
-        article.category.toLowerCase().includes(search.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(search.toLowerCase())
-      )
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { excerpt: { contains: search, mode: 'insensitive' } },
+        { authorName: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } },
+      ]
     }
     
-    // Apply column filters
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        filteredArticles = filteredArticles.filter(article => 
-          article[key as keyof MobileArticle]?.toString().toLowerCase() === value.toLowerCase()
-        )
+    // Apply status filter if provided
+    if (filters.status) {
+      const statusMap: Record<string, string> = {
+        'ativo': 'published',
+        'rascunho': 'draft',
+        'inativo': 'archived'
+      }
+      where.status = statusMap[filters.status.toLowerCase()] || filters.status
+    }
+    
+    // Apply category filter if provided
+    if (filters.category) {
+      where.category = { equals: filters.category, mode: 'insensitive' }
+    }
+    
+    // Map sortBy to database columns
+    const sortByMap: Record<string, string> = {
+      'date': 'createdAt',
+      'title': 'title',
+      'author': 'authorName',
+      'category': 'category'
+    }
+    const dbSortBy = sortByMap[sortBy] || 'createdAt'
+    
+    // Get total count
+    const totalCount = await prisma.article.count({ where })
+    
+    // Define article select type
+    type ArticleSelect = {
+      id: string
+      title: string
+      excerpt: string | null
+      slug: string
+      authorName: string | null
+      category: string | null
+      status: string
+      isPremium: boolean
+      readTime: string | null
+      createdAt: Date
+      featuredImage: string | null
+    }
+    
+    // Fetch articles from database
+    const articles: ArticleSelect[] = await prisma.article.findMany({
+      where,
+      orderBy: { [dbSortBy]: sortOrder as 'asc' | 'desc' },
+      skip: page * pageSize,
+      take: pageSize,
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        slug: true,
+        authorName: true,
+        category: true,
+        status: true,
+        isPremium: true,
+        readTime: true,
+        createdAt: true,
+        featuredImage: true,
       }
     })
     
-    // Apply sorting
-    filteredArticles.sort((a, b) => {
-      const aVal = a[sortBy as keyof MobileArticle] || ''
-      const bVal = b[sortBy as keyof MobileArticle] || ''
+    // Transform to mobile-friendly format
+    const mobileArticles: MobileArticle[] = articles.map((article) => {
+      // Map database status to display status
+      const statusMap: Record<string, "Ativo" | "Rascunho" | "Inativo"> = {
+        'published': 'Ativo',
+        'draft': 'Rascunho',
+        'archived': 'Inativo'
+      }
       
-      if (sortOrder === 'desc') {
-        return bVal.toString().localeCompare(aVal.toString())
+      return {
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt || '',
+        author: article.authorName || 'Unknown',
+        category: article.category || 'General',
+        status: statusMap[article.status] || 'Ativo',
+        paid: article.isPremium ? 'Pago' : 'Gratuito',
+        date: article.createdAt.toLocaleDateString('pt-BR', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        }),
+        readTime: article.readTime || '5 min de leitura',
+        commentCount: 0, // TODO: Add comment count when comments are implemented
+        ...(includeImages && article.featuredImage && { imageUrl: article.featuredImage }),
+        ...(platform === 'web' && { slug: article.slug })
       }
-      return aVal.toString().localeCompare(bVal.toString())
     })
     
-    // Apply pagination
-    const totalCount = filteredArticles.length
     const pageCount = Math.ceil(totalCount / pageSize)
-    const paginatedArticles = filteredArticles.slice(page * pageSize, (page + 1) * pageSize)
     
     // Enhanced response with mobile-friendly pagination info
     const response: APIResponse<MobileArticle[]> = {
       success: true,
-      data: paginatedArticles,
+      data: mobileArticles,
       pagination: {
         currentPage: page,
         pageSize,

@@ -89,9 +89,6 @@ async function main() {
         const year = parseInt(dateParts[2])
         const publishedAt = new Date(year, month, day)
 
-        // Generate random view count between 100-5000
-        const viewCount = Math.floor(Math.random() * 4900) + 100
-
         // Create the article
         await prisma.blogArticle.create({
           data: {
@@ -105,7 +102,6 @@ async function main() {
             category: article.category,
             tags: [article.category, 'Saúde Sexual', 'Educação'],
             readTime,
-            viewCount,
             commentCount: article.commentCount || 0,
             likeCount: Math.floor(Math.random() * 100),
             isPublished: Math.random() > 0.2, // 80% published, 20% draft

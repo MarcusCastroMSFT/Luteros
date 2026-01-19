@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
 
-// Configure route segment to enable caching
-export const dynamic = 'force-dynamic' // Required for auth
-export const revalidate = 60 // Revalidate every 60 seconds
+// This route requires authentication, so it must be dynamic (no ISR)
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
@@ -66,7 +66,6 @@ export async function GET(
       date: formattedDate,
       readTime: `${article.readTime} min`,
       commentCount: article.commentCount,
-      viewCount: article.viewCount,
       status: article.isPublished ? 'published' : 'draft',
     };
 
@@ -174,6 +173,16 @@ export async function PUT(
       }
     });
 
+    // Invalidate cache so users see the updated article immediately
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${slug}`);
+    // Also revalidate old slug if it changed
+    if (slug !== existingArticle.slug) {
+      revalidatePath(`/blog/${existingArticle.slug}`);
+    }
+    await revalidateTag('articles', {});
+    await revalidateTag(`article-${slug}`, {});
+
     return NextResponse.json({
       success: true,
       data: updatedArticle,
@@ -205,7 +214,7 @@ export async function DELETE(
     // Check if article exists
     const article = await prisma.blogArticle.findUnique({
       where: { id: articleId },
-      select: { id: true, title: true },
+      select: { id: true, title: true, slug: true },
     });
 
     if (!article) {
@@ -219,6 +228,12 @@ export async function DELETE(
     await prisma.blogArticle.delete({
       where: { id: articleId },
     });
+
+    // Invalidate cache so the deleted article is removed from listings
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${article.slug}`);
+    await revalidateTag('articles', {});
+    await revalidateTag(`article-${article.slug}`, {});
 
     return NextResponse.json({
       success: true,

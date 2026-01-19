@@ -22,9 +22,6 @@ export async function GET(request: NextRequest) {
       draftArticles,
       newArticlesThisMonth,
       newArticlesLastMonth,
-      totalViews,
-      viewsThisMonth,
-      viewsLastMonth,
       totalComments,
       commentsThisMonth,
       commentsLastMonth,
@@ -53,30 +50,6 @@ export async function GET(request: NextRequest) {
       prisma.blogArticle.count({
         where: {
           createdAt: {
-            gte: twoMonthsAgo,
-            lt: lastMonth
-          }
-        }
-      }),
-      
-      // Total views (sum)
-      prisma.blogArticle.aggregate({
-        _sum: { viewCount: true }
-      }),
-      
-      // Views this month (articles created/updated this month)
-      prisma.blogArticle.aggregate({
-        _sum: { viewCount: true },
-        where: {
-          updatedAt: { gte: lastMonth }
-        }
-      }),
-      
-      // Views last month (for comparison)
-      prisma.blogArticle.aggregate({
-        _sum: { viewCount: true },
-        where: {
-          updatedAt: {
             gte: twoMonthsAgo,
             lt: lastMonth
           }
@@ -113,11 +86,6 @@ export async function GET(request: NextRequest) {
       ? ((newArticlesThisMonth - newArticlesLastMonth) / newArticlesLastMonth * 100).toFixed(1)
       : '0.0'
     
-    const viewsGrowthNum = (viewsThisMonth._sum.viewCount || 0) - (viewsLastMonth._sum.viewCount || 0)
-    const viewsGrowth = (viewsLastMonth._sum.viewCount || 0) > 0
-      ? (viewsGrowthNum / (viewsLastMonth._sum.viewCount || 1) * 100).toFixed(1)
-      : '0.0'
-    
     const activeArticlesGrowth = newArticlesLastMonth > 0
       ? ((publishedArticles - (publishedArticles - newArticlesThisMonth)) / (publishedArticles - newArticlesThisMonth) * 100).toFixed(1)
       : '0.0'
@@ -131,10 +99,6 @@ export async function GET(request: NextRequest) {
       totalArticles,
       totalArticlesGrowth: articlesGrowth,
       newArticlesThisMonth,
-      
-      totalViews: totalViews._sum.viewCount || 0,
-      totalViewsGrowth: viewsGrowth,
-      viewsThisMonth: viewsThisMonth._sum.viewCount || 0,
       
       publishedArticles,
       activeArticlesGrowth,

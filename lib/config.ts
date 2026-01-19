@@ -48,6 +48,15 @@ export const getConfig = (): AppConfig => {
   return webConfig
 }
 
+// Check if we're in development mode (allows fallback to sample data)
+export const isDevelopment = process.env.NODE_ENV === 'development'
+
+// Check if sample/fallback data should be used
+// Only allowed in development, never in UAT/staging/production
+export const useFallbackData = () => {
+  return isDevelopment
+}
+
 // API endpoints that both platforms will use
 export const API_ENDPOINTS = {
   articles: '/articles',

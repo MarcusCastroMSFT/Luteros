@@ -1,20 +1,22 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
-import { sampleArticles } from '@/data/articles';
 import { type Article } from '@/types/blog';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// ISR: Revalidate every 30 minutes, with on-demand revalidation when articles are updated
+export const revalidate = 1800; // 30 minutes in seconds
+
 // Dynamically import non-critical components for better performance
-const ArticleShare = dynamic(() => import('@/components/blog/articleShare').then(mod => ({ default: mod.ArticleShare })), {
+const ArticleShare = nextDynamic(() => import('@/components/blog/articleShare').then(mod => ({ default: mod.ArticleShare })), {
   loading: () => <Skeleton className="h-24 w-full" />
 });
-const AuthorBio = dynamic(() => import('@/components/blog/authorBio').then(mod => ({ default: mod.AuthorBio })), {
+const AuthorBio = nextDynamic(() => import('@/components/blog/authorBio').then(mod => ({ default: mod.AuthorBio })), {
   loading: () => <Skeleton className="h-32 w-full" />
 });
-const RelatedArticles = dynamic(() => import('@/components/blog/relatedArticles').then(mod => ({ default: mod.RelatedArticles })), {
+const RelatedArticles = nextDynamic(() => import('@/components/blog/relatedArticles').then(mod => ({ default: mod.RelatedArticles })), {
   loading: () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Skeleton className="h-80 w-full" />
@@ -30,20 +32,16 @@ interface ArticlePageProps {
   }>;
 }
 
-// Fetch article data from database API with ISR
+// Fetch article data from database
 async function getArticleData(slug: string): Promise<{ article: Article; relatedArticles: Article[] } | null> {
   try {
-    // Always try to fetch from API first (database-driven)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
     const response = await fetch(`${baseUrl}/api/blog/${slug}`, {
-      // ISR: Revalidate every 30 minutes, serve stale content while revalidating
-      next: { 
-        revalidate: 1800, // 30 minutes
-        tags: [`article-${slug}`, 'articles'] // Tags for on-demand revalidation
-      },
+      // Use ISR cache - revalidates based on route segment config
+      next: { revalidate: 1800, tags: ['articles', `article-${slug}`] },
       // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(15000) // Increased to 15 seconds
+      signal: AbortSignal.timeout(15000)
     });
     
     if (response.ok) {
@@ -56,74 +54,18 @@ async function getArticleData(slug: string): Promise<{ article: Article; related
       }
     }
 
-    // If API fails, try fallback to static data (for development/build)
-    console.warn(`API fetch failed for article ${slug}, using fallback`);
-    const article = sampleArticles.find(a => a.slug === slug);
-    
-    if (!article) {
-      return null;
-    }
-
-    const relatedArticles = sampleArticles
-      .filter(a => a.category === article.category && a.slug !== slug)
-      .slice(0, 3);
-    
-    return { article, relatedArticles };
+    console.error(`API fetch failed for article ${slug}`);
+    return null;
   } catch (error) {
     console.error('Error fetching article data:', error);
-    
-    // Emergency fallback to static data
-    const article = sampleArticles.find(a => a.slug === slug);
-    if (article) {
-      const relatedArticles = sampleArticles
-        .filter(a => a.category === article.category && a.slug !== slug)
-        .slice(0, 3);
-      return { article, relatedArticles };
-    }
-    
     return null;
-  }
-}
-
-// Generate static params with ISR - fetch initial articles from database
-export async function generateStaticParams() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    
-    // Try to fetch article slugs from database API
-    const response = await fetch(`${baseUrl}/api/blog`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      if (result.success && result.data && result.data.articles) {
-        return result.data.articles.map((article: Article) => ({
-          slug: article.slug,
-        }));
-      }
-    }
-    
-    console.warn('API fetch failed during generateStaticParams, using fallback data');
-    
-    // Fallback to sample articles during build/development
-    return sampleArticles.map((article) => ({
-      slug: article.slug,
-    }));
-  } catch (error) {
-    console.error('Error in generateStaticParams:', error);
-    
-    // Always return sample data as last resort to prevent build failure
-    return sampleArticles.map((article) => ({
-      slug: article.slug,
-    }));
   }
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
   
-  // Fetch article data with ISR support
+  // Fetch article data from database
   const articleData = await getArticleData(slug);
   
   if (!articleData) {
@@ -132,29 +74,47 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const { article, relatedArticles } = articleData;
 
-  // Generate full URL for sharing (in a real app, this would be dynamic)
-  const articleUrl = `https://luteros.com/blog/${article.slug}`;
+  // Generate full URL for sharing
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const articleUrl = `${baseUrl}/blog/${article.slug}`;
 
-  // JSON-LD structured data for SEO
+  // JSON-LD structured data for SEO (following schema.org best practices)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
+    '@id': articleUrl,
     headline: article.title,
     description: article.excerpt,
-    image: article.image,
+    image: article.image ? {
+      '@type': 'ImageObject',
+      url: article.image.startsWith('http') ? article.image : `${baseUrl}${article.image}`,
+    } : undefined,
     author: {
       '@type': 'Person',
       name: article.author,
+      url: article.authorSlug ? `${baseUrl}/specialists/${article.authorSlug}` : undefined,
     },
     datePublished: article.date,
+    dateModified: article.date,
     publisher: {
       '@type': 'Organization',
       name: 'Luteros',
+      url: baseUrl,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://luteros.com/logo.png',
+        url: `${baseUrl}/images/logo.png`,
+        width: 200,
+        height: 60,
       },
     },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': articleUrl,
+    },
+    articleSection: article.category,
+    wordCount: article.content ? article.content.split(/\s+/).length : undefined,
+    timeRequired: `PT${article.readTime.replace(' min', '')}M`,
+    inLanguage: 'pt-BR',
   };
 
   return (
@@ -220,26 +180,58 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   if (!articleData) {
     return {
       title: 'Artigo não encontrado',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
   const { article } = articleData;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const articleUrl = `${baseUrl}/blog/${slug}`;
+  const imageUrl = article.image?.startsWith('http') 
+    ? article.image 
+    : `${baseUrl}${article.image}`;
 
   return {
-    title: `${article.title} | Luteros Blog`,
+    title: article.title,
     description: article.excerpt,
+    keywords: [article.category, 'saúde sexual', 'educação', 'bem-estar'],
+    authors: [{ name: article.author }],
+    alternates: {
+      canonical: articleUrl,
+    },
     openGraph: {
       title: article.title,
       description: article.excerpt,
-      images: [article.image],
+      url: articleUrl,
+      siteName: 'Luteros',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
       type: 'article',
+      publishedTime: article.date,
       authors: [article.author],
+      section: article.category,
+      locale: 'pt_BR',
     },
     twitter: {
       card: 'summary_large_image',
       title: article.title,
       description: article.excerpt,
-      images: [article.image],
+      images: [imageUrl],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
   };
 }

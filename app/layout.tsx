@@ -18,9 +18,62 @@ const cardo = Cardo({
   variable: "--font-cardo",
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+
 export const metadata: Metadata = {
-  title: "Luteros - Saúde Sexual e Bem-estar",
-  description: "Plataforma de educação em saúde sexual e bem-estar",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "Luteros - Saúde Sexual e Bem-estar",
+    template: "%s | Luteros",
+  },
+  description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
+  keywords: ["saúde sexual", "bem-estar", "educação sexual", "saúde íntima", "cursos online", "especialistas"],
+  authors: [{ name: "Luteros" }],
+  creator: "Luteros",
+  publisher: "Luteros",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: baseUrl,
+    siteName: "Luteros",
+    title: "Luteros - Saúde Sexual e Bem-estar",
+    description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Luteros - Saúde Sexual e Bem-estar",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Luteros - Saúde Sexual e Bem-estar",
+    description: "Plataforma de educação em saúde sexual e bem-estar.",
+    images: ["/images/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your verification codes here when available
+    // google: 'your-google-verification-code',
+    // yandex: 'your-yandex-verification-code',
+  },
 };
 
 export default function RootLayout({

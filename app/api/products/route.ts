@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sampleProducts, productCategories } from '@/data/products';
 import { ProductsApiResponse } from '@/types/product';
+import { isDevelopment } from '@/lib/config';
 
+// TODO: Replace with database queries - currently using sample data
 export async function GET(request: NextRequest) {
+  // In production/UAT, this should query the database
+  if (!isDevelopment) {
+    console.warn('Products API: Using sample data in non-development environment. Connect to database.');
+  }
+  
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1') - 1; // Convert to 0-based

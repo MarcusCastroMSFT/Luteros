@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 1800; // Revalidate every 30 minutes (instead of 5)
+// ISR: Revalidate every 30 minutes
+export const revalidate = 1800; // 30 minutes in seconds
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
           category: true,
           readTime: true,
           commentCount: true,
-          viewCount: true,
           publishedAt: true,
           createdAt: true,
           author: {
@@ -82,7 +81,6 @@ export async function GET(request: NextRequest) {
       category: string
       readTime: number
       commentCount: number
-      viewCount: number
       publishedAt: Date | null
       createdAt: Date
       author: {
@@ -116,7 +114,6 @@ export async function GET(request: NextRequest) {
         date: formattedDate,
         readTime: `${article.readTime} min`,
         commentCount: article.commentCount,
-        viewCount: article.viewCount,
       };
     });
 

@@ -5,8 +5,8 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour
+// ISR: Revalidate every 30 minutes
+export const revalidate = 1800; // 30 minutes in seconds
 
 export async function GET(request: NextRequest, { params }: Props) {
   try {
@@ -27,7 +27,6 @@ export async function GET(request: NextRequest, { params }: Props) {
         image: true,
         category: true,
         readTime: true,
-        viewCount: true,
         commentCount: true,
         isPublished: true,
         publishedAt: true,
@@ -55,12 +54,6 @@ export async function GET(request: NextRequest, { params }: Props) {
       );
     }
 
-    // Increment view count
-    await prisma.blogArticle.update({
-      where: { id: article.id },
-      data: { viewCount: { increment: 1 } },
-    });
-
     // Get related articles - prioritize manually selected ones, fallback to same category
     let relatedArticles: Array<{
       id: string;
@@ -71,7 +64,6 @@ export async function GET(request: NextRequest, { params }: Props) {
       image: string | null;
       category: string;
       readTime: number;
-      viewCount: number;
       commentCount: number;
       publishedAt: Date | null;
       createdAt: Date;
@@ -153,7 +145,6 @@ export async function GET(request: NextRequest, { params }: Props) {
       date: formattedDate,
       readTime: `${article.readTime} min`,
       commentCount: article.commentCount,
-      viewCount: article.viewCount,
     };
 
     // Define type for related articles from Prisma query
@@ -167,7 +158,6 @@ export async function GET(request: NextRequest, { params }: Props) {
       category: string
       readTime: number
       commentCount: number
-      viewCount: number
       publishedAt: Date | null
       createdAt: Date
       author: {
@@ -201,7 +191,6 @@ export async function GET(request: NextRequest, { params }: Props) {
         date: relFormattedDate,
         readTime: `${rel.readTime} min`,
         commentCount: rel.commentCount,
-        viewCount: rel.viewCount,
       };
     });
 

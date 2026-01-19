@@ -3,10 +3,9 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import ArticleList from './articleList';
 import { LatestArticlesProps } from '@/types/blog';
-import { sampleArticles } from '@/data/articles';
 
 export function LatestArticles({ articles, limit = 12 }: LatestArticlesProps) {
-  const articlesToShow = articles ? articles.slice(0, limit) : sampleArticles.slice(0, limit);
+  const articlesToShow = articles ? articles.slice(0, limit) : [];
   
   return (
     <section className="py-16 bg-gray-50 dark:bg-gray-900">

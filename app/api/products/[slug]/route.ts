@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sampleProducts } from '@/data/products';
 import { ProductApiResponse } from '@/types/product';
+import { isDevelopment } from '@/lib/config';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// TODO: Replace with database queries - currently using sample data
 export async function GET(request: NextRequest, { params }: Props) {
+  // In production/UAT, this should query the database
+  if (!isDevelopment) {
+    console.warn('Products API: Using sample data in non-development environment. Connect to database.');
+  }
+  
   try {
     const { slug } = await params;
     

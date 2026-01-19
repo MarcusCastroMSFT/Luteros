@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { requireAuth } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
@@ -40,7 +41,6 @@ export async function GET(request: NextRequest) {
       category: { category: sortOrder },
       date: { publishedAt: sortOrder },
       createdAt: { createdAt: sortOrder },
-      viewCount: { viewCount: sortOrder },
       commentCount: { commentCount: sortOrder },
     }
     
@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
           image: true,
           category: true,
           readTime: true,
-          viewCount: true,
           commentCount: true,
           isPublished: true,
           publishedAt: true,
@@ -93,7 +92,6 @@ export async function GET(request: NextRequest) {
       image: string | null
       category: string
       readTime: number
-      viewCount: number
       commentCount: number
       isPublished: boolean
       publishedAt: Date | null
@@ -125,7 +123,6 @@ export async function GET(request: NextRequest) {
       date: article.publishedAt?.toISOString() || article.createdAt.toISOString(),
       readTime: `${article.readTime} min`,
       commentCount: article.commentCount,
-      viewCount: article.viewCount,
     }))
 
     const pageCount = Math.ceil(totalCount / pageSize)
@@ -205,7 +202,6 @@ export async function POST(request: NextRequest) {
         relatedArticleIds: relatedArticleIds || [],
         accessType,
         targetAudience,
-        viewCount: 0,
         commentCount: 0,
       },
       include: {
@@ -219,6 +215,11 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Invalidate cache so users see the new article immediately
+    revalidatePath('/blog')
+    revalidatePath(`/blog/${slug}`)
+    await revalidateTag('articles', {})
 
     return NextResponse.json({
       success: true,

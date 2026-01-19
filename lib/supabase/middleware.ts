@@ -23,6 +23,7 @@ export async function updateSession(request: NextRequest) {
       },
     }
   )
+  
 
   // Use getClaims() for fast local JWT validation and token refresh
   // This validates the JWT signature and checks expiration WITHOUT making a server call

@@ -28,7 +28,6 @@ interface Article {
   date: string;
   readTime: string;
   commentCount: number;
-  viewCount: number;
   status: 'published' | 'draft';
 }
 
@@ -159,7 +158,6 @@ export function ViewArticleModal({
                 <div className="border-t pt-6 mt-8">
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-6">
-                      <span>{article.viewCount} visualizações</span>
                       <span>{article.commentCount} comentários</span>
                     </div>
                     <Button

@@ -49,7 +49,6 @@ export async function GET(
         relatedArticleIds: article.relatedArticleIds || [],
         accessType: article.accessType || 'free',
         targetAudience: article.targetAudience || 'general',
-        viewCount: article.viewCount,
         commentCount: article.commentCount,
         publishedAt: article.publishedAt,
         createdAt: article.createdAt,
