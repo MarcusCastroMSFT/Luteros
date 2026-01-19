@@ -4,6 +4,8 @@ import "./globals.css";
 import { LayoutWrapper } from "../components/layout-wrapper";
 import { Providers } from "../components/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -36,6 +38,8 @@ export default function RootLayout({
             {children}
           </LayoutWrapper>
           <Toaster />
+          <SpeedInsights />
+          <Analytics />
         </Providers>
       </body>
     </html>
