@@ -24,19 +24,29 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // CRITICAL: This refreshes the session and validates the JWT
-  // Using getClaims() internally to validate JWT signature
-  const { data: { user }, error } = await supabase.auth.getUser()
+  // Use getClaims() for fast local JWT validation and token refresh
+  // This validates the JWT signature and checks expiration WITHOUT making a server call
+  // It's ideal for middleware where performance is critical
+  const { data: claims, error: claimsError } = await supabase.auth.getClaims()
 
-  // Optional: Redirect to login if no user and trying to access protected routes
-  if (
-    error || !user
-  ) {
-    const url = request.nextUrl.clone()
-    if (url.pathname.startsWith('/dashboard')) {
+  // For protected routes that need full session validation,
+  // use getUser() which verifies the session is still active server-side
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  
+  if (isProtectedRoute) {
+    // For protected routes, we need full server validation
+    // getUser() verifies the session hasn't been revoked/logged out
+    const { data: { user }, error } = await supabase.auth.getUser()
+    
+    if (error || !user) {
+      const url = request.nextUrl.clone()
       url.pathname = '/login'
+      url.searchParams.set('redirectTo', request.nextUrl.pathname)
       return NextResponse.redirect(url)
     }
+  } else if (claimsError || !claims) {
+    // For non-protected routes, just let the request through
+    // even if there's no valid session
   }
 
   return supabaseResponse

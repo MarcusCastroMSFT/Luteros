@@ -18,11 +18,10 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to login if not authenticated (in a real app)
-    // For now, we'll just log the auth state
+    // Client-side redirect fallback (middleware handles server-side protection)
+    // This catches edge cases where client-side auth state differs from server
     if (!isLoading && !user) {
-      console.log('User not authenticated, would redirect to login');
-      // router.push('/login');
+      router.push('/login');
     }
   }, [user, isLoading, router]);
 

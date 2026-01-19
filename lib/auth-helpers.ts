@@ -12,6 +12,10 @@ interface CachedRequest extends NextRequest {
 /**
  * Get authenticated user with request-level caching
  * This prevents multiple auth checks within the same request
+ * 
+ * IMPORTANT: Uses getUser() which validates the session server-side
+ * This ensures the user hasn't logged out and the session is still valid
+ * Unlike getClaims() which only does local JWT validation
  */
 export async function getAuthUser(request: NextRequest): Promise<User | null> {
   // Check if user is already cached in the request context
@@ -20,7 +24,8 @@ export async function getAuthUser(request: NextRequest): Promise<User | null> {
     return cached
   }
 
-  // Fetch user from Supabase
+  // Fetch user from Supabase using getUser() for full server validation
+  // This verifies the session is still active and hasn't been revoked
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -31,8 +36,11 @@ export async function getAuthUser(request: NextRequest): Promise<User | null> {
 }
 
 /**
- * Middleware to verify authentication and cache user
- * Returns 401 if not authenticated
+ * Require authentication for API routes
+ * Returns the user if authenticated, or a 401 response if not
+ * 
+ * Uses getUser() for full server-side session validation
+ * This is the recommended approach for protecting user data
  */
 export async function requireAuth(request: NextRequest): Promise<User | NextResponse> {
   const user = await getAuthUser(request)
