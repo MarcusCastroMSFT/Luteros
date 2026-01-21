@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export const revalidate = 60; // ISR: Revalidate every 60 seconds
-
 interface Props {
   params: Promise<{ slug: string }>;
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidateTag, revalidatePath } from 'next/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
@@ -94,8 +94,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Revalidate events cache
+    // Revalidate all event-related cache tags
     revalidateTag('events', {})
+    revalidateTag('events-initial', {})
+    revalidateTag('event-slugs', {})
+    revalidateTag('upcoming-events-count', {})
+    revalidatePath('/events')
+    revalidatePath(`/events/${slug}`)
+    revalidatePath('/dashboard/events')
 
     return NextResponse.json({
       success: true,

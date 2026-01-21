@@ -3,9 +3,6 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireAdminOrInstructor } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
 
-// This route requires authentication, so it must be dynamic (no ISR)
-export const dynamic = 'force-dynamic';
-
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ articleId: string }> }
@@ -179,9 +176,12 @@ export async function PUT(
     // Also revalidate old slug if it changed
     if (slug !== existingArticle.slug) {
       revalidatePath(`/blog/${existingArticle.slug}`);
+      revalidateTag(`article-${existingArticle.slug}`, {});
     }
-    await revalidateTag('articles', {});
-    await revalidateTag(`article-${slug}`, {});
+    revalidateTag('articles', {});
+    revalidateTag('articles-initial', {});
+    revalidateTag('article-slugs', {});
+    revalidateTag(`article-${slug}`, {});
 
     return NextResponse.json({
       success: true,
@@ -232,8 +232,10 @@ export async function DELETE(
     // Invalidate cache so the deleted article is removed from listings
     revalidatePath('/blog');
     revalidatePath(`/blog/${article.slug}`);
-    await revalidateTag('articles', {});
-    await revalidateTag(`article-${article.slug}`, {});
+    revalidateTag('articles', {});
+    revalidateTag('articles-initial', {});
+    revalidateTag('article-slugs', {});
+    revalidateTag(`article-${article.slug}`, {});
 
     return NextResponse.json({
       success: true,

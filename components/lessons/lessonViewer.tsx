@@ -37,7 +37,7 @@ export function LessonViewer({
       default:
         return (
           <div className="text-center py-8">
-            <div className="text-gray-600 dark:text-gray-400">
+            <div className="text-gray-600">
               Unsupported lesson type: {lesson.type}
             </div>
           </div>
@@ -46,18 +46,18 @@ export function LessonViewer({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Lesson Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+      <div className="border-b border-gray-200 p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {lesson.title}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-gray-600 mb-4">
               {lesson.description}
             </p>
-            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-4 text-sm text-gray-500">
               <span className="capitalize">{lesson.type}</span>
               <span>•</span>
               <span>{lesson.duration}</span>
@@ -71,7 +71,7 @@ export function LessonViewer({
             className={`flex items-center gap-2 cursor-pointer ${
               isCompleted 
                 ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : 'text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600'
+                : 'text-gray-600 border-gray-300'
             }`}
           >
             {isCompleted ? (
@@ -95,7 +95,7 @@ export function LessonViewer({
       </div>
 
       {/* Navigation Footer */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-6">
+      <div className="border-t border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <Button
             onClick={() => onNavigate('previous')}

@@ -58,44 +58,44 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
           
           {/* Instructor Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               {name}
             </h3>
             
-            <p className="text-base text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-base text-gray-600 mb-4">
               {title}
             </p>
             
             {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
               {/* Rating */}
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900 dark:text-white">{rating}</span>
+                <span className="font-medium text-gray-900">{rating}</span>
                 <span>Avaliação</span>
               </div>
               
               {/* Reviews */}
               <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <Star className="w-4 h-4 text-gray-400" />
                 <span>{formatNumber(reviewsCount)} Avaliações</span>
               </div>
               
               {/* Students */}
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <Users className="w-4 h-4 text-gray-400" />
                 <span>{formatNumber(studentsCount)} Estudantes</span>
               </div>
               
               {/* Courses */}
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <BookOpen className="w-4 h-4 text-gray-400" />
                 <span>{coursesCount} Curso{coursesCount !== 1 ? 's' : ''}</span>
               </div>
             </div>
             
             {/* Bio Section */}
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+            <p className="text-sm text-gray-700 leading-relaxed mb-4">
               {bio}
             </p>
             
@@ -108,7 +108,7 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                    className="p-2 rounded-full border border-gray-200 hover:border-gray-300 transition-colors"
                   >
                     {getSocialIcon(url)}
                   </a>

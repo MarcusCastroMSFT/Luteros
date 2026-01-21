@@ -151,5 +151,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching events for sitemap:', error)
   }
 
-  return [...staticPages, ...articlePages, ...coursePages, ...eventPages]
+  // Fetch all active products
+  let productPages: MetadataRoute.Sitemap = []
+  try {
+    const products = await prisma.product.findMany({
+      where: { isActive: true },
+      select: {
+        slug: true,
+        updatedAt: true,
+        isFeatured: true,
+      },
+    })
+
+    productPages = products.map((product: { slug: string; updatedAt: Date; isFeatured: boolean }) => ({
+      url: `${baseUrl}/products/${product.slug}`,
+      lastModified: product.updatedAt || new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: product.isFeatured ? 0.8 : 0.6,
+    }))
+  } catch (error) {
+    console.error('Error fetching products for sitemap:', error)
+  }
+
+  return [...staticPages, ...articlePages, ...coursePages, ...eventPages, ...productPages]
 }

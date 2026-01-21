@@ -65,23 +65,23 @@ export function StatusBadge({ value, className, labels }: StatusBadgeProps) {
   
   if (isActive) {
     // Green for active - works in light and dark mode
-    badgeClasses = "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800"
+    badgeClasses = "bg-green-100 text-green-800 border-green-200"
     displayText = activeLabel
   } else if (isDraft) {
     // Yellow/orange for draft - works in light and dark mode
-    badgeClasses = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
+    badgeClasses = "bg-yellow-100 text-yellow-800 border-yellow-200"
     displayText = draftLabel
   } else if (isSuspended) {
     // Red for suspended - works in light and dark mode
-    badgeClasses = "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800"
+    badgeClasses = "bg-red-100 text-red-800 border-red-200"
     displayText = suspendedLabel
   } else if (isInactive) {
     // Gray for inactive - works in light and dark mode
-    badgeClasses = "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+    badgeClasses = "bg-gray-100 text-gray-800 border-gray-200"
     displayText = inactiveLabel
   } else {
     // Fallback for unknown status
-    badgeClasses = "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+    badgeClasses = "bg-gray-100 text-gray-800 border-gray-200"
     displayText = value
   }
   

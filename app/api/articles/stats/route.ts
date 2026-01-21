@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, connection } from 'next/server'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    await connection()
+    
     // Verify authentication and authorization (admin or instructor only)
     const authResult = await requireAdminOrInstructor(request)
     if (authResult instanceof NextResponse) {

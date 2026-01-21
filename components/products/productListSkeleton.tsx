@@ -4,7 +4,7 @@ export function ProductListSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {Array.from({ length: 12 }).map((_, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Image Skeleton */}
           <div className="relative aspect-[4/3]">
             <Skeleton className="absolute inset-0" />

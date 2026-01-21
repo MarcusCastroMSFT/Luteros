@@ -710,3 +710,96 @@ model CommunityReplyLike {
   @@index([replyId])
   @@map("community_reply_likes")
 }
+
+// ============================================
+// PRODUCTS & PARTNERS
+// ============================================
+model ProductPartner {
+  id               String   @id @default(uuid()) @db.Uuid
+  
+  // Basic Info
+  name             String
+  slug             String   @unique
+  logo             String?
+  website          String?
+  description      String?  @db.Text
+  
+  // Contact
+  email            String?
+  phone            String?
+  
+  // Status
+  isActive         Boolean  @default(true)
+  
+  // Metadata
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relations
+  products         Product[]
+  
+  @@index([slug])
+  @@index([isActive])
+  @@map("product_partners")
+}
+
+model Product {
+  id               String   @id @default(uuid()) @db.Uuid
+  
+  // Basic Info
+  slug             String   @unique
+  title            String
+  description      String   @db.Text
+  shortDescription String   @db.Text
+  image            String?
+  
+  // Partner relationship
+  partnerId        String   @db.Uuid
+  partner          ProductPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  
+  // Discount information (stored as JSON for flexibility)
+  discountPercentage Int      @default(0)
+  discountType     String   @default("percentage") // percentage, fixed
+  originalPrice    Decimal? @db.Decimal(10, 2)
+  discountedPrice  Decimal? @db.Decimal(10, 2)
+  discountAmount   Decimal? @db.Decimal(10, 2)
+  
+  // Promo details
+  promoCode        String
+  
+  // Categorization
+  category         String
+  tags             String[] // Array of tags
+  
+  // Access Control
+  availability     String   @default("all") // all, members
+  
+  // Validity
+  validUntil       DateTime?
+  
+  // Terms and Usage
+  termsAndConditions String? @db.Text
+  howToUse         String[] // Array of usage steps
+  features         String[] // Array of features
+  
+  // Status
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  
+  // Usage stats
+  usageCount       Int      @default(0)
+  maxUsages        Int?
+  
+  // Metadata
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([slug])
+  @@index([partnerId])
+  @@index([category])
+  @@index([isActive, isFeatured])
+  @@index([isActive, category])
+  @@index([availability])
+  @@index([createdAt(sort: Desc)])
+  @@map("products")
+}

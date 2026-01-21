@@ -12,7 +12,7 @@ export function SpecialistContact({ specialist }: SpecialistContactProps) {
   return (
     <div className="sticky top-8 space-y-6">
       {/* Profile Card */}
-      <Card className="overflow-hidden dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+      <Card className="overflow-hidden border-gray-200">
         <CardContent className="p-6">
           <div className="text-center">
             {/* Avatar */}
@@ -25,10 +25,10 @@ export function SpecialistContact({ specialist }: SpecialistContactProps) {
               />
             </div>
             
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {specialist.name}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-gray-600 mb-4">
               {specialist.profession}
             </p>
           </div>
@@ -36,27 +36,27 @@ export function SpecialistContact({ specialist }: SpecialistContactProps) {
       </Card>
 
       {/* Contact Info Card */}
-      <Card className="dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+      <Card className="border-gray-200">
         <CardContent className="p-6">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contact Me</h4>
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Contact Me</h4>
           
           <div className="space-y-3">
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <MapPin className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm">PO Box 16122 Collins Street West Victoria</span>
             </div>
             
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Mail className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm">info@upskill.com</span>
             </div>
             
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Phone className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm">+89 (619) 076-2205</span>
             </div>
             
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Globe className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm">www.allfin.com</span>
             </div>
@@ -64,18 +64,18 @@ export function SpecialistContact({ specialist }: SpecialistContactProps) {
           
           {/* Social Links */}
           <div className="mt-6">
-            <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Follow me</h5>
+            <h5 className="text-sm font-medium text-gray-900 mb-3">Follow me</h5>
             <div className="flex gap-3">
-              <a href="#" className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
+              <a href="#" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
+              <a href="#" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
                 <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
+              <a href="#" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="#" className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
+              <a href="#" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-[var(--cta-highlight)] hover:text-white transition-colors">
                 <Linkedin className="w-4 h-4" />
               </a>
             </div>

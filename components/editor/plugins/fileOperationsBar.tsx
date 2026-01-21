@@ -26,14 +26,14 @@ export function FileOperationsBar({ isPreviewMode = false, onTogglePreview }: Fi
       size="sm"
       onClick={onClick}
       title={title}
-      className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100"
     >
       {children}
     </Button>
   );
 
   return (
-    <div className="flex items-center justify-between gap-1 p-2 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <div className="flex items-center justify-between gap-1 p-2 bg-gray-100 border-t border-gray-200">
       {/* Left side - File operations */}
       <div className="flex items-center gap-1">
         <FileButton

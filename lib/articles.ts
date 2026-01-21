@@ -1,6 +1,5 @@
-import { cache } from 'react'
+import { cacheLife, cacheTag } from 'next/cache'
 import prisma from '@/lib/prisma'
-import { unstable_cache } from 'next/cache'
 import { type Article } from '@/types/blog'
 
 // Type for article with author from Prisma
@@ -125,20 +124,14 @@ async function fetchArticles(page: number, limit: number, category?: string) {
   }
 }
 
-// Get paginated articles with optional category filter (with caching)
-// Uses React cache for request memoization + unstable_cache for persistent caching
-export const getArticles = cache(async (page: number, limit: number, category?: string) => {
-  const getCachedArticles = unstable_cache(
-    () => fetchArticles(page, limit, category),
-    [`articles-list-${page}-${limit}-${category || 'all'}`],
-    {
-      revalidate: 1800, // 30 minutes
-      tags: ['articles'],
-    }
-  )
+// Get paginated articles with optional category filter using Next.js 16 Cache Components
+export async function getArticles(page: number, limit: number, category?: string) {
+  'use cache'
+  cacheLife('hours') // Articles change less frequently - stale 1h, revalidate 1h, expire 1d
+  cacheTag('articles', `articles-list-${page}-${limit}-${category || 'all'}`)
   
-  return getCachedArticles()
-})
+  return fetchArticles(page, limit, category)
+}
 
 // Internal function to fetch single article
 async function fetchArticleBySlug(slug: string) {
@@ -254,20 +247,14 @@ async function fetchArticleBySlug(slug: string) {
   }
 }
 
-// Get single article by slug with related articles (with caching)
-// Uses React cache for request memoization + unstable_cache for persistent caching
-export const getArticleBySlug = cache(async (slug: string) => {
-  const getCachedArticle = unstable_cache(
-    () => fetchArticleBySlug(slug),
-    [`article-${slug}`],
-    {
-      revalidate: 1800, // 30 minutes
-      tags: ['articles', `article-${slug}`],
-    }
-  )
+// Get single article by slug with related articles using Next.js 16 Cache Components
+export async function getArticleBySlug(slug: string) {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('articles', `article-${slug}`)
   
-  return getCachedArticle()
-})
+  return fetchArticleBySlug(slug)
+}
 
 // Internal function to fetch article metadata
 async function fetchArticleMetadata(slug: string) {
@@ -305,17 +292,34 @@ async function fetchArticleMetadata(slug: string) {
   }
 }
 
-// Get article metadata only (for generateMetadata) with caching
-// Uses React cache for request memoization + unstable_cache for persistent caching
-export const getArticleMetadata = cache(async (slug: string) => {
-  const getCachedMetadata = unstable_cache(
-    () => fetchArticleMetadata(slug),
-    [`article-metadata-${slug}`],
-    {
-      revalidate: 1800,
-      tags: ['articles', `article-${slug}`],
-    }
-  )
+// Get article metadata only (for generateMetadata) using Next.js 16 Cache Components
+export async function getArticleMetadata(slug: string) {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('articles', `article-${slug}`)
   
-  return getCachedMetadata()
-})
+  return fetchArticleMetadata(slug)
+}
+
+// Get all article slugs for generateStaticParams
+export async function getAllArticleSlugs(): Promise<string[]> {
+  'use cache'
+  cacheLife('hours') // Cache slugs longer as they change less frequently
+  cacheTag('articles', 'article-slugs')
+  
+  const articles = await prisma.blogArticle.findMany({
+    where: { isPublished: true },
+    select: { slug: true },
+  })
+  
+  return articles.map((a: { slug: string }) => a.slug)
+}
+
+// Get initial articles for SSR (first page)
+export async function getInitialArticles() {
+  'use cache'
+  cacheLife('minutes') // Shorter cache for listing - new articles appear within minutes
+  cacheTag('articles', 'articles-initial')
+  
+  return fetchArticles(1, 12) // First page with 12 articles
+}

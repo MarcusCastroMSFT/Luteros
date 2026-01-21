@@ -87,11 +87,11 @@ export function getUserColumns(onUserUpdated?: () => void): ColumnDef<User>[] {
       const role = row.getValue("role") as string
       
       const roleColors = {
-        "Administrador": "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-        "Editor": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-        "Moderador": "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-        "Premium": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-        "Usuário": "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+        "Administrador": "bg-red-100 text-red-800",
+        "Editor": "bg-blue-100 text-blue-800",
+        "Moderador": "bg-purple-100 text-purple-800",
+        "Premium": "bg-yellow-100 text-yellow-800",
+        "Usuário": "bg-gray-100 text-gray-800",
       }
       
       return (

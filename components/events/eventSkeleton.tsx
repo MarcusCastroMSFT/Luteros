@@ -4,8 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function EventCardSkeleton() {
   return (
-    <Card className="overflow-hidden py-0 border border-gray-200 dark:border-gray-700 h-full">
-      <CardContent className="p-6 bg-white dark:bg-gray-800 h-full flex flex-col">
+    <Card className="overflow-hidden py-0 border border-gray-200 h-full">
+      <CardContent className="p-6 bg-white h-full flex flex-col">
         {/* Location and Time Row Skeleton */}
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">

@@ -9,13 +9,13 @@ export default function EditorTestPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold mb-8 text-gray-900">
           Rich Text Editor
         </h1>
         
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Editor Content
             </label>
             <RichTextEditor
@@ -27,10 +27,10 @@ export default function EditorTestPage() {
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">
               Recursos Disponíveis:
             </h3>
-            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <ul className="text-sm text-gray-600 space-y-1">
               <li>• <strong>Títulos:</strong> H1, H2, H3 através dos botões ou shortcuts (# ## ###)</li>
               <li>• <strong>Formatação:</strong> Negrito (*bold*), Itálico (**italic**), Sublinhado, Riscado</li>
               <li>• <strong>Cor do texto:</strong> Use o botão de paleta para alterar a cor do texto selecionado</li>
@@ -49,10 +49,10 @@ export default function EditorTestPage() {
           
           {content && (
             <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold mb-2 text-gray-900">
                 Preview do Conteúdo:
               </h3>
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+              <div className="bg-gray-50 p-4 rounded-lg">
                 <RichTextEditor
                   initialValue={content}
                   readOnly

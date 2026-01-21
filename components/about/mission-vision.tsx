@@ -19,35 +19,35 @@ export const MissionVision = memo<MissionVisionProps>(function MissionVision({
   className = ''
 }) {
   return (
-    <section className={`py-20 bg-white dark:bg-gray-900 ${className}`}>
+    <section className={`py-20 bg-white ${className}`}>
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Mission */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
             <div className="flex items-center mb-6">
-              <div className="bg-cta-highlight/10 dark:bg-cta-highlight/20 p-3 rounded-lg mr-4">
-                <Target className="w-8 h-8 text-cta-highlight dark:text-cta-highlight" />
+              <div className="bg-cta-highlight/10 p-3 rounded-lg mr-4">
+                <Target className="w-8 h-8 text-cta-highlight" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900">
                 {mission.title}
               </h2>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+            <p className="text-gray-600 text-lg leading-relaxed">
               {mission.description}
             </p>
           </div>
 
           {/* Vision */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
             <div className="flex items-center mb-6">
-              <div className="bg-cta-highlight/10 dark:bg-cta-highlight/20 p-3 rounded-lg mr-4">
-                <Eye className="w-8 h-8 text-cta-highlight dark:text-cta-highlight" />
+              <div className="bg-cta-highlight/10 p-3 rounded-lg mr-4">
+                <Eye className="w-8 h-8 text-cta-highlight" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900">
                 {vision.title}
               </h2>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
+            <p className="text-gray-600 text-lg leading-relaxed">
               {vision.description}
             </p>
           </div>

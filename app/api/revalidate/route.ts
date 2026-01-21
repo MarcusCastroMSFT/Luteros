@@ -18,12 +18,14 @@ export async function POST(request: NextRequest) {
       case 'article':
         if (slug) {
           // Revalidate specific article
-          await revalidateTag(`article-${slug}`, {});
+          revalidateTag(`article-${slug}`, {});
           revalidatePath(`/blog/${slug}`);
           console.log(`Revalidated article: ${slug}`);
         } else {
           // Revalidate all articles
-          await revalidateTag('articles', {});
+          revalidateTag('articles', {});
+          revalidateTag('articles-initial', {});
+          revalidateTag('article-slugs', {});
           revalidatePath('/blog');
           console.log('Revalidated all articles');
         }
@@ -33,18 +35,20 @@ export async function POST(request: NextRequest) {
       case 'articles':
         // Revalidate entire blog section
         revalidatePath('/blog');
-        await revalidateTag('articles', {});
-        await revalidateTag('blog-listing', {});
+        revalidateTag('articles', {});
+        revalidateTag('articles-initial', {});
+        revalidateTag('article-slugs', {});
         console.log('Revalidated entire blog section');
         break;
       
       case 'new-article':
         // When a new article is created in the database
-        await revalidateTag('articles', {});
-        await revalidateTag('blog-listing', {});
+        revalidateTag('articles', {});
+        revalidateTag('articles-initial', {});
+        revalidateTag('article-slugs', {});
         revalidatePath('/blog');
         if (slug) {
-          await revalidateTag(`article-${slug}`, {});
+          revalidateTag(`article-${slug}`, {});
           revalidatePath(`/blog/${slug}`);
         }
         console.log(`New article created: ${slug || 'unknown'}`);
@@ -52,18 +56,116 @@ export async function POST(request: NextRequest) {
       
       case 'delete-article':
         // When an article is deleted from the database
-        await revalidateTag('articles', {});
-        await revalidateTag('blog-listing', {});
+        revalidateTag('articles', {});
+        revalidateTag('articles-initial', {});
+        revalidateTag('article-slugs', {});
         revalidatePath('/blog');
         if (slug) {
-          await revalidateTag(`article-${slug}`, {});
+          revalidateTag(`article-${slug}`, {});
         }
         console.log(`Article deleted: ${slug || 'unknown'}`);
         break;
       
+      case 'product':
+        if (slug) {
+          // Revalidate specific product
+          revalidateTag(`product-${slug}`, {});
+          revalidatePath(`/products/${slug}`);
+          console.log(`Revalidated product: ${slug}`);
+        } else {
+          // Revalidate all products
+          revalidateTag('products', {});
+          revalidatePath('/products');
+          console.log('Revalidated all products');
+        }
+        break;
+      
+      case 'products':
+        // Revalidate entire products section
+        revalidateTag('products', {});
+        revalidateTag('featured-products', {});
+        revalidateTag('product-slugs', {});
+        revalidatePath('/products');
+        console.log('Revalidated entire products section');
+        break;
+      
+      case 'new-product':
+        // When a new product is created
+        revalidateTag('products', {});
+        revalidateTag('product-slugs', {});
+        revalidatePath('/products');
+        if (slug) {
+          revalidateTag(`product-${slug}`, {});
+          revalidatePath(`/products/${slug}`);
+        }
+        console.log(`New product created: ${slug || 'unknown'}`);
+        break;
+      
+      case 'delete-product':
+        // When a product is deleted
+        revalidateTag('products', {});
+        revalidateTag('product-slugs', {});
+        revalidatePath('/products');
+        if (slug) {
+          revalidateTag(`product-${slug}`, {});
+        }
+        console.log(`Product deleted: ${slug || 'unknown'}`);
+        break;
+      
+      case 'event':
+        if (slug) {
+          // Revalidate specific event
+          revalidateTag(`event-${slug}`, {});
+          revalidatePath(`/events/${slug}`);
+          console.log(`Revalidated event: ${slug}`);
+        } else {
+          // Revalidate all events
+          revalidateTag('events', {});
+          revalidatePath('/events');
+          console.log('Revalidated all events');
+        }
+        break;
+      
+      case 'events':
+        // Revalidate entire events section
+        revalidateTag('events', {});
+        revalidateTag('events-initial', {});
+        revalidateTag('event-slugs', {});
+        revalidateTag('upcoming-events-count', {});
+        revalidatePath('/events');
+        console.log('Revalidated entire events section');
+        break;
+      
+      case 'new-event':
+        // When a new event is created
+        revalidateTag('events', {});
+        revalidateTag('events-initial', {});
+        revalidateTag('event-slugs', {});
+        revalidateTag('upcoming-events-count', {});
+        revalidatePath('/events');
+        if (slug) {
+          revalidateTag(`event-${slug}`, {});
+          revalidatePath(`/events/${slug}`);
+        }
+        console.log(`New event created: ${slug || 'unknown'}`);
+        break;
+      
+      case 'delete-event':
+        // When an event is deleted
+        revalidateTag('events', {});
+        revalidateTag('events-initial', {});
+        revalidateTag('event-slugs', {});
+        revalidateTag('upcoming-events-count', {});
+        revalidatePath('/events');
+        if (slug) {
+          revalidateTag(`event-${slug}`, {});
+        }
+        console.log(`Event deleted: ${slug || 'unknown'}`);
+        break;
+      
       default:
         return NextResponse.json(
-          { message: 'Invalid revalidation type. Use: article, blog, new-article, delete-article' },
+          { message: 'Invalid revalidation type. Use: article, blog, new-article, delete-article, product, products, new-product, delete-product, event, events, new-event, delete-event' },
           { status: 400 }
         );
     }

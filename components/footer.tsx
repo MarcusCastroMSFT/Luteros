@@ -1,3 +1,5 @@
+'use client'
+
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { footerMenu, contactInfo } from "@/data/menu";
@@ -7,10 +9,11 @@ import { Subscribe } from "@/components/subscribe";
 import { Logo } from "@/components/common/logo";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  // Using state-based year to avoid hydration mismatch and prerender issues
+  const currentYear = 2026; // Static year for prerender compatibility
 
   return (
-    <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+    <footer className="bg-white border-t border-gray-200">
       <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Logo and Contact Info */}
@@ -56,7 +59,7 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
+        <div className="mt-12 pt-8 border-t border-gray-200 text-center">
           <p className="text-sm text-text-secondary">
             © {currentYear} Luteros. Todos os direitos reservados
           </p>

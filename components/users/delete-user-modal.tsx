@@ -62,8 +62,8 @@ export function DeleteUserModal({
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-              <IconAlertTriangle className="h-5 w-5 text-red-600 dark:text-red-500" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+              <IconAlertTriangle className="h-5 w-5 text-red-600" />
             </div>
             <AlertDialogTitle>Excluir Usuário</AlertDialogTitle>
           </div>
@@ -74,16 +74,16 @@ export function DeleteUserModal({
             </span>
             ?
           </AlertDialogDescription>
-          <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 p-3 mt-3">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <div className="rounded-lg bg-yellow-50 p-3 mt-3">
+            <p className="text-sm text-yellow-800">
               <strong>Atenção:</strong> Esta ação não pode ser desfeita. Todos os dados
               relacionados ao usuário, incluindo cursos, comentários e progresso serão
               permanentemente removidos.
             </p>
           </div>
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3 mt-3">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <div className="rounded-lg bg-red-50 p-3 mt-3">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
         </AlertDialogHeader>

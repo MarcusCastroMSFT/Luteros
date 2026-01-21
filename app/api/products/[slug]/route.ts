@@ -1,27 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sampleProducts } from '@/data/products';
+import prisma from '@/lib/prisma';
 import { ProductApiResponse } from '@/types/product';
-import { isDevelopment } from '@/lib/config';
+import { requireAdminOrInstructor } from '@/lib/auth-helpers';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// TODO: Replace with database queries - currently using sample data
 export async function GET(request: NextRequest, { params }: Props) {
-  // In production/UAT, this should query the database
-  if (!isDevelopment) {
-    console.warn('Products API: Using sample data in non-development environment. Connect to database.');
-  }
-  
+  // Add cache tag for manual invalidation
+  const headers = new Headers({
+    'Cache-Tag': 'products',
+  });
+
   try {
     const { slug } = await params;
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
+    const { searchParams } = new URL(request.url);
+    const adminMode = searchParams.get('admin') === 'true';
 
-    // Find product by slug
-    const product = sampleProducts.find(p => p.slug === slug && p.isActive);
+    // Build where clause - for admin mode, find by slug OR id without isActive filter
+    let product;
+    
+    if (adminMode) {
+      // Admin mode: find by slug or id, include inactive products
+      product = await prisma.product.findFirst({
+        where: {
+          OR: [
+            { slug },
+            { id: slug },
+          ],
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          shortDescription: true,
+          image: true,
+          discountPercentage: true,
+          discountType: true,
+          originalPrice: true,
+          discountedPrice: true,
+          discountAmount: true,
+          promoCode: true,
+          category: true,
+          tags: true,
+          availability: true,
+          validUntil: true,
+          termsAndConditions: true,
+          howToUse: true,
+          features: true,
+          isActive: true,
+          isFeatured: true,
+          usageCount: true,
+          maxUsages: true,
+          createdAt: true,
+          partnerId: true,
+          partner: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              logo: true,
+              website: true,
+            },
+          },
+        },
+      });
+    } else {
+      // Public mode: find by slug only, active products only
+      product = await prisma.product.findUnique({
+        where: {
+          slug,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          shortDescription: true,
+          image: true,
+          discountPercentage: true,
+          discountType: true,
+          originalPrice: true,
+          discountedPrice: true,
+          discountAmount: true,
+          promoCode: true,
+          category: true,
+          tags: true,
+          availability: true,
+          validUntil: true,
+          termsAndConditions: true,
+          howToUse: true,
+          features: true,
+          isActive: true,
+          isFeatured: true,
+          usageCount: true,
+          maxUsages: true,
+          createdAt: true,
+          partner: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              logo: true,
+              website: true,
+            },
+          },
+        },
+      });
+    }
 
     if (!product) {
       const response: ProductApiResponse = {
@@ -29,33 +119,103 @@ export async function GET(request: NextRequest, { params }: Props) {
         error: 'Product not found',
         data: null,
       };
-      return NextResponse.json(response, { status: 404 });
+      return NextResponse.json(response, { status: 404, headers });
     }
 
     // Get related products (same category, excluding current product)
-    const relatedProducts = sampleProducts
-      .filter(p => 
-        p.slug !== slug && 
-        p.category === product.category && 
-        p.isActive
-      )
-      .sort((a, b) => {
-        // Sort by featured first, then by usage count
-        if (a.isFeatured && !b.isFeatured) return -1;
-        if (!a.isFeatured && b.isFeatured) return 1;
-        return b.usageCount - a.usageCount;
-      })
-      .slice(0, 4);
+    const relatedProducts = await prisma.product.findMany({
+      where: {
+        isActive: true,
+        category: product.category,
+        id: { not: product.id },
+      },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        description: true,
+        shortDescription: true,
+        image: true,
+        discountPercentage: true,
+        discountType: true,
+        originalPrice: true,
+        discountedPrice: true,
+        discountAmount: true,
+        promoCode: true,
+        category: true,
+        tags: true,
+        availability: true,
+        validUntil: true,
+        termsAndConditions: true,
+        howToUse: true,
+        features: true,
+        isActive: true,
+        isFeatured: true,
+        usageCount: true,
+        maxUsages: true,
+        createdAt: true,
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logo: true,
+            website: true,
+          },
+        },
+      },
+      orderBy: [
+        { isFeatured: 'desc' },
+        { usageCount: 'desc' },
+      ],
+      take: 4,
+    });
+
+    // Transform product to match frontend interface
+    const transformProduct = (p: typeof product) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      shortDescription: p.shortDescription,
+      image: p.image || '',
+      partner: {
+        id: p.partner.id,
+        name: p.partner.name,
+        logo: p.partner.logo || '',
+        website: p.partner.website || '',
+      },
+      discount: {
+        percentage: p.discountPercentage,
+        amount: p.discountAmount ? Number(p.discountAmount) : undefined,
+        type: p.discountType as 'percentage' | 'fixed',
+        originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
+        discountedPrice: p.discountedPrice ? Number(p.discountedPrice) : undefined,
+      },
+      promoCode: p.promoCode,
+      category: p.category,
+      tags: p.tags,
+      availability: p.availability as 'all' | 'members',
+      validUntil: p.validUntil?.toISOString().split('T')[0] || '',
+      termsAndConditions: p.termsAndConditions || '',
+      howToUse: p.howToUse,
+      features: p.features,
+      isActive: p.isActive,
+      isFeatured: p.isFeatured,
+      createdDate: p.createdAt.toISOString().split('T')[0],
+      usageCount: p.usageCount,
+      maxUsages: p.maxUsages || undefined,
+    });
 
     const response: ProductApiResponse = {
       success: true,
       data: {
-        product,
-        relatedProducts,
+        product: transformProduct(product),
+        relatedProducts: relatedProducts.map(transformProduct),
       },
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers });
 
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -65,5 +225,200 @@ export async function GET(request: NextRequest, { params }: Props) {
       data: null,
     };
     return NextResponse.json(response, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: Props) {
+  try {
+    const { slug } = await params;
+
+    // Verify authentication and authorization (admin or instructor only)
+    const authResult = await requireAdminOrInstructor(request);
+    if (authResult instanceof NextResponse) {
+      return authResult; // Return 401/403 response
+    }
+
+    // Find product by slug or id
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { slug },
+          { id: slug },
+        ],
+      },
+    });
+
+    if (!product) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete the product
+    await prisma.product.delete({
+      where: { id: product.id },
+    });
+
+    // Revalidate all product-related cache tags
+    revalidateTag('products', {});
+    revalidateTag('featured-products', {});
+    revalidateTag('product-slugs', {});
+    revalidateTag(`product-${product.slug}`, {});
+    revalidateTag(`related-products-${product.id}`, {});
+    revalidatePath('/products');
+    revalidatePath(`/products/${product.slug}`);
+    revalidatePath('/dashboard/products');
+
+    return NextResponse.json({
+      success: true,
+      message: 'Product deleted successfully',
+    });
+
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete product' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: Props) {
+  try {
+    const { slug: productSlugOrId } = await params;
+
+    // Verify authentication
+    const authResult = await requireAdminOrInstructor(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Find product by slug or id
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        OR: [
+          { slug: productSlugOrId },
+          { id: productSlugOrId },
+        ],
+      },
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { success: false, error: 'Produto não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      title,
+      slug,
+      description,
+      shortDescription,
+      image,
+      partnerId,
+      discountPercentage,
+      discountType,
+      originalPrice,
+      discountedPrice,
+      discountAmount,
+      promoCode,
+      category,
+      tags,
+      availability,
+      validUntil,
+      termsAndConditions,
+      howToUse,
+      features,
+      isActive,
+      isFeatured,
+      maxUsages,
+    } = body;
+
+    // Validation
+    if (!title || !slug || !description || !shortDescription || !partnerId || !promoCode || !category) {
+      return NextResponse.json(
+        { success: false, error: 'Campos obrigatórios faltando' },
+        { status: 400 }
+      );
+    }
+
+    // Check if new slug conflicts with another product
+    if (slug !== existingProduct.slug) {
+      const conflictingProduct = await prisma.product.findUnique({
+        where: { slug },
+      });
+
+      if (conflictingProduct) {
+        return NextResponse.json(
+          { success: false, error: 'Já existe outro produto com este slug' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const product = await prisma.product.update({
+      where: { id: existingProduct.id },
+      data: {
+        title,
+        slug,
+        description,
+        shortDescription,
+        image: image || null,
+        partnerId,
+        discountPercentage: discountPercentage || 0,
+        discountType: discountType || 'percentage',
+        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+        discountedPrice: discountedPrice ? parseFloat(discountedPrice) : null,
+        discountAmount: discountAmount ? parseFloat(discountAmount) : null,
+        promoCode,
+        category,
+        tags: tags || [],
+        availability: availability || 'all',
+        validUntil: validUntil ? new Date(validUntil) : null,
+        termsAndConditions: termsAndConditions || null,
+        howToUse: howToUse || [],
+        features: features || [],
+        isActive: isActive ?? true,
+        isFeatured: isFeatured ?? false,
+        maxUsages: maxUsages || null,
+      },
+      include: {
+        partner: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+          },
+        },
+      },
+    });
+
+    // Revalidate all product-related cache tags
+    revalidateTag('products', {});
+    revalidateTag('featured-products', {});
+    revalidateTag(`product-${slug}`, {});
+    revalidateTag(`related-products-${existingProduct.id}`, {});
+    // Also revalidate old slug if changed
+    if (slug !== existingProduct.slug) {
+      revalidateTag(`product-${existingProduct.slug}`, {});
+      revalidatePath(`/products/${existingProduct.slug}`);
+    }
+    revalidatePath('/products');
+    revalidatePath(`/products/${slug}`);
+    revalidatePath('/dashboard/products');
+
+    return NextResponse.json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return NextResponse.json(
+      { success: false, error: 'Erro ao atualizar produto' },
+      { status: 500 }
+    );
   }
 }

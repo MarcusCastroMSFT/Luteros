@@ -27,7 +27,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="group bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer">
+    <div className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer">
       <Link href={`/products/${product.slug}`} className="block">
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -76,18 +76,18 @@ export function ProductCard({ product }: ProductCardProps) {
                 sizes="24px"
               />
             </div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-gray-600">
               {product.partner.name}
             </span>
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-cta-highlight dark:group-hover:text-brand-400 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-cta-highlight transition-colors">
             {product.title}
           </h3>
 
           {/* Short Description */}
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
             {product.shortDescription}
           </p>
 
@@ -107,40 +107,40 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="flex items-center justify-between mb-3">
             <div className="space-y-1">
               {product.discount.originalPrice && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                <div className="text-sm text-gray-500 line-through">
                   R$ {product.discount.originalPrice.toFixed(2).replace('.', ',')}
                 </div>
               )}
               {product.discount.discountedPrice && (
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                <div className="text-lg font-bold text-green-600">
                   R$ {product.discount.discountedPrice.toFixed(2).replace('.', ',')}
                 </div>
               )}
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-500 dark:text-gray-400">Economia</div>
-              <div className="text-sm font-medium text-red-600 dark:text-red-400">
+              <div className="text-xs text-gray-500">Economia</div>
+              <div className="text-sm font-medium text-red-600">
                 R$ {(product.discount.originalPrice! - product.discount.discountedPrice!).toFixed(2).replace('.', ',')}
               </div>
             </div>
           </div>
 
           {/* Promo Code */}
-          <div className="flex items-center gap-2 mb-3 p-2 bg-gray-50 dark:bg-gray-700 rounded">
-            <Tag size={14} className="text-cta-highlight dark:text-brand-400" />
-            <span className="text-sm font-mono font-medium text-gray-900 dark:text-white">
+          <div className="flex items-center gap-2 mb-3 p-2 bg-gray-50 rounded">
+            <Tag size={14} className="text-cta-highlight" />
+            <span className="text-sm font-mono font-medium text-gray-900">
               {product.promoCode}
             </span>
           </div>
 
           {/* Valid Until */}
-          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-4">
+          <div className="flex items-center gap-1 text-xs text-gray-500 mb-4">
             <CalendarDays size={12} />
             Válido até {formatDate(product.validUntil)}
           </div>
 
           {/* Usage Stats */}
-          <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-4">
+          <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
             <span>{product.usageCount} usos</span>
             {product.maxUsages && (
               <span>

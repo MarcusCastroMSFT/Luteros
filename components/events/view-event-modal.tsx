@@ -152,8 +152,8 @@ export function ViewEventModal({
             <div className="space-y-6">
               {/* Status Alerts */}
               {!event.isPublished && (
-                <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-600">
-                  <AlertDescription className="text-amber-800 dark:text-amber-400 font-medium">
+                <Alert className="border-amber-500 bg-amber-50">
+                  <AlertDescription className="text-amber-800 font-medium">
                     ⚠️ Este evento não está publicado e não está visível publicamente.
                   </AlertDescription>
                 </Alert>

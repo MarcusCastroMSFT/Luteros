@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="bg-gradient-to-br from-brand-50 to-brand-secondary-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+    <div className="bg-gradient-to-br from-brand-50 to-brand-secondary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 lg:gap-32 items-center">
           {/* Left side - 404 Image */}

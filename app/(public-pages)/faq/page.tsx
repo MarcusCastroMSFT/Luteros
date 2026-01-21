@@ -245,23 +245,23 @@ function FAQAccordion({ item }: { item: FAQItem }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="border border-gray-200 rounded-lg">
       <button
-        className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors rounded-lg cursor-pointer"
+        className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors rounded-lg cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="font-medium text-gray-900 dark:text-gray-100 pr-4">
+        <span className="font-medium text-gray-900 pr-4">
           {item.question}
         </span>
         {isOpen ? (
-          <ChevronUp className="text-brand-600 dark:text-brand-400 flex-shrink-0" size={20} />
+          <ChevronUp className="text-brand-600 flex-shrink-0" size={20} />
         ) : (
-          <ChevronDown className="text-brand-600 dark:text-brand-400 flex-shrink-0" size={20} />
+          <ChevronDown className="text-brand-600 flex-shrink-0" size={20} />
         )}
       </button>
       {isOpen && (
         <div className="px-6 pb-4">
-          <div className="text-gray-700 dark:text-gray-300 leading-relaxed">
+          <div className="text-gray-700 leading-relaxed">
             {typeof item.answer === 'string' ? (
               <p>{item.answer}</p>
             ) : (
@@ -287,7 +287,7 @@ export default function FAQPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <PageHeader
         title="Perguntas Frequentes"
         description="Encontre respostas para suas dúvidas sobre a Luteros"
@@ -307,7 +307,7 @@ export default function FAQPage() {
               placeholder="Buscar nas perguntas frequentes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
             />
           </div>
 
@@ -318,7 +318,7 @@ export default function FAQPage() {
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                 !selectedCategory
                   ? 'bg-cta-highlight text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
               Todas
@@ -330,7 +330,7 @@ export default function FAQPage() {
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                   selectedCategory === category
                     ? 'bg-cta-highlight text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 {category}
@@ -343,45 +343,45 @@ export default function FAQPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sidebar with Quick Links */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6 sticky top-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 sticky top-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Acesso Rápido
               </h3>
               <div className="space-y-3">
-                <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/30 border-l-4 border-brand-500 dark:border-brand-400 p-4 rounded-lg">
-                  <h4 className="font-medium text-brand-800 dark:text-brand-200 mb-2">
+                <div className="bg-gradient-to-r from-brand-50 to-brand-100 border-l-4 border-brand-500 p-4 rounded-lg">
+                  <h4 className="font-medium text-brand-800 mb-2">
                     Precisa de Ajuda Imediata?
                   </h4>
-                  <p className="text-sm text-brand-700 dark:text-brand-300 mb-3">
+                  <p className="text-sm text-brand-700 mb-3">
                     Nossa equipe está sempre disponível para ajudar você.
                   </p>
                   <div className="space-y-2 text-sm">
-                    <p className="text-brand-800 dark:text-brand-200">
+                    <p className="text-brand-800">
                       <strong>Chat:</strong> Disponível 24/7
                     </p>
-                    <p className="text-brand-800 dark:text-brand-200">
+                    <p className="text-brand-800">
                       <strong>Email:</strong> suporte@luteros.com
                     </p>
-                    <p className="text-brand-800 dark:text-brand-200">
+                    <p className="text-brand-800">
                       <strong>WhatsApp:</strong> (11) 9999-9999
                     </p>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-l-4 border-blue-500 dark:border-blue-400 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-800 mb-2">
                     Emergência Médica?
                   </h4>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <p className="text-sm text-blue-700">
                     Em caso de emergência médica, procure imediatamente atendimento presencial ou ligue 192.
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Link href="/privacy" className="block hover:text-cta-highlight dark:hover:text-cta-highlight text-sm transition-colors">
+                  <Link href="/privacy" className="block hover:text-cta-highlight text-sm transition-colors">
                     → Política de Privacidade
                   </Link>
-                  <Link href="/terms" className="block hover:text-cta-highlight dark:hover:text-cta-highlight text-sm transition-colors">
+                  <Link href="/terms" className="block hover:text-cta-highlight text-sm transition-colors">
                     → Termos de Uso
                   </Link>
                 </div>
@@ -396,10 +396,10 @@ export default function FAQPage() {
                 <>
                   {selectedCategory && (
                     <div className="mb-6">
-                      <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                         {selectedCategory}
                       </h2>
-                      <p className="text-gray-600 dark:text-gray-400">
+                      <p className="text-gray-600">
                         {filteredFAQs.length} pergunta{filteredFAQs.length !== 1 ? 's' : ''} encontrada{filteredFAQs.length !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -411,10 +411,10 @@ export default function FAQPage() {
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400 text-lg">
+                  <p className="text-gray-500 text-lg">
                     Nenhuma pergunta encontrada para &ldquo;{searchTerm}&rdquo;
                   </p>
-                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                  <p className="text-gray-400 text-sm mt-2">
                     Tente buscar com outras palavras ou entre em contato conosco.
                   </p>
                 </div>
@@ -425,11 +425,11 @@ export default function FAQPage() {
 
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
-          <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/30 dark:to-brand-800/30 border border-brand-200 dark:border-brand-700/50 rounded-lg p-8">
-            <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-gradient-to-r from-brand-50 to-brand-100 border border-brand-200 rounded-lg p-8">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
               Não encontrou sua resposta?
             </h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
+            <p className="text-gray-700 mb-6">
               Nossa equipe de suporte está pronta para ajudar você com qualquer dúvida específica.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

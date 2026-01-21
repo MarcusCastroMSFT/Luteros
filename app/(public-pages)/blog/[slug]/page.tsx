@@ -4,10 +4,14 @@ import nextDynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getArticleBySlug, getArticleMetadata } from '@/lib/articles';
+import { getArticleBySlug, getArticleMetadata, getAllArticleSlugs } from '@/lib/articles';
 
-// ISR: Revalidate every 30 minutes, with on-demand revalidation when articles are updated
-export const revalidate = 1800; // 30 minutes in seconds
+// Generate static params for all published articles
+// New articles are accessible immediately via cache revalidation on creation
+export async function generateStaticParams() {
+  const slugs = await getAllArticleSlugs()
+  return slugs.map((slug: string) => ({ slug }))
+}
 
 // Dynamically import non-critical components for better performance
 const ArticleShare = nextDynamic(() => import('@/components/blog/articleShare').then(mod => ({ default: mod.ArticleShare })), {
@@ -114,7 +118,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <ArticleContent content={article.content} className="mb-12" />
 
           {/* Share Section */}
-          <div className="border-t border-b border-gray-200 dark:border-gray-700 py-8 mb-12">
+          <div className="border-t border-b border-gray-200 py-8 mb-12">
             <ArticleShare
               title={article.title}
               url={articleUrl}

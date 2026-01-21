@@ -1,12 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, connection } from 'next/server'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 300 // Revalidate every 5 minutes
-
 export async function GET(request: NextRequest) {
   try {
+    await connection()
+    
     // Verify authentication and authorization (admin or instructor only)
     const authResult = await requireAdminOrInstructor(request)
     if (authResult instanceof NextResponse) {

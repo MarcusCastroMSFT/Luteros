@@ -6,6 +6,7 @@ import { Providers } from "../components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -86,14 +87,16 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${cardo.variable} antialiased min-h-screen font-sans`}
       >
-        <Providers>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
-          <Toaster />
-          <SpeedInsights />
-          <Analytics />
-        </Providers>
+        <Suspense>
+          <Providers>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+            <Toaster />
+            <SpeedInsights />
+            <Analytics />
+          </Providers>
+        </Suspense>
       </body>
     </html>
   );

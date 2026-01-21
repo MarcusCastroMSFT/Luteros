@@ -36,11 +36,11 @@ export function PageHeader({ title, description, breadcrumbs, className = '', al
                 <React.Fragment key={index}>
                   <BreadcrumbItem>
                     {item.href ? (
-                      <BreadcrumbLink href={item.href} className="text-gray-600 dark:text-gray-300 hover:text-primary">
+                      <BreadcrumbLink href={item.href} className="text-gray-600 hover:text-primary">
                         {item.label}
                       </BreadcrumbLink>
                     ) : (
-                      <BreadcrumbPage className="text-gray-900 dark:text-white font-medium">
+                      <BreadcrumbPage className="text-gray-900 font-medium">
                         {item.label}
                       </BreadcrumbPage>
                     )}
@@ -58,7 +58,7 @@ export function PageHeader({ title, description, breadcrumbs, className = '', al
 
           {/* Description */}
           {description && (
-            <p className={`text-lg text-gray-600 dark:text-gray-300 ${isLeft ? 'max-w-3xl' : 'max-w-2xl mx-auto'}`}>
+            <p className={`text-lg text-gray-600 ${isLeft ? 'max-w-3xl' : 'max-w-2xl mx-auto'}`}>
               {description}
             </p>
           )}

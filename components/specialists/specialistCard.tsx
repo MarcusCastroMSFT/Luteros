@@ -12,10 +12,10 @@ interface SpecialistCardProps {
 export function SpecialistCard({ specialist }: SpecialistCardProps) {
   return (
     <Link href={`/specialists/${specialist.slug}`} className="cursor-pointer">
-      <Card className="group hover:shadow-lg transition-all py-0 duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-cta-highlight overflow-hidden dark:bg-gray-800">
+      <Card className="group hover:shadow-lg transition-all py-0 duration-300 cursor-pointer border border-gray-200 hover:border-cta-highlight overflow-hidden">
         <CardContent className="p-0">
           {/* Avatar Image - Full width */}
-          <div className="relative w-full h-48 bg-gradient-to-br from-brand-100 to-brand-secondary-100 dark:from-brand-900/20 dark:to-brand-secondary-900/20">
+          <div className="relative w-full h-48 bg-gradient-to-br from-brand-100 to-brand-secondary-100">
             <Image
               src={specialist.avatar}
               alt={specialist.name}
@@ -27,7 +27,7 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
           {/* Content Section */}
           <div className="p-6">
             {/* Stats */}
-            <div className="flex items-center gap-4 mb-3 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
                 <span>{specialist.studentsCount} Estudantes</span>
@@ -39,12 +39,12 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
             </div>
 
             {/* Name */}
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1 group-hover:text-cta-highlight transition-colors">
+            <h3 className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-cta-highlight transition-colors">
               {specialist.name}
             </h3>
             
             {/* Profession */}
-            <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">
+            <p className="text-gray-600 text-sm mb-3">
               {specialist.profession}
             </p>
 
@@ -53,13 +53,13 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
               {specialist.specialties.slice(0, 2).map((specialty, index) => (
                 <span 
                   key={index}
-                  className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+                  className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
                 >
                   {specialty}
                 </span>
               ))}
               {specialist.specialties.length > 2 && (
-                <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
                   +{specialist.specialties.length - 2}
                 </span>
               )}
@@ -69,9 +69,9 @@ export function SpecialistCard({ specialist }: SpecialistCardProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900 dark:text-white">{specialist.rating}</span>
+                <span className="font-medium text-gray-900">{specialist.rating}</span>
               </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{specialist.experience}</span>
+              <span className="text-xs text-gray-500">{specialist.experience}</span>
             </div>
           </div>
         </CardContent>

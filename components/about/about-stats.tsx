@@ -11,13 +11,13 @@ export const AboutStatsSection = memo<AboutStatsProps>(function AboutStatsSectio
   className = ''
 }) {
   return (
-    <section className={`py-20 bg-white dark:bg-gray-900 ${className}`}>
+    <section className={`py-20 bg-white ${className}`}>
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
             Nosso Impacto em Números
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Resultado do nosso compromisso com a excelência educacional e o desenvolvimento profissional.
           </p>
         </div>
@@ -28,15 +28,15 @@ export const AboutStatsSection = memo<AboutStatsProps>(function AboutStatsSectio
               key={stat.id}
               className="text-center group"
             >
-              <div className="bg-gradient-to-br from-cta-highlight via-cta-highlight/95 to-cta-highlight/90 dark:bg-gradient-to-br dark:from-brand-900/80 dark:via-brand-800/70 dark:to-brand-900/60 rounded-xl p-8 mb-4 group-hover:scale-105 transition-transform duration-300">
+              <div className="bg-gradient-to-br from-cta-highlight via-cta-highlight/95 to-cta-highlight/90 rounded-xl p-8 mb-4 group-hover:scale-105 transition-transform duration-300">
                 <div className="text-4xl md:text-5xl font-bold text-white mb-2">
                   {stat.number}
                 </div>
-                <div className="text-lg font-semibold text-white/90 dark:text-brand-200/90">
+                <div className="text-lg font-semibold text-white/90">
                   {stat.label}
                 </div>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 font-medium">
+              <p className="text-gray-600 font-medium">
                 {stat.description}
               </p>
             </div>

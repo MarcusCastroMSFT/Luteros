@@ -72,42 +72,42 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
           <div className="space-y-4">
             {posts.length === 0 ? (
               <div className="text-center py-8">
-                <div className="text-gray-500 dark:text-gray-400 mb-2">
+                <div className="text-gray-500 mb-2">
                   Você ainda não criou nenhum post
                 </div>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
+                <p className="text-sm text-gray-400">
                   Comece a participar da comunidade criando seu primeiro post
                 </p>
               </div>
             ) : (
               posts.map((post) => (
-                <div key={post.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-primary">
+                    <h3 className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary">
                       {post.title}
                     </h3>
-                    <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+                    <button className="text-gray-400 hover:text-gray-600 p-1">
                       <MoreHorizontal size={16} />
                     </button>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                     <span>{formatDate(post.createdDate)}</span>
                     <span>•</span>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {post.category}
                     </span>
                     <span>•</span>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {post.subcategory}
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                  <p className="text-gray-600 mb-4 line-clamp-3">
                     {post.content}
                   </p>
                   
-                  <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-6 text-sm text-gray-500">
                     <div className="flex items-center gap-2">
                       <Heart size={16} />
                       <span>{post.likes}</span>
@@ -120,8 +120,8 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
                       onClick={() => reportItem(post.id, post.author)}
                       className={`flex items-center gap-2 transition-colors cursor-pointer ${
                         reportedItems.has(post.id) 
-                          ? 'text-red-500 dark:text-red-400' 
-                          : 'hover:text-red-500 dark:hover:text-red-400'
+                          ? 'text-red-500' 
+                          : 'hover:text-red-500'
                       }`}
                       disabled={reportedItems.has(post.id)}
                     >
@@ -138,10 +138,10 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
       case 'replies':
         return (
           <div className="text-center py-8">
-            <div className="text-gray-500 dark:text-gray-400 mb-2">
+            <div className="text-gray-500 mb-2">
               Suas respostas aparecerão aqui
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
+            <p className="text-sm text-gray-400">
               Participe das discussões respondendo aos posts da comunidade
             </p>
           </div>
@@ -150,10 +150,10 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
       case 'bookmarks':
         return (
           <div className="text-center py-8">
-            <div className="text-gray-500 dark:text-gray-400 mb-2">
+            <div className="text-gray-500 mb-2">
               Seus posts favoritos aparecerão aqui
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
+            <p className="text-sm text-gray-400">
               Salve posts interessantes para acessá-los facilmente depois
             </p>
           </div>
@@ -165,9 +165,9 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-gray-200">
         <div className="flex">
           {tabs.map((tab) => (
             <button
@@ -175,16 +175,16 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary bg-brand-50 dark:bg-brand-900/10'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? 'border-primary text-primary bg-brand-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center justify-center gap-2">
                 <span>{tab.label}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   activeTab === tab.id
-                    ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                    ? 'bg-brand-100 text-brand-600'
+                    : 'bg-gray-100 text-gray-500'
                 }`}>
                   {tab.count}
                 </span>

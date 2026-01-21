@@ -72,7 +72,7 @@ export function EventInfo({
   };
 
   return (
-    <Card className="w-full py-0 max-w-md mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
+    <Card className="w-full py-0 max-w-md mx-auto bg-white border border-gray-200 shadow-lg">
       <CardContent className="p-0">
         {/* Event Image */}
         <div className="p-4">
@@ -89,13 +89,13 @@ export function EventInfo({
 
         {/* Event Info Section */}
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">
             Informações
           </h3>
 
           {/* Cost */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2 text-gray-600">
               <BadgeDollarSign className="w-4 h-4" />
               <span className="text-sm font-medium">Preço:</span>
             </div>
@@ -106,33 +106,33 @@ export function EventInfo({
 
           {/* Total Slots */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2 text-gray-600">
               <Users className="w-4 h-4" />
               <span className="text-sm font-medium">Lugares:</span>
             </div>
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+            <span className="text-lg font-semibold text-gray-900">
               {totalSlots}
             </span>
           </div>
 
           {/* Booked Slots */}
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2 text-gray-600">
               <Clock className="w-4 h-4" />
               <span className="text-sm font-medium">Lugares Reservados:</span>
             </div>
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+            <span className="text-lg font-semibold text-gray-900">
               {bookedSlots}
             </span>
           </div>
 
           {/* Separator */}
-          <hr className="border-gray-200 dark:border-gray-600 mb-6" />
+          <hr className="border-gray-200 mb-6" />
 
           {/* Registration Buttons */}
           {isCheckingRegistration ? (
             <div className="w-full mb-6">
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-12 animate-pulse"></div>
+              <div className="w-full bg-gray-200 rounded-lg h-12 animate-pulse"></div>
             </div>
           ) : !isRegistered ? (
             <button 
@@ -140,10 +140,10 @@ export function EventInfo({
               disabled={isRegistering || bookedSlots >= totalSlots}
               className={`w-full font-semibold py-3 rounded-lg mb-6 transition-colors flex items-center justify-center gap-2 ${
                 bookedSlots >= totalSlots
-                  ? 'bg-gray-400 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-not-allowed'
+                  ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
                   : isRegistering
-                  ? 'bg-slate-600 dark:bg-slate-600 text-white cursor-wait'
-                  : 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white cursor-pointer'
+                  ? 'bg-slate-600 text-white cursor-wait'
+                  : 'bg-slate-800 hover:bg-slate-900 text-white cursor-pointer'
               }`}
             >
               {isRegistering ? (
@@ -167,7 +167,7 @@ export function EventInfo({
             </button>
           ) : (
             <div className="mb-6 space-y-3">
-              <div className="w-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 border border-green-300 dark:border-green-700">
+              <div className="w-full bg-green-100 text-green-800 font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 border border-green-300">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -176,7 +176,7 @@ export function EventInfo({
               <button 
                 onClick={onCancelRegistration}
                 disabled={isRegistering}
-                className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isRegistering ? 'Cancelando...' : 'Cancelar Inscrição'}
               </button>
@@ -185,33 +185,33 @@ export function EventInfo({
 
           {/* Share Section */}
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+            <p className="text-sm font-medium text-gray-900 mb-3">
               Compartilhar
             </p>
             <div className="flex justify-center gap-3">
               <button 
                 onClick={handleFacebookShare}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <Facebook className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <Facebook className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
               <button 
                 onClick={handleXShare}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <XLogo className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <XLogo className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
               <button 
                 onClick={handleCopyLink}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <Link className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <Link className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
               <button 
                 onClick={handleLinkedInShare}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <Linkedin className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <Linkedin className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
             </div>
           </div>

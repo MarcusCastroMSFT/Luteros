@@ -82,7 +82,7 @@ export function CourseInfo({ course, onEnroll }: CourseInfoProps) {
 
   return (
     <>
-      <Card className="w-full py-0 max-w-md mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
+      <Card className="w-full py-0 max-w-md mx-auto bg-white border border-gray-200 shadow-lg">
         <CardContent className="p-0">
           {/* Course Image/Video */}
           <div className="p-4">
@@ -118,10 +118,10 @@ export function CourseInfo({ course, onEnroll }: CourseInfoProps) {
               </span>
               {course.originalPrice && course.originalPrice > course.price && (
                 <>
-                  <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                  <span className="text-lg text-gray-500 line-through">
                     {formatPrice(course.originalPrice)}
                   </span>
-                  <span className="text-sm bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-400 px-2 py-1 rounded">
+                  <span className="text-sm bg-brand-100 text-brand-600 px-2 py-1 rounded">
                     {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% OFF
                   </span>
                 </>
@@ -134,7 +134,7 @@ export function CourseInfo({ course, onEnroll }: CourseInfoProps) {
         <div className="px-6 mb-6">
           <button 
             onClick={onEnroll}
-            className="w-full bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold py-3 rounded-lg mb-3 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg mb-3 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             Registrar
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,43 +145,43 @@ export function CourseInfo({ course, onEnroll }: CourseInfoProps) {
 
         {/* Course Includes Section */}
         <div className="px-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Este curso inclui:
           </h3>
 
           <div className="space-y-3">
             {/* Video Hours */}
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Clock className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{course.duration} de video</span>
             </div>
 
             {/* Articles (if available) */}
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <FileText className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">3 artigos</span>
             </div>
 
             {/* Downloadable Resources */}
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Download className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{course.lessonsCount * 10 + 49} recursos para download</span>
             </div>
 
             {/* Mobile and TV Access */}
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Smartphone className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">Acesso em dispositivos móveis e TV</span>
             </div>
 
             {/* Full Lifetime Access */}
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Infinity className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">Acesso incluso com assinatura mensal</span>
             </div>
 
             {/* Certificate of Completion */}
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3 text-gray-600">
               <Award className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">Certificado de conclusão</span>
             </div>
@@ -191,33 +191,33 @@ export function CourseInfo({ course, onEnroll }: CourseInfoProps) {
         {/* Share Section */}
         <div className="px-6 pb-6">
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+            <p className="text-sm font-medium text-gray-900 mb-3">
               Compartilhe este curso
             </p>
             <div className="flex justify-center gap-3">
               <button 
                 onClick={handleFacebookShare}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <Facebook className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <Facebook className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
               <button 
                 onClick={handleXShare}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <XLogo className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <XLogo className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
               <button 
                 onClick={handleCopyLink}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <Link className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <Link className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
               <button 
                 onClick={handleLinkedInShare}
-                className="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer group"
               >
-                <Linkedin className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-primary" />
+                <Linkedin className="w-4 h-4 text-gray-600 group-hover:text-primary" />
               </button>
             </div>
           </div>

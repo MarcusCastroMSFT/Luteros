@@ -163,8 +163,8 @@ export function ToolbarPlugin() {
       onClick={onClick}
       title={title}
       className={cn(
-        'h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800',
-        isActive && 'bg-gray-100 dark:bg-gray-800 text-primary'
+        'h-8 w-8 p-0 hover:bg-gray-100',
+        isActive && 'bg-gray-100 text-primary'
       )}
     >
       {children}
@@ -205,7 +205,7 @@ export function ToolbarPlugin() {
 
   return (
     <div 
-      className="flex items-center gap-1 p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+      className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50"
       ref={toolbarRef}
     >
       {/* Block Type */}

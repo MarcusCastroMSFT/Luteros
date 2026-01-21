@@ -2,9 +2,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function ProductDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb Skeleton */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center space-x-2">
             <Skeleton className="h-4 w-16" />
@@ -20,7 +20,7 @@ export function ProductDetailSkeleton() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               {/* Image */}
               <div className="relative aspect-[16/10]">
                 <Skeleton className="absolute inset-0" />
@@ -94,7 +94,7 @@ export function ProductDetailSkeleton() {
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
               {/* Price Card */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 {/* Pricing */}
                 <div className="mb-4">
                   <Skeleton className="h-5 w-24 mb-2" />
@@ -118,7 +118,7 @@ export function ProductDetailSkeleton() {
                 </div>
 
                 {/* Usage Stats */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex justify-between">
                     <Skeleton className="h-4 w-16" />
                     <Skeleton className="h-4 w-20" />
@@ -127,7 +127,7 @@ export function ProductDetailSkeleton() {
               </div>
 
               {/* Related Products */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <Skeleton className="h-6 w-40 mb-4" />
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (

@@ -122,17 +122,17 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
   return (
     <div className="space-y-6">
       {/* Audio Player */}
-      <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 rounded-lg p-6 border border-brand-200 dark:border-brand-700">
+      <div className="bg-gradient-to-r from-brand-50 to-brand-100 rounded-lg p-6 border border-brand-200">
         <audio ref={audioRef} src={getAudioUrl()} preload="metadata" />
         
         {/* Audio Info */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-brand-200 dark:bg-brand-800 rounded-full flex items-center justify-center">
-            <Headphones size={24} className="text-cta-highlight dark:text-brand-400" />
+          <div className="w-16 h-16 bg-brand-200 rounded-full flex items-center justify-center">
+            <Headphones size={24} className="text-cta-highlight" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">{lesson.title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Duração: {lesson.duration}</p>
+            <h3 className="font-semibold text-gray-900">{lesson.title}</h3>
+            <p className="text-sm text-gray-600">Duração: {lesson.duration}</p>
           </div>
         </div>
 
@@ -144,9 +144,9 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
             max={duration || 0}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
           />
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
@@ -158,7 +158,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
             variant="ghost"
             size="sm"
             onClick={() => skip(-10)}
-            className="text-gray-600 dark:text-gray-400"
+            className="text-gray-600"
           >
             <SkipBack size={20} />
           </Button>
@@ -167,7 +167,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
             variant="ghost"
             size="sm"
             onClick={() => skip(-5)}
-            className="text-gray-600 dark:text-gray-400"
+            className="text-gray-600"
           >
             <RotateCcw size={16} />
             <span className="text-xs ml-1">5s</span>
@@ -184,7 +184,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
             variant="ghost"
             size="sm"
             onClick={() => skip(5)}
-            className="text-gray-600 dark:text-gray-400"
+            className="text-gray-600"
           >
             <span className="text-xs mr-1">5s</span>
             <SkipForward size={16} />
@@ -194,7 +194,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
             variant="ghost"
             size="sm"
             onClick={() => skip(10)}
-            className="text-gray-600 dark:text-gray-400"
+            className="text-gray-600"
           >
             <SkipForward size={20} />
           </Button>
@@ -207,7 +207,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
               variant="ghost"
               size="sm"
               onClick={toggleMute}
-              className="text-gray-600 dark:text-gray-400"
+              className="text-gray-600"
             >
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </Button>
@@ -218,12 +218,12 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
               step={0.1}
               value={isMuted ? 0 : volume}
               onChange={handleVolumeChange}
-              className="w-20 h-1 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              className="w-20 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Velocidade:</span>
+            <span className="text-xs text-gray-600">Velocidade:</span>
             {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
               <Button
                 key={rate}
@@ -233,7 +233,7 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
                 className={`text-xs ${
                   playbackRate === rate 
                     ? 'bg-cta-highlight text-white' 
-                    : 'text-gray-600 dark:text-gray-400'
+                    : 'text-gray-600'
                 }`}
               >
                 {rate}x
@@ -244,33 +244,33 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
       </div>
 
       {/* Audio Transcript */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold text-gray-900 mb-3">
           Transcrição do Áudio
         </h3>
-        <div className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed space-y-2">
+        <div className="text-gray-600 text-sm leading-relaxed space-y-2">
           <p>
-            <span className="text-gray-400 dark:text-gray-500">[00:00]</span> Welcome to this audio lesson. 
+            <span className="text-gray-400">[00:00]</span> Welcome to this audio lesson. 
             In this session, we&apos;ll be covering the key concepts and practical applications...
           </p>
           <p>
-            <span className="text-gray-400 dark:text-gray-500">[00:30]</span> Let&apos;s start by understanding 
+            <span className="text-gray-400">[00:30]</span> Let&apos;s start by understanding 
             the fundamental principles that will guide our learning journey...
           </p>
           <p>
-            <span className="text-gray-400 dark:text-gray-500">[01:15]</span> As we progress through 
+            <span className="text-gray-400">[01:15]</span> As we progress through 
             this material, you&apos;ll notice how these concepts build upon each other...
           </p>
         </div>
       </div>
 
       {/* Audio Notes Section */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold text-gray-900 mb-2">
           Anotações de Escuta
         </h3>
         <textarea
-          className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
+          className="w-full h-24 p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 resize-none focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
           placeholder="Faça anotações enquanto escuta esta audioaula..."
         />
       </div>

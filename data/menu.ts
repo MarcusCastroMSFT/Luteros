@@ -141,7 +141,7 @@ export interface SocialLink {
 export const socialLinks: SocialLink[] = [
   { name: "Facebook", href: "#", icon: "facebook" },
   { name: "Twitter", href: "#", icon: "twitter" },
-  { name: "Instagram", href: "#", icon: "instagram" },
+  { name: "Instagram", href: "https://www.instagram.com/lutteros", icon: "instagram" },
   { name: "LinkedIn", href: "#", icon: "linkedin" }
 ];
 

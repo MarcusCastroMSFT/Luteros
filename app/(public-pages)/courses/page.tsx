@@ -108,7 +108,7 @@ export default function CoursesPage() {
         
         <div className="container mx-auto px-4 max-w-[1428px] py-16 text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Erro</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <p className="text-gray-600 mb-6">{error}</p>
           <Button 
             onClick={() => fetchCourses(currentPage, activeCategory, true)}
             className="cursor-pointer"
@@ -151,10 +151,10 @@ export default function CoursesPage() {
           <>
             {courses.length === 0 ? (
               <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Nenhum curso encontrado
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-gray-600 mb-4">
                   {activeCategory !== 'Todos' 
                     ? `Não encontramos cursos na categoria "${activeCategory}".`
                     : 'Não há cursos disponíveis no momento.'

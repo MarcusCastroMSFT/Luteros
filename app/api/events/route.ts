@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 1800 // Revalidate every 30 minutes
-
 export interface Event {
   id: string
   header: string

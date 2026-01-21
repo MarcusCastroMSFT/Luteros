@@ -59,17 +59,17 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <DialogContent className="sm:max-w-[500px] bg-white border border-gray-200">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-              <Flag size={20} className="text-red-600 dark:text-red-400" />
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <Flag size={20} className="text-red-600" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
                 Reportar {itemType === 'post' ? 'Post' : 'Resposta'}
               </DialogTitle>
-              <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+              <DialogDescription className="text-sm text-gray-600">
                 {itemAuthor && `De: ${itemAuthor}`}
               </DialogDescription>
             </div>
@@ -78,10 +78,10 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
 
         <div className="space-y-6">
           {/* Warning */}
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div className="flex gap-3">
-              <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-amber-800 dark:text-amber-200">
+              <AlertTriangle size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-amber-800">
                 <p className="font-medium mb-1">Antes de reportar:</p>
                 <p>Reportes falsos podem resultar em suspensão da sua conta. Use esta função apenas para conteúdo que viola nossas diretrizes da comunidade.</p>
               </div>
@@ -90,7 +90,7 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
 
           {/* Reason Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
+            <label className="block text-sm font-medium text-gray-900 mb-3">
               Motivo do reporte *
             </label>
             <div className="space-y-2">
@@ -99,8 +99,8 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
                   key={reason.id}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     selectedReason === reason.id
-                      ? 'border-primary bg-brand-50 dark:bg-brand-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      ? 'border-primary bg-brand-50'
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <input
@@ -109,9 +109,9 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
                     value={reason.id}
                     checked={selectedReason === reason.id}
                     onChange={(e) => setSelectedReason(e.target.value)}
-                    className="mt-1 w-4 h-4 text-primary border-gray-300 dark:border-gray-600 focus:ring-primary dark:bg-gray-700 cursor-pointer"
+                    className="mt-1 w-4 h-4 text-primary border-gray-300 focus:ring-primary cursor-pointer"
                   />
-                  <span className="text-sm text-gray-900 dark:text-white">{reason.label}</span>
+                  <span className="text-sm text-gray-900">{reason.label}</span>
                 </label>
               ))}
             </div>
@@ -119,7 +119,7 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
 
           {/* Details */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               Detalhes adicionais (opcional)
             </label>
             <textarea
@@ -127,10 +127,10 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Forneça mais contexto sobre o problema..."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               maxLength={500}
             />
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-xs text-gray-500 mt-1">
               {details.length}/500 caracteres
             </div>
           </div>
@@ -140,7 +140,7 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
             <Button
               variant="outline"
               onClick={handleClose}
-              className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
               disabled={isSubmitting}
             >
               Cancelar

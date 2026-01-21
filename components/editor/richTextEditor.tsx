@@ -121,16 +121,16 @@ const customTransformers = [
 
 const theme = {
   // Paragraph
-  paragraph: 'mb-2 text-gray-900 dark:text-gray-100',
+  paragraph: 'mb-2 text-gray-900',
   
   // Headings
   heading: {
-    h1: 'text-3xl font-bold mb-4 text-gray-900 dark:text-white',
-    h2: 'text-2xl font-semibold mb-3 text-gray-900 dark:text-white',
-    h3: 'text-xl font-semibold mb-3 text-gray-900 dark:text-white',
-    h4: 'text-lg font-medium mb-2 text-gray-900 dark:text-white',
-    h5: 'text-base font-medium mb-2 text-gray-900 dark:text-white',
-    h6: 'text-sm font-medium mb-2 text-gray-900 dark:text-white',
+    h1: 'text-3xl font-bold mb-4 text-gray-900',
+    h2: 'text-2xl font-semibold mb-3 text-gray-900',
+    h3: 'text-xl font-semibold mb-3 text-gray-900',
+    h4: 'text-lg font-medium mb-2 text-gray-900',
+    h5: 'text-base font-medium mb-2 text-gray-900',
+    h6: 'text-sm font-medium mb-2 text-gray-900',
   },
   
   // Lists
@@ -146,10 +146,10 @@ const theme = {
   },
   
   // Quote
-  quote: 'border-l-4 border-primary pl-4 italic text-gray-700 dark:text-gray-300 my-4',
+  quote: 'border-l-4 border-primary pl-4 italic text-gray-700 my-4',
   
   // Code
-  code: 'bg-gray-100 dark:bg-gray-800 rounded px-2 py-1 font-mono text-sm',
+  code: 'bg-gray-100 rounded px-2 py-1 font-mono text-sm',
   codeHighlight: {
     atrule: 'text-purple-600',
     attr: 'text-blue-600',
@@ -184,7 +184,7 @@ const theme = {
   },
   
   // Links
-  link: 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline cursor-pointer transition-colors',
+  link: 'text-blue-600 hover:text-blue-800 underline cursor-pointer transition-colors',
   
   // Text formatting
   text: {
@@ -193,19 +193,19 @@ const theme = {
     underline: 'underline',
     strikethrough: 'line-through',
     underlineStrikethrough: 'underline line-through',
-    code: 'bg-gray-100 dark:bg-gray-800 rounded px-1 py-0.5 font-mono text-sm',
+    code: 'bg-gray-100 rounded px-1 py-0.5 font-mono text-sm',
   },
   
   // Tables
-  table: 'border-collapse border border-gray-300 dark:border-gray-600 w-full my-4',
-  tableCell: 'border border-gray-300 dark:border-gray-600 px-3 py-2',
-  tableCellHeader: 'border border-gray-300 dark:border-gray-600 px-3 py-2 font-semibold bg-gray-50 dark:bg-gray-800',
+  table: 'border-collapse border border-gray-300 w-full my-4',
+  tableCell: 'border border-gray-300 px-3 py-2',
+  tableCellHeader: 'border border-gray-300 px-3 py-2 font-semibold bg-gray-50',
   
   // Hashtag
   hashtag: 'text-primary font-medium',
   
   // Horizontal Rule
-  hr: 'my-4 border-0 h-px bg-gray-300 dark:bg-gray-600',
+  hr: 'my-4 border-0 h-px bg-gray-300',
   
   // Element alignment classes
   elementFormat: {
@@ -276,7 +276,7 @@ export function RichTextEditor({
   };
 
   return (
-    <div className={cn('border border-gray-200 dark:border-gray-700 rounded-lg', className)}>
+    <div className={cn('border border-gray-200 rounded-lg', className)}>
       <LexicalComposer initialConfig={editorConfig}>
         {!readOnly && <ToolbarPlugin />}
         
@@ -285,10 +285,10 @@ export function RichTextEditor({
             <RichTextPlugin
               contentEditable={
                 <ContentEditable
-                  className="min-h-[500px] p-4 focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                  className="min-h-[500px] p-4 focus:outline-none bg-white text-gray-900"
                   aria-placeholder={placeholder}
                   placeholder={
-                    <div className="absolute top-4 left-4 text-gray-400 dark:text-gray-500 pointer-events-none">
+                    <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
                       {placeholder}
                     </div>
                   }

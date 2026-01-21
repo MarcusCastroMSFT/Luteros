@@ -36,16 +36,16 @@ export function SpecialistInfo({
           <div className="p-6 space-y-4">
             {/* Name and Profession */}
             <div className="text-center">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              <h1 className="text-xl font-bold text-gray-900 mb-1">
                 {specialist.name}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
+              <p className="text-gray-600 text-sm">
                 {specialist.profession}
               </p>
             </div>
 
             {/* Experience */}
-            <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-center gap-2 text-gray-600">
               <Clock className="w-4 h-4" />
               <span className="text-sm">{specialist.experience}</span>
             </div>
@@ -53,46 +53,46 @@ export function SpecialistInfo({
             {/* Rating */}
             <div className="flex items-center justify-center gap-2">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm font-medium text-gray-900">
                 {specialist.rating.toFixed(1)}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500">
                 ({specialist.studentsCount} avaliações)
               </span>
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400 mb-1">
+                <div className="flex items-center justify-center gap-1 text-gray-600 mb-1">
                   <Users className="w-4 h-4" />
                 </div>
-                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                <div className="text-lg font-bold text-gray-900">
                   {specialist.studentsCount}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-xs text-gray-500">
                   Estudantes
                 </div>
               </div>
               
               <div>
-                <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400 mb-1">
+                <div className="flex items-center justify-center gap-1 text-gray-600 mb-1">
                   <BookOpen className="w-4 h-4" />
                 </div>
-                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                <div className="text-lg font-bold text-gray-900">
                   {specialist.coursesCount}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-xs text-gray-500">
                   Cursos
                 </div>
               </div>
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Action Buttons */}
             <div className="space-y-3">
@@ -120,7 +120,7 @@ export function SpecialistInfo({
       {/* Specialties */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="font-semibold text-gray-900 mb-4">
             Especialidades
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -140,10 +140,10 @@ export function SpecialistInfo({
       {specialist.location && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="font-semibold text-gray-900 mb-4">
               Localização
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
+            <p className="text-gray-600 text-sm">
               {specialist.location}
             </p>
           </CardContent>
@@ -154,14 +154,14 @@ export function SpecialistInfo({
       {specialist.languages && specialist.languages.length > 0 && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="font-semibold text-gray-900 mb-4">
               Idiomas
             </h3>
             <div className="flex flex-wrap gap-2">
               {specialist.languages.map((language, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+                  className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full"
                 >
                   {language}
                 </span>
@@ -175,13 +175,13 @@ export function SpecialistInfo({
       {specialist.consultationPrice && (
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="font-semibold text-gray-900 mb-4">
               Consulta
             </h3>
             <p className="text-2xl font-bold text-cta-highlight">
               R$ {specialist.consultationPrice.toFixed(2).replace('.', ',')}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               por sessão
             </p>
           </CardContent>

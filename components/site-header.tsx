@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/navigation-menu";
 import { navigationMenu } from "@/data/menu";
 import { Logo } from "@/components/common/logo";
-import { ModeToggle } from "@/components/ui/mode-toggle";
 import { useAuth } from "@/contexts/auth-context";
 import { HeaderUserMenu } from "@/components/header-user-menu";
 
@@ -85,15 +84,12 @@ export function SiteHeader() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Right side - Cart, Theme, Auth */}
+          {/* Right side - Cart, Auth */}
           <div className="flex items-center space-x-4">
             {/* Cart */}
             <Button variant="ghost" size="sm" className="relative p-2 cursor-pointer hover:bg-transparent hover:text-cta-highlight transition-colors">
               <ShoppingCart className="w-5 h-5" />
             </Button>
-
-            {/* Theme Toggle */}
-            <ModeToggle />
 
             {/* Authentication */}
             {user ? (
@@ -106,7 +102,7 @@ export function SiteHeader() {
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 rounded-lg px-4 py-2 cursor-pointer transition-colors">
+                  <Button size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-lg px-4 py-2 cursor-pointer transition-colors">
                     Sign Up
                   </Button>
                 </Link>

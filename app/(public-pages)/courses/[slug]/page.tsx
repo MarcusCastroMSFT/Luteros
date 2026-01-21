@@ -83,7 +83,7 @@ export default function CoursePage({ params }: CoursePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Page Header */}
       <PageHeader
         title={course.title}
@@ -101,10 +101,10 @@ export default function CoursePage({ params }: CoursePageProps) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-12">
             {/* Course Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-gray-600 dark:text-gray-300 mb-8">
+            <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-8">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900 dark:text-white">{course.rating}</span>
+                <span className="font-medium text-gray-900">{course.rating}</span>
                 <span>({course.reviewsCount} avaliações)</span>
               </div>
               <div className="flex items-center gap-2">
@@ -131,12 +131,12 @@ export default function CoursePage({ params }: CoursePageProps) {
             )}
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Course Content Section */}
             {course.sections && course.sections.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Conteúdo do Curso
                 </h2>
                 <CourseContent 
@@ -148,11 +148,11 @@ export default function CoursePage({ params }: CoursePageProps) {
             )}
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Instructor Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Instrutor
               </h2>
               <InstructorCard instructor={course.instructor} />

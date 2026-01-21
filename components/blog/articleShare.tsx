@@ -61,7 +61,7 @@ export function ArticleShare({ title, url, className = '' }: ArticleShareProps) 
 
   return (
     <div className={`${className}`}>
-      <h3 className="text-lg font-semibold mb-4 font-cardo text-gray-900 dark:text-white">Compartilhar Artigo</h3>
+      <h3 className="text-lg font-semibold mb-4 font-cardo text-gray-900">Compartilhar Artigo</h3>
       <div className="flex flex-wrap gap-3">
         {shareLinks.map((link) => (
           <Button

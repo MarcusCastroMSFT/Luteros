@@ -8,7 +8,7 @@ export function EventList({ events = [], limit, className = '' }: EventListProps
   if (displayedEvents.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">No events found.</p>
+        <p className="text-gray-500">No events found.</p>
       </div>
     );
   }

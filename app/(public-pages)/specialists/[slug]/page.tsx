@@ -87,7 +87,7 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Page Header */}
       <PageHeader
         title={specialist.name}
@@ -105,7 +105,7 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-12">
             {/* Specialist Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-gray-600 dark:text-gray-300 mb-8">
+            <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-8">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
                 <span>{specialist.profession}</span>
@@ -122,11 +122,11 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
 
             {/* Bio Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Sobre o Especialista
               </h2>
-              <div className="prose prose-gray dark:prose-invert max-w-none">
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+              <div className="prose prose-gray max-w-none">
+                <p className="text-gray-600 leading-relaxed">
                   {specialist.fullBio || specialist.bio}
                 </p>
               </div>
@@ -135,14 +135,14 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
             {/* Education Section - Only show if data exists */}
             {specialist.education && specialist.education.length > 0 && (
               <>
-                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="border-t border-gray-200"></div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Formação
                   </h2>
                   <ul className="space-y-3">
                     {specialist.education.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
+                      <li key={index} className="flex items-start gap-3 text-gray-600">
                         <span className="text-cta-highlight font-bold text-lg">•</span>
                         <span className="leading-relaxed">{item}</span>
                       </li>
@@ -155,14 +155,14 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
             {/* Certifications Section - Only show if data exists */}
             {specialist.certifications && specialist.certifications.length > 0 && (
               <>
-                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="border-t border-gray-200"></div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Certificações
                   </h2>
                   <ul className="space-y-3">
                     {specialist.certifications.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
+                      <li key={index} className="flex items-start gap-3 text-gray-600">
                         <span className="text-cta-highlight font-bold text-lg">•</span>
                         <span className="leading-relaxed">{item}</span>
                       </li>
@@ -175,14 +175,14 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
             {/* Achievements Section - Only show if data exists */}
             {specialist.achievements && specialist.achievements.length > 0 && (
               <>
-                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="border-t border-gray-200"></div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Conquistas
                   </h2>
                   <ul className="space-y-3">
                     {specialist.achievements.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
+                      <li key={index} className="flex items-start gap-3 text-gray-600">
                         <span className="text-cta-highlight font-bold text-lg">•</span>
                         <span className="leading-relaxed">{item}</span>
                       </li>
@@ -193,21 +193,21 @@ export default function SpecialistPage({ params }: SpecialistPageProps) {
             )}
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Specialties Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Especialidades
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {specialist.specialties.map((specialty, index) => (
                   <div 
                     key={index}
-                    className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200"
                   >
                     <div className="w-2 h-2 bg-cta-highlight rounded-full"></div>
-                    <span className="text-gray-900 dark:text-white font-medium">{specialty}</span>
+                    <span className="text-gray-900 font-medium">{specialty}</span>
                   </div>
                 ))}
               </div>

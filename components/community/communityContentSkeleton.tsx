@@ -11,7 +11,7 @@ export function CommunityContentSkeleton() {
 
       {/* Posts Skeleton */}
       {[1, 2, 3, 4, 5].map((post) => (
-        <div key={post} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div key={post} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {/* Post Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">

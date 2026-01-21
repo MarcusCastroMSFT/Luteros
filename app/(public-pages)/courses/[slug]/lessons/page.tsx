@@ -111,12 +111,12 @@ export default function CourseLessonsPage() {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="text-xl font-semibold text-gray-900 mb-2">
             {error || 'Curso não encontrado'}
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
+          <div className="text-gray-600">
             {error || 'O curso solicitado não pôde ser encontrado.'}
           </div>
         </div>
@@ -125,15 +125,15 @@ export default function CourseLessonsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               {course.title}
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               {completedLessons.size} de {getAllLessons().length} aulas concluídas
             </p>
           </div>
@@ -145,8 +145,8 @@ export default function CourseLessonsPage() {
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
           {/* Left Column - Course Content */}
           <div className="xl:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Conteúdo do Curso
               </h2>
               <CourseContent 
@@ -171,8 +171,8 @@ export default function CourseLessonsPage() {
                 canNavigateNext={getCurrentLessonIndex() < getAllLessons().length - 1}
               />
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <div className="text-gray-600 dark:text-gray-400">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                <div className="text-gray-600">
                   Selecione uma aula para começar
                 </div>
               </div>

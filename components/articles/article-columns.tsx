@@ -223,8 +223,8 @@ export const articleColumns: ColumnDef<ArticleRow>[] = [
                 className="cursor-pointer"
                 onClick={() => setDeleteModalOpen(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
-                <span className="text-red-600 dark:text-red-400">Excluir artigo</span>
+                <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                <span className="text-red-600">Excluir artigo</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -9,10 +9,10 @@ interface SpecialistCoursesProps {
 
 export function SpecialistCourses({ courses }: SpecialistCoursesProps) {
   return (
-    <Card className="dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+    <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">My Courses</CardTitle>
-        <p className="text-gray-600 dark:text-gray-300">
+        <CardTitle className="text-2xl font-bold text-gray-900">My Courses</CardTitle>
+        <p className="text-gray-600">
           Explore my comprehensive course collection designed to help you master essential skills.
         </p>
       </CardHeader>

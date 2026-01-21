@@ -19,10 +19,10 @@ export const PricingCard = memo<PricingCardProps>(function PricingCard({
   
   return (
     <div
-      className={`relative bg-white dark:bg-gray-800 border rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 ${
+      className={`relative bg-white border rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 ${
         plan.popular
-          ? 'border-cta-highlight dark:border-cta-highlight ring-1 ring-cta-highlight/20 scale-105'
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          ? 'border-cta-highlight ring-1 ring-cta-highlight/20 scale-105'
+          : 'border-gray-200 hover:border-gray-300'
       } ${className}`}
     >
       {plan.popular && (
@@ -35,30 +35,30 @@ export const PricingCard = memo<PricingCardProps>(function PricingCard({
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">
           {plan.name}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-gray-600 mb-6">
           {plan.description}
         </p>
         
         {/* Price */}
         <div className="mb-6">
           <div className="flex items-center justify-center gap-1">
-            <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <span className="text-3xl font-bold text-gray-900">
               {plan.currency}
             </span>
-            <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">
+            <span className="text-5xl font-bold text-gray-900">
               {price === 0 ? '0' : monthlyPrice.toFixed(2).replace('.', ',')}
             </span>
             {price > 0 && (
-              <span className="text-gray-600 dark:text-gray-400 text-lg">
+              <span className="text-gray-600 text-lg">
                 /mês
               </span>
             )}
           </div>
           {isYearly && price > 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-500 mt-2">
               Cobrado anualmente ({plan.currency}{price.toFixed(2).replace('.', ',')})
             </p>
           )}
@@ -67,10 +67,10 @@ export const PricingCard = memo<PricingCardProps>(function PricingCard({
         {/* CTA Button */}
         <Link
           href={plan.id === 'free' ? '/register' : `/subscribe?plan=${plan.id}&billing=${isYearly ? 'yearly' : 'monthly'}`}
-          className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 group ${
+          className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 group ${
             plan.buttonVariant === 'filled'
               ? 'bg-cta-highlight text-white hover:bg-cta-highlight/90 focus:ring-cta-highlight shadow-md hover:shadow-lg'
-              : 'border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-cta-highlight dark:hover:border-cta-highlight hover:text-cta-highlight dark:hover:text-cta-highlight focus:ring-cta-highlight'
+              : 'border-2 border-gray-300 text-gray-700 hover:border-cta-highlight hover:text-cta-highlight focus:ring-cta-highlight'
           }`}
         >
           {plan.buttonText}
@@ -80,7 +80,7 @@ export const PricingCard = memo<PricingCardProps>(function PricingCard({
 
       {/* Features */}
       <div className="space-y-4">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm uppercase tracking-wide">
+        <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
           Recursos Incluídos
         </h4>
         <ul className="space-y-3">
@@ -90,21 +90,21 @@ export const PricingCard = memo<PricingCardProps>(function PricingCard({
                 feature.included
                   ? feature.highlight
                     ? 'bg-cta-highlight text-white'
-                    : 'bg-green-100 dark:bg-green-900/30'
-                  : 'bg-gray-100 dark:bg-gray-700'
+                    : 'bg-green-100'
+                  : 'bg-gray-100'
               }`}>
                 {feature.included ? (
                   <Check className="w-3 h-3 text-current" />
                 ) : (
-                  <X className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                  <X className="w-3 h-3 text-gray-400" />
                 )}
               </div>
               <span className={`text-sm ${
                 feature.included
                   ? feature.highlight
-                    ? 'text-gray-900 dark:text-gray-100 font-medium'
-                    : 'text-gray-700 dark:text-gray-300'
-                  : 'text-gray-400 dark:text-gray-500'
+                    ? 'text-gray-900 font-medium'
+                    : 'text-gray-700'
+                  : 'text-gray-400'
               }`}>
                 {feature.text}
               </span>

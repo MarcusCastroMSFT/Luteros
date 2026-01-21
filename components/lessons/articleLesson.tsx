@@ -66,19 +66,19 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
   return (
     <div className="space-y-6">
       {/* Article Controls */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-gray-600 dark:text-gray-400" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Tempo de leitura: {lesson.duration}</span>
+            <BookOpen size={16} className="text-gray-600" />
+            <span className="text-sm text-gray-600">Tempo de leitura: {lesson.duration}</span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Type size={16} className="text-gray-600 dark:text-gray-400" />
+            <Type size={16} className="text-gray-600" />
             <select
               value={fontSize}
               onChange={(e) => setFontSize(e.target.value)}
-              className="text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-900 dark:text-white"
+              className="text-sm bg-white border border-gray-300 rounded px-2 py-1 text-gray-900"
             >
               <option value="sm">Pequena</option>
               <option value="base">Normal</option>
@@ -93,19 +93,19 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
             variant="ghost"
             size="sm"
             onClick={() => setIsBookmarked(!isBookmarked)}
-            className={`${isBookmarked ? 'text-cta-highlight dark:text-brand-400' : 'text-gray-600 dark:text-gray-400'}`}
+            className={`${isBookmarked ? 'text-cta-highlight' : 'text-gray-600'}`}
           >
             <Bookmark size={16} className={isBookmarked ? 'fill-current' : ''} />
           </Button>
           
-          <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400">
+          <Button variant="ghost" size="sm" className="text-gray-600">
             <Share2 size={16} />
           </Button>
         </div>
       </div>
 
       {/* Article Content */}
-      <div className={`prose prose-gray dark:prose-invert max-w-none ${fontSizeClasses[fontSize as keyof typeof fontSizeClasses]}`}>
+      <div className={`prose prose-gray max-w-none ${fontSizeClasses[fontSize as keyof typeof fontSizeClasses]}`}>
         <div 
           className="article-content"
           dangerouslySetInnerHTML={{ __html: articleContent }}
@@ -113,22 +113,22 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
       </div>
 
       {/* Article Notes Section */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold text-gray-900 mb-2">
           Anotações do Artigo
         </h3>
         <textarea
-          className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
+          className="w-full h-32 p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 resize-none focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
           placeholder="Faça anotações enquanto lê este artigo..."
         />
       </div>
 
       {/* Article Summary */}
-      <div className="bg-brand-50 dark:bg-brand-900/20 rounded-lg p-4 border border-brand-200 dark:border-brand-700">
-        <h3 className="font-semibold text-brand-800 dark:text-brand-200 mb-2">
+      <div className="bg-brand-50 rounded-lg p-4 border border-brand-200">
+        <h3 className="font-semibold text-brand-800 mb-2">
           Pontos Principais
         </h3>
-        <ul className="text-brand-700 dark:text-brand-300 text-sm space-y-1">
+        <ul className="text-brand-700 text-sm space-y-1">
           <li>• Domine os conceitos fundamentais antes de avançar para tópicos mais complexos</li>
           <li>• Pratique regularmente com exemplos do mundo real</li>
           <li>• Evite armadilhas comuns seguindo as melhores práticas</li>

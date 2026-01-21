@@ -51,16 +51,16 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-4"></div>
-              <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-full mb-6"></div>
+              <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+              <div className="h-12 bg-gray-200 rounded w-full mb-6"></div>
               <div className="space-y-4">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
               </div>
             </div>
           </div>
@@ -71,13 +71,13 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
               {error}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               O artigo que você está procurando não foi encontrado ou não pôde ser carregado.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -105,14 +105,14 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
   const { article, relatedArticles } = data;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Navigation */}
           <div className="mb-8">
             <Link 
               href="/help" 
-              className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-cta-highlight transition-colors cursor-pointer"
+              className="inline-flex items-center text-gray-600 hover:text-cta-highlight transition-colors cursor-pointer"
             >
               <ArrowLeft size={20} className="mr-2" />
               Voltar ao Centro de Ajuda
@@ -120,22 +120,22 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
           </div>
 
           {/* Article Header */}
-          <div className="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+          <div className="mb-8 pb-8 border-b border-gray-200">
             <div className="mb-4">
               <Badge className="bg-cta-highlight/10 text-cta-highlight border-cta-highlight/20">
                 {article.category}
               </Badge>
             </div>
             
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
               {article.title}
             </h1>
             
-            <p className="text-xl text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+            <p className="text-xl text-gray-600 mb-6 leading-relaxed">
               {article.description}
             </p>
             
-            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
               <div className="flex items-center">
                 <Clock size={16} className="mr-2" />
                 {article.readTime}
@@ -160,8 +160,8 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
 
           {/* Related Articles */}
           {relatedArticles.length > 0 && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-12">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8">
+            <div className="border-t border-gray-200 pt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">
                 Artigos relacionados
               </h2>
               
@@ -170,21 +170,21 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
                   <Link
                     key={relatedArticle.slug}
                     href={`/help/${relatedArticle.slug}`}
-                    className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-lg transition-all duration-200 hover:border-cta-highlight/20 cursor-pointer"
+                    className="group bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all duration-200 hover:border-cta-highlight/20 cursor-pointer"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-cta-highlight transition-colors">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-cta-highlight transition-colors">
                         {relatedArticle.title}
                       </h3>
-                      <ArrowRight className="text-gray-400 dark:text-gray-500 group-hover:text-cta-highlight transition-colors flex-shrink-0 ml-2" size={16} />
+                      <ArrowRight className="text-gray-400 group-hover:text-cta-highlight transition-colors flex-shrink-0 ml-2" size={16} />
                     </div>
                     
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                       {relatedArticle.description}
                     </p>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{relatedArticle.readTime}</span>
+                      <span className="text-xs text-gray-500">{relatedArticle.readTime}</span>
                       <Badge 
                         variant={relatedArticle.difficulty === 'easy' ? 'secondary' : relatedArticle.difficulty === 'medium' ? 'outline' : 'default'}
                         className="text-xs"
@@ -199,11 +199,11 @@ export default function HelpArticlePage({ params }: { params: Promise<{ slug: st
           )}
 
           {/* Help CTA */}
-          <div className="mt-16 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-8 text-center">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <div className="mt-16 bg-gray-50 rounded-2xl p-8 text-center">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Este artigo foi útil?
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               Se você ainda tem dúvidas, nossa equipe está aqui para ajudar
             </p>
             

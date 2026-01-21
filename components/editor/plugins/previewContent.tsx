@@ -124,7 +124,7 @@ export function PreviewContent({
   }
 
   return (
-    <article className="min-h-[500px] p-4 bg-white dark:bg-gray-900">
+    <article className="min-h-[500px] p-4 bg-white">
       <style dangerouslySetInnerHTML={{
         __html: `
           .preview-content img[style*="width"][style*="height"] {
@@ -163,50 +163,16 @@ export function PreviewContent({
           .preview-content a[rel*="nofollow"] {
             font-weight: 500;
           }
-          
-          /* Ensure proper contrast in dark mode */
-          .dark .preview-content {
-            color: #f3f4f6 !important;
-          }
-          
-          .dark .preview-content h1,
-          .dark .preview-content h2,
-          .dark .preview-content h3,
-          .dark .preview-content h4,
-          .dark .preview-content h5,
-          .dark .preview-content h6 {
-            color: #ffffff !important;
-          }
-          
-          .dark .preview-content p,
-          .dark .preview-content li,
-          .dark .preview-content span {
-            color: #e5e7eb !important;
-          }
-          
-          .dark .preview-content strong,
-          .dark .preview-content b {
-            color: #ffffff !important;
-          }
-          
-          .dark .preview-content a {
-            color: #60a5fa !important;
-          }
-          
-          .dark .preview-content blockquote {
-            color: #d1d5db !important;
-            border-left-color: #6b7280 !important;
-          }
         `
       }} />
       <div 
-        className="preview-content prose prose-lg dark:prose-invert max-w-none 
-                   prose-headings:text-gray-900 dark:prose-headings:text-white
-                   prose-p:text-gray-900 dark:prose-p:text-gray-100
-                   prose-a:text-blue-600 dark:prose-a:text-blue-400
-                   prose-strong:text-gray-900 dark:prose-strong:text-white
-                   prose-code:bg-gray-100 dark:prose-code:bg-gray-800
-                   prose-hr:border-gray-300 dark:prose-hr:border-gray-600"
+        className="preview-content prose prose-lg max-w-none 
+                   prose-headings:text-gray-900
+                   prose-p:text-gray-900
+                   prose-a:text-blue-600
+                   prose-strong:text-gray-900
+                   prose-code:bg-gray-100
+                   prose-hr:border-gray-300"
         role="main"
         itemScope
         itemType="https://schema.org/Article"

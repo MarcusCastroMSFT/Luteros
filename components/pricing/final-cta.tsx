@@ -35,13 +35,13 @@ export const FinalCTA = memo<FinalCTAProps>(function FinalCTA({
 }) {
   return (
     <section className={`text-center ${className}`} aria-labelledby="final-cta-title">
-      <div className="bg-gradient-to-br from-cta-highlight via-cta-highlight/95 to-cta-highlight/90 dark:bg-gradient-to-br dark:from-brand-900/80 dark:via-brand-800/70 dark:to-brand-900/60 dark:border dark:border-brand-700/50 rounded-xl p-12 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-br from-cta-highlight via-cta-highlight/95 to-cta-highlight/90 rounded-xl p-12 text-white relative overflow-hidden">
         {/* Content */}
         <div className="relative z-10">
           <h2 id="final-cta-title" className="text-3xl font-bold mb-4">
             {title}
           </h2>
-          <p className="text-xl text-white/90 dark:text-brand-200/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             {description}
           </p>
           
@@ -53,8 +53,8 @@ export const FinalCTA = memo<FinalCTAProps>(function FinalCTA({
                 href={button.href}
                 className={`px-8 py-4 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   button.variant === 'primary'
-                    ? 'bg-white text-cta-highlight dark:bg-brand-600 dark:text-white hover:bg-gray-50 dark:hover:bg-brand-500 focus:ring-white dark:focus:ring-brand-400'
-                    : 'border-2 border-white/30 dark:border-brand-400/40 text-white dark:text-brand-200 hover:bg-white/10 dark:hover:bg-brand-600/20 focus:ring-white/50 dark:focus:ring-brand-400/50'
+                    ? 'bg-white text-cta-highlight hover:bg-gray-50 focus:ring-white'
+                    : 'border-2 border-white/30 text-white hover:bg-white/10 focus:ring-white/50'
                 }`}
                 aria-describedby="final-cta-title"
               >
@@ -66,9 +66,9 @@ export const FinalCTA = memo<FinalCTAProps>(function FinalCTA({
 
         {/* Decorative Elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 dark:bg-brand-400/10 rounded-full -translate-y-16 translate-x-16" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 dark:bg-brand-400/10 rounded-full translate-y-12 -translate-x-12" />
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/3 dark:bg-brand-400/8 rounded-full -translate-y-8" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/3 rounded-full -translate-y-8" />
         </div>
       </div>
     </section>

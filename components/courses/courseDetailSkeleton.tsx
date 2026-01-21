@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function CourseDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Page Header Skeleton */}
       <section className="py-16 lg:py-16 bg-cta-background">
         <div className="container mx-auto px-4 max-w-[1428px]">
@@ -81,7 +81,7 @@ export function CourseDetailSkeleton() {
               <Skeleton className="h-8 w-48 mb-6" />
               <div className="space-y-4">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <Skeleton className="h-6 w-48" />
                       <Skeleton className="h-4 w-16" />
@@ -103,7 +103,7 @@ export function CourseDetailSkeleton() {
             {/* Instructor Section Skeleton */}
             <div>
               <Skeleton className="h-8 w-32 mb-6" />
-              <div className="flex items-start gap-6 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex items-start gap-6 p-6 bg-white rounded-lg border border-gray-200">
                 <Skeleton className="w-24 h-24 rounded-full" />
                 <div className="flex-1 space-y-3">
                   <Skeleton className="h-6 w-48" />
@@ -125,7 +125,7 @@ export function CourseDetailSkeleton() {
           {/* Sidebar Skeleton */}
           <div className="lg:col-span-1">
             <div className="lg:-mt-52 relative z-10">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6">
+              <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
                 {/* Course Image/Video Skeleton */}
                 <Skeleton className="w-full h-48 rounded-lg" />
                 
@@ -143,7 +143,7 @@ export function CourseDetailSkeleton() {
                 </div>
 
                 {/* Course Info Skeleton */}
-                <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="space-y-3 pt-4 border-t border-gray-200">
                   <div className="flex justify-between">
                     <Skeleton className="h-4 w-20" />
                     <Skeleton className="h-4 w-16" />

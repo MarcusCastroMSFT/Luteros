@@ -60,22 +60,22 @@ export function VideoLesson({ lesson }: VideoLessonProps) {
       </div>
 
       {/* Video Description */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold text-gray-900 mb-2">
           Sobre este vídeo
         </h3>
-        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+        <p className="text-gray-600 text-sm leading-relaxed">
           {lesson.description}
         </p>
       </div>
 
       {/* Video Notes Section */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold text-gray-900 mb-2">
           Fazer Anotações
         </h3>
         <textarea
-          className="w-full h-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+          className="w-full h-24 p-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 resize-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           placeholder="Adicione suas anotações para esta videoaula..."
         />
       </div>

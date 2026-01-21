@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag } from 'next/cache'
+import { revalidateTag, revalidatePath } from 'next/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 1800 // Revalidate every 30 minutes
 
 interface RouteParams {
   params: Promise<{
@@ -224,12 +221,18 @@ export async function PUT(
       return event
     })
 
-    // Revalidate events cache
+    // Revalidate all event-related cache tags
     revalidateTag('events', {})
+    revalidateTag('events-initial', {})
+    revalidateTag('upcoming-events-count', {})
     revalidateTag(`event-${existingEvent.slug}`, {})
     if (body.slug && body.slug !== existingEvent.slug) {
       revalidateTag(`event-${body.slug}`, {})
+      revalidatePath(`/events/${body.slug}`)
     }
+    revalidatePath('/events')
+    revalidatePath(`/events/${existingEvent.slug}`)
+    revalidatePath('/dashboard/events')
 
     return NextResponse.json({
       success: true,
@@ -292,11 +295,17 @@ export async function DELETE(
       where: { id }
     })
 
-    // Revalidate events cache
+    // Revalidate all event-related cache tags
     revalidateTag('events', {})
+    revalidateTag('events-initial', {})
+    revalidateTag('event-slugs', {})
+    revalidateTag('upcoming-events-count', {})
     if (eventToDelete?.slug) {
       revalidateTag(`event-${eventToDelete.slug}`, {})
+      revalidatePath(`/events/${eventToDelete.slug}`)
     }
+    revalidatePath('/events')
+    revalidatePath('/dashboard/events')
 
     return NextResponse.json({
       success: true,

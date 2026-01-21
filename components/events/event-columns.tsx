@@ -230,8 +230,8 @@ export const createEventColumns = (onUpdate?: () => void): ColumnDef<Event>[] =>
                 Editar evento
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer" onClick={() => setDeleteModalOpen(true)}>
-                <Trash2 className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
-                <span className="text-red-600 dark:text-red-400">Excluir evento</span>
+                <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                <span className="text-red-600">Excluir evento</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

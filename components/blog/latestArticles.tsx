@@ -8,15 +8,15 @@ export function LatestArticles({ articles, limit = 12 }: LatestArticlesProps) {
   const articlesToShow = articles ? articles.slice(0, limit) : [];
   
   return (
-    <section className="py-16 bg-gray-50 dark:bg-gray-900">
+    <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4 max-w-[1428px]">
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-12">
           <div className="mb-6 lg:mb-0">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 font-cardo">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 font-cardo">
               Últimas do <span className="text-primary">Blog</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg max-w-md">
+            <p className="text-gray-600 text-lg max-w-md">
               Artigos sobre educação sexual e saúde íntima.
             </p>
           </div>

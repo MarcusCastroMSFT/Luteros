@@ -75,9 +75,11 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
   },
+  // Enable Cache Components (PPR) for Next.js 16
+  cacheComponents: true,
   // Optimize for ISR and database-driven content
   experimental: {
-    // Enable partial prerendering for better ISR performance
+    // Configure stale times for router cache
     staleTimes: {
       dynamic: 30, // 30 seconds for dynamic routes
       static: 180, // 3 minutes for static routes
@@ -100,7 +102,51 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: '/products/:slug*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=3600',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
+      },
+      {
+        source: '/events/:slug*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=3600',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
+      },
+      {
         source: '/api/blog/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=300',
+          },
+        ],
+      },
+      {
+        source: '/api/products-public/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=300',
+          },
+        ],
+      },
+      {
+        source: '/api/events-public/:path*',
         headers: [
           {
             key: 'Cache-Control',

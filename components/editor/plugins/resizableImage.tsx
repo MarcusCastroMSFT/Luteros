@@ -247,7 +247,7 @@ export function ResizableImage({ src, alt, width: initialWidth, height: initialH
           ))}
           
           {/* Toolbar */}
-          <div className="absolute -top-10 left-0 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border p-1">
+          <div className="absolute -top-10 left-0 flex items-center gap-1 bg-white rounded-md shadow-lg border p-1">
             <Button
               size="sm"
               variant="ghost"
@@ -287,14 +287,14 @@ export function ResizableImage({ src, alt, width: initialWidth, height: initialH
               setCaption(e.target.value);
               updateNodeCaption(e.target.value);
             }}
-            className="w-full px-3 py-2 text-sm text-center italic text-gray-600 dark:text-gray-400 bg-brand-50 dark:bg-brand-900/20 rounded-md focus:bg-brand-100 dark:focus:bg-brand-900/30 outline-none"
+            className="w-full px-3 py-2 text-sm text-center italic text-gray-600 bg-brand-50 rounded-md focus:bg-brand-100 outline-none"
           />
         </div>
       )}
       
       {/* Display caption */}
       {caption && !showCaption && (
-        <div className="mt-3 px-3 py-2 bg-brand-50 dark:bg-brand-900/20 rounded-md text-sm text-center italic text-gray-600 dark:text-gray-400">
+        <div className="mt-3 px-3 py-2 bg-brand-50 rounded-md text-sm text-center italic text-gray-600">
           {caption}
         </div>
       )}

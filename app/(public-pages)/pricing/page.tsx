@@ -17,15 +17,15 @@ export default function PricingPage() {
         <link rel="canonical" href="/pricing" />
       </Head>
       
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50">
 
         <div className="container mx-auto px-4 py-16 max-w-7xl">
           {/* Pricing Header */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Nossos <span className="text-cta-highlight">Preços</span>
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-12">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
               Investir em conhecimento é investir no seu futuro. Escolha o plano que melhor se adapta às suas necessidades e objetivos.
             </p>
 

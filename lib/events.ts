@@ -1,6 +1,5 @@
-import { cache } from 'react'
+import { cacheLife, cacheTag } from 'next/cache'
 import prisma from '@/lib/prisma'
-import { unstable_cache } from 'next/cache'
 import { type Event, type EventsPagination } from '@/types/event'
 import { type Speaker } from '@/components/common/speakers'
 
@@ -17,7 +16,7 @@ type EventWithCount = {
   duration: string
   image: string | null
   totalSlots: number
-  cost: string
+  cost: { toString(): string } | null // Prisma Decimal type
   isFree: boolean
   createdAt: Date
   _count: {
@@ -53,7 +52,7 @@ function transformEvent(event: EventWithCount | EventWithSpeakers): Event {
     location: event.location,
     date: event.eventDate.toISOString().split('T')[0],
     time: event.eventTime,
-    cost: event.cost,
+    cost: event.cost ? event.cost.toString() : '0', // Convert Decimal to string
     isFree: event.isFree,
     totalSlots: event.totalSlots,
     bookedSlots,
@@ -138,20 +137,14 @@ async function fetchEvents(page: number, limit: number, search?: string) {
   }
 }
 
-// Get paginated events with optional search filter (with caching)
-// Uses React cache for request memoization + unstable_cache for persistent caching
-export const getEvents = cache(async (page: number, limit: number, search?: string) => {
-  const getCachedEvents = unstable_cache(
-    () => fetchEvents(page, limit, search),
-    [`events-list-${page}-${limit}-${search || 'all'}`],
-    {
-      revalidate: 60, // 1 minute - events might have real-time booking updates
-      tags: ['events'],
-    }
-  )
+// Get paginated events with optional search filter using Next.js 16 Cache Components
+export async function getEvents(page: number, limit: number, search?: string) {
+  'use cache'
+  cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
+  cacheTag('events', `events-list-${page}-${limit}-${search || 'all'}`)
   
-  return getCachedEvents()
-})
+  return fetchEvents(page, limit, search)
+}
 
 // Internal function to fetch single event
 async function fetchEventBySlug(slug: string) {
@@ -246,20 +239,14 @@ async function fetchEventBySlug(slug: string) {
   }
 }
 
-// Get single event by slug with related events (with caching)
-// Uses React cache for request memoization + unstable_cache for persistent caching
-export const getEventBySlug = cache(async (slug: string) => {
-  const getCachedEvent = unstable_cache(
-    () => fetchEventBySlug(slug),
-    [`event-${slug}`],
-    {
-      revalidate: 60, // 1 minute
-      tags: ['events', `event-${slug}`],
-    }
-  )
+// Get single event by slug with related events using Next.js 16 Cache Components
+export async function getEventBySlug(slug: string) {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('events', `event-${slug}`)
   
-  return getCachedEvent()
-})
+  return fetchEventBySlug(slug)
+}
 
 // Internal function to fetch event metadata
 async function fetchEventMetadata(slug: string) {
@@ -293,39 +280,52 @@ async function fetchEventMetadata(slug: string) {
   }
 }
 
-// Get event metadata only (for generateMetadata) with caching
-// Uses React cache for request memoization + unstable_cache for persistent caching
-export const getEventMetadata = cache(async (slug: string) => {
-  const getCachedMetadata = unstable_cache(
-    () => fetchEventMetadata(slug),
-    [`event-metadata-${slug}`],
-    {
-      revalidate: 60,
-      tags: ['events', `event-${slug}`],
-    }
-  )
+// Get event metadata only (for generateMetadata) using Next.js 16 Cache Components
+export async function getEventMetadata(slug: string) {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('events', `event-${slug}`)
   
-  return getCachedMetadata()
-})
+  return fetchEventMetadata(slug)
+}
 
 // Get upcoming events count (useful for homepage or navigation)
-export const getUpcomingEventsCount = cache(async () => {
-  const getCachedCount = unstable_cache(
-    async () => {
-      return prisma.event.count({
-        where: {
-          isPublished: true,
-          isCancelled: false,
-          eventDate: { gte: new Date() },
-        },
-      })
-    },
-    ['upcoming-events-count'],
-    {
-      revalidate: 300, // 5 minutes
-      tags: ['events'],
-    }
-  )
+export async function getUpcomingEventsCount() {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('events', 'upcoming-events-count')
   
-  return getCachedCount()
-})
+  return prisma.event.count({
+    where: {
+      isPublished: true,
+      isCancelled: false,
+      eventDate: { gte: new Date() },
+    },
+  })
+}
+
+// Get all event slugs for generateStaticParams
+export async function getAllEventSlugs() {
+  'use cache'
+  cacheLife('hours') // Cache slugs longer as they change less frequently
+  cacheTag('events', 'event-slugs')
+  
+  const events = await prisma.event.findMany({
+    where: { 
+      isPublished: true,
+      isCancelled: false,
+    },
+    select: { slug: true },
+  })
+  
+  return events.map((e: { slug: string }) => ({ slug: e.slug }))
+}
+
+// Get initial events for SSR (first page)
+export async function getInitialEvents() {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('events', 'events-initial')
+  
+  return fetchEvents(1, 9) // First page with 9 events
+}

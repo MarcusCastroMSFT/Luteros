@@ -20,7 +20,7 @@ export function Speakers({ speakers, title = "Palestrantes do Evento", className
 
   return (
     <div className={className}>
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{title}</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {speakers.map((speaker) => (
@@ -33,10 +33,10 @@ export function Speakers({ speakers, title = "Palestrantes do Evento", className
                 className="object-cover"
               />
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-1">
+            <h3 className="font-semibold text-gray-900 text-lg mb-1">
               {speaker.name}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-gray-600">
               {speaker.title}
             </p>
           </div>

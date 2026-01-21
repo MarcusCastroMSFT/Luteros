@@ -10,9 +10,9 @@ export function ArticleContent({
   className = ''
 }: ArticleContentProps) {
   return (
-    <div className={`prose prose-lg dark:prose-invert max-w-none ${className}`}>
+    <div className={`prose prose-lg max-w-none ${className}`}>
       <div 
-        className="text-gray-700 dark:text-gray-300 leading-relaxed"
+        className="text-gray-700 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: content }}
       />
     </div>

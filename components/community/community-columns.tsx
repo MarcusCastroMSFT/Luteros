@@ -33,19 +33,19 @@ export interface CommunityPostRow {
 const getCategoryColor = (category: string) => {
   switch (category) {
     case "Gravidez":
-      return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200"
+      return "bg-pink-100 text-pink-800"
     case "Pós-parto":
-      return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+      return "bg-purple-100 text-purple-800"
     case "Suporte Contínuo":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+      return "bg-blue-100 text-blue-800"
     case "Paternidade":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+      return "bg-green-100 text-green-800"
     case "Fertilidade":
-      return "bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-200"
+      return "bg-brand-100 text-brand-800"
     case "Menopausa":
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+      return "bg-gray-100 text-gray-800"
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+      return "bg-gray-100 text-gray-800"
   }
 }
 

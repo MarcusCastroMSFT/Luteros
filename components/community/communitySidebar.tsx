@@ -28,45 +28,45 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
     {
       title: 'GRAVIDEZ E CUIDADOS COM RECÉM-NASCIDOS',
       items: [
-        { id: 'pregnancy', label: 'Gravidez', icon: Baby, color: 'text-brand-600 dark:text-brand-400' },
-        { id: 'birth-month-groups', label: 'Grupos por mês de nascimento', icon: Users, color: 'text-blue-600 dark:text-blue-400' },
-        { id: 'postpartum', label: 'Pós-parto', icon: Heart, color: 'text-pink-600 dark:text-pink-400' },
+        { id: 'pregnancy', label: 'Gravidez', icon: Baby, color: 'text-brand-600' },
+        { id: 'birth-month-groups', label: 'Grupos por mês de nascimento', icon: Users, color: 'text-blue-600' },
+        { id: 'postpartum', label: 'Pós-parto', icon: Heart, color: 'text-pink-600' },
       ]
     },
     {
       title: 'SUPORTE CONTÍNUO',
       items: [
-        { id: 'ask-provider', label: 'Pergunte a um especialista', icon: Stethoscope, color: 'text-green-600 dark:text-green-400' },
-        { id: 'general-health', label: 'Saúde geral', icon: Heart, color: 'text-red-600 dark:text-red-400' },
+        { id: 'ask-provider', label: 'Pergunte a um especialista', icon: Stethoscope, color: 'text-green-600' },
+        { id: 'general-health', label: 'Saúde geral', icon: Heart, color: 'text-red-600' },
       ]
     },
     {
       title: 'PATERNIDADE E PEDIATRIA',
       items: [
-        { id: 'parenting-pediatrics', label: 'Paternidade e pediatria', icon: Users, color: 'text-indigo-600 dark:text-indigo-400' },
+        { id: 'parenting-pediatrics', label: 'Paternidade e pediatria', icon: Users, color: 'text-indigo-600' },
       ]
     },
     {
       title: 'FERTILIDADE E CONSTRUÇÃO FAMILIAR',
       items: [
-        { id: 'ttc-fertility', label: 'TTC e fertilidade', icon: Flower, color: 'text-purple-600 dark:text-purple-400' },
-        { id: 'fertility-treatment', label: 'Tratamento de fertilidade', icon: Sparkles, color: 'text-brand-600 dark:text-brand-400' },
-        { id: 'adoption-surrogacy', label: 'Adoção e barriga de aluguel', icon: Heart, color: 'text-rose-600 dark:text-rose-400' },
+        { id: 'ttc-fertility', label: 'TTC e fertilidade', icon: Flower, color: 'text-purple-600' },
+        { id: 'fertility-treatment', label: 'Tratamento de fertilidade', icon: Sparkles, color: 'text-brand-600' },
+        { id: 'adoption-surrogacy', label: 'Adoção e barriga de aluguel', icon: Heart, color: 'text-rose-600' },
       ]
     },
     {
       title: 'MENOPAUSA E SAÚDE DA MEIA-IDADE',
       items: [
-        { id: 'menopause', label: 'Menopausa', icon: Flower, color: 'text-violet-600 dark:text-violet-400' },
+        { id: 'menopause', label: 'Menopausa', icon: Flower, color: 'text-violet-600' },
       ]
     }
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* User Sections */}
       <div className="mb-8">
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
           MINHA COMUNIDADE
         </h3>
         <div className="space-y-2">
@@ -78,8 +78,8 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
                 onClick={() => onCategorySelect(section.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
                   selectedCategory === section.id
-                    ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <Icon size={18} />
@@ -93,7 +93,7 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
       {/* Category Sections */}
       {categorySections.map((category, categoryIndex) => (
         <div key={categoryIndex} className="mb-6">
-          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
             {category.title}
           </h3>
           <div className="space-y-1">
@@ -105,8 +105,8 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
                   onClick={() => onCategorySelect(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
                     selectedCategory === item.id
-                      ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   <Icon size={16} className={item.color} />

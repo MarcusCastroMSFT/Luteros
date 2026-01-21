@@ -360,8 +360,8 @@ export function ToolbarPlugin() {
       onClick={onClick}
       title={title}
       className={cn(
-        'h-8 w-8 p-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800',
-        isActive && 'bg-gray-100 dark:bg-gray-800 text-primary'
+        'h-8 w-8 p-0 cursor-pointer hover:bg-gray-100',
+        isActive && 'bg-gray-100 text-primary'
       )}
     >
       {children}
@@ -369,7 +369,7 @@ export function ToolbarPlugin() {
   );
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+    <div className="border-b border-gray-200 bg-gray-50">
       {/* Main toolbar */}
       <div 
         className="sticky top-0 z-10 flex items-center gap-1 p-2"
@@ -467,7 +467,7 @@ export function ToolbarPlugin() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 relative"
+              className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100 relative"
               title="Cor do texto"
             >
               <Palette className="h-4 w-4" />
@@ -487,8 +487,8 @@ export function ToolbarPlugin() {
                     className={cn(
                       "w-8 h-8 rounded border-2 hover:scale-110 transition-transform cursor-pointer",
                       toolbarState.textColor === color.value 
-                        ? "border-gray-600 dark:border-gray-300" 
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-gray-600" 
+                        : "border-gray-300"
                     )}
                     style={{ backgroundColor: color.value }}
                     title={color.name}
@@ -498,7 +498,7 @@ export function ToolbarPlugin() {
               
               {/* Custom Hex Color Input */}
               <div className="mb-3 border-t pt-3">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
+                <label className="text-xs text-gray-600 mb-2 block">
                   Cor personalizada (hex):
                 </label>
                 <div className="flex gap-2">
@@ -522,7 +522,7 @@ export function ToolbarPlugin() {
                 </div>
               </div>
               
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-gray-500">
                 Selecione o texto e escolha uma cor
               </div>
             </div>

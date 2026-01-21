@@ -158,11 +158,11 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900">
             {getCategoryTitle()}
           </h2>
           <Button onClick={onCreatePost} className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
@@ -175,13 +175,13 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
         <div className="space-y-4">
           {/* Search */}
           <div className="relative">
-            <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+            <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Buscar na comunidade"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
 
@@ -193,7 +193,7 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
                 <select
                   value={selectedSubcategory}
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="all">Todas as subcategorias</option>
                   {subcategories.map(subcategory => (
@@ -206,13 +206,13 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
             )}
 
             {/* Sort Filter */}
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setSortBy('popular')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                   sortBy === 'popular'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Populares
@@ -221,8 +221,8 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
                 onClick={() => setSortBy('recent')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                   sortBy === 'recent'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Recentes
@@ -235,11 +235,11 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
       {/* Posts List */}
       <div className="space-y-4">
         {filteredPosts.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-            <div className="text-gray-500 dark:text-gray-400 mb-2">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <div className="text-gray-500 mb-2">
               Nenhum post encontrado
             </div>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
+            <p className="text-sm text-gray-400">
               Tente ajustar os filtros ou criar um novo post
             </p>
           </div>

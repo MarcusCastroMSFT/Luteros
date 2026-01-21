@@ -51,15 +51,15 @@ export function AudienceBadge({ value, className, labels }: AudienceBadgeProps) 
   
   if (isDoctors) {
     // Blue for doctors - works in light and dark mode
-    badgeClasses = "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+    badgeClasses = "bg-blue-100 text-blue-800 border-blue-200"
     displayText = doctorsLabel
   } else if (isGeneral) {
     // Gray for general public - works in light and dark mode
-    badgeClasses = "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+    badgeClasses = "bg-gray-100 text-gray-800 border-gray-200"
     displayText = generalLabel
   } else {
     // Fallback for unknown audience
-    badgeClasses = "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800"
+    badgeClasses = "bg-gray-100 text-gray-800 border-gray-200"
     displayText = value
   }
   

@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function SpecialistDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Page Header Skeleton */}
       <section className="py-16 lg:py-16 bg-cta-background">
         <div className="container mx-auto px-4 max-w-[1428px]">
@@ -57,7 +57,7 @@ export function SpecialistDetailSkeleton() {
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Expertise Section Skeleton */}
             <div>
@@ -108,7 +108,7 @@ export function SpecialistDetailSkeleton() {
                     </div>
 
                     {/* Separator */}
-                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                    <div className="border-t border-gray-200"></div>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 gap-4 text-center">
@@ -125,7 +125,7 @@ export function SpecialistDetailSkeleton() {
                     </div>
 
                     {/* Separator */}
-                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                    <div className="border-t border-gray-200"></div>
 
                     {/* Action Buttons */}
                     <div className="space-y-3">

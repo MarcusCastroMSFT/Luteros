@@ -167,7 +167,7 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
         variant="destructive"
       />
       
-      <div className="bg-gray-50 dark:bg-gray-900">
+      <div className="bg-gray-50">
         {/* Page Header */}
         <PageHeader
           title={event.title}
@@ -185,7 +185,7 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Event Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-gray-600 dark:text-gray-300 mb-8">
+            <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-8">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
                 <span>{event.location}</span>
@@ -202,29 +202,29 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
 
             {/* Event Description Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Sobre o Evento
               </h2>
-              <div className="prose prose-gray dark:prose-invert max-w-none">
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+              <div className="prose prose-gray max-w-none">
+                <p className="text-gray-600 leading-relaxed mb-6">
                   {event.fullDescription || event.description}
                 </p>
               </div>
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Event Content Section */}
             {event.content && event.content.length > 0 && (
               <>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
                     Tópicos
                   </h2>
                   <ul className="space-y-3">
                     {event.content.map((item, index) => (
-                      <li key={index} className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
+                      <li key={index} className="flex items-start gap-3 text-gray-600">
                         <span className="text-blue-600 font-bold text-lg">•</span>
                         <span className="leading-relaxed">{item}</span>
                       </li>
@@ -233,7 +233,7 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
                 </div>
                 
                 {/* Separator */}
-                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <div className="border-t border-gray-200"></div>
               </>
             )}
 

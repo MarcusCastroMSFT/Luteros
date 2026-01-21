@@ -53,7 +53,7 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
     <div className={`space-y-8 ${className}`}>
       {/* What you'll learn section */}
       <section>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
           O que você vai aprender
         </h2>
         
@@ -62,8 +62,8 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
           <div className="space-y-3">
             {leftColumnObjectives.map((objective, index) => (
               <div key={index} className="flex items-start gap-3">
-                <Check size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{objective}</span>
+                <Check size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-gray-700">{objective}</span>
               </div>
             ))}
           </div>
@@ -72,8 +72,8 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
           <div className="space-y-3">
             {rightColumnObjectives.map((objective, index) => (
               <div key={index + midPoint} className="flex items-start gap-3">
-                <Check size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{objective}</span>
+                <Check size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-gray-700">{objective}</span>
               </div>
             ))}
           </div>
@@ -82,15 +82,15 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
       
       {/* Requirements section */}
       <section>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
           Requisitos
         </h2>
         
         <div className="space-y-3">
           {requirements.map((requirement, index) => (
             <div key={index} className="flex items-start gap-3">
-              <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full mt-2 flex-shrink-0" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{requirement}</span>
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0" />
+              <span className="text-sm text-gray-700">{requirement}</span>
             </div>
           ))}
         </div>
@@ -98,11 +98,11 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
       
       {/* About This Course section */}
       <section>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
           Sobre o Curso
         </h2>
         
-        <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        <div className="text-sm text-gray-700 leading-relaxed">
           <div className="whitespace-pre-wrap">
             {showMoreAbout ? aboutCourse : truncatedAbout}
           </div>
@@ -111,7 +111,7 @@ export function CourseOverview({ course, className }: CourseOverviewProps) {
             <Button
               variant="link"
               onClick={() => setShowMoreAbout(!showMoreAbout)}
-              className="cursor-pointer text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 p-0 h-auto font-normal mt-2 flex items-center gap-1"
+              className="cursor-pointer text-brand-600 hover:text-brand-700 p-0 h-auto font-normal mt-2 flex items-center gap-1"
             >
               {showMoreAbout ? 'Mostrar menos' : 'Mostrar mais'}
               {showMoreAbout ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

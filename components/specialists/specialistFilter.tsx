@@ -60,7 +60,7 @@ export function SpecialistFilter({
 
       {/* Specialty Filters */}
       <div>
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+        <h3 className="text-sm font-medium text-gray-900 mb-3">
           Especialidades
         </h3>
         <div className="flex flex-wrap gap-2">

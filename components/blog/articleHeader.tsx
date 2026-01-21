@@ -35,17 +35,17 @@ export function ArticleHeader({
       </div>
 
       {/* Title */}
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 font-cardo leading-tight">
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 font-cardo leading-tight">
         {title}
       </h1>
 
       {/* Excerpt */}
-      <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+      <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
         {excerpt}
       </p>
 
       {/* Meta Information */}
-      <div className="flex flex-wrap items-center gap-6 text-gray-500 dark:text-gray-400 text-sm mb-8">
+      <div className="flex flex-wrap items-center gap-6 text-gray-500 text-sm mb-8">
         <div className="flex items-center gap-2">
           <User className="w-4 h-4" />
           <span>{author}</span>
@@ -68,7 +68,7 @@ export function ArticleHeader({
 
       {/* Featured Image - Only show if image exists */}
       {hasImage && (
-        <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800">
+        <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden bg-gray-200">
           {image.startsWith('data:') ? (
             // Use regular img tag for data URLs (base64)
             // eslint-disable-next-line @next/next/no-img-element

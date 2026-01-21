@@ -156,7 +156,7 @@ export function ViewArticleModal({
 
                 {/* Stats Footer */}
                 <div className="border-t pt-6 mt-8">
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-6">
                       <span>{article.commentCount} comentários</span>
                     </div>

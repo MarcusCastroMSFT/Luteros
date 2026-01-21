@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { connection } from 'next/server';
 import { sampleSpecialists } from '@/data/specialists';
 
 // This route handles both GET requests for specialists data
 export async function GET(request: NextRequest) {
+  // Signal that this route needs request data
+  await connection();
+  
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');

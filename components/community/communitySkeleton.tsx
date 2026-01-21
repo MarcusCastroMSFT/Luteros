@@ -2,13 +2,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function CommunitySkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10 py-8">
         <div className="xl:grid xl:grid-cols-5 xl:gap-8">
           {/* Sidebar Skeleton - 2 columns */}
           <div className="xl:col-span-2 mb-8 xl:mb-0">
             <div className="sticky top-8">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 {/* Profile Section Skeleton */}
                 <div className="mb-6">
                   <div className="flex items-center space-x-3 mb-4">
@@ -36,7 +36,7 @@ export function CommunitySkeleton() {
                 </div>
 
                 {/* User Sections Skeleton */}
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-6 pt-6 border-t border-gray-200">
                   <Skeleton className="h-5 w-20 mb-4" />
                   {[1, 2, 3].map((item) => (
                     <div key={item} className="flex items-center space-x-3 p-3 rounded-lg">
@@ -60,7 +60,7 @@ export function CommunitySkeleton() {
 
               {/* Posts Skeleton */}
               {[1, 2, 3, 4, 5].map((post) => (
-                <div key={post} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div key={post} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   {/* Post Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">

@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function EventDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Page Header Skeleton */}
       <section className="py-16 lg:py-16 bg-cta-background">
         <div className="container mx-auto px-4 max-w-[1428px]">
@@ -60,7 +60,7 @@ export function EventDetailSkeleton() {
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Event Content Section Skeleton */}
             <div>
@@ -76,7 +76,7 @@ export function EventDetailSkeleton() {
             </div>
             
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div className="border-t border-gray-200"></div>
 
             {/* Speakers Section Skeleton */}
             <div>
@@ -96,7 +96,7 @@ export function EventDetailSkeleton() {
           {/* Sidebar Skeleton */}
           <div className="lg:col-span-1">
             <div className="lg:-mt-52 relative z-10">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-6">
+              <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
                 {/* Event Image Skeleton */}
                 <Skeleton className="w-full h-48 rounded-lg" />
                 

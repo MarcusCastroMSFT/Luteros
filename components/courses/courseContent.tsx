@@ -65,8 +65,8 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
     <div 
       className={`flex items-center justify-between py-3 px-4 transition-colors cursor-pointer ${
         isActive 
-          ? 'bg-brand-50 dark:bg-brand-900/20 border-r-2 border-brand-500' 
-          : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+          ? 'bg-brand-50 border-r-2 border-brand-500' 
+          : 'hover:bg-gray-50'
       }`}
       onClick={handleClick}
     >
@@ -74,8 +74,8 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
         <LessonTypeIcon type={type} />
         <span className={`text-sm font-medium truncate ${
           isActive 
-            ? 'text-brand-700 dark:text-brand-300' 
-            : 'text-gray-700 dark:text-gray-300'
+            ? 'text-brand-700' 
+            : 'text-gray-700'
         }`}>
           {title}
         </span>
@@ -87,14 +87,14 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-sm text-gray-500 dark:text-gray-400">{duration}</span>
+        <span className="text-sm text-gray-500">{duration}</span>
         
         {isPreview ? (
-          <Badge variant="outline" className="text-brand-600 dark:text-brand-400 border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-900/20">
+          <Badge variant="outline" className="text-brand-600 border-brand-200 bg-brand-50">
             Prévia
           </Badge>
         ) : (
-          <Lock size={14} className="text-gray-400 dark:text-gray-500" />
+          <Lock size={14} className="text-gray-400" />
         )}
       </div>
     </div>
@@ -117,21 +117,21 @@ const SectionItem = ({ section, isExpanded, onToggle, onLessonSelect, currentLes
   const lessonsCount = lessons.length
   
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+        className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-3">
           {isExpanded ? (
-            <ChevronUp size={20} className="text-gray-400 dark:text-gray-500" />
+            <ChevronUp size={20} className="text-gray-400" />
           ) : (
-            <ChevronDown size={20} className="text-gray-400 dark:text-gray-500" />
+            <ChevronDown size={20} className="text-gray-400" />
           )}
-          <span className="font-medium text-gray-900 dark:text-white">{title}</span>
+          <span className="font-medium text-gray-900">{title}</span>
         </div>
         
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-4 text-sm text-gray-500">
           <span>{lessonsCount} lecture{lessonsCount !== 1 ? 's' : ''}</span>
           <span>•</span>
           <span>{totalDuration}</span>
@@ -139,7 +139,7 @@ const SectionItem = ({ section, isExpanded, onToggle, onLessonSelect, currentLes
       </button>
       
       {isExpanded && (
-        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="border-t border-gray-200 bg-white">
           {lessons.map((lesson) => (
             <LessonItem
               key={lesson.id}
@@ -226,7 +226,7 @@ export function CourseContent({
               <Button 
                 variant="outline" 
                 onClick={handleShowMore}
-                className="w-full text-brand-600 dark:text-brand-400 border-brand-200 dark:border-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900/20"
+                className="w-full text-brand-600 border-brand-200 hover:bg-brand-50"
               >
                 {remainingSections} Mais Seções →
               </Button>

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  IconBuildingStore,
   IconCamera,
   IconChartBar,
   IconDashboard,
@@ -12,6 +13,7 @@ import {
   IconHelp,
   IconListDetails,
   IconMail,
+  IconPackage,
   IconReport,
   IconRobot,
   IconSearch,
@@ -38,6 +40,7 @@ import { sidebarData, SidebarData } from "@/data/menuDashboard"
 
 // Icon mapping to convert string references to actual icons
 const iconMap = {
+  IconBuildingStore,
   IconDashboard,
   IconListDetails,
   IconChartBar,
@@ -54,6 +57,7 @@ const iconMap = {
   IconFileWord,
   IconRobot,
   IconMail,
+  IconPackage,
 }
 
 // Convert string icon references to actual icon components

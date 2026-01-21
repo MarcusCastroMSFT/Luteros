@@ -88,35 +88,35 @@ export function RepliesDialog({ isOpen, onClose, post }: RepliesDialogProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[700px] max-h-[85vh] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col">
-          <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-4 flex-shrink-0">
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] bg-white border border-gray-200 flex flex-col">
+          <DialogHeader className="border-b border-gray-200 pb-4 flex-shrink-0">
             <div className="flex items-start gap-4">
               {/* Original Post Avatar */}
-              <div className="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-brand-600 dark:text-brand-400 font-medium text-sm">
+              <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-brand-600 font-medium text-sm">
                   {post.isAnonymous ? 'A' : post.author.charAt(0).toUpperCase()}
                 </span>
               </div>
               
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">
                   {post.title}
                 </DialogTitle>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                   <span>{post.isAnonymous ? 'Anônimo' : post.author}</span>
                   <span>•</span>
                   <span>{formatDate(post.createdDate)}</span>
                   <span>•</span>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                     {post.subcategory}
                   </span>
                 </div>
-                <DialogDescription className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3">
+                <DialogDescription className="text-gray-600 text-sm line-clamp-3">
                   {post.content}
                 </DialogDescription>
                 
                 {/* Post Actions */}
-                <div className="flex items-center gap-4 mt-3 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
                   <div className="flex items-center gap-2">
                     <Heart size={16} />
                     <span>{post.likes}</span>
@@ -134,22 +134,22 @@ export function RepliesDialog({ isOpen, onClose, post }: RepliesDialogProps) {
           <div className="flex-1 py-4 min-h-0">
             {post.replies.length === 0 ? (
               <div className="text-center py-8">
-                <MessageSquare size={48} className="mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-                <p className="text-gray-500 dark:text-gray-400 mb-2">
+                <MessageSquare size={48} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500 mb-2">
                   Ainda não há respostas
                 </p>
-                <p className="text-sm text-gray-400 dark:text-gray-500">
+                <p className="text-sm text-gray-400">
                   Seja o primeiro a responder este post
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-sm font-medium text-gray-900">
                     Respostas ({post.repliesCount})
                   </h3>
                   {post.replies.length > 5 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
                       <span>Role para ver todas</span>
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -159,43 +159,43 @@ export function RepliesDialog({ isOpen, onClose, post }: RepliesDialogProps) {
                 </div>
                 
                 {/* Scrollable replies container */}
-                <div className="space-y-3 max-h-[calc(60vh-2rem)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div className="space-y-3 max-h-[calc(60vh-2rem)] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                 {post.replies.map((reply) => (
                   <div key={reply.id} className="flex gap-3">
                     {/* Reply Avatar */}
-                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-600 dark:text-gray-400 font-medium text-xs">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-gray-600 font-medium text-xs">
                         {reply.isAnonymous ? 'A' : reply.author.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     
                     {/* Reply Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                      <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span className="font-medium text-gray-900 dark:text-white">
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <span className="font-medium text-gray-900">
                               {reply.isAnonymous ? 'Anônimo' : reply.author}
                             </span>
                             <span>•</span>
                             <span>{formatDate(reply.createdDate)}</span>
                           </div>
-                          <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 cursor-pointer">
+                          <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
                             <MoreHorizontal size={16} />
                           </button>
                         </div>
                         
-                        <p className="text-gray-900 dark:text-white text-sm mb-3">
+                        <p className="text-gray-900 text-sm mb-3">
                           {reply.content}
                         </p>
                         
                         {/* Reply Actions */}
-                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
                           <button 
                             onClick={() => toggleLike(reply.id)}
                             className={`flex items-center gap-2 transition-colors cursor-pointer ${
                               likedReplies.has(reply.id) 
-                                ? 'text-red-500 dark:text-red-400' 
+                                ? 'text-red-500' 
                                 : 'hover:text-primary'
                             }`}
                           >
@@ -212,8 +212,8 @@ export function RepliesDialog({ isOpen, onClose, post }: RepliesDialogProps) {
                             onClick={() => reportItem(reply.id, reply.author)}
                             className={`flex items-center gap-2 transition-colors cursor-pointer ${
                               reportedItems.has(reply.id) 
-                                ? 'text-red-500 dark:text-red-400' 
-                                : 'hover:text-red-500 dark:hover:text-red-400'
+                                ? 'text-red-500' 
+                                : 'hover:text-red-500'
                             }`}
                             disabled={reportedItems.has(reply.id)}
                           >
@@ -231,12 +231,12 @@ export function RepliesDialog({ isOpen, onClose, post }: RepliesDialogProps) {
           </div>
 
           {/* Footer Actions */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <div className="border-t border-gray-200 pt-4">
             <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
               >
                 Fechar
               </Button>

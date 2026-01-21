@@ -5,9 +5,6 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ISR: Revalidate every 30 minutes
-export const revalidate = 1800; // 30 minutes in seconds
-
 export async function GET(request: NextRequest, { params }: Props) {
   try {
     const { slug } = await params;

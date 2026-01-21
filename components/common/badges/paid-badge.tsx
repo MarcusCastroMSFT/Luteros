@@ -41,8 +41,8 @@ export function PaidBadge({ value, className, labels }: PaidBadgeProps) {
   
   // Custom colors that work well in both light and dark mode
   const badgeClasses = isFree 
-    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-    : "bg-brand-100 text-brand-800 dark:bg-brand-900/20 dark:text-brand-400 border-brand-200 dark:border-brand-800"
+    ? "bg-blue-100 text-blue-800 border-blue-200"
+    : "bg-brand-100 text-brand-800 border-brand-200"
   
   return (
     <Badge 

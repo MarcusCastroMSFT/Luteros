@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export const revalidate = 60; // ISR: Revalidate every 60 seconds
-
 export async function GET(request: NextRequest) {
   // Add cache tag for manual invalidation
   const headers = new Headers({

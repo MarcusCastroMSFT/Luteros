@@ -28,11 +28,11 @@ export function PostCard({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-cta-highlight dark:text-brand-400 font-medium text-sm">
+        <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-cta-highlight font-medium text-sm">
             {post.isAnonymous ? 'A' : post.author.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -41,29 +41,29 @@ export function PostCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 cursor-pointer hover:text-primary">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer hover:text-primary">
                 {post.title}
               </h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3">
+              <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                 <span>{post.isAnonymous ? 'Anônimo' : post.author}</span>
                 <span>•</span>
                 <span>{formatDate(post.createdDate)}</span>
                 <span>•</span>
-                <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                   {post.subcategory}
                 </span>
               </div>
-              <p className={`text-gray-600 dark:text-gray-300 mb-4 ${!showFullContent ? 'line-clamp-3' : ''}`}>
+              <p className={`text-gray-600 mb-4 ${!showFullContent ? 'line-clamp-3' : ''}`}>
                 {post.content}
               </p>
             </div>
-            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 cursor-pointer">
+            <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
               <MoreHorizontal size={16} />
             </button>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-6 text-sm text-gray-500">
             <button className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
               <Heart size={16} />
               <span>{post.likes}</span>
@@ -79,8 +79,8 @@ export function PostCard({
               onClick={() => onReport(post.id, post.author)}
               className={`flex items-center gap-2 transition-colors cursor-pointer ${
                 isReported 
-                  ? 'text-red-500 dark:text-red-400' 
-                  : 'hover:text-red-500 dark:hover:text-red-400'
+                  ? 'text-red-500' 
+                  : 'hover:text-red-500'
               }`}
               disabled={isReported}
             >

@@ -219,7 +219,10 @@ export async function POST(request: NextRequest) {
     // Invalidate cache so users see the new article immediately
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
-    await revalidateTag('articles', {})
+    revalidateTag('articles', {})
+    revalidateTag('articles-initial', {})
+    revalidateTag('article-slugs', {})
+    revalidateTag(`article-${slug}`, {})
 
     return NextResponse.json({
       success: true,

@@ -514,7 +514,7 @@ export default function NewArticlePage() {
                     <span className="text-sm font-medium">Preview ao Vivo</span>
                   </div>
                   {!isPublished && (
-                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded">
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
                       Rascunho
                     </span>
                   )}

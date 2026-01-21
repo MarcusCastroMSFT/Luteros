@@ -53,6 +53,16 @@ export const sidebarData: SidebarData = {
       icon: "IconReport",
     },
     {
+      title: "Produtos",
+      url: "/dashboard/products",
+      icon: "IconPackage",
+    },
+    {
+      title: "Parceiros",
+      url: "/dashboard/partners",
+      icon: "IconBuildingStore",
+    },
+    {
       title: "Eventos",
       url: "/dashboard/events",
       icon: "IconCalendarEvent",

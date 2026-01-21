@@ -91,12 +91,12 @@ export default function CommunityPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="text-xl font-semibold text-gray-900 mb-2">
             Erro ao carregar comunidade
           </div>
-          <div className="text-gray-600 dark:text-gray-400">
+          <div className="text-gray-600">
             {error}
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10 py-8">
         <div className="xl:grid xl:grid-cols-5 xl:gap-8">
           {/* Sidebar - 2 columns */}

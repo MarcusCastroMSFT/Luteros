@@ -30,7 +30,7 @@ export function SpecialistList({
       
       {showPagination && specialists.length > (limit || specialists.length) && (
         <div className="mt-8 flex justify-center">
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
+          <div className="text-gray-500 text-sm">
             Mostrando {displayedSpecialists.length} de {specialists.length} especialistas
           </div>
         </div>
