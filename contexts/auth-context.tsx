@@ -170,10 +170,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               fetchUserProfile(newUserId)
             }, 0)
           }
-          // Defer navigation
-          setTimeout(() => {
-            router.refresh()
-          }, 0)
+          // Note: Removed router.refresh() here to avoid issues on 404 pages
+          // and unnecessary re-renders. The profile fetch will update the UI.
         } else if (event === 'TOKEN_REFRESHED') {
           // Token was refreshed by the middleware, no action needed
           // The user object is already updated in state
@@ -186,8 +184,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         } else if (event === 'INITIAL_SESSION') {
           // Initial session loaded from storage
-          // Only fetch profile if we don't have one yet
-          if (newUserId && !userProfile) {
+          // The initAuth() above already handles the initial profile fetch,
+          // so we only need to fetch here if initAuth hasn't run yet
+          // Use the cache to avoid duplicate fetches
+          if (newUserId && !profileCache.has(newUserId)) {
             setTimeout(() => {
               fetchUserProfile(newUserId)
             }, 0)
