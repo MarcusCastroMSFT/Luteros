@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Fetch profile from Prisma
-    const profile = await prisma.userProfile.findUnique({
+    const profile = await prisma.user_profiles.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -44,7 +44,7 @@ export async function GET(
     })
 
     // Get user role from UserRoleAssignment table
-    const roleAssignment = await prisma.userRoleAssignment.findFirst({
+    const roleAssignment = await prisma.user_roles.findFirst({
       where: { userId },
       select: { role: true },
       orderBy: { createdAt: 'desc' }
@@ -53,7 +53,7 @@ export async function GET(
 
     if (!profile) {
       // Profile doesn't exist yet, create it
-      const newProfile = await prisma.userProfile.create({
+      const newProfile = await prisma.user_profiles.create({
         data: {
           id: userId,
           fullName: user.user_metadata?.full_name || user.user_metadata?.name,
@@ -108,7 +108,7 @@ export async function PATCH(
     const body = await request.json()
 
     // Update profile in Prisma
-    const updatedProfile = await prisma.userProfile.update({
+    const updatedProfile = await prisma.user_profiles.update({
       where: { id: userId },
       data: {
         fullName: body.fullName,

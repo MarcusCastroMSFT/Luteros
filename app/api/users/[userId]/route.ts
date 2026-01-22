@@ -23,7 +23,7 @@ export async function GET(
     
     const [userProfile, authData] = await Promise.all([
       // Fetch user profile from database
-      prisma.userProfile.findUnique({
+      prisma.user_profiles.findUnique({
         where: { id: userId },
         select: {
           id: true,
@@ -71,7 +71,7 @@ export async function GET(
     const status = userProfile.lastLoginAt ? 'Ativo' : 'Inativo'
     
     // Get actual role from UserRoleAssignment table
-    const roleAssignment = await prisma.userRoleAssignment.findFirst({
+    const roleAssignment = await prisma.user_roles.findFirst({
       where: { userId },
       select: { role: true },
       orderBy: { createdAt: 'desc' }
@@ -114,7 +114,7 @@ export async function PATCH(
     const body = await request.json()
     
     // Validate that the user exists
-    const existingUser = await prisma.userProfile.findUnique({
+    const existingUser = await prisma.user_profiles.findUnique({
       where: { id: userId },
       select: { id: true }
     })
@@ -146,19 +146,19 @@ export async function PATCH(
     // Handle role update separately in UserRoleAssignment table
     if (body.role !== undefined) {
       // Check if role assignment exists
-      const existingRole = await prisma.userRoleAssignment.findFirst({
+      const existingRole = await prisma.user_roles.findFirst({
         where: { userId }
       })
 
       if (existingRole) {
         // Update existing role
-        await prisma.userRoleAssignment.update({
+        await prisma.user_roles.update({
           where: { id: existingRole.id },
           data: { role: body.role }
         })
       } else {
         // Create new role assignment
-        await prisma.userRoleAssignment.create({
+        await prisma.user_roles.create({
           data: {
             userId,
             role: body.role
@@ -168,7 +168,7 @@ export async function PATCH(
     }
 
     // Update user profile
-    const updatedUser = await prisma.userProfile.update({
+    const updatedUser = await prisma.user_profiles.update({
       where: { id: userId },
       data: updateData,
       select: {
@@ -226,7 +226,7 @@ export async function DELETE(
     }
 
     // Validate that the user exists
-    const existingUser = await prisma.userProfile.findUnique({
+    const existingUser = await prisma.user_profiles.findUnique({
       where: { id: userId },
       select: { id: true, fullName: true }
     })
@@ -239,7 +239,7 @@ export async function DELETE(
     }
 
     // Delete user profile (cascade will handle related records based on schema)
-    await prisma.userProfile.delete({
+    await prisma.user_profiles.delete({
       where: { id: userId }
     })
 

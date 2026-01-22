@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     
     if (adminMode) {
       // Admin mode: find by slug or id, include inactive products
-      product = await prisma.product.findFirst({
+      product = await prisma.products.findFirst({
         where: {
           OR: [
             { slug },
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest, { params }: Props) {
           maxUsages: true,
           createdAt: true,
           partnerId: true,
-          partner: {
+          product_partners: {
             select: {
               id: true,
               name: true,
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       });
     } else {
       // Public mode: find by slug only, active products only
-      product = await prisma.product.findUnique({
+      product = await prisma.products.findUnique({
         where: {
           slug,
           isActive: true,
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest, { params }: Props) {
           usageCount: true,
           maxUsages: true,
           createdAt: true,
-          partner: {
+          product_partners: {
             select: {
               id: true,
               name: true,
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     }
 
     // Get related products (same category, excluding current product)
-    const relatedProducts = await prisma.product.findMany({
+    const relatedProducts = await prisma.products.findMany({
       where: {
         isActive: true,
         category: product.category,
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest, { params }: Props) {
         usageCount: true,
         maxUsages: true,
         createdAt: true,
-        partner: {
+        product_partners: {
           select: {
             id: true,
             name: true,
@@ -180,10 +180,10 @@ export async function GET(request: NextRequest, { params }: Props) {
       shortDescription: p.shortDescription,
       image: p.image || '',
       partner: {
-        id: p.partner.id,
-        name: p.partner.name,
-        logo: p.partner.logo || '',
-        website: p.partner.website || '',
+        id: p.product_partners.id,
+        name: p.product_partners.name,
+        logo: p.product_partners.logo || '',
+        website: p.product_partners.website || '',
       },
       discount: {
         percentage: p.discountPercentage,
@@ -239,7 +239,7 @@ export async function DELETE(request: NextRequest, { params }: Props) {
     }
 
     // Find product by slug or id
-    const product = await prisma.product.findFirst({
+    const product = await prisma.products.findFirst({
       where: {
         OR: [
           { slug },
@@ -256,7 +256,7 @@ export async function DELETE(request: NextRequest, { params }: Props) {
     }
 
     // Delete the product
-    await prisma.product.delete({
+    await prisma.products.delete({
       where: { id: product.id },
     });
 
@@ -295,7 +295,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
     }
 
     // Find product by slug or id
-    const existingProduct = await prisma.product.findFirst({
+    const existingProduct = await prisma.products.findFirst({
       where: {
         OR: [
           { slug: productSlugOrId },
@@ -347,7 +347,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
 
     // Check if new slug conflicts with another product
     if (slug !== existingProduct.slug) {
-      const conflictingProduct = await prisma.product.findUnique({
+      const conflictingProduct = await prisma.products.findUnique({
         where: { slug },
       });
 
@@ -359,7 +359,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
       }
     }
 
-    const product = await prisma.product.update({
+    const product = await prisma.products.update({
       where: { id: existingProduct.id },
       data: {
         title,

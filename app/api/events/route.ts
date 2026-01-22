@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     // Execute queries in parallel for performance
     const [events, totalCount] = await Promise.all([
-      prisma.event.findMany({
+      prisma.events.findMany({
         where: whereCondition,
         select: {
           id: true,
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
           cost: true,
           isPublished: true,
           isCancelled: true,
-          speakers: {
+          event_speakers: {
             select: {
               name: true,
             },
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
           },
           _count: {
             select: {
-              registrations: true,
+              event_registrations: true,
             },
           },
         },
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
         skip: page * pageSize,
         take: pageSize,
       }),
-      prisma.event.count({
+      prisma.events.count({
         where: whereCondition,
       }),
     ])
@@ -131,9 +131,9 @@ export async function GET(request: NextRequest) {
       date: event.eventDate.toISOString().split('T')[0],
       time: event.eventTime,
       paid: event.isFree ? 'Gratuito' : 'Pago',
-      target: event._count.registrations.toString(),
+      target: event._count.event_registrations.toString(),
       limit: event.totalSlots.toString(),
-      reviewer: event.speakers[0]?.name || 'Não Atribuído',
+      reviewer: event.event_speakers[0]?.name || 'Não Atribuído',
     }))
 
     const pageCount = Math.ceil(totalCount / pageSize)

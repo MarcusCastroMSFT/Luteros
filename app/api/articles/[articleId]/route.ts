@@ -19,10 +19,10 @@ export async function GET(
     const articleId = params.articleId;
 
     // Fetch article with author details (optimized query)
-    const article = await prisma.blogArticle.findUnique({
+    const article = await prisma.blog_articles.findUnique({
       where: { id: articleId },
       include: {
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -57,8 +57,8 @@ export async function GET(
       image: article.image || '',
       category: article.category,
       author: {
-        name: article.author.fullName || 'Unknown',
-        avatar: article.author.avatar || '/images/default-avatar.jpg',
+        name: article.user_profiles.fullName || 'Unknown',
+        avatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
       },
       date: formattedDate,
       readTime: `${article.readTime} min`,
@@ -115,7 +115,7 @@ export async function PUT(
     }
 
     // Check if article exists
-    const existingArticle = await prisma.blogArticle.findUnique({
+    const existingArticle = await prisma.blog_articles.findUnique({
       where: { id: articleId },
     });
 
@@ -128,7 +128,7 @@ export async function PUT(
 
     // Check if slug is being changed and if it conflicts with another article
     if (slug !== existingArticle.slug) {
-      const slugConflict = await prisma.blogArticle.findUnique({
+      const slugConflict = await prisma.blog_articles.findUnique({
         where: { slug },
       });
 
@@ -141,7 +141,7 @@ export async function PUT(
     }
 
     // Update article
-    const updatedArticle = await prisma.blogArticle.update({
+    const updatedArticle = await prisma.blog_articles.update({
       where: { id: articleId },
       data: {
         title,
@@ -159,7 +159,7 @@ export async function PUT(
         targetAudience,
       },
       include: {
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -212,7 +212,7 @@ export async function DELETE(
     const articleId = params.articleId;
 
     // Check if article exists
-    const article = await prisma.blogArticle.findUnique({
+    const article = await prisma.blog_articles.findUnique({
       where: { id: articleId },
       select: { id: true, title: true, slug: true },
     });
@@ -225,7 +225,7 @@ export async function DELETE(
     }
 
     // Delete the article (cascade will handle related records)
-    await prisma.blogArticle.delete({
+    await prisma.blog_articles.delete({
       where: { id: articleId },
     });
 

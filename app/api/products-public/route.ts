@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
 
     // Get total count, paginated products, and categories in parallel
     const [totalProducts, products, categoriesRaw] = await Promise.all([
-      prisma.product.count({ where: whereClause }),
-      prisma.product.findMany({
+      prisma.products.count({ where: whereClause }),
+      prisma.products.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       // Get distinct categories with counts
-      prisma.product.groupBy({
+      prisma.products.groupBy({
         by: ['category'],
         where: { isActive: true },
         _count: { category: true },
@@ -114,10 +114,10 @@ export async function GET(request: NextRequest) {
       shortDescription: product.shortDescription,
       image: product.image || '',
       partner: {
-        id: product.partner.id,
-        name: product.partner.name,
-        logo: product.partner.logo || '',
-        website: product.partner.website || '',
+        id: product.product_partners.id,
+        name: product.product_partners.name,
+        logo: product.product_partners.logo || '',
+        website: product.product_partners.website || '',
       },
       discount: {
         percentage: product.discountPercentage,

@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sampleCourses } from '@/data/courses';
-import { isDevelopment } from '@/lib/config';
+import { getCourseBySlug } from '@/lib/courses';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// TODO: Replace with database queries - currently using sample data
 export async function GET(request: NextRequest, { params }: Props) {
-  // In production/UAT, this should query the database
-  if (!isDevelopment) {
-    console.warn('Courses API: Using sample data in non-development environment. Connect to database.');
-  }
-  
   try {
     const { slug } = await params;
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Find course by slug
-    const course = sampleCourses.find(course => course.slug === slug);
+    // Use the cached getCourseBySlug function from lib/courses.ts
+    const result = await getCourseBySlug(slug);
 
-    if (!course) {
+    if (!result) {
       return NextResponse.json(
         { 
           success: false, 
@@ -33,22 +23,24 @@ export async function GET(request: NextRequest, { params }: Props) {
       );
     }
 
-    // Get related courses (same category or instructor, excluding current course)
-    const relatedCourses = sampleCourses
-      .filter(c => 
-        c.slug !== slug && 
-        (c.category === course.category || c.instructor.id === course.instructor.id)
-      )
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 4);
-
-    return NextResponse.json({
+    // Create response with cache headers
+    const response = NextResponse.json({
       success: true,
       data: {
-        course,
-        relatedCourses,
+        course: result.course,
+        lessons: result.lessons,
+        relatedCourses: result.relatedCourses,
       },
     });
+
+    // Set cache headers for CDN and browser caching
+    // stale-while-revalidate allows serving stale content while fetching fresh data
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=3600, stale-while-revalidate=86400'
+    );
+
+    return response;
 
   } catch (error) {
     console.error('Error fetching course:', error);

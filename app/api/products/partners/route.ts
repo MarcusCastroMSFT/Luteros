@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return authResult;
     }
 
-    const partners = await prisma.productPartner.findMany({
+    const partners = await prisma.product_partners.findMany({
       where: { isActive: true },
       select: {
         id: true,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingPartner = await prisma.productPartner.findUnique({
+    const existingPartner = await prisma.product_partners.findUnique({
       where: { slug },
     });
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const partner = await prisma.productPartner.create({
+    const partner = await prisma.product_partners.create({
       data: {
         name,
         slug,

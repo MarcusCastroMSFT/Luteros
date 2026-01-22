@@ -31,32 +31,32 @@ export async function GET(request: NextRequest) {
       categoriesCount,
     ] = await Promise.all([
       // Total products count
-      prisma.product.count(),
+      prisma.products.count(),
       
       // Active products count
-      prisma.product.count({
+      prisma.products.count({
         where: { isActive: true }
       }),
       
       // Inactive products count
-      prisma.product.count({
+      prisma.products.count({
         where: { isActive: false }
       }),
       
       // Featured products count
-      prisma.product.count({
+      prisma.products.count({
         where: { isFeatured: true, isActive: true }
       }),
       
       // New products this month
-      prisma.product.count({
+      prisma.products.count({
         where: {
           createdAt: { gte: lastMonth }
         }
       }),
       
       // New products last month (for comparison)
-      prisma.product.count({
+      prisma.products.count({
         where: {
           createdAt: {
             gte: twoMonthsAgo,
@@ -66,22 +66,22 @@ export async function GET(request: NextRequest) {
       }),
       
       // Total usage count
-      prisma.product.aggregate({
+      prisma.products.aggregate({
         _sum: { usageCount: true }
       }),
       
       // Members only products
-      prisma.product.count({
+      prisma.products.count({
         where: { availability: 'members', isActive: true }
       }),
       
       // All access products
-      prisma.product.count({
+      prisma.products.count({
         where: { availability: 'all', isActive: true }
       }),
       
       // Unique categories count
-      prisma.product.groupBy({
+      prisma.products.groupBy({
         by: ['category'],
         where: { isActive: true }
       }),

@@ -17,7 +17,7 @@ export async function GET(
     }
 
     // Fetch event registrations with user details in a single optimized query
-    const registrations = await prisma.eventRegistration.findMany({
+    const registrations = await prisma.event_registrations.findMany({
       where: {
         eventId: id,
       },
@@ -28,7 +28,7 @@ export async function GET(
         paidAmount: true,
         paymentStatus: true,
         userId: true,
-        user: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -80,9 +80,9 @@ export async function GET(
       paidAmount: reg.paidAmount,
       paymentStatus: reg.paymentStatus,
       user: {
-        id: reg.user.id,
-        fullName: reg.user.fullName,
-        displayName: reg.user.displayName,
+        id: reg.user_profiles.id,
+        fullName: reg.user_profiles.fullName,
+        displayName: reg.user_profiles.displayName,
         email: emailMap.get(reg.userId) || 'Email não disponível',
       },
     }));

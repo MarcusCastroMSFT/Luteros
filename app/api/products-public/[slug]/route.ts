@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { slug } = await params;
 
     // Find the product by slug
-    const product = await prisma.product.findUnique({
+    const product = await prisma.products.findUnique({
       where: {
         slug,
         isActive: true,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         usageCount: true,
         maxUsages: true,
         createdAt: true,
-        partner: {
+        product_partners: {
           select: {
             id: true,
             name: true,
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get related products (same category, excluding current product)
-    const relatedProducts = await prisma.product.findMany({
+    const relatedProducts = await prisma.products.findMany({
       where: {
         isActive: true,
         category: product.category,
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         usageCount: true,
         maxUsages: true,
         createdAt: true,
-        partner: {
+        product_partners: {
           select: {
             id: true,
             name: true,
@@ -127,10 +127,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       shortDescription: p.shortDescription,
       image: p.image || '',
       partner: {
-        id: p.partner.id,
-        name: p.partner.name,
-        logo: p.partner.logo || '',
-        website: p.partner.website || '',
+        id: p.product_partners.id,
+        name: p.product_partners.name,
+        logo: p.product_partners.logo || '',
+        website: p.product_partners.website || '',
       },
       discount: {
         percentage: p.discountPercentage,

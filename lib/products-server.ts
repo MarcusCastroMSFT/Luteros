@@ -28,7 +28,7 @@ function transformProduct(product: {
   usageCount: number
   maxUsages: number | null
   createdAt: Date
-  partner: {
+  product_partners: {
     id: string
     name: string
     slug: string
@@ -44,10 +44,10 @@ function transformProduct(product: {
     shortDescription: product.shortDescription,
     image: product.image || '',
     partner: {
-      id: product.partner.id,
-      name: product.partner.name,
-      logo: product.partner.logo || '',
-      website: product.partner.website || '',
+      id: product.product_partners.id,
+      name: product.product_partners.name,
+      logo: product.product_partners.logo || '',
+      website: product.product_partners.website || '',
     },
     discount: {
       percentage: product.discountPercentage,
@@ -97,7 +97,7 @@ const productSelect = {
   usageCount: true,
   maxUsages: true,
   createdAt: true,
-  partner: {
+  product_partners: {
     select: {
       id: true,
       name: true,
@@ -114,9 +114,9 @@ export async function getInitialProducts() {
   cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
   cacheTag('products')
 
-  const [totalProducts, products, categoriesRaw] = await Promise.all([
-    prisma.product.count({ where: { isActive: true } }),
-    prisma.product.findMany({
+  const [totalProducts, productsData, categoriesRaw] = await Promise.all([
+    prisma.products.count({ where: { isActive: true } }),
+    prisma.products.findMany({
       where: { isActive: true },
       select: productSelect,
       orderBy: [
@@ -125,14 +125,14 @@ export async function getInitialProducts() {
       ],
       take: 12,
     }),
-    prisma.product.groupBy({
+    prisma.products.groupBy({
       by: ['category'],
       where: { isActive: true },
       _count: { category: true },
     }),
   ])
 
-  const transformedProducts = products.map(transformProduct)
+  const transformedProducts = productsData.map(transformProduct)
   
   const categories: ProductCategory[] = categoriesRaw.map((cat: { category: string; _count: { category: number } }) => ({
     name: cat.category,
@@ -154,7 +154,7 @@ export async function getFeaturedProducts(limit: number = 4) {
   cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
   cacheTag('products', 'featured-products')
 
-  const products = await prisma.product.findMany({
+  const featuredProducts = await prisma.products.findMany({
     where: {
       isActive: true,
       isFeatured: true,
@@ -164,5 +164,5 @@ export async function getFeaturedProducts(limit: number = 4) {
     take: limit,
   })
 
-  return products.map(transformProduct)
+  return featuredProducts.map(transformProduct)
 }

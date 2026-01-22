@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         try {
           const prisma = (await import('@/lib/prisma')).default
           
-          await prisma.userProfile.upsert({
+          await prisma.user_profiles.upsert({
             where: { id: user.id },
             update: {
               lastLoginAt: new Date(),

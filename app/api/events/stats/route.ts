@@ -32,12 +32,12 @@ export async function GET(request: NextRequest) {
       attendedCount,
     ] = await Promise.all([
       // Total events
-      prisma.event.count({
+      prisma.events.count({
         where: { isPublished: true, isCancelled: false },
       }),
       
       // Events this month
-      prisma.event.count({
+      prisma.events.count({
         where: {
           isPublished: true,
           isCancelled: false,
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Events last month
-      prisma.event.count({
+      prisma.events.count({
         where: {
           isPublished: true,
           isCancelled: false,
@@ -58,17 +58,17 @@ export async function GET(request: NextRequest) {
       }),
       
       // Total registrations
-      prisma.eventRegistration.count(),
+      prisma.event_registrations.count(),
       
       // Registrations this month
-      prisma.eventRegistration.count({
+      prisma.event_registrations.count({
         where: {
           registeredAt: { gte: firstDayThisMonth },
         },
       }),
       
       // Registrations last month
-      prisma.eventRegistration.count({
+      prisma.event_registrations.count({
         where: {
           registeredAt: {
             gte: firstDayLastMonth,
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Paid registrations (revenue calculation)
-      prisma.eventRegistration.aggregate({
+      prisma.event_registrations.aggregate({
         where: {
           paymentStatus: 'COMPLETED',
         },
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Paid registrations this month
-      prisma.eventRegistration.aggregate({
+      prisma.event_registrations.aggregate({
         where: {
           paymentStatus: 'COMPLETED',
           registeredAt: { gte: firstDayThisMonth },
@@ -99,10 +99,10 @@ export async function GET(request: NextRequest) {
       }),
       
       // Total registrations for attendance calculation
-      prisma.eventRegistration.count(),
+      prisma.event_registrations.count(),
       
       // Attended registrations
-      prisma.eventRegistration.count({
+      prisma.event_registrations.count({
         where: { attended: true },
       }),
     ])
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     const revenueThisMonth = Number(paidRegistrationsThisMonth._sum.paidAmount || 0)
     
     // For last month revenue, we need a separate query
-    const paidRegistrationsLastMonth = await prisma.eventRegistration.aggregate({
+    const paidRegistrationsLastMonth = await prisma.event_registrations.aggregate({
       where: {
         paymentStatus: 'COMPLETED',
         registeredAt: {
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
 
     // For attendance growth, compare with last month
     const [totalRegsLastMonth, attendedLastMonth] = await Promise.all([
-      prisma.eventRegistration.count({
+      prisma.event_registrations.count({
         where: {
           registeredAt: {
             gte: firstDayLastMonth,
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
           },
         },
       }),
-      prisma.eventRegistration.count({
+      prisma.event_registrations.count({
         where: {
           attended: true,
           registeredAt: {

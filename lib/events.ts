@@ -20,13 +20,13 @@ type EventWithCount = {
   isFree: boolean
   createdAt: Date
   _count: {
-    registrations: number
+    event_registrations: number
   }
 }
 
 // Type for event with speakers
 type EventWithSpeakers = EventWithCount & {
-  speakers: {
+  event_speakers: {
     id: string
     name: string
     title: string
@@ -41,7 +41,7 @@ type EventWithSpeakers = EventWithCount & {
 
 // Transform Prisma event to frontend Event type
 function transformEvent(event: EventWithCount | EventWithSpeakers): Event {
-  const bookedSlots = event._count.registrations
+  const bookedSlots = event._count.event_registrations
   
   const baseEvent: Event = {
     id: event.id,
@@ -60,8 +60,8 @@ function transformEvent(event: EventWithCount | EventWithSpeakers): Event {
   }
 
   // Add speakers if present
-  if ('speakers' in event && event.speakers) {
-    baseEvent.speakers = event.speakers as Speaker[]
+  if ('event_speakers' in event && event.event_speakers) {
+    baseEvent.speakers = event.event_speakers as Speaker[]
   }
 
   return baseEvent
@@ -87,8 +87,8 @@ async function fetchEvents(page: number, limit: number, search?: string) {
 
   // Get total count and paginated events in parallel
   const [totalEvents, events] = await Promise.all([
-    prisma.event.count({ where: whereClause }),
-    prisma.event.findMany({
+    prisma.events.count({ where: whereClause }),
+    prisma.events.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -107,7 +107,7 @@ async function fetchEvents(page: number, limit: number, search?: string) {
         createdAt: true,
         _count: {
           select: {
-            registrations: true,
+            event_registrations: true,
           },
         },
       },
@@ -149,7 +149,7 @@ export async function getEvents(page: number, limit: number, search?: string) {
 // Internal function to fetch single event
 async function fetchEventBySlug(slug: string) {
   // Find event by slug (only published, non-cancelled events)
-  const event = await prisma.event.findFirst({
+  const event = await prisma.events.findFirst({
     where: {
       slug,
       isPublished: true,
@@ -172,10 +172,10 @@ async function fetchEventBySlug(slug: string) {
       createdAt: true,
       _count: {
         select: {
-          registrations: true,
+          event_registrations: true,
         },
       },
-      speakers: {
+      event_speakers: {
         select: {
           id: true,
           name: true,
@@ -199,7 +199,7 @@ async function fetchEventBySlug(slug: string) {
   }
 
   // Get related events (upcoming published events, excluding current event)
-  const relatedEvents = await prisma.event.findMany({
+  const relatedEvents = await prisma.events.findMany({
     where: {
       slug: { not: slug },
       isPublished: true,
@@ -223,7 +223,7 @@ async function fetchEventBySlug(slug: string) {
       createdAt: true,
       _count: {
         select: {
-          registrations: true,
+          event_registrations: true,
         },
       },
     },
@@ -250,7 +250,7 @@ export async function getEventBySlug(slug: string) {
 
 // Internal function to fetch event metadata
 async function fetchEventMetadata(slug: string) {
-  const event = await prisma.event.findFirst({
+  const event = await prisma.events.findFirst({
     where: { 
       slug,
       isPublished: true,
@@ -295,7 +295,7 @@ export async function getUpcomingEventsCount() {
   cacheLife('minutes')
   cacheTag('events', 'upcoming-events-count')
   
-  return prisma.event.count({
+  return prisma.events.count({
     where: {
       isPublished: true,
       isCancelled: false,
@@ -310,7 +310,7 @@ export async function getAllEventSlugs() {
   cacheLife('hours') // Cache slugs longer as they change less frequently
   cacheTag('events', 'event-slugs')
   
-  const events = await prisma.event.findMany({
+  const events = await prisma.events.findMany({
     where: { 
       isPublished: true,
       isCancelled: false,

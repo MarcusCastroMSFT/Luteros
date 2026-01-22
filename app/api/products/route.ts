@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       const orderBy = orderByMap[sortBy] || { createdAt: sortOrder };
       
       const [products, totalCount] = await Promise.all([
-        prisma.product.findMany({
+        prisma.products.findMany({
           where: whereCondition,
           select: {
             id: true,
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
             maxUsages: true,
             validUntil: true,
             createdAt: true,
-            partner: {
+            product_partners: {
               select: {
                 name: true,
               },
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
           skip: page * pageSize,
           take: pageSize,
         }),
-        prisma.product.count({ where: whereCondition }),
+        prisma.products.count({ where: whereCondition }),
       ]);
       
       // Transform for admin dashboard table
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         id: product.id,
         title: product.title,
         slug: product.slug,
-        partner: product.partner.name,
+        partner: product.product_partners.name,
         category: product.category,
         discount: product.discountPercentage,
         promoCode: product.promoCode,
@@ -155,8 +155,8 @@ export async function GET(request: NextRequest) {
 
     // Get total count, paginated products, and categories in parallel
     const [totalProducts, products, categoriesRaw] = await Promise.all([
-      prisma.product.count({ where: whereClause }),
-      prisma.product.findMany({
+      prisma.products.count({ where: whereClause }),
+      prisma.products.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
           usageCount: true,
           maxUsages: true,
           createdAt: true,
-          partner: {
+          product_partners: {
             select: {
               id: true,
               name: true,
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       // Get distinct categories with counts
-      prisma.product.groupBy({
+      prisma.products.groupBy({
         by: ['category'],
         where: { isActive: true },
         _count: { category: true },
@@ -337,7 +337,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingProduct = await prisma.product.findUnique({
+    const existingProduct = await prisma.products.findUnique({
       where: { slug },
     });
 
@@ -349,7 +349,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if partner exists
-    const partner = await prisma.productPartner.findUnique({
+    const partner = await prisma.product_partners.findUnique({
       where: { id: partnerId },
     });
 
@@ -360,7 +360,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const product = await prisma.product.create({
+    const product = await prisma.products.create({
       data: {
         title,
         slug,
@@ -386,7 +386,7 @@ export async function POST(request: NextRequest) {
         maxUsages: maxUsages || null,
       },
       include: {
-        partner: {
+        product_partners: {
           select: {
             id: true,
             name: true,

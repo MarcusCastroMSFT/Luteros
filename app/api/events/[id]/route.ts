@@ -25,21 +25,21 @@ export async function GET(
     // Parallel queries for better performance
     const [event, registrationStats] = await Promise.all([
       // Fetch event with speakers and registration count
-      prisma.event.findUnique({
+      prisma.events.findUnique({
         where: { id },
         include: {
-          speakers: {
+          event_speakers: {
             orderBy: { order: 'asc' }
           },
           _count: {
             select: {
-              registrations: true
+              event_registrations: true
             }
           }
         }
       }),
       // Get registration stats with aggregation (much faster than fetching all records)
-      prisma.eventRegistration.aggregate({
+      prisma.event_registrations.aggregate({
         where: { eventId: id },
         _count: { id: true },
       })
@@ -53,7 +53,7 @@ export async function GET(
     }
 
     // Get attended count separately (only if needed for stats)
-    const attendedCount = await prisma.eventRegistration.count({
+    const attendedCount = await prisma.event_registrations.count({
       where: { 
         eventId: id,
         attended: true 
@@ -79,15 +79,15 @@ export async function GET(
       duration: event.duration,
       image: event.image,
       totalSlots: event.totalSlots,
-      bookedSlots: event._count.registrations,
-      availableSlots: event.totalSlots - event._count.registrations,
+      bookedSlots: event._count.event_registrations,
+      availableSlots: event.totalSlots - event._count.event_registrations,
       cost: event.cost?.toString(),
       isFree: event.isFree,
       isPublished: event.isPublished,
       isCancelled: event.isCancelled,
       createdAt: event.createdAt.toISOString(),
       updatedAt: event.updatedAt.toISOString(),
-      speakers: event.speakers.map((speaker: { id: string; name: string; title: string | null; bio: string | null; image: string | null; linkedin: string | null; twitter: string | null; website: string | null }) => ({
+      speakers: event.event_speakers.map((speaker: { id: string; name: string; title: string | null; bio: string | null; image: string | null; linkedin: string | null; twitter: string | null; website: string | null }) => ({
         id: speaker.id,
         name: speaker.name,
         title: speaker.title,
@@ -145,7 +145,7 @@ export async function PUT(
     }
 
     // Check if event exists
-    const existingEvent = await prisma.event.findUnique({
+    const existingEvent = await prisma.events.findUnique({
       where: { id }
     })
 
@@ -158,7 +158,7 @@ export async function PUT(
 
     // Check if slug is being changed and if it's already taken
     if (body.slug && body.slug !== existingEvent.slug) {
-      const slugExists = await prisma.event.findUnique({
+      const slugExists = await prisma.events.findUnique({
         where: { slug: body.slug }
       })
 
@@ -269,7 +269,7 @@ export async function DELETE(
     const { id } = await params
 
     // Check if event exists
-    const existingEvent = await prisma.event.findUnique({
+    const existingEvent = await prisma.events.findUnique({
       where: { id },
       select: {
         id: true,
@@ -285,13 +285,13 @@ export async function DELETE(
     }
 
     // Get slug before deleting for cache invalidation
-    const eventToDelete = await prisma.event.findUnique({
+    const eventToDelete = await prisma.events.findUnique({
       where: { id },
       select: { slug: true }
     })
 
     // Delete event (cascade will delete related registrations and speakers)
-    await prisma.event.delete({
+    await prisma.events.delete({
       where: { id }
     })
 

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     const { slug } = await params;
 
     // Find event by slug (only published, non-cancelled events)
-    const event = await prisma.event.findFirst({
+    const event = await prisma.events.findFirst({
       where: {
         slug,
         isPublished: true,
@@ -37,10 +37,10 @@ export async function GET(request: NextRequest, { params }: Props) {
         createdAt: true,
         _count: {
           select: {
-            registrations: true,
+            event_registrations: true,
           },
         },
-        speakers: {
+        event_speakers: {
           select: {
             id: true,
             name: true,
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     }
 
     // Get related events (upcoming published events, excluding current event)
-    const relatedEvents = await prisma.event.findMany({
+    const relatedEvents = await prisma.events.findMany({
       where: {
         slug: { not: slug },
         isPublished: true,
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest, { params }: Props) {
         isFree: true,
         _count: {
           select: {
-            registrations: true,
+            event_registrations: true,
           },
         },
       },
@@ -116,12 +116,12 @@ export async function GET(request: NextRequest, { params }: Props) {
       duration: event.duration,
       image: event.image || '',
       totalSlots: event.totalSlots,
-      bookedSlots: event._count.registrations,
-      availableSlots: event.totalSlots - event._count.registrations,
+      bookedSlots: event._count.event_registrations,
+      availableSlots: event.totalSlots - event._count.event_registrations,
       cost: event.cost,
       isFree: event.isFree,
       paid: event.isFree ? 'Gratuito' : 'Pago',
-      speakers: event.speakers,
+      speakers: event.event_speakers,
     };
 
     // Transform related events
@@ -136,8 +136,8 @@ export async function GET(request: NextRequest, { params }: Props) {
       duration: e.duration,
       image: e.image || '',
       totalSlots: e.totalSlots,
-      bookedSlots: e._count.registrations,
-      availableSlots: e.totalSlots - e._count.registrations,
+      bookedSlots: e._count.event_registrations,
+      availableSlots: e.totalSlots - e._count.event_registrations,
       cost: e.cost,
       isFree: e.isFree,
       paid: e.isFree ? 'Gratuito' : 'Pago',

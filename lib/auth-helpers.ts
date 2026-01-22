@@ -73,7 +73,7 @@ export async function getUserRole(request: NextRequest, userId: string): Promise
   }
 
   // Fetch role from database
-  const roleAssignment = await prisma.userRoleAssignment.findFirst({
+  const roleAssignment = await prisma.user_roles.findFirst({
     where: { userId },
     select: { role: true },
     orderBy: { createdAt: 'desc' }

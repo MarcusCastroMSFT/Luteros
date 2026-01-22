@@ -30,32 +30,32 @@ export async function GET(request: NextRequest) {
       totalProducts,
     ] = await Promise.all([
       // Total partners
-      prisma.productPartner.count(),
+      prisma.product_partners.count(),
       // Active partners
-      prisma.productPartner.count({ where: { isActive: true } }),
+      prisma.product_partners.count({ where: { isActive: true } }),
       // Inactive partners
-      prisma.productPartner.count({ where: { isActive: false } }),
+      prisma.product_partners.count({ where: { isActive: false } }),
       // New partners this month
-      prisma.productPartner.count({
+      prisma.product_partners.count({
         where: {
           createdAt: { gte: startOfMonth }
         }
       }),
       // Partners at end of last month (for growth calculation)
-      prisma.productPartner.count({
+      prisma.product_partners.count({
         where: {
           createdAt: { lte: endOfLastMonth }
         }
       }),
       // Active partners at end of last month
-      prisma.productPartner.count({
+      prisma.product_partners.count({
         where: {
           isActive: true,
           createdAt: { lte: endOfLastMonth }
         }
       }),
       // Total products count
-      prisma.product.count(),
+      prisma.products.count(),
     ]);
 
     // Calculate growth percentages

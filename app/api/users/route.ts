@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     
     // Execute database queries in parallel for performance
     const [users, totalCount] = await Promise.all([
-      prisma.userProfile.findMany({
+      prisma.user_profiles.findMany({
         where: whereCondition,
         orderBy,
         skip: page * pageSize,
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
           lastLoginAt: true,
         }
       }),
-      prisma.userProfile.count({ where: whereCondition })
+      prisma.user_profiles.count({ where: whereCondition })
     ])
     
     const pageCount = Math.ceil(totalCount / pageSize)
@@ -75,11 +75,22 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = createAdminClient()
     const userIds = users.map((u: { id: string }) => u.id)
     
+    // Helper to detect seed/test UUIDs (e.g., 00000000-0000-0000-0000-000000000001)
+    const isSeedUserId = (id: string) => /^0{8}-0{4}-0{4}-0{4}-0{11}[0-9a-f]$/.test(id)
+
     // Use Promise.all to fetch all user emails in parallel
     const emailPromises = userIds.map(async (userId: string) => {
+      // Skip Supabase Auth lookup for seed/test users
+      if (isSeedUserId(userId)) {
+        return [userId, 'seed@example.com']
+      }
+      
       const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
       if (error) {
-        console.error(`Error fetching user ${userId}:`, error)
+        // Only log as warning for unexpected errors, not for seed data
+        if (error.code !== 'user_not_found') {
+          console.warn(`Warning fetching user ${userId}:`, error.message)
+        }
         return [userId, null]
       }
       return [userId, data.user?.email]
@@ -91,7 +102,7 @@ export async function GET(request: NextRequest) {
     const emailMap = new Map(emailResults as [string, string | null][])
     
     // Fetch roles for all users
-    const roleAssignments = await prisma.userRoleAssignment.findMany({
+    const roleAssignments = await prisma.user_roles.findMany({
       where: {
         userId: {
           in: userIds

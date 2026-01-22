@@ -1,7 +1,8 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Star } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Star, ExternalLink, Eye, Edit, Trash2 } from "lucide-react"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/common/badges/status-badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { DeleteCourseModal } from "./delete-course-modal"
 
 export interface CourseRow {
   id: string
@@ -227,34 +229,73 @@ export const coursesColumns: ColumnDef<CourseRow>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    enableHiding: false,
+    cell: function ActionsCell({ row, table }) {
       const course = row.original
+      const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+
+      const handleDeleteSuccess = () => {
+        // Optimistically update UI by removing the course
+        const meta = table.options.meta as { onDeleteRow?: (id: string) => void }
+        meta?.onDeleteRow?.(course.id)
+      }
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(course.id)}
-            >
-              Copiar ID do curso
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-            <DropdownMenuItem>Editar curso</DropdownMenuItem>
-            <DropdownMenuItem>Ver relatórios</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
-              Desativar curso
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
+                <span className="sr-only">Abrir menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+              {course.status !== "Rascunho" && course.slug && (
+                <>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => window.open(`/courses/${course.slug}`, '_blank')}
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Abrir curso publicado
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => window.location.href = `/dashboard/courses/${course.id}/edit`}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar curso
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => navigator.clipboard.writeText(course.id)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Copiar ID do curso
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => setDeleteModalOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                <span className="text-red-600">Excluir curso</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DeleteCourseModal
+            courseId={course.id}
+            courseTitle={course.title}
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            onSuccess={handleDeleteSuccess}
+          />
+        </>
       )
     },
   },

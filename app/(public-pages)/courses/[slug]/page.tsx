@@ -1,15 +1,9 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import { Suspense } from 'react';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { PageHeader } from '@/components/common/pageHeader';
-import { CourseInfo } from '@/components/courses/courseInfo';
-import { CourseOverview } from '@/components/courses/courseOverview';
-import { CourseContent } from '@/components/courses/courseContent';
-import { InstructorCard } from '@/components/instructors/instructorCard';
+import { getCourseBySlug, getCourseMetadata, getAllCourseSlugs } from '@/lib/courses';
+import { CourseDetailClient } from './course-detail-client';
 import { CourseDetailSkeleton } from '@/components/courses/courseDetailSkeleton';
-import { Star, Clock, BookOpen, Users, Globe } from 'lucide-react';
-import { type Course, type CourseApiResponse } from '@/types/course';
 
 interface CoursePageProps {
   params: Promise<{
@@ -17,159 +11,171 @@ interface CoursePageProps {
   }>;
 }
 
-async function getCourse(slug: string) {
-  try {
-    const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''}/api/courses-public/${slug}`, {
-      cache: 'no-store', // Ensure fresh data
-    });
-    
-    if (!response.ok) {
-      return null;
-    }
-    
-    const data: CourseApiResponse = await response.json();
-    return data.success ? data.data : null;
-  } catch (error) {
-    console.error('Error fetching course:', error);
-    return null;
-  }
+// JSON-LD structured data for Course schema
+function generateCourseJsonLd(course: Awaited<ReturnType<typeof getCourseBySlug>>, slug: string) {
+  if (!course) return null;
+  
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const courseUrl = `${baseUrl}/courses/${slug}`;
+  const imageUrl = course.course.image?.startsWith('http') 
+    ? course.course.image 
+    : `${baseUrl}${course.course.image || course.course.coverImage}`;
+
+  // Parse duration to ISO 8601 format (e.g., "PT5H30M")
+  const parseDuration = (duration: string) => {
+    const hoursMatch = duration.match(/(\d+)\s*h/);
+    const minutesMatch = duration.match(/(\d+)\s*m/);
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+    if (hours && minutes) return `PT${hours}H${minutes}M`;
+    if (hours) return `PT${hours}H`;
+    if (minutes) return `PT${minutes}M`;
+    return 'PT1H'; // Default
+  };
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course.course.title,
+    description: course.course.description,
+    url: courseUrl,
+    image: imageUrl,
+    provider: {
+      '@type': 'Organization',
+      name: 'Luteros',
+      url: baseUrl,
+      logo: `${baseUrl}/images/logo.png`,
+    },
+    instructor: {
+      '@type': 'Person',
+      name: course.course.instructor.name,
+      description: course.course.instructor.bio,
+      image: course.course.instructor.image,
+    },
+    inLanguage: course.course.language || 'pt-BR',
+    numberOfCredits: course.course.lessonsCount,
+    educationalLevel: course.course.level,
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'online',
+      courseWorkload: parseDuration(course.course.duration),
+    },
+    offers: {
+      '@type': 'Offer',
+      price: course.course.price,
+      priceCurrency: 'BRL',
+      availability: 'https://schema.org/InStock',
+      url: courseUrl,
+    },
+    aggregateRating: course.course.reviewsCount > 0 ? {
+      '@type': 'AggregateRating',
+      ratingValue: course.course.rating,
+      reviewCount: course.course.reviewsCount,
+      bestRating: 5,
+      worstRating: 1,
+    } : undefined,
+    about: {
+      '@type': 'Thing',
+      name: course.course.category,
+    },
+  };
 }
 
-export default function CoursePage({ params }: CoursePageProps) {
-  const { slug } = React.use(params);
-  const [courseData, setCourseData] = useState<{ course: Course; relatedCourses: Course[] } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCourse = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      const data = await getCourse(slug);
-      
-      if (data) {
-        setCourseData(data);
-      } else {
-        setError('Course not found');
-      }
-      
-      setIsLoading(false);
+// Generate metadata for SEO with ISR support
+export async function generateMetadata({ params }: CoursePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const metadata = await getCourseMetadata(slug);
+  
+  if (!metadata) {
+    return {
+      title: 'Curso não encontrado',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
-
-    fetchCourse();
-  }, [slug]);
-
-  if (isLoading) {
-    return <CourseDetailSkeleton />;
   }
 
-  if (error || !courseData) {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const courseUrl = `${baseUrl}/courses/${slug}`;
+  const imageUrl = metadata.image?.startsWith('http') 
+    ? metadata.image 
+    : `${baseUrl}${metadata.image}`;
+  
+  return {
+    title: `${metadata.title} | Cursos`,
+    description: metadata.description,
+    keywords: [metadata.category, 'curso online', 'educação', 'saúde sexual', 'bem-estar', metadata.level],
+    authors: [{ name: metadata.instructorName }],
+    alternates: {
+      canonical: courseUrl,
+    },
+    openGraph: {
+      title: `${metadata.title} | Luteros`,
+      description: metadata.description || '',
+      url: courseUrl,
+      siteName: 'Luteros',
+      images: metadata.image ? [{ 
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+        alt: metadata.title,
+      }] : [],
+      type: 'website',
+      locale: 'pt_BR',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${metadata.title} | Luteros`,
+      description: metadata.description || '',
+      images: metadata.image ? [imageUrl] : [],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  };
+}
+
+// Generate static params for pre-rendering
+export async function generateStaticParams() {
+  const slugs = await getAllCourseSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+// Server component to fetch course data
+async function CourseContentWrapper({ slug }: { slug: string }) {
+  const courseData = await getCourseBySlug(slug);
+  
+  if (!courseData) {
     notFound();
   }
 
-  const { course } = courseData;
-
-  const handleEnroll = () => {
-    // Handle enrollment logic
-    console.log('Add to cart clicked for course:', course.id);
-  };
-
-  const formatStudentsCount = (count: number) => {
-    if (count >= 1000) {
-      return `${Math.floor(count / 1000)}k`;
-    }
-    return count.toString();
-  };
-
+  // Generate JSON-LD for SEO
+  const jsonLd = generateCourseJsonLd(courseData, slug);
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Page Header */}
-      <PageHeader
-        title={course.title}
-        description={course.description}
-        align="left"
-        breadcrumbs={[
-          { label: 'Home', href: '/' },
-          { label: 'Cursos', href: '/courses' },
-          { label: course.category }
-        ]}
-      />
-      
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-12">
-            {/* Course Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-8">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900">{course.rating}</span>
-                <span>({course.reviewsCount} avaliações)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{formatStudentsCount(course.studentsCount)} estudantes</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{course.duration}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{course.lessonsCount} aulas</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{course.language}</span>
-              </div>
-            </div>
+    <>
+      {/* JSON-LD Structured Data */}
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <CourseDetailClient course={courseData.course} lessons={courseData.lessons} slug={slug} />
+    </>
+  );
+}
 
-            {/* Learning Objectives Section */}
-            {course.learningObjectives && course.learningObjectives.length > 0 && (
-              <CourseOverview course={course} />
-            )}
-
-            {/* Separator */}
-            <div className="border-t border-gray-200"></div>
-
-            {/* Course Content Section */}
-            {course.sections && course.sections.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Conteúdo do Curso
-                </h2>
-                <CourseContent 
-                  sections={course.sections}
-                  totalSections={course.sectionsCount}
-                  courseSlug={slug}
-                />
-              </div>
-            )}
-
-            {/* Separator */}
-            <div className="border-t border-gray-200"></div>
-
-            {/* Instructor Section */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Instrutor
-              </h2>
-              <InstructorCard instructor={course.instructor} />
-            </div>
-          </div>
-          
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="lg:-mt-52 relative z-10">
-              <CourseInfo
-                course={course}
-                onEnroll={handleEnroll}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+export default async function CoursePage({ params }: CoursePageProps) {
+  const { slug } = await params;
+  
+  return (
+    <Suspense fallback={<CourseDetailSkeleton />}>
+      <CourseContentWrapper slug={slug} />
+    </Suspense>
   );
 }

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Build orderBy condition - map frontend fields to database fields
     const orderByMap: Record<string, Record<string, unknown>> = {
       title: { title: sortOrder },
-      author: { author: { fullName: sortOrder } },
+      author: { user_profiles: { fullName: sortOrder } },
       category: { category: sortOrder },
       date: { publishedAt: sortOrder },
       createdAt: { createdAt: sortOrder },
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Execute queries in parallel for performance
     const [articles, totalCount] = await Promise.all([
-      prisma.blogArticle.findMany({
+      prisma.blog_articles.findMany({
         where: whereCondition,
         select: {
           id: true,
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
           updatedAt: true,
           accessType: true,
           targetAudience: true,
-          author: {
+          user_profiles: {
             select: {
               id: true,
               fullName: true,
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         skip: page * pageSize,
         take: pageSize,
       }),
-      prisma.blogArticle.count({
+      prisma.blog_articles.count({
         where: whereCondition,
       }),
     ])
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       updatedAt: Date
       accessType: string
       targetAudience: string
-      author: {
+      user_profiles: {
         id: string
         fullName: string | null
         displayName: string | null
@@ -113,9 +113,9 @@ export async function GET(request: NextRequest) {
       title: article.title,
       slug: article.slug,
       image: article.image,
-      author: article.author.fullName || article.author.displayName || 'Unknown',
-      authorId: article.author.id,
-      authorAvatar: article.author.avatar,
+      author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
+      authorId: article.user_profiles.id,
+      authorAvatar: article.user_profiles.avatar,
       category: article.category,
       status: article.isPublished ? 'Ativo' : 'Rascunho',
       paid: article.accessType === 'paid' ? 'Pago' : 'Gratuito',
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
     const finalAuthorId = authorId || authResult.user.id
 
     // Check if slug already exists
-    const existingArticle = await prisma.blogArticle.findUnique({
+    const existingArticle = await prisma.blog_articles.findUnique({
       where: { slug }
     })
 
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create article
-    const article = await prisma.blogArticle.create({
+    const article = await prisma.blog_articles.create({
       data: {
         title,
         slug,
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
         commentCount: 0,
       },
       include: {
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,

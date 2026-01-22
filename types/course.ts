@@ -88,6 +88,15 @@ export interface CourseApiResponse {
   success: boolean;
   data: {
     course: Course;
+    lessons?: {
+      id: string;
+      title: string;
+      description: string | null;
+      duration: number | null;
+      order: number;
+      sectionTitle: string | null;
+      isFree: boolean;
+    }[];
     relatedCourses: Course[];
   } | null;
   error?: string;

@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
 
     // Get total count and paginated events in parallel
     const [totalEvents, events] = await Promise.all([
-      prisma.event.count({ where: whereClause }),
-      prisma.event.findMany({
+      prisma.events.count({ where: whereClause }),
+      prisma.events.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           _count: {
             select: {
-              registrations: true,
+              event_registrations: true,
             },
           },
         },
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     // Transform events to match frontend interface
     const transformedEvents = events.map((event: typeof events[number]) => {
-      const bookedSlots = event._count.registrations;
+      const bookedSlots = event._count.event_registrations;
       return {
         id: event.id,
         slug: event.slug,

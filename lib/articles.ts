@@ -16,7 +16,7 @@ type BlogArticleWithAuthor = {
   publishedAt: Date | null
   createdAt: Date
   relatedArticleIds: string[]
-  author: {
+  user_profiles: {
     id: string
     fullName: string | null
     displayName: string | null
@@ -45,8 +45,8 @@ function transformArticle(article: BlogArticleWithAuthor, includeContent = false
     ...(includeContent && { content: article.content || '' }),
     image: article.image || '',
     category: article.category,
-    author: article.author.fullName || article.author.displayName || 'Unknown',
-    authorAvatar: article.author.avatar || '/images/default-avatar.jpg',
+    author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
+    authorAvatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
     authorSlug: '',
     date: formatDate(new Date(articleDate)),
     readTime: `${article.readTime} min`,
@@ -65,7 +65,7 @@ async function fetchArticles(page: number, limit: number, category?: string) {
   }
 
   const [articles, totalArticles, allCategories] = await Promise.all([
-    prisma.blogArticle.findMany({
+    prisma.blog_articles.findMany({
       where: whereCondition,
       select: {
         id: true,
@@ -79,7 +79,7 @@ async function fetchArticles(page: number, limit: number, category?: string) {
         publishedAt: true,
         createdAt: true,
         relatedArticleIds: true,
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -92,10 +92,10 @@ async function fetchArticles(page: number, limit: number, category?: string) {
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.blogArticle.count({
+    prisma.blog_articles.count({
       where: whereCondition,
     }),
-    prisma.blogArticle.findMany({
+    prisma.blog_articles.findMany({
       where: { isPublished: true },
       select: { category: true },
       distinct: ['category'],
@@ -135,7 +135,7 @@ export async function getArticles(page: number, limit: number, category?: string
 
 // Internal function to fetch single article
 async function fetchArticleBySlug(slug: string) {
-  const article = await prisma.blogArticle.findFirst({
+  const article = await prisma.blog_articles.findFirst({
     where: { 
       slug,
       isPublished: true,
@@ -153,7 +153,7 @@ async function fetchArticleBySlug(slug: string) {
       publishedAt: true,
       createdAt: true,
       relatedArticleIds: true,
-      author: {
+      user_profiles: {
         select: {
           id: true,
           fullName: true,
@@ -172,7 +172,7 @@ async function fetchArticleBySlug(slug: string) {
   let relatedArticles: BlogArticleWithAuthor[] = []
   
   if (article.relatedArticleIds && article.relatedArticleIds.length > 0) {
-    relatedArticles = await prisma.blogArticle.findMany({
+    relatedArticles = await prisma.blog_articles.findMany({
       where: {
         id: { in: article.relatedArticleIds },
         isPublished: true,
@@ -191,7 +191,7 @@ async function fetchArticleBySlug(slug: string) {
         publishedAt: true,
         createdAt: true,
         relatedArticleIds: true,
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -205,7 +205,7 @@ async function fetchArticleBySlug(slug: string) {
   
   // Fill with same category articles if needed
   if (relatedArticles.length < 3) {
-    const additionalArticles = await prisma.blogArticle.findMany({
+    const additionalArticles = await prisma.blog_articles.findMany({
       where: {
         category: article.category,
         slug: { not: slug },
@@ -227,7 +227,7 @@ async function fetchArticleBySlug(slug: string) {
         publishedAt: true,
         createdAt: true,
         relatedArticleIds: true,
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -258,7 +258,7 @@ export async function getArticleBySlug(slug: string) {
 
 // Internal function to fetch article metadata
 async function fetchArticleMetadata(slug: string) {
-  const article = await prisma.blogArticle.findFirst({
+  const article = await prisma.blog_articles.findFirst({
     where: { 
       slug,
       isPublished: true,
@@ -269,7 +269,7 @@ async function fetchArticleMetadata(slug: string) {
       image: true,
       category: true,
       publishedAt: true,
-      author: {
+      user_profiles: {
         select: {
           fullName: true,
           displayName: true,
@@ -288,7 +288,7 @@ async function fetchArticleMetadata(slug: string) {
     image: article.image,
     category: article.category,
     date: article.publishedAt?.toISOString(),
-    author: article.author.fullName || article.author.displayName || 'Unknown',
+    author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
   }
 }
 
@@ -307,7 +307,7 @@ export async function getAllArticleSlugs(): Promise<string[]> {
   cacheLife('hours') // Cache slugs longer as they change less frequently
   cacheTag('articles', 'article-slugs')
   
-  const articles = await prisma.blogArticle.findMany({
+  const articles = await prisma.blog_articles.findMany({
     where: { isPublished: true },
     select: { slug: true },
   })

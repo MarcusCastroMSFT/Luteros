@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     const { slug } = await params;
 
     // Fetch published article by slug from database
-    const article = await prisma.blogArticle.findFirst({
+    const article = await prisma.blog_articles.findFirst({
       where: { 
         slug,
         isPublished: true, // Only show published articles
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: Props) {
         publishedAt: true,
         createdAt: true,
         relatedArticleIds: true, // Explicitly include related article IDs
-        author: {
+        user_profiles: {
           select: {
             id: true,
             fullName: true,
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       commentCount: number;
       publishedAt: Date | null;
       createdAt: Date;
-      author: {
+      user_profiles: {
         id: string;
         fullName: string | null;
         displayName: string | null;
@@ -74,14 +74,14 @@ export async function GET(request: NextRequest, { params }: Props) {
     
     if (article.relatedArticleIds && article.relatedArticleIds.length > 0) {
       // Fetch manually selected related articles
-      relatedArticles = await prisma.blogArticle.findMany({
+      relatedArticles = await prisma.blog_articles.findMany({
         where: {
           id: { in: article.relatedArticleIds },
           isPublished: true,
         },
         take: 3,
         include: {
-          author: {
+          user_profiles: {
             select: {
               id: true,
               fullName: true,
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     
     // If we don't have 3 related articles, fill with same category articles
     if (relatedArticles.length < 3) {
-      const additionalArticles = await prisma.blogArticle.findMany({
+      const additionalArticles = await prisma.blog_articles.findMany({
         where: {
           category: article.category,
           slug: { not: slug },
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest, { params }: Props) {
         take: 3 - relatedArticles.length,
         orderBy: { publishedAt: 'desc' },
         include: {
-          author: {
+          user_profiles: {
             select: {
               id: true,
               fullName: true,
@@ -136,8 +136,8 @@ export async function GET(request: NextRequest, { params }: Props) {
       content: article.content,
       image: article.image || '',
       category: article.category,
-      author: article.author.fullName || article.author.displayName || 'Unknown',
-      authorAvatar: article.author.avatar || '/images/default-avatar.jpg',
+      author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
+      authorAvatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
       authorSlug: '',
       date: formattedDate,
       readTime: `${article.readTime} min`,
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       commentCount: number
       publishedAt: Date | null
       createdAt: Date
-      author: {
+      user_profiles: {
         id: string
         fullName: string | null
         displayName: string | null
@@ -182,8 +182,8 @@ export async function GET(request: NextRequest, { params }: Props) {
         content: rel.content,
         image: rel.image || '',
         category: rel.category,
-        author: rel.author.fullName || rel.author.displayName || 'Unknown',
-        authorAvatar: rel.author.avatar || '/images/default-avatar.jpg',
+        author: rel.user_profiles.fullName || rel.user_profiles.displayName || 'Unknown',
+        authorAvatar: rel.user_profiles.avatar || '/images/default-avatar.jpg',
         authorSlug: '',
         date: relFormattedDate,
         readTime: `${rel.readTime} min`,

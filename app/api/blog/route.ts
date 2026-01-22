@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Execute queries in parallel for performance
     const [articles, totalArticles, allCategories] = await Promise.all([
-      prisma.blogArticle.findMany({
+      prisma.blog_articles.findMany({
         where: whereCondition,
         select: {
           id: true,
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           commentCount: true,
           publishedAt: true,
           createdAt: true,
-          author: {
+          user_profiles: {
             select: {
               id: true,
               fullName: true,
@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.blogArticle.count({
+      prisma.blog_articles.count({
         where: whereCondition,
       }),
-      prisma.blogArticle.findMany({
+      prisma.blog_articles.findMany({
         where: { isPublished: true },
         select: { category: true },
         distinct: ['category'],
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       commentCount: number
       publishedAt: Date | null
       createdAt: Date
-      author: {
+      user_profiles: {
         id: string
         fullName: string | null
         displayName: string | null
@@ -105,8 +105,8 @@ export async function GET(request: NextRequest) {
         // Exclude content to reduce payload size and prevent cache overflow
         image: article.image || '',
         category: article.category,
-        author: article.author.fullName || article.author.displayName || 'Unknown',
-        authorAvatar: article.author.avatar || '/images/default-avatar.jpg',
+        author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
+        authorAvatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
         authorSlug: '',
         date: formattedDate,
         readTime: `${article.readTime} min`,

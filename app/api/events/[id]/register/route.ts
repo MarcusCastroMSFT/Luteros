@@ -22,7 +22,7 @@ export async function POST(
     }
 
     // Check if event exists and has available slots
-    const event = await prisma.event.findUnique({
+    const event = await prisma.events.findUnique({
       where: { id },
       select: {
         id: true,
@@ -34,7 +34,7 @@ export async function POST(
         cost: true,
         _count: {
           select: {
-            registrations: true,
+            event_registrations: true,
           },
         },
       },
@@ -61,7 +61,7 @@ export async function POST(
       );
     }
 
-    if (event._count.registrations >= event.totalSlots) {
+    if (event._count.event_registrations >= event.totalSlots) {
       return NextResponse.json(
         { success: false, error: 'Event is fully booked' },
         { status: 400 }
@@ -69,7 +69,7 @@ export async function POST(
     }
 
     // Check if user is already registered
-    const existingRegistration = await prisma.eventRegistration.findUnique({
+    const existingRegistration = await prisma.event_registrations.findUnique({
       where: {
         eventId_userId: {
           eventId: id,
@@ -86,7 +86,7 @@ export async function POST(
     }
 
     // Create registration
-    const result = await prisma.eventRegistration.create({
+    const result = await prisma.event_registrations.create({
       data: {
         eventId: id,
         userId: user.id,
@@ -96,7 +96,7 @@ export async function POST(
     });
 
     // Get event slug for cache invalidation
-    const eventWithSlug = await prisma.event.findUnique({
+    const eventWithSlug = await prisma.events.findUnique({
       where: { id },
       select: { slug: true }
     });
@@ -145,7 +145,7 @@ export async function GET(
     }
 
     // Check if user is registered
-    const registration = await prisma.eventRegistration.findUnique({
+    const registration = await prisma.event_registrations.findUnique({
       where: {
         eventId_userId: {
           eventId: id,
@@ -194,7 +194,7 @@ export async function DELETE(
     }
 
     // Check if registration exists
-    const registration = await prisma.eventRegistration.findUnique({
+    const registration = await prisma.event_registrations.findUnique({
       where: {
         eventId_userId: {
           eventId: id,
@@ -211,14 +211,14 @@ export async function DELETE(
     }
 
     // Delete registration
-    await prisma.eventRegistration.delete({
+    await prisma.event_registrations.delete({
       where: {
         id: registration.id,
       },
     });
 
     // Get event slug for cache invalidation
-    const eventWithSlug = await prisma.event.findUnique({
+    const eventWithSlug = await prisma.events.findUnique({
       where: { id },
       select: { slug: true }
     });

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count for pagination
-    const totalCount = await prisma.productPartner.count({ where });
+    const totalCount = await prisma.product_partners.count({ where });
 
     // Build orderBy
     const orderBy: Record<string, string> = {};
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get partners with pagination
-    const partners = await prisma.productPartner.findMany({
+    const partners = await prisma.product_partners.findMany({
       where,
       include: {
         _count: {
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingPartner = await prisma.productPartner.findUnique({
+    const existingPartner = await prisma.product_partners.findUnique({
       where: { slug },
     });
 
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const partner = await prisma.productPartner.create({
+    const partner = await prisma.product_partners.create({
       data: {
         name,
         slug,

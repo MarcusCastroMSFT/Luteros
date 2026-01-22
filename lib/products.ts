@@ -4,7 +4,7 @@ import { Product } from '@/types/product'
 
 // Fetch product by slug directly from database
 async function fetchProductBySlug(slug: string) {
-  const product = await prisma.product.findUnique({
+  const product = await prisma.products.findUnique({
     where: {
       slug,
       isActive: true,
@@ -34,7 +34,7 @@ async function fetchProductBySlug(slug: string) {
       usageCount: true,
       maxUsages: true,
       createdAt: true,
-      partner: {
+      product_partners: {
         select: {
           id: true,
           name: true,
@@ -53,7 +53,7 @@ async function fetchProductBySlug(slug: string) {
 
 // Fetch related products
 async function fetchRelatedProducts(productId: string, category: string) {
-  const products = await prisma.product.findMany({
+  const products = await prisma.products.findMany({
     where: {
       isActive: true,
       category,
@@ -84,7 +84,7 @@ async function fetchRelatedProducts(productId: string, category: string) {
       usageCount: true,
       maxUsages: true,
       createdAt: true,
-      partner: {
+      product_partners: {
         select: {
           id: true,
           name: true,
@@ -106,7 +106,7 @@ async function fetchRelatedProducts(productId: string, category: string) {
 
 // Fetch metadata only (lightweight query for generateMetadata)
 async function fetchProductMetadata(slug: string) {
-  const product = await prisma.product.findUnique({
+  const product = await prisma.products.findUnique({
     where: {
       slug,
       isActive: true,
@@ -117,7 +117,7 @@ async function fetchProductMetadata(slug: string) {
       description: true,
       image: true,
       category: true,
-      partner: {
+      product_partners: {
         select: {
           name: true,
         },
@@ -132,7 +132,7 @@ async function fetchProductMetadata(slug: string) {
     description: product.shortDescription || product.description,
     image: product.image,
     category: product.category,
-    partnerName: product.partner.name,
+    partnerName: product.product_partners.name,
   }
 }
 
@@ -146,15 +146,9 @@ type DatabaseProduct = {
   image: string | null
   discountPercentage: number
   discountType: string
-  originalPrice: ReturnType<typeof prisma.product.findUnique> extends Promise<infer T> 
-    ? T extends { originalPrice: infer P } ? P : never 
-    : never
-  discountedPrice: ReturnType<typeof prisma.product.findUnique> extends Promise<infer T>
-    ? T extends { discountedPrice: infer P } ? P : never
-    : never
-  discountAmount: ReturnType<typeof prisma.product.findUnique> extends Promise<infer T>
-    ? T extends { discountAmount: infer P } ? P : never
-    : never
+  originalPrice: { toNumber(): number } | null
+  discountedPrice: { toNumber(): number } | null
+  discountAmount: { toNumber(): number } | null
   promoCode: string
   category: string
   tags: string[]
@@ -168,7 +162,7 @@ type DatabaseProduct = {
   usageCount: number
   maxUsages: number | null
   createdAt: Date
-  partner: {
+  product_partners: {
     id: string
     name: string
     slug: string
@@ -186,10 +180,10 @@ function transformProduct(product: DatabaseProduct): Product {
     shortDescription: product.shortDescription,
     image: product.image || '',
     partner: {
-      id: product.partner.id,
-      name: product.partner.name,
-      logo: product.partner.logo || '',
-      website: product.partner.website || '',
+      id: product.product_partners.id,
+      name: product.product_partners.name,
+      logo: product.product_partners.logo || '',
+      website: product.product_partners.website || '',
     },
     discount: {
       percentage: product.discountPercentage,
@@ -247,7 +241,7 @@ export async function getAllProductSlugs() {
   cacheLife('hours') // Cache slugs longer as they change less frequently
   cacheTag('products', 'product-slugs')
   
-  const products = await prisma.product.findMany({
+  const products = await prisma.products.findMany({
     where: { isActive: true },
     select: { slug: true },
   })

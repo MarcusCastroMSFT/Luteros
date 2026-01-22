@@ -27,10 +27,10 @@ export async function GET(request: NextRequest) {
       previousWeekNewUsers,
     ] = await Promise.all([
       // Total users
-      prisma.userProfile.count(),
+      prisma.user_profiles.count(),
       
       // New users in last month
-      prisma.userProfile.count({
+      prisma.user_profiles.count({
         where: {
           createdAt: {
             gte: lastMonth
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // New users in last week
-      prisma.userProfile.count({
+      prisma.user_profiles.count({
         where: {
           createdAt: {
             gte: lastWeek
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Active users (logged in within last 30 days)
-      prisma.userProfile.count({
+      prisma.user_profiles.count({
         where: {
           lastLoginAt: {
             gte: lastMonth
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Previous month total for trend calculation
-      prisma.userProfile.count({
+      prisma.user_profiles.count({
         where: {
           createdAt: {
             lt: lastMonth
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Previous week new users for trend calculation
-      prisma.userProfile.count({
+      prisma.user_profiles.count({
         where: {
           createdAt: {
             gte: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),

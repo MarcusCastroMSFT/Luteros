@@ -18,7 +18,7 @@ export async function GET(
     const articleId = params.articleId;
 
     // Fetch article with all raw data
-    const article = await prisma.blogArticle.findUnique({
+    const article = await prisma.blog_articles.findUnique({
       where: { id: articleId },
     });
 

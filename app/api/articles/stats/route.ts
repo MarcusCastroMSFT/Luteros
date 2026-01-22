@@ -29,27 +29,27 @@ export async function GET(request: NextRequest) {
       commentsLastMonth,
     ] = await Promise.all([
       // Total articles count
-      prisma.blogArticle.count(),
+      prisma.blog_articles.count(),
       
       // Published articles count
-      prisma.blogArticle.count({
+      prisma.blog_articles.count({
         where: { isPublished: true }
       }),
       
       // Draft articles count
-      prisma.blogArticle.count({
+      prisma.blog_articles.count({
         where: { isPublished: false }
       }),
       
       // New articles this month
-      prisma.blogArticle.count({
+      prisma.blog_articles.count({
         where: {
           createdAt: { gte: lastMonth }
         }
       }),
       
       // New articles last month (for comparison)
-      prisma.blogArticle.count({
+      prisma.blog_articles.count({
         where: {
           createdAt: {
             gte: twoMonthsAgo,
@@ -59,12 +59,12 @@ export async function GET(request: NextRequest) {
       }),
       
       // Total comments
-      prisma.blogArticle.aggregate({
+      prisma.blog_articles.aggregate({
         _sum: { commentCount: true }
       }),
       
       // Comments this month
-      prisma.blogArticle.aggregate({
+      prisma.blog_articles.aggregate({
         _sum: { commentCount: true },
         where: {
           updatedAt: { gte: lastMonth }
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       }),
       
       // Comments last month
-      prisma.blogArticle.aggregate({
+      prisma.blog_articles.aggregate({
         _sum: { commentCount: true },
         where: {
           updatedAt: {

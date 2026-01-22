@@ -5,14 +5,14 @@ async function verifyAndFixEventRegistrations() {
 
   try {
     // Get all events
-    const events = await prisma.event.findMany({
+    const events = await prisma.events.findMany({
       select: {
         id: true,
         title: true,
         totalSlots: true,
         _count: {
           select: {
-            registrations: true,
+            event_registrations: true,
           },
         },
       },
@@ -21,7 +21,7 @@ async function verifyAndFixEventRegistrations() {
     console.log(`Encontrados ${events.length} eventos\n`)
 
     for (const event of events) {
-      const registrationCount = event._count.registrations
+      const registrationCount = event._count.event_registrations
       console.log(`✅ ${event.title}: ${registrationCount}/${event.totalSlots}`)
     }
 

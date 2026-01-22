@@ -1,17 +1,23 @@
 "use client"
 
+import { useState } from "react"
+import Link from "next/link"
 import { ServerSideDataTable } from "@/components/common/server-side-data-table"
 import { CoursesStats } from "@/components/courses/courses-stats"
 import { coursesColumns, type CourseRow } from "@/components/courses/courses-columns"
 import { useServerSideData } from "@/hooks/use-server-side-data"
 
 export default function CoursesPage() {
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0)
+
   const {
     data: courses,
+    setData,
+    totalCount,
+    setTotalCount,
+    pageCount,
     loading,
     error,
-    totalCount,
-    pageCount,
     pageIndex,
     pageSize,
     sorting,
@@ -26,22 +32,24 @@ export default function CoursesPage() {
     initialPageSize: 10,
   })
 
+  const handleDeleteCourse = (courseId: string) => {
+    // Optimistic update: remove course from table immediately
+    setData(prevData => prevData.filter(course => course.id !== courseId))
+    setTotalCount(prevCount => prevCount - 1)
+    
+    // Refresh stats to reflect the deletion
+    setStatsRefreshKey(prev => prev + 1)
+  }
+
   if (error) {
     return (
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <div className="px-4 lg:px-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">Cursos</h1>
-                <p className="text-muted-foreground">
-                  Gerencie seus cursos e programas educacionais.
-                </p>
-              </div>
-            </div>
-            <div className="px-4 lg:px-6">
-              <div className="text-red-600">
-                Erro ao carregar cursos: {error}
+              <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+                <h3 className="text-sm font-medium text-destructive">Erro ao carregar cursos</h3>
+                <p className="text-sm text-destructive/80 mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -56,21 +64,31 @@ export default function CoursesPage() {
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {/* Page Header */}
           <div className="px-4 lg:px-6">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">Cursos</h1>
-              <p className="text-muted-foreground">
-                Gerencie seus cursos e programas educacionais.
-                {!loading && (
-                  <span className="ml-2 text-sm">
-                    ({totalCount.toLocaleString()} cursos totais)
-                  </span>
-                )}
-              </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-2xl font-semibold tracking-tight">Cursos</h1>
+                  <p className="text-muted-foreground">
+                    Gerencie seus cursos e programas educacionais.
+                    {!loading && (
+                      <span className="ml-2 text-sm">
+                        ({totalCount.toLocaleString()} cursos totais)
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <Link 
+                  href="/dashboard/courses/new"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer"
+                >
+                  Novo Curso
+                </Link>
+              </div>
             </div>
           </div>
           
           {/* Stats Cards */}
-          <CoursesStats />
+          <CoursesStats refreshKey={statsRefreshKey} />
           
           {/* Courses Table */}
           <ServerSideDataTable
@@ -93,6 +111,7 @@ export default function CoursesPage() {
             manualPagination={true}
             manualSorting={true}
             manualFiltering={true}
+            meta={{ onDeleteRow: handleDeleteCourse }}
           />
         </div>
       </div>

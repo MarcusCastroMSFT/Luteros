@@ -89,7 +89,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published blog articles
   let articlePages: MetadataRoute.Sitemap = []
   try {
-    const articles = await prisma.blogArticle.findMany({
+    const articles = await prisma.blog_articles.findMany({
       where: { isPublished: true },
       select: {
         slug: true,
@@ -112,7 +112,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published courses
   let coursePages: MetadataRoute.Sitemap = []
   try {
-    const courses = await prisma.course.findMany({
+    const courses = await prisma.courses.findMany({
       where: { isPublished: true },
       select: {
         slug: true,
@@ -133,7 +133,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published events
   let eventPages: MetadataRoute.Sitemap = []
   try {
-    const events = await prisma.event.findMany({
+    const events = await prisma.events.findMany({
       where: { isPublished: true },
       select: {
         slug: true,
@@ -154,7 +154,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all active products
   let productPages: MetadataRoute.Sitemap = []
   try {
-    const products = await prisma.product.findMany({
+    const products = await prisma.products.findMany({
       where: { isActive: true },
       select: {
         slug: true,

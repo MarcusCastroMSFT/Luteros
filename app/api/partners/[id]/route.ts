@@ -19,7 +19,7 @@ export async function GET(
 
     const { id } = await context.params;
 
-    const partner = await prisma.productPartner.findUnique({
+    const partner = await prisma.product_partners.findUnique({
       where: { id },
       include: {
         _count: {
@@ -77,7 +77,7 @@ export async function PUT(
     const { name, slug, logo, website, description, email, phone, isActive } = body;
 
     // Check if partner exists
-    const existingPartner = await prisma.productPartner.findUnique({
+    const existingPartner = await prisma.product_partners.findUnique({
       where: { id },
     });
 
@@ -90,7 +90,7 @@ export async function PUT(
 
     // Check if slug is being changed and if new slug already exists
     if (slug && slug !== existingPartner.slug) {
-      const slugExists = await prisma.productPartner.findUnique({
+      const slugExists = await prisma.product_partners.findUnique({
         where: { slug },
       });
 
@@ -102,7 +102,7 @@ export async function PUT(
       }
     }
 
-    const updatedPartner = await prisma.productPartner.update({
+    const updatedPartner = await prisma.product_partners.update({
       where: { id },
       data: {
         name: name || existingPartner.name,
@@ -143,7 +143,7 @@ export async function DELETE(
     const { id } = await context.params;
 
     // Check if partner exists
-    const existingPartner = await prisma.productPartner.findUnique({
+    const existingPartner = await prisma.product_partners.findUnique({
       where: { id },
       include: {
         _count: {
@@ -160,7 +160,7 @@ export async function DELETE(
     }
 
     // Delete partner (products will be cascade deleted due to schema configuration)
-    await prisma.productPartner.delete({
+    await prisma.product_partners.delete({
       where: { id },
     });
 

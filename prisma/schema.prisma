@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,25 +6,485 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============================================
-// IMPORTANT: Supabase Auth Integration
-// ============================================
-// DO NOT duplicate fields from auth.users table
-// auth.users already contains: id, email, phone, created_at, updated_at
-// We only store additional user profile data here
+model blog_articles {
+  id                String          @id @db.Uuid
+  title             String
+  slug              String          @unique
+  excerpt           String
+  content           String
+  image             String?
+  coverImage        String?
+  authorId          String          @db.Uuid
+  category          String
+  tags              String[]
+  metaTitle         String?
+  metaDescription   String?
+  readTime          Int
+  viewCount         Int             @default(0)
+  commentCount      Int             @default(0)
+  likeCount         Int             @default(0)
+  isPublished       Boolean         @default(false)
+  publishedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime
+  relatedArticleIds String[]        @default([]) @db.Uuid
+  accessType        String          @default("free")
+  targetAudience    String          @default("general")
+  user_profiles     user_profiles   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  blog_comments     blog_comments[]
+  blog_likes        blog_likes[]
 
-// User Roles (matches Supabase Auth custom claims)
-enum UserRole {
-  ADMIN
-  INSTRUCTOR
-  STUDENT
+  @@index([accessType])
+  @@index([authorId])
+  @@index([category])
+  @@index([createdAt(sort: Desc)])
+  @@index([isPublished, category])
+  @@index([isPublished, publishedAt(sort: Desc)])
+  @@index([slug])
+  @@index([targetAudience])
 }
 
-enum SubscriptionTier {
-  FREE
-  BASIC
-  PREMIUM
-  ENTERPRISE
+model blog_comments {
+  id            String        @id @db.Uuid
+  articleId     String        @db.Uuid
+  userId        String        @db.Uuid
+  content       String
+  isPublished   Boolean       @default(true)
+  isReported    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  blog_articles blog_articles @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+model blog_likes {
+  id            String        @id @db.Uuid
+  articleId     String        @db.Uuid
+  userId        String        @db.Uuid
+  createdAt     DateTime      @default(now())
+  blog_articles blog_articles @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, userId])
+  @@index([articleId])
+  @@index([userId])
+}
+
+model certificates {
+  id                String        @id @db.Uuid
+  userId            String        @db.Uuid
+  courseId          String        @db.Uuid
+  certificateNumber String        @unique
+  issuedAt          DateTime      @default(now())
+  expiresAt         DateTime?
+  verificationUrl   String?
+  user_profiles     user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model comments {
+  id            String        @id @db.Uuid
+  userId        String        @db.Uuid
+  entityType    String
+  entityId      String        @db.Uuid
+  content       String
+  isPublished   Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model community_likes {
+  id              String          @id @db.Uuid
+  postId          String          @db.Uuid
+  userId          String          @db.Uuid
+  createdAt       DateTime        @default(now())
+  community_posts community_posts @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user_profiles   user_profiles   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model community_posts {
+  id                String              @id @db.Uuid
+  title             String
+  content           String
+  userId            String              @db.Uuid
+  category          String
+  subcategory       String?
+  tags              String[]
+  isAnonymous       Boolean             @default(false)
+  status            CommunityPostStatus @default(ACTIVE)
+  isReported        Boolean             @default(false)
+  isPinned          Boolean             @default(false)
+  viewCount         Int                 @default(0)
+  replyCount        Int                 @default(0)
+  likeCount         Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  lastReplyAt       DateTime?
+  community_likes   community_likes[]
+  user_profiles     user_profiles       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community_replies community_replies[]
+
+  @@index([category])
+  @@index([createdAt(sort: Desc)])
+  @@index([isPinned, createdAt(sort: Desc)])
+  @@index([lastReplyAt(sort: Desc)])
+  @@index([status])
+  @@index([userId])
+}
+
+model community_replies {
+  id                    String                  @id @db.Uuid
+  postId                String                  @db.Uuid
+  userId                String                  @db.Uuid
+  content               String
+  isAnonymous           Boolean                 @default(false)
+  isReported            Boolean                 @default(false)
+  likeCount             Int                     @default(0)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  community_posts       community_posts         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user_profiles         user_profiles           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community_reply_likes community_reply_likes[]
+
+  @@index([postId, createdAt])
+  @@index([userId])
+}
+
+model community_reply_likes {
+  id                String            @id @db.Uuid
+  replyId           String            @db.Uuid
+  userId            String            @db.Uuid
+  createdAt         DateTime          @default(now())
+  community_replies community_replies @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  user_profiles     user_profiles     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([replyId, userId])
+  @@index([replyId])
+}
+
+model course_progress {
+  id               String        @id @db.Uuid
+  userId           String        @db.Uuid
+  courseId         String        @db.Uuid
+  completedLessons Int           @default(0)
+  totalLessons     Int
+  progressPercent  Int           @default(0)
+  lastAccessedAt   DateTime      @default(now())
+  updatedAt        DateTime
+  courses          courses       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user_profiles    user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model courses {
+  id               String            @id @default(uuid()) @db.Uuid
+  title            String
+  slug             String            @unique
+  description      String
+  shortDescription String?
+  level            String
+  category         String
+  language         String            @default("en")
+  duration         Int?
+  thumbnail        String?
+  coverImage       String?
+  previewVideo     String?
+  instructorId     String            @db.Uuid
+  price            Decimal?          @db.Decimal(10, 2)
+  discountPrice    Decimal?          @db.Decimal(10, 2)
+  isFree           Boolean           @default(false)
+  isPublished      Boolean           @default(false)
+  publishedAt      DateTime?
+  enrollmentCount  Int               @default(0)
+  averageRating    Decimal?          @db.Decimal(3, 2)
+  reviewCount      Int               @default(0)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  course_progress  course_progress[]
+  user_profiles    user_profiles     @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  enrollments      enrollments[]
+  lessons          lessons[]
+  reviews          reviews[]
+}
+
+model enrollments {
+  id              String        @id @db.Uuid
+  userId          String        @db.Uuid
+  courseId        String        @db.Uuid
+  enrolledAt      DateTime      @default(now())
+  completedAt     DateTime?
+  expiresAt       DateTime?
+  progressPercent Int           @default(0)
+  paidAmount      Decimal?      @db.Decimal(10, 2)
+  paymentStatus   String?
+  courses         courses       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user_profiles   user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model event_registrations {
+  id            String        @id @db.Uuid
+  eventId       String        @db.Uuid
+  userId        String        @db.Uuid
+  registeredAt  DateTime      @default(now())
+  attended      Boolean       @default(false)
+  paidAmount    Decimal?      @db.Decimal(10, 2)
+  paymentStatus String?
+  events        events        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model event_speakers {
+  id       String  @id @db.Uuid
+  eventId  String  @db.Uuid
+  name     String
+  title    String?
+  bio      String?
+  image    String?
+  linkedin String?
+  twitter  String?
+  website  String?
+  order    Int     @default(0)
+  events   events  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model events {
+  id                  String                @id @db.Uuid
+  title               String
+  slug                String                @unique
+  description         String
+  fullDescription     String?
+  location            String
+  eventDate           DateTime
+  eventTime           String
+  duration            Int?
+  image               String?
+  totalSlots          Int
+  cost                Decimal?              @db.Decimal(10, 2)
+  isFree              Boolean               @default(false)
+  isPublished         Boolean               @default(false)
+  isCancelled         Boolean               @default(false)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  event_registrations event_registrations[]
+  event_speakers      event_speakers[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([eventDate(sort: Desc)])
+  @@index([isCancelled])
+  @@index([isFree])
+  @@index([isPublished, eventDate(sort: Desc)])
+  @@index([slug])
+}
+
+model lesson_progress {
+  id              String        @id @db.Uuid
+  userId          String        @db.Uuid
+  lessonId        String        @db.Uuid
+  isCompleted     Boolean       @default(false)
+  completedAt     DateTime?
+  watchedDuration Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  lessons         lessons       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user_profiles   user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model lessons {
+  id              String            @id @default(uuid()) @db.Uuid
+  courseId        String            @db.Uuid
+  title           String
+  description     String?
+  content         String?
+  videoUrl        String?
+  duration        Int?
+  order           Int
+  sectionTitle    String?
+  isPublished     Boolean           @default(false)
+  isFree          Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  type            LessonType        @default(video)
+  videoProvider   String?
+  lesson_progress lesson_progress[]
+  courses         courses           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, order])
+}
+
+model notifications {
+  id            String        @id @db.Uuid
+  userId        String        @db.Uuid
+  type          String
+  title         String
+  message       String
+  actionUrl     String?
+  isRead        Boolean       @default(false)
+  readAt        DateTime?
+  createdAt     DateTime      @default(now())
+  user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId, isRead])
+}
+
+model product_partners {
+  id          String     @id @db.Uuid
+  name        String
+  slug        String     @unique
+  logo        String?
+  website     String?
+  description String?
+  email       String?
+  phone       String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  products    products[]
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+model products {
+  id                 String           @id @db.Uuid
+  slug               String           @unique
+  title              String
+  description        String
+  shortDescription   String
+  image              String?
+  partnerId          String           @db.Uuid
+  discountPercentage Int              @default(0)
+  discountType       String           @default("percentage")
+  originalPrice      Decimal?         @db.Decimal(10, 2)
+  discountedPrice    Decimal?         @db.Decimal(10, 2)
+  discountAmount     Decimal?         @db.Decimal(10, 2)
+  promoCode          String
+  category           String
+  tags               String[]
+  availability       String           @default("all")
+  validUntil         DateTime?
+  termsAndConditions String?
+  howToUse           String[]
+  features           String[]
+  isActive           Boolean          @default(true)
+  isFeatured         Boolean          @default(false)
+  usageCount         Int              @default(0)
+  maxUsages          Int?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime
+  product_partners   product_partners @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([availability])
+  @@index([category])
+  @@index([createdAt(sort: Desc)])
+  @@index([isActive, category])
+  @@index([isActive, isFeatured])
+  @@index([partnerId])
+  @@index([slug])
+}
+
+model reviews {
+  id            String        @id @db.Uuid
+  userId        String        @db.Uuid
+  courseId      String        @db.Uuid
+  rating        Int
+  title         String?
+  comment       String?
+  isPublished   Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  courses       courses       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model user_profiles {
+  id                    String                  @id @db.Uuid
+  fullName              String?
+  displayName           String?
+  bio                   String?
+  avatar                String?
+  phone                 String?
+  dateOfBirth           DateTime?
+  title                 String?
+  company               String?
+  website               String?
+  linkedin              String?
+  twitter               String?
+  instagram             String?
+  rating                Decimal?                @db.Decimal(3, 2)
+  reviewsCount          Int                     @default(0)
+  studentsCount         Int                     @default(0)
+  coursesCount          Int                     @default(0)
+  language              String                  @default("en")
+  timezone              String                  @default("UTC")
+  emailNotifications    Boolean                 @default(true)
+  marketingEmails       Boolean                 @default(false)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  lastLoginAt           DateTime?
+  blog_articles         blog_articles[]
+  blog_comments         blog_comments[]
+  blog_likes            blog_likes[]
+  certificates          certificates[]
+  comments              comments[]
+  community_likes       community_likes[]
+  community_posts       community_posts[]
+  community_replies     community_replies[]
+  community_reply_likes community_reply_likes[]
+  course_progress       course_progress[]
+  courses               courses[]
+  enrollments           enrollments[]
+  event_registrations   event_registrations[]
+  lesson_progress       lesson_progress[]
+  notifications         notifications[]
+  reviews               reviews[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([displayName])
+  @@index([fullName])
+}
+
+model user_roles {
+  id        BigInt   @id @default(autoincrement())
+  userId    String   @db.Uuid
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@unique([userId, role])
+}
+
+enum CommunityPostStatus {
+  ACTIVE
+  CLOSED
+  MODERATION
+}
+
+enum LessonType {
+  video
+  article
+  audio
 }
 
 enum SubscriptionStatus {
@@ -37,769 +494,15 @@ enum SubscriptionStatus {
   TRIAL
 }
 
-// ============================================
-// USER PROFILE (extends auth.users)
-// ============================================
-model UserProfile {
-  id                String   @id @db.Uuid // References auth.users(id)
-  
-  // Profile Information
-  fullName          String?
-  displayName       String?
-  bio               String?   @db.Text
-  avatar            String?
-  phone             String?
-  dateOfBirth       DateTime?
-  
-  // Professional Information
-  title             String?
-  company           String?
-  website           String?
-  linkedin          String?
-  twitter           String?
-  instagram         String?
-  
-  // Stats (for instructors)
-  rating            Decimal?  @db.Decimal(3, 2)
-  reviewsCount      Int       @default(0)
-  studentsCount     Int       @default(0)
-  coursesCount      Int       @default(0)
-  
-  // Preferences
-  language          String    @default("en")
-  timezone          String    @default("UTC")
-  emailNotifications Boolean  @default(true)
-  marketingEmails   Boolean   @default(false)
-  
-  // Metadata
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  lastLoginAt       DateTime?
-  
-  // Relations - Courses
-  enrollments       Enrollment[]
-  courseProgress    CourseProgress[]
-  lessonProgress    LessonProgress[]
-  instructorCourses Course[]  @relation("InstructorCourses")
-  reviews           Review[]
-  
-  // Relations - Blog
-  blogArticles      BlogArticle[] @relation("BlogArticles")
-  blogComments      BlogComment[] @relation("BlogComments")
-  blogLikes         BlogLike[]    @relation("BlogLikes")
-  
-  // Relations - Events
-  eventRegistrations EventRegistration[] @relation("EventRegistrations")
-  
-  // Relations - Community
-  communityPosts    CommunityPost[]      @relation("CommunityPosts")
-  communityReplies  CommunityReply[]     @relation("CommunityReplies")
-  communityPostLikes CommunityLike[]     @relation("CommunityPostLikes")
-  communityReplyLikes CommunityReplyLike[] @relation("CommunityReplyLikes")
-  
-  // Relations - General
-  comments          Comment[]
-  certificates      Certificate[]
-  notifications     Notification[]
-  
-  @@index([fullName])
-  @@index([displayName])
-  @@index([createdAt(sort: Desc)])
-  @@map("user_profiles")
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
 }
 
-// User Roles Table (for Supabase Auth Hooks)
-model UserRoleAssignment {
-  id        BigInt   @id @default(autoincrement())
-  userId    String   @db.Uuid
-  role      UserRole
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([userId, role])
-  @@map("user_roles")
-}
-
-// ============================================
-// COURSES
-// ============================================
-model Course {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Information
-  title            String
-  slug             String   @unique
-  description      String   @db.Text
-  shortDescription String?
-  
-  // Course Details
-  level            String   // BEGINNER, INTERMEDIATE, ADVANCED
-  category         String
-  language         String   @default("en")
-  duration         Int?     // in minutes
-  
-  // Media
-  thumbnail        String?
-  coverImage       String?
-  previewVideo     String?
-  
-  // Instructor
-  instructorId     String   @db.Uuid
-  instructor       UserProfile @relation("InstructorCourses", fields: [instructorId], references: [id], onDelete: Cascade)
-  
-  // Pricing
-  price            Decimal? @db.Decimal(10, 2)
-  discountPrice    Decimal? @db.Decimal(10, 2)
-  isFree           Boolean  @default(false)
-  
-  // Status
-  isPublished      Boolean  @default(false)
-  publishedAt      DateTime?
-  
-  // Stats
-  enrollmentCount  Int      @default(0)
-  averageRating    Decimal? @db.Decimal(3, 2)
-  reviewCount      Int      @default(0)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  lessons          Lesson[]
-  enrollments      Enrollment[]
-  reviews          Review[]
-  courseProgress   CourseProgress[]
-  
-  @@map("courses")
-}
-
-// ============================================
-// LESSONS
-// ============================================
-model Lesson {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Information
-  courseId         String   @db.Uuid
-  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
-  title            String
-  description      String?  @db.Text
-  
-  // Content
-  content          String?  @db.Text
-  videoUrl         String?
-  duration         Int?     // in seconds
-  
-  // Order
-  order            Int
-  sectionTitle     String?
-  
-  // Status
-  isPublished      Boolean  @default(false)
-  isFree           Boolean  @default(false)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  lessonProgress   LessonProgress[]
-  
-  @@unique([courseId, order])
-  @@map("lessons")
-}
-
-// ============================================
-// ENROLLMENTS & PROGRESS
-// ============================================
-model Enrollment {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  courseId         String   @db.Uuid
-  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
-  // Enrollment Details
-  enrolledAt       DateTime @default(now())
-  completedAt      DateTime?
-  expiresAt        DateTime?
-  
-  // Progress
-  progressPercent  Int      @default(0)
-  
-  // Payment
-  paidAmount       Decimal? @db.Decimal(10, 2)
-  paymentStatus    String?  // PENDING, COMPLETED, REFUNDED
-  
-  @@unique([userId, courseId])
-  @@map("enrollments")
-}
-
-model CourseProgress {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  courseId         String   @db.Uuid
-  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
-  // Progress
-  completedLessons Int      @default(0)
-  totalLessons     Int
-  progressPercent  Int      @default(0)
-  
-  // Time Tracking
-  lastAccessedAt   DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  @@unique([userId, courseId])
-  @@map("course_progress")
-}
-
-model LessonProgress {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  lessonId         String   @db.Uuid
-  lesson           Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  
-  // Progress
-  isCompleted      Boolean  @default(false)
-  completedAt      DateTime?
-  watchedDuration  Int      @default(0) // in seconds
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  @@unique([userId, lessonId])
-  @@map("lesson_progress")
-}
-
-// ============================================
-// REVIEWS & RATINGS
-// ============================================
-model Review {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  courseId         String   @db.Uuid
-  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  
-  // Review Content
-  rating           Int      // 1-5
-  title            String?
-  comment          String?  @db.Text
-  
-  // Moderation
-  isPublished      Boolean  @default(true)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  @@unique([userId, courseId])
-  @@map("reviews")
-}
-
-// ============================================
-// COMMENTS
-// ============================================
-model Comment {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Comment can be on different entities
-  entityType       String   // COURSE, LESSON, BLOG_POST
-  entityId         String   @db.Uuid
-  
-  // Content
-  content          String   @db.Text
-  
-  // Moderation
-  isPublished      Boolean  @default(true)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  @@map("comments")
-}
-
-// ============================================
-// CERTIFICATES
-// ============================================
-model Certificate {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  courseId         String   @db.Uuid
-  
-  // Certificate Details
-  certificateNumber String  @unique
-  issuedAt         DateTime @default(now())
-  expiresAt        DateTime?
-  
-  // Verification
-  verificationUrl  String?
-  
-  @@unique([userId, courseId])
-  @@map("certificates")
-}
-
-// ============================================
-// NOTIFICATIONS
-// ============================================
-model Notification {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Notification Details
-  type             String   // COURSE_UPDATE, NEW_LESSON, CERTIFICATE, etc.
-  title            String
-  message          String   @db.Text
-  
-  // Link
-  actionUrl        String?
-  
-  // Status
-  isRead           Boolean  @default(false)
-  readAt           DateTime?
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  
-  @@index([userId, isRead])
-  @@index([createdAt(sort: Desc)])
-  @@map("notifications")
-}
-
-// ============================================
-// BLOG & ARTICLES
-// ============================================
-model BlogArticle {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Information
-  title            String
-  slug             String   @unique
-  excerpt          String   @db.Text
-  content          String   @db.Text
-  
-  // Media
-  image            String?
-  coverImage       String?
-  
-  // Author
-  authorId         String   @db.Uuid
-  author           UserProfile @relation("BlogArticles", fields: [authorId], references: [id], onDelete: Cascade)
-  
-  // Categorization
-  category         String
-  tags             String[] // Array of tags
-  
-  // Related Content
-  relatedArticleIds String[] @default([]) @db.Uuid // Up to 3 related article IDs
-  
-  // SEO
-  metaTitle        String?
-  metaDescription  String?
-  
-  // Stats
-  readTime         Int      // in minutes
-  viewCount        Int      @default(0)
-  commentCount     Int      @default(0)
-  likeCount        Int      @default(0)
-  
-  // Access Control
-  accessType       String   @default("free") // free, paid
-  targetAudience   String   @default("general") // general, doctors
-  
-  // Status
-  isPublished      Boolean  @default(false)
-  publishedAt      DateTime?
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  comments         BlogComment[]
-  likes            BlogLike[]
-  
-  @@index([slug])
-  @@index([authorId])
-  @@index([category])
-  @@index([isPublished, publishedAt(sort: Desc)])
-  @@index([isPublished, category]) // For filtering published articles by category
-  @@index([createdAt(sort: Desc)])
-  @@index([accessType]) // For filtering by free/paid
-  @@index([targetAudience]) // For filtering by audience type
-  @@map("blog_articles")
-}
-
-model BlogComment {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  articleId        String   @db.Uuid
-  article          BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("BlogComments", fields: [userId], references: [id], onDelete: Cascade)
-  
-  content          String   @db.Text
-  
-  // Moderation
-  isPublished      Boolean  @default(true)
-  isReported       Boolean  @default(false)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  @@index([articleId, createdAt(sort: Desc)])
-  @@index([userId])
-  @@map("blog_comments")
-}
-
-model BlogLike {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  articleId        String   @db.Uuid
-  article          BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("BlogLikes", fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt        DateTime @default(now())
-  
-  @@unique([articleId, userId])
-  @@index([articleId])
-  @@index([userId])
-  @@map("blog_likes")
-}
-
-// ============================================
-// EVENTS
-// ============================================
-model Event {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Information
-  title            String
-  slug             String   @unique
-  description      String   @db.Text
-  fullDescription  String?  @db.Text
-  
-  // Event Details
-  location         String
-  eventDate        DateTime
-  eventTime        String
-  duration         Int?     // in minutes
-  
-  // Media
-  image            String?
-  
-  // Capacity
-  totalSlots       Int
-  
-  // Pricing
-  cost             Decimal? @db.Decimal(10, 2)
-  isFree           Boolean  @default(false)
-  
-  // Status
-  isPublished      Boolean  @default(false)
-  isCancelled      Boolean  @default(false)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  registrations    EventRegistration[]
-  speakers         EventSpeaker[]
-  
-  @@index([slug])
-  @@index([eventDate(sort: Desc)])
-  @@index([isPublished, eventDate(sort: Desc)])
-  @@index([isFree]) // For filtering free/paid events
-  @@index([isCancelled]) // For filtering active events
-  @@index([createdAt(sort: Desc)])
-  @@map("events")
-}
-
-model EventRegistration {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  eventId          String   @db.Uuid
-  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("EventRegistrations", fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Registration Details
-  registeredAt     DateTime @default(now())
-  attended         Boolean  @default(false)
-  
-  // Payment
-  paidAmount       Decimal? @db.Decimal(10, 2)
-  paymentStatus    String?  // PENDING, COMPLETED, REFUNDED
-  
-  @@unique([eventId, userId])
-  @@index([eventId])
-  @@index([userId])
-  @@map("event_registrations")
-}
-
-model EventSpeaker {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  eventId          String   @db.Uuid
-  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  // Speaker Information
-  name             String
-  title            String?
-  bio              String?  @db.Text
-  image            String?
-  
-  // Social Links
-  linkedin         String?
-  twitter          String?
-  website          String?
-  
-  // Order
-  order            Int      @default(0)
-  
-  @@index([eventId])
-  @@map("event_speakers")
-}
-
-// ============================================
-// COMMUNITY
-// ============================================
-enum CommunityPostStatus {
-  ACTIVE
-  CLOSED
-  MODERATION
-}
-
-model CommunityPost {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Information
-  title            String
-  content          String   @db.Text
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("CommunityPosts", fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Categorization
-  category         String
-  subcategory      String?
-  tags             String[] // Array of tags
-  
-  // Privacy
-  isAnonymous      Boolean  @default(false)
-  
-  // Status
-  status           CommunityPostStatus @default(ACTIVE)
-  
-  // Moderation
-  isReported       Boolean  @default(false)
-  isPinned         Boolean  @default(false)
-  
-  // Stats
-  viewCount        Int      @default(0)
-  replyCount       Int      @default(0)
-  likeCount        Int      @default(0)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  lastReplyAt      DateTime?
-  
-  // Relations
-  replies          CommunityReply[]
-  likes            CommunityLike[]
-  
-  @@index([userId])
-  @@index([category])
-  @@index([status])
-  @@index([isPinned, createdAt(sort: Desc)])
-  @@index([lastReplyAt(sort: Desc)])
-  @@index([createdAt(sort: Desc)])
-  @@map("community_posts")
-}
-
-model CommunityReply {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  postId           String   @db.Uuid
-  post             CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("CommunityReplies", fields: [userId], references: [id], onDelete: Cascade)
-  
-  content          String   @db.Text
-  
-  // Privacy
-  isAnonymous      Boolean  @default(false)
-  
-  // Moderation
-  isReported       Boolean  @default(false)
-  
-  // Stats
-  likeCount        Int      @default(0)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  likes            CommunityReplyLike[]
-  
-  @@index([postId, createdAt])
-  @@index([userId])
-  @@map("community_replies")
-}
-
-model CommunityLike {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  postId           String   @db.Uuid
-  post             CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("CommunityPostLikes", fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt        DateTime @default(now())
-  
-  @@unique([postId, userId])
-  @@index([postId])
-  @@map("community_likes")
-}
-
-model CommunityReplyLike {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  replyId          String   @db.Uuid
-  reply            CommunityReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
-  
-  userId           String   @db.Uuid
-  user             UserProfile @relation("CommunityReplyLikes", fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt        DateTime @default(now())
-  
-  @@unique([replyId, userId])
-  @@index([replyId])
-  @@map("community_reply_likes")
-}
-
-// ============================================
-// PRODUCTS & PARTNERS
-// ============================================
-model ProductPartner {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Info
-  name             String
-  slug             String   @unique
-  logo             String?
-  website          String?
-  description      String?  @db.Text
-  
-  // Contact
-  email            String?
-  phone            String?
-  
-  // Status
-  isActive         Boolean  @default(true)
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  products         Product[]
-  
-  @@index([slug])
-  @@index([isActive])
-  @@map("product_partners")
-}
-
-model Product {
-  id               String   @id @default(uuid()) @db.Uuid
-  
-  // Basic Info
-  slug             String   @unique
-  title            String
-  description      String   @db.Text
-  shortDescription String   @db.Text
-  image            String?
-  
-  // Partner relationship
-  partnerId        String   @db.Uuid
-  partner          ProductPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  
-  // Discount information (stored as JSON for flexibility)
-  discountPercentage Int      @default(0)
-  discountType     String   @default("percentage") // percentage, fixed
-  originalPrice    Decimal? @db.Decimal(10, 2)
-  discountedPrice  Decimal? @db.Decimal(10, 2)
-  discountAmount   Decimal? @db.Decimal(10, 2)
-  
-  // Promo details
-  promoCode        String
-  
-  // Categorization
-  category         String
-  tags             String[] // Array of tags
-  
-  // Access Control
-  availability     String   @default("all") // all, members
-  
-  // Validity
-  validUntil       DateTime?
-  
-  // Terms and Usage
-  termsAndConditions String? @db.Text
-  howToUse         String[] // Array of usage steps
-  features         String[] // Array of features
-  
-  // Status
-  isActive         Boolean  @default(true)
-  isFeatured       Boolean  @default(false)
-  
-  // Usage stats
-  usageCount       Int      @default(0)
-  maxUsages        Int?
-  
-  // Metadata
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  @@index([slug])
-  @@index([partnerId])
-  @@index([category])
-  @@index([isActive, isFeatured])
-  @@index([isActive, category])
-  @@index([availability])
-  @@index([createdAt(sort: Desc)])
-  @@map("products")
+enum UserRole {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
 }

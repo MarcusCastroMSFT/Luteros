@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       
       try {
         // Check if event already exists
-        const existing = await prisma.event.findUnique({
+        const existing = await prisma.events.findUnique({
           where: { slug: event.slug }
         })
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create event
-        const createdEvent = await prisma.event.create({
+        const createdEvent = await prisma.events.create({
           data: event,
         })
 
