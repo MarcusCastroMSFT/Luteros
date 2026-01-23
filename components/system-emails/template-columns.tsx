@@ -23,6 +23,7 @@ import {
   IconHeart,
   IconPlayerPlay,
   IconPlayerPause,
+  IconTrash,
 } from "@tabler/icons-react"
 
 export interface SystemEmailTemplate {
@@ -85,7 +86,8 @@ export function getTemplateColumns(
   onPreview: (template: SystemEmailTemplate) => void,
   onSendTest: (template: SystemEmailTemplate) => void,
   onReset: (template: SystemEmailTemplate) => void,
-  onToggleActive: (template: SystemEmailTemplate) => void
+  onToggleActive: (template: SystemEmailTemplate) => void,
+  onDelete: (template: SystemEmailTemplate) => void
 ): ColumnDef<SystemEmailTemplate>[] {
   return [
     {
@@ -209,6 +211,14 @@ export function getTemplateColumns(
               <DropdownMenuItem onClick={() => onReset(template)} className="cursor-pointer">
                 <IconRefresh className="mr-2 h-4 w-4" />
                 Restaurar Padrão
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onDelete(template)} 
+                className="cursor-pointer text-destructive focus:text-destructive"
+              >
+                <IconTrash className="mr-2 h-4 w-4" />
+                Excluir
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -180,3 +180,76 @@ export async function PATCH(
     )
   }
 }
+
+// DELETE - Delete a template
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Validate ID format
+    if (!isValidUUID(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid template ID' },
+        { status: 400 }
+      )
+    }
+    
+    // Get current user and check admin role
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    const userRole = await prisma.user_roles.findFirst({
+      where: { userId: user.id },
+      select: { role: true },
+    })
+
+    if (userRole?.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Only admins can delete templates' },
+        { status: 403 }
+      )
+    }
+
+    // Check if template exists
+    const existing = await prisma.system_email_templates.findUnique({
+      where: { id },
+    })
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Template not found' },
+        { status: 404 }
+      )
+    }
+
+    // Delete the template
+    await prisma.system_email_templates.delete({
+      where: { id },
+    })
+
+    // Invalidate cache for this template
+    invalidateTemplateCache(existing.code)
+
+    return NextResponse.json({
+      success: true,
+      message: 'Template deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting system email template:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete template' },
+      { status: 500 }
+    )
+  }
+}

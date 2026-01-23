@@ -64,10 +64,12 @@ export function SystemEmailsTable() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [testDialogOpen, setTestDialogOpen] = useState(false)
   const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<SystemEmailTemplate | null>(null)
   const [testEmail, setTestEmail] = useState("")
   const [isSendingTest, setIsSendingTest] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Fetch templates
   const fetchTemplates = useCallback(async () => {
@@ -112,6 +114,11 @@ export function SystemEmailsTable() {
   const handleReset = useCallback((template: SystemEmailTemplate) => {
     setSelectedTemplate(template)
     setResetDialogOpen(true)
+  }, [])
+
+  const handleDelete = useCallback((template: SystemEmailTemplate) => {
+    setSelectedTemplate(template)
+    setDeleteDialogOpen(true)
   }, [])
 
   const handleToggleActive = useCallback(async (template: SystemEmailTemplate) => {
@@ -198,10 +205,37 @@ export function SystemEmailsTable() {
     }
   }
 
+  const confirmDelete = async () => {
+    if (!selectedTemplate) return
+
+    setIsDeleting(true)
+
+    try {
+      const response = await fetch(`/api/system-emails/${selectedTemplate.id}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erro ao excluir template')
+      }
+
+      toast.success('Template excluído com sucesso')
+      setDeleteDialogOpen(false)
+      fetchTemplates()
+    } catch (error) {
+      console.error('Error deleting:', error)
+      toast.error(error instanceof Error ? error.message : 'Erro ao excluir')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   // Table columns
   const columns = useMemo(
-    () => getTemplateColumns(handleEdit, handlePreview, handleSendTest, handleReset, handleToggleActive),
-    [handleEdit, handlePreview, handleSendTest, handleReset, handleToggleActive]
+    () => getTemplateColumns(handleEdit, handlePreview, handleSendTest, handleReset, handleToggleActive, handleDelete),
+    [handleEdit, handlePreview, handleSendTest, handleReset, handleToggleActive, handleDelete]
   )
 
   // Filter templates by search and category
@@ -401,6 +435,30 @@ export function SystemEmailsTable() {
             <AlertDialogAction onClick={confirmReset} disabled={isResetting} className="cursor-pointer">
               {isResetting && <IconLoader2 className="h-4 w-4 mr-2 animate-spin" />}
               Restaurar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá excluir permanentemente o template &quot;{selectedTemplate?.name}&quot;.
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              disabled={isDeleting} 
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting && <IconLoader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

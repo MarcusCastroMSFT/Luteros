@@ -33,6 +33,15 @@ const pool = new Pool({ connectionString })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
+// Templates that were migrated to Supabase Auth and should be removed from DB
+const DEPRECATED_TEMPLATE_CODES = [
+  'welcome',
+  'email_verification', 
+  'password_reset',
+  'password_changed',
+  'email_changed',
+]
+
 async function main() {
   console.log('🌱 Starting system email templates seed...')
   
@@ -41,6 +50,35 @@ async function main() {
   }
   
   console.log('✅ Database connection configured')
+  
+  // First, remove deprecated templates that are now handled by Supabase Auth
+  console.log('\n🧹 Cleaning up deprecated templates (now handled by Supabase Auth)...')
+  let deletedCount = 0
+  
+  for (const code of DEPRECATED_TEMPLATE_CODES) {
+    try {
+      const existing = await prisma.system_email_templates.findUnique({
+        where: { code }
+      })
+      
+      if (existing) {
+        await prisma.system_email_templates.delete({
+          where: { code }
+        })
+        console.log(`🗑️  Removed deprecated template: ${code}`)
+        deletedCount++
+      }
+    } catch (error) {
+      // Ignore if template doesn't exist
+    }
+  }
+  
+  if (deletedCount > 0) {
+    console.log(`   Removed ${deletedCount} deprecated templates\n`)
+  } else {
+    console.log(`   No deprecated templates found\n`)
+  }
+  
   console.log(`📧 Seeding ${systemEmailTemplates.length} email templates...`)
 
   let createdCount = 0
@@ -116,10 +154,11 @@ async function main() {
 
     console.log('\n✨ Seed completed!')
     console.log(`📊 Summary:`)
+    console.log(`   - Removed: ${deletedCount} deprecated templates`)
     console.log(`   - Created: ${createdCount} templates`)
     console.log(`   - Updated: ${updatedCount} templates`)
     console.log(`   - Skipped: ${skippedCount} templates`)
-    console.log(`   - Total: ${systemEmailTemplates.length} templates`)
+    console.log(`   - Total active: ${systemEmailTemplates.length} templates`)
 
   } catch (error) {
     console.error('❌ Seed failed:', error)
