@@ -193,10 +193,22 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         ]}
       />
       
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
+      <div className="container mx-auto px-4 max-w-[1428px] py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
+          {/* Sidebar - First on mobile, right side on desktop */}
+          <div className="lg:col-span-1 order-first lg:order-last">
+            <div className="lg:-mt-52 relative z-10">
+              <CourseInfo
+                course={courseForInfo}
+                onEnroll={handleEnroll}
+                isEnrolling={isEnrolling}
+                isEnrolled={isEnrolled}
+              />
+            </div>
+          </div>
+
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-12">
+          <div className="lg:col-span-2 space-y-8 lg:space-y-12 order-last lg:order-first">
             {/* Course Meta Info */}
             <div className="flex flex-wrap items-center gap-6 text-gray-600 mb-8">
               <div className="flex items-center gap-2">
@@ -261,18 +273,6 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                 Instrutor
               </h2>
               <InstructorCard instructor={course.instructor} />
-            </div>
-          </div>
-          
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="lg:-mt-52 relative z-10">
-              <CourseInfo
-                course={courseForInfo}
-                onEnroll={handleEnroll}
-                isEnrolling={isEnrolling}
-                isEnrolled={isEnrolled}
-              />
             </div>
           </div>
         </div>

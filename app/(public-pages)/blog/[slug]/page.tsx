@@ -132,7 +132,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             author={article.author}
             avatar={article.authorAvatar}
             authorSlug={article.authorSlug || ''}
-            className="mb-16"
+            className="mb-8 sm:mb-16"
           />
         </div>
 

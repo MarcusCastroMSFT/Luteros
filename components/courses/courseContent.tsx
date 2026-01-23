@@ -63,19 +63,21 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
   
   return (
     <div 
-      className={`flex items-center justify-between py-3 px-4 transition-colors cursor-pointer ${
+      className={`flex items-center justify-between py-2.5 md:py-3 px-3 md:px-4 transition-colors cursor-pointer ${
         isActive 
-          ? 'bg-brand-50 border-r-2 border-brand-500' 
+          ? 'bg-brand-50 border-l-2 md:border-l-0 md:border-r-2 border-brand-500' 
           : 'hover:bg-gray-50'
       }`}
       onClick={handleClick}
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
         <LessonTypeIcon type={type} />
         <span className={`text-sm font-medium truncate ${
           isActive 
             ? 'text-brand-700' 
-            : 'text-gray-700'
+            : isCompleted
+              ? 'text-gray-600'
+              : 'text-gray-700'
         }`}>
           {title}
         </span>
@@ -86,15 +88,15 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
         )}
       </div>
       
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-sm text-gray-500">{duration}</span>
+      <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0 ml-2">
+        <span className="text-xs md:text-sm text-gray-500">{duration}</span>
         
         {isPreview ? (
-          <Badge variant="outline" className="text-brand-600 border-brand-200 bg-brand-50">
+          <Badge variant="outline" className="text-brand-600 border-brand-200 bg-brand-50 text-[10px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5">
             Prévia
           </Badge>
         ) : (
-          <Lock size={14} className="text-gray-400" />
+          <Lock size={12} className="text-gray-400 md:w-3.5 md:h-3.5" />
         )}
       </div>
     </div>
@@ -115,25 +117,37 @@ interface SectionProps {
 const SectionItem = ({ section, isExpanded, onToggle, onLessonSelect, currentLessonId, completedLessons, courseSlug, onPreviewClick }: SectionProps) => {
   const { title, lessons, totalDuration } = section
   const lessonsCount = lessons.length
+  const completedCount = lessons.filter(l => completedLessons?.has(l.id)).length
   
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full px-4 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
+        className="w-full px-3 md:px-4 py-3 md:py-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
           {isExpanded ? (
-            <ChevronUp size={20} className="text-gray-400" />
+            <ChevronUp size={18} className="text-gray-400 shrink-0 md:w-5 md:h-5" />
           ) : (
-            <ChevronDown size={20} className="text-gray-400" />
+            <ChevronDown size={18} className="text-gray-400 shrink-0 md:w-5 md:h-5" />
           )}
-          <span className="font-medium text-gray-900">{title}</span>
+          <span className="font-medium text-gray-900 text-sm md:text-base truncate">{title}</span>
+          {/* Section progress indicator */}
+          {completedLessons && completedCount > 0 && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full shrink-0 ${
+              completedCount === lessonsCount 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-gray-100 text-gray-600'
+            }`}>
+              {completedCount}/{lessonsCount}
+            </span>
+          )}
         </div>
         
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span>{lessonsCount} lecture{lessonsCount !== 1 ? 's' : ''}</span>
-          <span>•</span>
+        <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-500 shrink-0 ml-2">
+          <span className="hidden sm:inline">{lessonsCount} aula{lessonsCount !== 1 ? 's' : ''}</span>
+          <span className="sm:hidden">{lessonsCount}</span>
+          <span className="hidden sm:inline">•</span>
           <span>{totalDuration}</span>
         </div>
       </button>
@@ -206,7 +220,7 @@ export function CourseContent({
   return (
     <>
       <div className={className}>
-        <div className="space-y-3 pt-6">
+        <div className="space-y-2 md:space-y-3 pt-4 md:pt-6">
           {visibleSections.map((section, index) => (
             <SectionItem
               key={section.id}

@@ -2,12 +2,15 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { IconCheck } from '@tabler/icons-react';
+import { IconCheck, IconList, IconChevronLeft, IconX } from '@tabler/icons-react';
 import { CourseContent } from '@/components/courses/courseContent';
 import { LessonViewer } from '@/components/lessons/lessonViewer';
 import { CourseSection, Lesson } from '@/types/course';
 import { type Course as CourseType } from '@/lib/courses';
 import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 // Type for raw lessons from the API
 interface RawLesson {
@@ -84,6 +87,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(initialLesson);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Fetch initial progress from API
   useEffect(() => {
@@ -113,6 +117,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
 
   const handleLessonSelect = useCallback((lesson: Lesson) => {
     setCurrentLesson(lesson);
+    setIsMobileSidebarOpen(false); // Close mobile sidebar on selection
     // Update URL without navigation for better UX
     const newUrl = `/courses/${slug}/lessons?lesson=${lesson.id}`;
     window.history.replaceState({}, '', newUrl);
@@ -234,23 +239,45 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+      {/* Sticky Header - Mobile optimized */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="py-3 md:py-4 flex items-center gap-3">
+            {/* Back button - Mobile */}
+            <Link 
+              href={`/courses/${slug}`}
+              className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <IconChevronLeft size={20} className="text-gray-600" />
+            </Link>
+            
+            {/* Title and Progress */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base md:text-xl font-bold text-gray-900 truncate">
                 {course.title}
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                {completedLessons.size} de {allLessons.length} aulas concluídas
-              </p>
+              {/* Progress Bar - Mobile */}
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-500",
+                      progressPercent >= 100 ? "bg-green-500" : "bg-brand-600"
+                    )}
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-600 shrink-0">
+                  {completedLessons.size}/{allLessons.length}
+                </span>
+              </div>
             </div>
             
-            {/* Circular Progress Indicator */}
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:block text-right">
+            {/* Circular Progress - Desktop only */}
+            <div className="hidden md:flex items-center gap-3">
+              <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{progressPercent}% completo</p>
+                <p className="text-xs text-gray-500">{completedLessons.size} de {allLessons.length} aulas</p>
               </div>
               <div className="w-12 h-12 relative">
                 <svg className="w-12 h-12 transform -rotate-90">
@@ -288,48 +315,86 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                 </span>
               </div>
             </div>
+            
+            {/* Mobile Menu Button */}
+            <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="xl:hidden h-9 px-3">
+                  <IconList size={18} />
+                  <span className="ml-2 hidden sm:inline">Aulas</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-[400px] p-0">
+                <SheetHeader className="p-4 border-b bg-gray-50">
+                  <SheetTitle className="text-left">Conteúdo do Curso</SheetTitle>
+                  <p className="text-sm text-gray-600">
+                    {sections.length} seções • {allLessons.length} aulas
+                  </p>
+                </SheetHeader>
+                <div className="overflow-y-auto h-[calc(100vh-100px)]">
+                  <CourseContent 
+                    sections={sections} 
+                    onLessonSelect={handleLessonSelect}
+                    currentLessonId={currentLesson?.id}
+                    completedLessons={completedLessons}
+                    showAllSections={true}
+                    className="p-4"
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-          {/* Left Column - Course Content */}
-          <div className="xl:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Conteúdo do Curso
-              </h2>
+      {/* Main Content - Lesson first on mobile */}
+      <div className="max-w-[1400px] mx-auto">
+        <div className="flex flex-col xl:flex-row">
+          {/* Left Sidebar - Course Content (Desktop only) */}
+          <div className="hidden xl:block xl:w-[380px] xl:shrink-0 border-r border-gray-200 bg-white">
+            <div className="sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto">
+              <div className="p-4 border-b bg-gray-50">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Conteúdo do Curso
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  {sections.length} seções • {allLessons.length} aulas
+                </p>
+              </div>
               <CourseContent 
                 sections={sections} 
                 onLessonSelect={handleLessonSelect}
                 currentLessonId={currentLesson?.id}
                 completedLessons={completedLessons}
                 showAllSections={true}
+                className="p-4"
               />
             </div>
           </div>
 
           {/* Right Column - Lesson Viewer */}
-          <div className="xl:col-span-3">
-            {currentLesson ? (
-              <LessonViewer
-                lesson={currentLesson}
-                isCompleted={completedLessons.has(currentLesson.id)}
-                onMarkComplete={() => markLessonComplete(currentLesson.id)}
-                onMarkIncomplete={() => markLessonIncomplete(currentLesson.id)}
-                onNavigate={navigateToLesson}
-                canNavigatePrevious={currentLessonIndex > 0}
-                canNavigateNext={currentLessonIndex < allLessons.length - 1}
-              />
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                <div className="text-gray-600">
-                  Selecione uma aula para começar
+          <div className="flex-1 min-w-0">
+            <div className="p-3 sm:p-6">
+              {currentLesson ? (
+                <LessonViewer
+                  lesson={currentLesson}
+                  isCompleted={completedLessons.has(currentLesson.id)}
+                  onMarkComplete={() => markLessonComplete(currentLesson.id)}
+                  onMarkIncomplete={() => markLessonIncomplete(currentLesson.id)}
+                  onNavigate={navigateToLesson}
+                  canNavigatePrevious={currentLessonIndex > 0}
+                  canNavigateNext={currentLessonIndex < allLessons.length - 1}
+                  currentIndex={currentLessonIndex}
+                  totalLessons={allLessons.length}
+                />
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                  <div className="text-gray-600">
+                    Selecione uma aula para começar
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
