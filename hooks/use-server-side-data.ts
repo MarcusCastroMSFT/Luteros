@@ -59,8 +59,20 @@ export function useServerSideData<T>({
   // Track previous endpoint to detect changes
   const prevEndpointRef = useRef(endpoint)
   const extraParamsString = JSON.stringify(extraParams)
+  
+  // AbortController for request cancellation
+  const abortControllerRef = useRef<AbortController | null>(null)
 
-  const fetchData = useCallback(async (searchTerm: string) => {
+  const fetchData = useCallback(async (searchTerm: string, signal?: AbortSignal) => {
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    
+    // Create new AbortController for this request
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    
     setLoading(true)
     setError(null)
     
@@ -92,7 +104,9 @@ export function useServerSideData<T>({
       
       // Build URL - handle endpoints that already have query params
       const separator = endpoint.includes('?') ? '&' : '?'
-      const response = await fetch(`${endpoint}${separator}${params}`)
+      const response = await fetch(`${endpoint}${separator}${params}`, {
+        signal: signal || controller.signal,
+      })
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -104,6 +118,10 @@ export function useServerSideData<T>({
       setTotalCount(result.totalCount || 0)
       setPageCount(result.pageCount || Math.ceil((result.totalCount || 0) / pageSize))
     } catch (err) {
+      // Don't set error state if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') {
+        return
+      }
       setError(err instanceof Error ? err.message : 'An error occurred')
       setData([])
       setTotalCount(0)
@@ -127,15 +145,29 @@ export function useServerSideData<T>({
     fetchData(effectiveSearchRef.current)
   }, [pageIndex, pageSize, sorting, columnFilters, fetchData])
   
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [])
+  
   // Effect for handling search with 3-character minimum (debounced)
   useEffect(() => {
     const effectiveSearch = searchValue.length >= 3 ? searchValue : ''
     
     // Only fetch if the effective search term has changed
     if (effectiveSearch !== effectiveSearchRef.current) {
-      effectiveSearchRef.current = effectiveSearch
-      setPageIndex(0) // Reset to first page when search changes
-      fetchData(effectiveSearch)
+      // Debounce search to prevent excessive API calls
+      const timeoutId = setTimeout(() => {
+        effectiveSearchRef.current = effectiveSearch
+        setPageIndex(0) // Reset to first page when search changes
+        fetchData(effectiveSearch)
+      }, 300)
+      
+      return () => clearTimeout(timeoutId)
     }
   }, [searchValue, fetchData])
   

@@ -181,10 +181,16 @@ async function fetchCommunityPosts(
   
   // Search in title, content, and tags
   if (search) {
-    whereCondition.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { content: { contains: search, mode: 'insensitive' } },
-      { tags: { has: search } },
+    // Use AND to combine with existing conditions (like isReported OR)
+    whereCondition.AND = [
+      ...(whereCondition.AND as Array<unknown> || []),
+      {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { content: { contains: search, mode: 'insensitive' } },
+          { tags: { has: search } },
+        ]
+      }
     ]
   }
 

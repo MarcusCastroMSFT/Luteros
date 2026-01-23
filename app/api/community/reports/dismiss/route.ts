@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     if (entityType === 'post') {
       const post = await prisma.community_posts.findUnique({
         where: { id: entityId },
+        select: { id: true },
       })
       
       if (!post) {
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
     } else {
       const reply = await prisma.community_replies.findUnique({
         where: { id: entityId },
+        select: { id: true },
       })
       
       if (!reply) {

@@ -107,30 +107,46 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onReplyDele
     
     setLoadingReports(true);
     try {
-      // Fetch post reports
+      // Fetch post reports and reply reports in parallel
+      const reportedReplies = post.replies.filter(r => r.isReported);
+      
+      const fetchPromises: Promise<void>[] = [];
+      
+      // Fetch post reports if post is reported
       if (post.isReported) {
-        const postResponse = await fetch(`/api/community/reports?entityType=post&entityId=${post.id}`);
-        if (postResponse.ok) {
-          const postData = await postResponse.json();
-          setPostReports(postData.reports || []);
-        }
+        fetchPromises.push(
+          fetch(`/api/community/reports?entityType=post&entityId=${post.id}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+              if (data?.reports) {
+                setPostReports(data.reports);
+              }
+            })
+        );
       }
 
-      // Fetch reply reports for reported replies
-      const reportedReplies = post.replies.filter(r => r.isReported);
+      // Fetch all reply reports in parallel
       if (reportedReplies.length > 0) {
-        const replyReportsMap = new Map<string, ReportDetails[]>();
-        for (const reply of reportedReplies) {
-          const replyResponse = await fetch(`/api/community/reports?entityType=reply&entityId=${reply.id}`);
-          if (replyResponse.ok) {
-            const replyData = await replyResponse.json();
-            if (replyData.reports?.length > 0) {
-              replyReportsMap.set(reply.id, replyData.reports);
-            }
-          }
-        }
-        setReplyReports(replyReportsMap);
+        const replyPromises = reportedReplies.map(reply =>
+          fetch(`/api/community/reports?entityType=reply&entityId=${reply.id}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => ({ replyId: reply.id, reports: data?.reports || [] }))
+        );
+        
+        fetchPromises.push(
+          Promise.all(replyPromises).then(results => {
+            const replyReportsMap = new Map<string, ReportDetails[]>();
+            results.forEach(({ replyId, reports }) => {
+              if (reports.length > 0) {
+                replyReportsMap.set(replyId, reports);
+              }
+            });
+            setReplyReports(replyReportsMap);
+          })
+        );
       }
+      
+      await Promise.all(fetchPromises);
     } catch (error) {
       console.error('Failed to fetch reports:', error);
     } finally {

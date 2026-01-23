@@ -107,21 +107,29 @@ export default function CommunityPage() {
     }
   }, [])
 
-  // Fetch reported posts count
+  // Fetch reported posts count - refresh when data changes
   useEffect(() => {
+    const controller = new AbortController()
+    
     const fetchReportedCount = async () => {
       try {
-        const response = await fetch('/api/community?isReported=true&pageSize=1')
+        const response = await fetch('/api/community?isReported=true&pageSize=1', {
+          signal: controller.signal,
+        })
         if (response.ok) {
           const data = await response.json()
           setReportedCount(data.totalCount || 0)
         }
       } catch (error) {
-        console.error('Error fetching reported count:', error)
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error fetching reported count:', error)
+        }
       }
     }
     fetchReportedCount()
-  }, [refetch])
+    
+    return () => controller.abort()
+  }, [communityPosts]) // Re-fetch when posts data changes
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -324,11 +332,17 @@ export default function CommunityPage() {
           {/* Tabs for filtering */}
           <div className="px-4 lg:px-6 mb-4">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList>
-                <TabsTrigger value="all" className="cursor-pointer">
+              <TabsList className="h-auto p-1 bg-muted/50 border border-border rounded-lg">
+                <TabsTrigger 
+                  value="all" 
+                  className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   Todos os Posts
                 </TabsTrigger>
-                <TabsTrigger value="reported" className="cursor-pointer">
+                <TabsTrigger 
+                  value="reported" 
+                  className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                >
                   <IconAlertTriangle className="h-4 w-4 mr-2 text-red-500" />
                   Denunciados
                   {reportedCount > 0 && (
