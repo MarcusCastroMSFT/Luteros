@@ -53,10 +53,11 @@ interface LikedReply {
 
 interface UserProfileTabsProps {
   posts: CommunityPost[];
+  initialTab?: 'posts' | 'replies' | 'bookmarks';
 }
 
-export function UserProfileTabs({ posts }: UserProfileTabsProps) {
-  const [activeTab, setActiveTab] = useState<'posts' | 'replies' | 'bookmarks'>('posts');
+export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabsProps) {
+  const [activeTab, setActiveTab] = useState<'posts' | 'replies' | 'bookmarks'>(initialTab);
   const [reportedItems, setReportedItems] = useState<Set<string>>(new Set());
   const [reportDialog, setReportDialog] = useState<{
     isOpen: boolean;
@@ -126,7 +127,21 @@ export function UserProfileTabs({ posts }: UserProfileTabsProps) {
     }
   }, [favoritesLoaded]);
 
-  // Load data when tab becomes active
+  // Update activeTab when initialTab prop changes (from sidebar navigation)
+  // and trigger data fetch if needed
+  useEffect(() => {
+    setActiveTab(initialTab);
+    
+    // Immediately fetch data for the new tab if not already loaded
+    if (initialTab === 'replies' && !repliesLoaded) {
+      fetchReplies();
+    }
+    if (initialTab === 'bookmarks' && !favoritesLoaded) {
+      fetchFavorites();
+    }
+  }, [initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load data when tab becomes active (via tab click)
   useEffect(() => {
     if (activeTab === 'replies' && !repliesLoaded) {
       fetchReplies();

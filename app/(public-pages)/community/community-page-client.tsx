@@ -130,6 +130,7 @@ export function CommunityPageClient({
             ) : isUserSection ? (
               <UserProfileTabs
                 posts={getUserPosts()}
+                initialTab={selectedCategory === 'my-replies' ? 'replies' : selectedCategory === 'my-favorites' ? 'bookmarks' : 'posts'}
               />
             ) : (
               <CommunityPostList

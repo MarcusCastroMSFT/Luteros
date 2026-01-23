@@ -42,6 +42,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    console.log('Favorites API - User:', user?.id);
+
     if (!user) {
       return NextResponse.json({
         success: false,
@@ -53,6 +55,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '0');
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = page * limit;
+
+    console.log('Favorites API - Fetching likes for user:', user.id);
 
     // Fetch liked posts with details
     const [likedPosts, likedPostsCount, likedReplies, likedRepliesCount] = await Promise.all([
@@ -108,6 +112,13 @@ export async function GET(request: NextRequest) {
         where: { userId: user.id },
       }),
     ]);
+
+    console.log('Favorites API - Found:', {
+      likedPostsCount,
+      likedRepliesCount,
+      postsData: likedPosts.length,
+      repliesData: likedReplies.length
+    });
 
     const formattedPosts: LikedPost[] = likedPosts.map((like: {
       community_posts: {
