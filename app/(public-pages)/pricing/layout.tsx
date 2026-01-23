@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Planos e Preços | Luteros - Aprenda e Evolua',
+  title: 'Planos e Preços | lutteros - Aprenda e Evolua',
   description: 'Escolha o plano ideal para acelerar seu aprendizado. Plano gratuito disponível, Premium a partir de R$ 39,90/mês. Garantia de 7 dias.',
   keywords: [
-    'preços luteros',
+    'preços lutteros',
     'planos de assinatura',
     'cursos online',
     'aprendizado premium',
@@ -12,14 +12,14 @@ export const metadata: Metadata = {
     'desenvolvimento de carreira'
   ],
   openGraph: {
-    title: 'Planos e Preços | Luteros',
+    title: 'Planos e Preços | lutteros',
     description: 'Escolha o plano ideal para acelerar seu aprendizado. Plano gratuito disponível, Premium a partir de R$ 39,90/mês.',
     type: 'website',
     locale: 'pt_BR',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Planos e Preços | Luteros',
+    title: 'Planos e Preços | lutteros',
     description: 'Escolha o plano ideal para acelerar seu aprendizado. Plano gratuito disponível, Premium a partir de R$ 39,90/mês.',
   },
   alternates: {

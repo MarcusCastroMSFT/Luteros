@@ -20,11 +20,13 @@ import {
   IconSettings,
   IconUsers,
   IconCalendarEvent,
+  IconSend,
 } from "@tabler/icons-react"
 
 import { User } from '@supabase/supabase-js'
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
+import { NavNewsletter } from "@/components/nav-newsletter"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import { Logo } from "@/components/common/logo"
@@ -58,6 +60,7 @@ const iconMap = {
   IconRobot,
   IconMail,
   IconPackage,
+  IconSend,
 }
 
 // Convert string icon references to actual icon components
@@ -86,6 +89,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     navMain: processNavItems(sidebarData.navMain),
     navClouds: processNavItems(sidebarData.navClouds),
     navSecondary: processNavItems(sidebarData.navSecondary),
+    newsletter: processDocuments(sidebarData.newsletter),
     documents: processDocuments(sidebarData.documents),
   }
 
@@ -106,6 +110,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={processedData.navMain} />
+        <NavNewsletter items={processedData.newsletter} />
         <NavDocuments items={processedData.documents} />
         <NavSecondary items={processedData.navSecondary} className="mt-auto" />
       </SidebarContent>

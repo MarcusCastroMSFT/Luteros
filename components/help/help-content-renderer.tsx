@@ -27,7 +27,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">1. Acesse a página de registro</h2>
             <p className="text-gray-700 mb-4">
               Clique no botão <strong className="font-semibold text-gray-900">&ldquo;Registrar&rdquo;</strong> no canto superior direito da página inicial ou acesse diretamente 
-              o link <Link href="/register" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer">luteros.com/register</Link>.
+              o link <Link href="/register" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer">lutteros.com/register</Link>.
             </p>
 
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">2. Preencha seus dados básicos</h2>
@@ -102,7 +102,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
         return (
           <div className="max-w-none text-gray-900">
             <p className="text-xl text-gray-600 mb-8">
-              Bem-vindo à Luteros! Este guia vai ajudar você a descobrir todos os recursos da plataforma 
+              Bem-vindo à lutteros! Este guia vai ajudar você a descobrir todos os recursos da plataforma 
               e começar sua jornada de aprendizado em saúde sexual.
             </p>
 
@@ -118,7 +118,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
             </ul>
 
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">2. Navegando pelo menu principal</h2>
-            <p className="text-gray-700 mb-4">O menu principal da Luteros está organizado em seções específicas:</p>
+            <p className="text-gray-700 mb-4">O menu principal da lutteros está organizado em seções específicas:</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -161,7 +161,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
 
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">4. Participando da comunidade</h2>
             <p className="text-gray-700 mb-4">
-              A comunidade Luteros é um espaço seguro para trocar experiências e tirar dúvidas. 
+              A comunidade lutteros é um espaço seguro para trocar experiências e tirar dúvidas. 
               Antes de participar, leia nossas 
               <Link href="/help/community-guidelines" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer"> diretrizes da comunidade</Link>.
             </p>
@@ -176,7 +176,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
 
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">5. Recursos mobile</h2>
             <p className="text-gray-700 mb-4">
-              A Luteros funciona perfeitamente no seu celular através do navegador. 
+              A lutteros funciona perfeitamente no seu celular através do navegador. 
               Em breve, também teremos um aplicativo dedicado para iOS e Android.
             </p>
 
@@ -187,7 +187,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
             <ul className="list-disc pl-6 space-y-2 mb-6 text-gray-700">
               <li>Usar o chat de suporte disponível 24/7</li>
               <li>Consultar nossa <Link href="/faq" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer">seção de FAQ</Link></li>
-              <li>Entrar em contato por email: suporte@luteros.com</li>
+              <li>Entrar em contato por email: suporte@lutteros.com</li>
             </ul>
           </div>
         );
@@ -196,7 +196,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
         return (
           <div className="max-w-none text-gray-900">
             <p className="text-xl text-gray-600 mb-8">
-              As consultas na Luteros são sessões educacionais que ajudam você a esclarecer dúvidas e 
+              As consultas na lutteros são sessões educacionais que ajudam você a esclarecer dúvidas e 
               obter orientações personalizadas sobre saúde sexual e reprodutiva.
             </p>
 

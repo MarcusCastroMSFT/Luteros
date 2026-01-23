@@ -15,7 +15,7 @@ interface CoursePageProps {
 function generateCourseJsonLd(course: Awaited<ReturnType<typeof getCourseBySlug>>, slug: string) {
   if (!course) return null;
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
   const courseUrl = `${baseUrl}/courses/${slug}`;
   const imageUrl = course.course.image?.startsWith('http') 
     ? course.course.image 
@@ -42,7 +42,7 @@ function generateCourseJsonLd(course: Awaited<ReturnType<typeof getCourseBySlug>
     image: imageUrl,
     provider: {
       '@type': 'Organization',
-      name: 'Luteros',
+      name: 'lutteros',
       url: baseUrl,
       logo: `${baseUrl}/images/logo.png`,
     },
@@ -96,7 +96,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
   const courseUrl = `${baseUrl}/courses/${slug}`;
   const imageUrl = metadata.image?.startsWith('http') 
     ? metadata.image 
@@ -111,10 +111,10 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
       canonical: courseUrl,
     },
     openGraph: {
-      title: `${metadata.title} | Luteros`,
+      title: `${metadata.title} | lutteros`,
       description: metadata.description || '',
       url: courseUrl,
-      siteName: 'Luteros',
+      siteName: 'lutteros',
       images: metadata.image ? [{ 
         url: imageUrl,
         width: 1200,
@@ -126,7 +126,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${metadata.title} | Luteros`,
+      title: `${metadata.title} | lutteros`,
       description: metadata.description || '',
       images: metadata.image ? [imageUrl] : [],
     },

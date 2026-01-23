@@ -19,19 +19,19 @@ const cardo = Cardo({
   variable: "--font-cardo",
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Luteros - Saúde Sexual e Bem-estar",
-    template: "%s | Luteros",
+    default: "lutteros - Saúde Sexual e Bem-estar",
+    template: "%s | lutteros",
   },
   description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
   keywords: ["saúde sexual", "bem-estar", "educação sexual", "saúde íntima", "cursos online", "especialistas"],
-  authors: [{ name: "Luteros" }],
-  creator: "Luteros",
-  publisher: "Luteros",
+  authors: [{ name: "lutteros" }],
+  creator: "lutteros",
+  publisher: "lutteros",
   formatDetection: {
     email: false,
     address: false,
@@ -41,21 +41,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     url: baseUrl,
-    siteName: "Luteros",
-    title: "Luteros - Saúde Sexual e Bem-estar",
+    siteName: "lutteros",
+    title: "lutteros - Saúde Sexual e Bem-estar",
     description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
     images: [
       {
         url: "/images/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Luteros - Saúde Sexual e Bem-estar",
+        alt: "lutteros - Saúde Sexual e Bem-estar",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Luteros - Saúde Sexual e Bem-estar",
+    title: "lutteros - Saúde Sexual e Bem-estar",
     description: "Plataforma de educação em saúde sexual e bem-estar.",
     images: ["/images/og-image.jpg"],
   },

@@ -1,24 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CommunityPost } from '@/types/community';
+import { CommunityPost, CommunityReply } from '@/types/community';
 import { ReportDialog } from './reportDialog';
 import { RepliesDialog } from './repliesDialog';
+import { CreatePostDialog } from './createPostDialog';
 import { PostCard } from './postCard';
+import { useDebounce } from '@/hooks/use-debounce';
 
 interface CommunityPostListProps {
   posts: CommunityPost[];
   selectedCategory?: string;
-  onCreatePost: () => void;
+  onCreatePost?: () => void;
+  onPostCreated?: (post: CommunityPost) => void;
 }
 
-export function CommunityPostList({ posts, selectedCategory, onCreatePost }: CommunityPostListProps) {
+export function CommunityPostList({ posts: initialPosts, selectedCategory, onPostCreated }: CommunityPostListProps) {
+  const [posts, setPosts] = useState<CommunityPost[]>(initialPosts);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'popular' | 'recent'>('popular');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
   const [reportedItems, setReportedItems] = useState<Set<string>>(new Set());
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [createPostDialog, setCreatePostDialog] = useState(false);
   const [reportDialog, setReportDialog] = useState<{
     isOpen: boolean;
     itemId: string;
@@ -37,6 +43,33 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
     isOpen: false,
     post: null
   });
+
+  // Update posts when initialPosts change
+  useState(() => {
+    setPosts(initialPosts);
+  });
+
+  // Fetch user's liked posts on mount
+  useEffect(() => {
+    const fetchLikedPosts = async () => {
+      try {
+        const response = await fetch('/api/community/liked');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.likedPostIds && Array.isArray(data.likedPostIds)) {
+            setLikedPosts(new Set(data.likedPostIds));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch liked posts:', error);
+      }
+    };
+    
+    fetchLikedPosts();
+  }, []);
+
+  // Debounce search query for better performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Get unique subcategories for the selected category
   const getSubcategories = () => {
@@ -63,15 +96,16 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
   // Calculate subcategories for the current category
   const subcategories = getSubcategories();
 
-  // Filter and sort posts
-  const getFilteredPosts = () => {
-    let filteredPosts = posts;
+  // Filter and sort posts with memoization for performance
+  const filteredPosts = useMemo(() => {
+    let result = [...posts];
 
-    // Filter by search query
-    if (searchQuery) {
-      filteredPosts = filteredPosts.filter(post =>
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchQuery.toLowerCase())
+    // Filter by search query (using debounced value)
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
+      result = result.filter(post =>
+        post.title.toLowerCase().includes(query) ||
+        post.content.toLowerCase().includes(query)
       );
     }
 
@@ -87,25 +121,23 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
         'adoption-surrogacy': 'Fertilidade',
         'menopause': 'Menopausa'
       };
-      filteredPosts = filteredPosts.filter(post => post.category === categoryMap[selectedCategory]);
+      result = result.filter(post => post.category === categoryMap[selectedCategory]);
     }
 
     // Filter by subcategory
     if (selectedSubcategory !== 'all') {
-      filteredPosts = filteredPosts.filter(post => post.subcategory === selectedSubcategory);
+      result = result.filter(post => post.subcategory === selectedSubcategory);
     }
 
-    // Sort posts
+    // Sort posts (create a new array to avoid mutating the original)
     if (sortBy === 'popular') {
-      filteredPosts.sort((a, b) => b.likes - a.likes);
+      result.sort((a, b) => b.likes - a.likes);
     } else {
-      filteredPosts.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
+      result.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
     }
 
-    return filteredPosts;
-  };
-
-  const filteredPosts = getFilteredPosts();
+    return result;
+  }, [posts, debouncedSearchQuery, selectedCategory, selectedSubcategory, sortBy]);
 
   const reportItem = (itemId: string, author: string) => {
     if (reportedItems.has(itemId)) return;
@@ -140,6 +172,71 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
     setRepliesDialog({ isOpen: false, post: null });
   };
 
+  const handlePostCreated = (newPost: CommunityPost) => {
+    // Add new post to the top of the list
+    setPosts(prev => [newPost, ...prev]);
+    if (onPostCreated) {
+      onPostCreated(newPost);
+    }
+  };
+
+  const handleReplyAdded = (postId: string, reply: CommunityReply) => {
+    // Update the reply count for the post
+    setPosts(prev => prev.map(post => 
+      post.id === postId 
+        ? { ...post, repliesCount: post.repliesCount + 1, replies: [...post.replies, reply] }
+        : post
+    ));
+    
+    // Also update the dialog's post reference
+    if (repliesDialog.post && repliesDialog.post.id === postId) {
+      setRepliesDialog(prev => ({
+        ...prev,
+        post: prev.post ? { ...prev.post, repliesCount: prev.post.repliesCount + 1 } : null
+      }));
+    }
+  };
+
+  const handlePostLikedFromDialog = (postId: string, liked: boolean, likeCount: number) => {
+    // Update the like count for the post in the list
+    setPosts(prev => prev.map(post => 
+      post.id === postId 
+        ? { ...post, likes: likeCount }
+        : post
+    ));
+    
+    // Update the liked posts set
+    setLikedPosts(prev => {
+      const newSet = new Set(prev);
+      if (liked) {
+        newSet.add(postId);
+      } else {
+        newSet.delete(postId);
+      }
+      return newSet;
+    });
+  };
+
+  const handlePostLikedFromCard = (postId: string, liked: boolean, likeCount: number) => {
+    // Update the like count for the post in the list
+    setPosts(prev => prev.map(post => 
+      post.id === postId 
+        ? { ...post, likes: likeCount }
+        : post
+    ));
+    
+    // Update the liked posts set
+    setLikedPosts(prev => {
+      const newSet = new Set(prev);
+      if (liked) {
+        newSet.add(postId);
+      } else {
+        newSet.delete(postId);
+      }
+      return newSet;
+    });
+  };
+
   const getCategoryTitle = () => {
     const categoryTitles: Record<string, string> = {
       'pregnancy': 'Gravidez',
@@ -165,7 +262,7 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
           <h2 className="text-2xl font-bold text-gray-900">
             {getCategoryTitle()}
           </h2>
-          <Button onClick={onCreatePost} className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
+          <Button onClick={() => setCreatePostDialog(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
             <Plus size={16} className="mr-2" />
             Criar novo post
           </Button>
@@ -251,6 +348,8 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
               onViewReplies={openRepliesDialog}
               onReport={reportItem}
               isReported={reportedItems.has(post.id)}
+              isLiked={likedPosts.has(post.id)}
+              onLikeChanged={handlePostLikedFromCard}
             />
           ))
         )}
@@ -270,6 +369,17 @@ export function CommunityPostList({ posts, selectedCategory, onCreatePost }: Com
         isOpen={repliesDialog.isOpen}
         onClose={closeRepliesDialog}
         post={repliesDialog.post}
+        onReplyAdded={handleReplyAdded}
+        onPostLiked={handlePostLikedFromDialog}
+        isPostLikedInitial={repliesDialog.post ? likedPosts.has(repliesDialog.post.id) : false}
+      />
+
+      {/* Create Post Dialog */}
+      <CreatePostDialog
+        isOpen={createPostDialog}
+        onClose={() => setCreatePostDialog(false)}
+        onPostCreated={handlePostCreated}
+        selectedCategory={getCategoryTitle()}
       />
     </div>
   );

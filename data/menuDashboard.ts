@@ -27,6 +27,7 @@ export interface SidebarData {
   navMain: SidebarNavItem[];
   navClouds: SidebarNavItem[];
   navSecondary: SidebarNavItem[];
+  newsletter: SidebarDocument[];
   documents: SidebarDocument[];
 }
 
@@ -138,6 +139,18 @@ export const sidebarData: SidebarData = {
       icon: "IconSearch",
     },
   ],
+  newsletter: [
+    {
+      name: "Inscritos",
+      url: "/dashboard/newsletter",
+      icon: "IconUsers",
+    },
+    {
+      name: "Campanhas",
+      url: "/dashboard/newsletter/campaigns",
+      icon: "IconSend",
+    },
+  ],
   documents: [
     {
       name: "Usuários",
@@ -145,14 +158,14 @@ export const sidebarData: SidebarData = {
       icon: "IconUsers",
     },
     {
+      name: "E-mails do Sistema",
+      url: "/dashboard/system-emails",
+      icon: "IconMail",
+    },
+    {
       name: "Relatórios",
       url: "/dashboard/reports",
       icon: "IconReport",
-    },
-    {
-      name: "Newsletter",
-      url: "/dashboard/newsletter",
-      icon: "IconMail",
     },
     {
       name: "Agents AI",

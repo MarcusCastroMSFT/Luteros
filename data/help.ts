@@ -9,7 +9,7 @@ import type {
 export const helpArticles: Record<string, HelpArticle> = {
   'create-account': {
     slug: 'create-account',
-    title: 'Como criar sua conta na Luteros',
+    title: 'Como criar sua conta na lutteros',
     description: 'Guia passo a passo para se registrar na plataforma e começar sua jornada de aprendizado',
     category: 'Primeiros Passos',
     readTime: '3 min',
@@ -20,7 +20,7 @@ export const helpArticles: Record<string, HelpArticle> = {
   },
   'first-steps': {
     slug: 'first-steps',
-    title: 'Seus primeiros passos na Luteros',
+    title: 'Seus primeiros passos na lutteros',
     description: 'Guia completo para navegar pela plataforma e aproveitar todos os recursos disponíveis',
     category: 'Primeiros Passos',
     readTime: '5 min',
@@ -32,7 +32,7 @@ export const helpArticles: Record<string, HelpArticle> = {
   'book-consultation': {
     slug: 'book-consultation',
     title: 'Como agendar uma consulta',
-    description: 'Processo completo de agendamento com especialistas credenciados da Luteros',
+    description: 'Processo completo de agendamento com especialistas credenciados da lutteros',
     category: 'Consultas e Especialistas',
     readTime: '6 min',
     lastUpdated: '10 de setembro, 2025',
@@ -190,7 +190,7 @@ export const helpCategories: HelpCategory[] = [
   {
     id: 'getting-started',
     title: 'Primeiros Passos',
-    description: 'Tudo que você precisa saber para começar na Luteros',
+    description: 'Tudo que você precisa saber para começar na lutteros',
     icon: 'Book',
     articles: [
       {
@@ -203,7 +203,7 @@ export const helpCategories: HelpCategory[] = [
       },
       {
         id: 'first-steps',
-        title: 'Seus primeiros passos na Luteros',
+        title: 'Seus primeiros passos na lutteros',
         description: 'Guia completo para navegar pela plataforma',
         readTime: '5 min',
         isPopular: true,
@@ -344,7 +344,7 @@ export const popularArticles: PopularArticle[] = [
     views: '12.5k visualizações'
   },
   {
-    title: 'Seus primeiros passos na Luteros',
+    title: 'Seus primeiros passos na lutteros',
     href: '/help/first-steps',
     views: '8.3k visualizações'
   },
@@ -370,7 +370,7 @@ export const quickActions: QuickAction[] = [
   },
   {
     title: 'Email de Suporte',
-    description: 'suporte@luteros.com',
+    description: 'suporte@lutteros.com',
     icon: 'Mail',
     action: 'email',
     available: true

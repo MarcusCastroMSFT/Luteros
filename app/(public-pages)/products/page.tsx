@@ -10,13 +10,13 @@ export const metadata: Metadata = {
   description: 'Descontos especiais em produtos e serviços selecionados para mães, pais e famílias. Membros têm acesso a ofertas exclusivas!',
   keywords: ['produtos', 'descontos', 'ofertas', 'família', 'saúde', 'bem-estar'],
   openGraph: {
-    title: 'Produtos | Luteros',
+    title: 'Produtos | lutteros',
     description: 'Descontos especiais em produtos e serviços selecionados para mães, pais e famílias.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Produtos | Luteros',
+    title: 'Produtos | lutteros',
     description: 'Descontos especiais em produtos e serviços selecionados para mães, pais e famílias.',
   },
   alternates: {

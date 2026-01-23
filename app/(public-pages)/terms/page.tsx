@@ -5,7 +5,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-gray-50">
       <PageHeader
         title="Termos de Uso"
-        description="Condições para uso da plataforma Luteros"
+        description="Condições para uso da plataforma lutteros"
         breadcrumbs={[
           { label: 'Início', href: '/' },
           { label: 'Termos de Uso' }
@@ -25,7 +25,7 @@ export default function TermsPage() {
             </h2>
             <div className="space-y-4">
               <p className="text-gray-700 leading-relaxed">
-                Ao acessar e usar a plataforma Luteros, você concorda em cumprir e estar vinculado a estes 
+                Ao acessar e usar a plataforma lutteros, você concorda em cumprir e estar vinculado a estes 
                 Termos de Uso. Se você não concorda com qualquer parte destes termos, não deve usar nossos serviços.
               </p>
               <div className="bg-gradient-to-r from-brand-50 to-brand-100 border-l-4 border-brand-500 p-4 my-6 rounded-lg">
@@ -43,7 +43,7 @@ export default function TermsPage() {
               2. Descrição dos Serviços
             </h2>
             <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">A Luteros oferece:</p>
+              <p className="text-gray-700 leading-relaxed">A lutteros oferece:</p>
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
                 <li><strong>Conteúdo Educativo:</strong> Artigos, cursos e recursos sobre saúde sexual e reprodutiva</li>
                 <li><strong>Consultas Online:</strong> Sessões com especialistas credenciados</li>
@@ -121,7 +121,7 @@ export default function TermsPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-800">Nosso Conteúdo:</h3>
               <p className="text-gray-700 leading-relaxed">
-                Todo o conteúdo da Luteros (textos, imagens, vídeos, cursos) é protegido por direitos autorais 
+                Todo o conteúdo da lutteros (textos, imagens, vídeos, cursos) é protegido por direitos autorais 
                 e propriedade intelectual. É permitido o uso pessoal e educativo, mas não a reprodução comercial 
                 sem autorização expressa.
               </p>
@@ -132,7 +132,7 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
                 <li>Mantém a propriedade de seu conteúdo original</li>
-                <li>Concede à Luteros licença para usar, exibir e distribuir o conteúdo na plataforma</li>
+                <li>Concede à lutteros licença para usar, exibir e distribuir o conteúdo na plataforma</li>
                 <li>Garante que possui os direitos necessários sobre o conteúdo</li>
                 <li>Aceita que podemos moderar ou remover conteúdo inadequado</li>
               </ul>
@@ -215,7 +215,7 @@ export default function TermsPage() {
               9. Limitação de Responsabilidade
             </h2>
             <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed"><strong>A Luteros não se responsabiliza por:</strong></p>
+              <p className="text-gray-700 leading-relaxed"><strong>A lutteros não se responsabiliza por:</strong></p>
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
                 <li>Decisões tomadas com base em informações da plataforma</li>
                 <li>Resultados de tratamentos médicos</li>
@@ -287,7 +287,7 @@ export default function TermsPage() {
             <div className="space-y-4">
               <p className="text-gray-700 leading-relaxed">Para questões sobre estes termos:</p>
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <p className="text-gray-800"><strong>Email:</strong> legal@luteros.com</p>
+                <p className="text-gray-800"><strong>Email:</strong> legal@lutteros.com</p>
                 <p className="text-gray-800"><strong>Telefone:</strong> (11) 9999-9999</p>
                 <p className="text-gray-800"><strong>Endereço:</strong> [Endereço da empresa]</p>
                 <p className="text-gray-800"><strong>Horário de Atendimento:</strong> Segunda a Sexta, 9h às 18h</p>

@@ -29,7 +29,7 @@ export const AboutTeam = memo<AboutTeamProps>(function AboutTeam({
             Nossa Equipe
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Conheça as pessoas apaixonadas que tornam a Luteros possível e trabalham incansavelmente para oferecer a melhor experiência educacional.
+            Conheça as pessoas apaixonadas que tornam a lutteros possível e trabalham incansavelmente para oferecer a melhor experiência educacional.
           </p>
         </div>
 

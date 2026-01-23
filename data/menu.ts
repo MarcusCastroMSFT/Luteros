@@ -124,7 +124,7 @@ export const footerMenu: MenuSection[] = [
     links: [
       { label: "Testemunhos", href: "/testimonials" },
       { label: "Preços", href: "/pricing" },
-      { label: "FAQs", href: "/faqs" },
+      { label: "FAQ", href: "/faq" },
       { label: "Central de Ajuda", href: "/help" },
       { label: "Termos", href: "/terms" },
       { label: "Privacidade", href: "/privacy" }

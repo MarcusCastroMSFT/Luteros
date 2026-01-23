@@ -212,7 +212,7 @@ export const sampleNewsletters: Newsletter[] = [
   },
   {
     id: '14',
-    title: 'Lançamento: App Luteros Mobile',
+    title: 'Lançamento: App lutteros Mobile',
     subject: '📱 Baixe agora nosso novo aplicativo móvel!',
     type: 'Anúncio',
     status: 'Inativo',

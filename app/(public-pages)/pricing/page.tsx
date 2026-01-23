@@ -11,9 +11,9 @@ export default function PricingPage() {
   return (
     <>
       <Head>
-        <title>Planos e Preços | Luteros - Aprenda e Evolua</title>
+        <title>Planos e Preços | lutteros - Aprenda e Evolua</title>
         <meta name="description" content="Escolha o plano ideal para acelerar seu aprendizado. Plano gratuito disponível, Premium a partir de R$ 39,90/mês. Garantia de 7 dias." />
-        <meta name="keywords" content="preços luteros, planos de assinatura, cursos online, aprendizado premium, educação profissional, desenvolvimento de carreira" />
+        <meta name="keywords" content="preços lutteros, planos de assinatura, cursos online, aprendizado premium, educação profissional, desenvolvimento de carreira" />
         <link rel="canonical" href="/pricing" />
       </Head>
       

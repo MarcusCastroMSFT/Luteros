@@ -49,7 +49,7 @@ export default function AboutPage() {
       {/* Final CTA */}
       <FinalCTA 
         title="Faça parte da nossa comunidade"
-        description="Junte-se a milhares de profissionais que escolheram a Luteros para acelerar suas carreiras e alcançar seus objetivos."
+        description="Junte-se a milhares de profissionais que escolheram a lutteros para acelerar suas carreiras e alcançar seus objetivos."
         className="mt-0 mb-20"
       />
     </div>

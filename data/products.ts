@@ -20,7 +20,7 @@ export const sampleProducts: Product[] = [
       originalPrice: 199.90,
       discountedPrice: 149.93
     },
-    promoCode: 'LUTEROS25',
+    promoCode: 'lutteros25',
     category: 'Saúde e Bem-estar',
     tags: ['suplementos', 'gravidez', 'vitaminas', 'natural'],
     availability: 'all',
@@ -29,7 +29,7 @@ export const sampleProducts: Product[] = [
     howToUse: [
       'Acesse o site do parceiro através do link fornecido',
       'Adicione os produtos desejados ao carrinho',
-      'No checkout, insira o código promocional LUTEROS25',
+      'No checkout, insira o código promocional lutteros25',
       'Confirme o desconto e finalize a compra'
     ],
     features: [
@@ -65,7 +65,7 @@ export const sampleProducts: Product[] = [
       originalPrice: 150.00,
       discountedPrice: 105.00
     },
-    promoCode: 'LUTEROS30',
+    promoCode: 'lutteros30',
     category: 'Consultoria',
     tags: ['nutrição', 'consulta', 'online', 'especialista'],
     availability: 'members',
@@ -75,7 +75,7 @@ export const sampleProducts: Product[] = [
       'Faça login em sua conta de membro',
       'Acesse o link do parceiro',
       'Selecione o profissional desejado',
-      'Agende sua consulta inserindo o código LUTEROS30',
+      'Agende sua consulta inserindo o código lutteros30',
       'Confirme o agendamento e realize o pagamento'
     ],
     features: [
@@ -157,7 +157,7 @@ export const sampleProducts: Product[] = [
       originalPrice: 297.00,
       discountedPrice: 178.20
     },
-    promoCode: 'NASCERLUTEROS',
+    promoCode: 'NASCERlutteros',
     category: 'Educação',
     tags: ['parto', 'curso', 'preparação', 'nascimento'],
     availability: 'members',
@@ -166,7 +166,7 @@ export const sampleProducts: Product[] = [
     howToUse: [
       'Acesse o site do Instituto Nascer',
       'Faça sua inscrição no curso',
-      'Na página de pagamento, insira NASCERLUTEROS',
+      'Na página de pagamento, insira NASCERlutteros',
       'Complete o pagamento com desconto',
       'Receba acesso imediato por email'
     ],

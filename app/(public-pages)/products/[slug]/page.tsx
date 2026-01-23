@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: `${metadata.title} | Luteros`,
+    title: `${metadata.title} | lutteros`,
     description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
     keywords: [
       metadata.category.toLowerCase(),
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       metadata.partnerName.toLowerCase(),
     ],
     openGraph: {
-      title: `${metadata.title} | Luteros`,
+      title: `${metadata.title} | lutteros`,
       description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
       type: 'website',
       locale: 'pt_BR',
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${metadata.title} | Luteros`,
+      title: `${metadata.title} | lutteros`,
       description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
       ...(metadata.image && { images: [metadata.image] }),
     },

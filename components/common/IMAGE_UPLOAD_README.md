@@ -1,6 +1,6 @@
 # ImageUpload Component
 
-A comprehensive, reusable image upload component for the Luteros platform that supports both file uploads and URL inputs with built-in image adjustment features.
+A comprehensive, reusable image upload component for the lutteros platform that supports both file uploads and URL inputs with built-in image adjustment features.
 
 ## Features
 
@@ -242,4 +242,4 @@ Potential improvements for production:
 
 ## License
 
-Part of the Luteros platform. Internal use only.
+Part of the lutteros platform. Internal use only.

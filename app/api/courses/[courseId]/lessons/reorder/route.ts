@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminOrInstructor } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+
+type TransactionClient = Prisma.TransactionClient;
 
 // PUT reorder lessons
 export async function PUT(
@@ -58,7 +61,7 @@ export async function PUT(
     // Update order for all lessons using a transaction
     // First set all to negative values to avoid unique constraint conflicts
     // Then set to the final values
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: TransactionClient) => {
       // Step 1: Set all orders to negative (temporary) to avoid conflicts
       await Promise.all(
         lessonIds.map((lessonId: string, index: number) =>

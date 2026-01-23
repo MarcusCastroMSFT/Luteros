@@ -11,13 +11,13 @@ export const metadata: Metadata = {
   description: 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar. Dicas de especialistas e informações confiáveis.',
   keywords: ['blog', 'artigos', 'saúde sexual', 'educação sexual', 'bem-estar', 'saúde íntima'],
   openGraph: {
-    title: 'Blog | Luteros',
+    title: 'Blog | lutteros',
     description: 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Blog | Luteros',
+    title: 'Blog | lutteros',
     description: 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.',
   },
   alternates: {

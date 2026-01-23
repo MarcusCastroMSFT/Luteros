@@ -34,7 +34,7 @@ export interface AboutMilestone {
 
 export const aboutContent = {
   hero: {
-    title: "Sobre a Luteros",
+    title: "Sobre a lutteros",
     subtitle: "Transformando o futuro da educação profissional",
     description: "Somos uma plataforma dedicada a capacitar profissionais através de educação de qualidade, conectando conhecimento teórico com aplicação prática no mercado de trabalho.",
   },
@@ -152,7 +152,7 @@ export const aboutMilestones: AboutMilestone[] = [
   {
     id: "foundation",
     year: "2020",
-    title: "Fundação da Luteros",
+    title: "Fundação da lutteros",
     description: "Início da jornada com o objetivo de democratizar o acesso à educação profissional de qualidade.",
   },
   {

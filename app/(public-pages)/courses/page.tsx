@@ -11,13 +11,13 @@ export const metadata: Metadata = {
   description: 'Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis. Aprenda com especialistas.',
   keywords: ['cursos', 'educação sexual', 'saúde reprodutiva', 'relacionamentos', 'educação online'],
   openGraph: {
-    title: 'Cursos | Luteros',
+    title: 'Cursos | lutteros',
     description: 'Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cursos | Luteros',
+    title: 'Cursos | lutteros',
     description: 'Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis.',
   },
   alternates: {

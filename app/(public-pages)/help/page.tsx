@@ -43,7 +43,7 @@ export default function HelpPage() {
       <div className="min-h-screen bg-gray-50">
         <PageHeader
           title="Central de Ajuda"
-          description="Encontre respostas para suas dúvidas e aprenda a usar a Luteros"
+          description="Encontre respostas para suas dúvidas e aprenda a usar a lutteros"
           breadcrumbs={[
             { label: 'Início', href: '/' },
             { label: 'Central de Ajuda' }
@@ -68,7 +68,7 @@ export default function HelpPage() {
       <div className="min-h-screen bg-gray-50">
         <PageHeader
           title="Central de Ajuda"
-          description="Encontre respostas para suas dúvidas e aprenda a usar a Luteros"
+          description="Encontre respostas para suas dúvidas e aprenda a usar a lutteros"
           breadcrumbs={[
             { label: 'Início', href: '/' },
             { label: 'Central de Ajuda' }
@@ -117,7 +117,7 @@ export default function HelpPage() {
     <div className="min-h-screen bg-gray-50">
       <PageHeader
         title="Central de Ajuda"
-        description="Encontre respostas, guias e suporte para usar a Luteros"
+        description="Encontre respostas, guias e suporte para usar a lutteros"
         breadcrumbs={[
           { label: 'Início', href: '/' },
           { label: 'Ajuda' }

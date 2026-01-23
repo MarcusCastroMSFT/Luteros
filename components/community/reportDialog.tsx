@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Flag, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -43,6 +44,11 @@ export function ReportDialog({ isOpen, onClose, onSubmit, itemType, itemAuthor }
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     onSubmit(selectedReason, details);
+    
+    // Show success toast
+    toast.success('Reporte enviado com sucesso!', {
+      description: `Obrigado por nos ajudar a manter a comunidade segura. Seu reporte será analisado pela nossa equipe.`,
+    });
     
     // Reset form
     setSelectedReason('');

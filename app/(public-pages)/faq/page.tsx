@@ -17,8 +17,8 @@ const faqData: FAQItem[] = [
   {
     id: 'platform-1',
     category: 'Sobre a Plataforma',
-    question: 'O que é a Luteros?',
-    answer: 'A Luteros é uma plataforma educacional dedicada à saúde sexual e reprodutiva. Oferecemos conteúdo científico, consultas com especialistas credenciados, cursos educativos e uma comunidade segura para discussões sobre temas relacionados à sexualidade e bem-estar.'
+    question: 'O que é a lutteros?',
+    answer: 'A lutteros é uma plataforma educacional dedicada à saúde sexual e reprodutiva. Oferecemos conteúdo científico, consultas com especialistas credenciados, cursos educativos e uma comunidade segura para discussões sobre temas relacionados à sexualidade e bem-estar.'
   },
   {
     id: 'platform-2',
@@ -26,7 +26,7 @@ const faqData: FAQItem[] = [
     question: 'A plataforma é confiável e segura?',
     answer: (
       <div className="space-y-2">
-        <p>Sim, a Luteros segue os mais altos padrões de segurança e privacidade:</p>
+        <p>Sim, a lutteros segue os mais altos padrões de segurança e privacidade:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li>Todos os especialistas são credenciados e verificados</li>
           <li>Conteúdo revisado por profissionais de saúde</li>
@@ -39,15 +39,15 @@ const faqData: FAQItem[] = [
   {
     id: 'platform-3',
     category: 'Sobre a Plataforma',
-    question: 'Qual a diferença entre a Luteros e outras plataformas de saúde?',
-    answer: 'A Luteros se especializa exclusivamente em saúde sexual e reprodutiva, oferecendo um ambiente seguro e livre de julgamentos. Nossa abordagem combina educação científica com suporte emocional, sempre respeitando a diversidade e individualidade de cada pessoa.'
+    question: 'Qual a diferença entre a lutteros e outras plataformas de saúde?',
+    answer: 'A lutteros se especializa exclusivamente em saúde sexual e reprodutiva, oferecendo um ambiente seguro e livre de julgamentos. Nossa abordagem combina educação científica com suporte emocional, sempre respeitando a diversidade e individualidade de cada pessoa.'
   },
 
   // Conta e Acesso
   {
     id: 'account-1',
     category: 'Conta e Acesso',
-    question: 'Como criar uma conta na Luteros?',
+    question: 'Como criar uma conta na lutteros?',
     answer: 'Para criar sua conta, clique em "Registrar" no menu superior, preencha seus dados básicos (nome, email, idade) e confirme seu email. O processo é rápido e seus dados ficam protegidos por nossa política de privacidade.'
   },
   {
@@ -78,7 +78,7 @@ const faqData: FAQItem[] = [
     question: 'Como funciona uma consulta online?',
     answer: (
       <div className="space-y-2">
-        <p>As consultas na Luteros são educacionais e informativas:</p>
+        <p>As consultas na lutteros são educacionais e informativas:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li>Agende através da plataforma com especialistas disponíveis</li>
           <li>Sessões por videochamada, chat ou telefone</li>
@@ -92,7 +92,7 @@ const faqData: FAQItem[] = [
   {
     id: 'consultations-2',
     category: 'Consultas e Especialistas',
-    question: 'Quem são os especialistas da Luteros?',
+    question: 'Quem são os especialistas da lutteros?',
     answer: 'Nossa equipe inclui ginecologistas, urologistas, psicólogos especializados em sexualidade, terapeutas sexuais, educadores sexuais e outros profissionais de saúde devidamente credenciados. Todos passam por verificação rigorosa de credenciais e formação contínua.'
   },
   {
@@ -210,7 +210,7 @@ const faqData: FAQItem[] = [
         <p>Oferecemos várias formas de suporte:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li><strong>Chat online:</strong> Disponível 24/7 na plataforma</li>
-          <li><strong>Email:</strong> suporte@luteros.com (resposta em até 24h)</li>
+          <li><strong>Email:</strong> suporte@lutteros.com (resposta em até 24h)</li>
           <li><strong>WhatsApp:</strong> (11) 9999-9999 (horário comercial)</li>
           <li><strong>Central de Ajuda:</strong> Base de conhecimento completa</li>
         </ul>
@@ -290,7 +290,7 @@ export default function FAQPage() {
     <div className="min-h-screen bg-gray-50">
       <PageHeader
         title="Perguntas Frequentes"
-        description="Encontre respostas para suas dúvidas sobre a Luteros"
+        description="Encontre respostas para suas dúvidas sobre a lutteros"
         breadcrumbs={[
           { label: 'Início', href: '/' },
           { label: 'FAQ' }
@@ -360,7 +360,7 @@ export default function FAQPage() {
                       <strong>Chat:</strong> Disponível 24/7
                     </p>
                     <p className="text-brand-800">
-                      <strong>Email:</strong> suporte@luteros.com
+                      <strong>Email:</strong> suporte@lutteros.com
                     </p>
                     <p className="text-brand-800">
                       <strong>WhatsApp:</strong> (11) 9999-9999

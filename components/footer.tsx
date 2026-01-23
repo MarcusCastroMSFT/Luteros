@@ -61,7 +61,7 @@ export function Footer() {
         {/* Copyright */}
         <div className="mt-12 pt-8 border-t border-gray-200 text-center">
           <p className="text-sm text-text-secondary">
-            © {currentYear} Luteros. Todos os direitos reservados
+            © {currentYear} lutteros. Todos os direitos reservados
           </p>
         </div>
       </div>

@@ -25,7 +25,7 @@ export default function PrivacyPage() {
             </h2>
             <div className="space-y-4">
               <p className="text-gray-700 leading-relaxed">
-                A Luteros reconhece a natureza sensível e íntima das informações relacionadas à saúde sexual e reprodutiva. 
+                A lutteros reconhece a natureza sensível e íntima das informações relacionadas à saúde sexual e reprodutiva. 
                 Estamos comprometidos em proteger sua privacidade com os mais altos padrões de segurança e confidencialidade. 
                 Esta política explica como coletamos, usamos, protegemos e compartilhamos suas informações pessoais.
               </p>
@@ -227,8 +227,8 @@ export default function PrivacyPage() {
                 Para exercer seus direitos ou esclarecer dúvidas sobre privacidade:
               </p>
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <p className="text-gray-800"><strong>Data Protection Officer (DPO):</strong> dpo@luteros.com</p>
-                <p className="text-gray-800"><strong>Email Geral:</strong> privacidade@luteros.com</p>
+                <p className="text-gray-800"><strong>Data Protection Officer (DPO):</strong> dpo@lutteros.com</p>
+                <p className="text-gray-800"><strong>Email Geral:</strong> privacidade@lutteros.com</p>
                 <p className="text-gray-800"><strong>Telefone:</strong> (11) 9999-9999</p>
                 <p className="text-gray-800"><strong>Endereço:</strong> [Endereço da empresa]</p>
                 <p className="text-gray-800"><strong>Horário:</strong> Segunda a Sexta, 9h às 18h</p>

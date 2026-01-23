@@ -49,7 +49,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { article, relatedArticles } = articleData;
 
   // Generate full URL for sharing
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
   const articleUrl = `${baseUrl}/blog/${article.slug}`;
 
   // JSON-LD structured data for SEO (following schema.org best practices)
@@ -72,7 +72,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     dateModified: article.date,
     publisher: {
       '@type': 'Organization',
-      name: 'Luteros',
+      name: 'lutteros',
       url: baseUrl,
       logo: {
         '@type': 'ImageObject',
@@ -161,7 +161,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
   const articleUrl = `${baseUrl}/blog/${slug}`;
   const imageUrl = article.image?.startsWith('http') 
     ? article.image 
@@ -179,7 +179,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       title: article.title,
       description: article.excerpt,
       url: articleUrl,
-      siteName: 'Luteros',
+      siteName: 'lutteros',
       images: [
         {
           url: imageUrl,

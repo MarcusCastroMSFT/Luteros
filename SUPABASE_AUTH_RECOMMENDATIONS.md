@@ -1,7 +1,7 @@
 # Supabase Auth Implementation - Critical Recommendations
 
 **Date:** December 6, 2025  
-**Project:** Luteros Learning Platform  
+**Project:** lutteros Learning Platform  
 **Current Status:** ⚠️ **NOT FOLLOWING BEST PRACTICES**
 
 ---

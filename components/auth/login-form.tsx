@@ -53,7 +53,7 @@ export function LoginForm({
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Welcome back</h1>
                 <p className="text-gray-600 text-sm mt-1">
-                  Login to your Luteros account
+                  Login to your lutteros account
                 </p>
               </div>
             </div>

@@ -7,7 +7,7 @@ datasource db {
 }
 
 model blog_articles {
-  id                String          @id @db.Uuid
+  id                String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   title             String
   slug              String          @unique
   excerpt           String
@@ -45,7 +45,7 @@ model blog_articles {
 }
 
 model blog_comments {
-  id            String        @id @db.Uuid
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   articleId     String        @db.Uuid
   userId        String        @db.Uuid
   content       String
@@ -61,7 +61,7 @@ model blog_comments {
 }
 
 model blog_likes {
-  id            String        @id @db.Uuid
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   articleId     String        @db.Uuid
   userId        String        @db.Uuid
   createdAt     DateTime      @default(now())
@@ -74,7 +74,7 @@ model blog_likes {
 }
 
 model certificates {
-  id                String        @id @db.Uuid
+  id                String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId            String        @db.Uuid
   courseId          String        @db.Uuid
   certificateNumber String        @unique
@@ -84,10 +84,12 @@ model certificates {
   user_profiles     user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([issuedAt(sort: Desc)])
 }
 
 model comments {
-  id            String        @id @db.Uuid
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId        String        @db.Uuid
   entityType    String
   entityId      String        @db.Uuid
@@ -96,10 +98,14 @@ model comments {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime
   user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model community_likes {
-  id              String          @id @db.Uuid
+  id              String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   postId          String          @db.Uuid
   userId          String          @db.Uuid
   createdAt       DateTime        @default(now())
@@ -107,11 +113,11 @@ model community_likes {
   user_profiles   user_profiles   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
-  @@index([postId])
+  @@index([userId])
 }
 
 model community_posts {
-  id                String              @id @db.Uuid
+  id                String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   title             String
   content           String
   userId            String              @db.Uuid
@@ -141,7 +147,7 @@ model community_posts {
 }
 
 model community_replies {
-  id                    String                  @id @db.Uuid
+  id                    String                  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   postId                String                  @db.Uuid
   userId                String                  @db.Uuid
   content               String
@@ -159,7 +165,7 @@ model community_replies {
 }
 
 model community_reply_likes {
-  id                String            @id @db.Uuid
+  id                String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   replyId           String            @db.Uuid
   userId            String            @db.Uuid
   createdAt         DateTime          @default(now())
@@ -167,11 +173,11 @@ model community_reply_likes {
   user_profiles     user_profiles     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([replyId, userId])
-  @@index([replyId])
+  @@index([userId])
 }
 
 model course_progress {
-  id               String        @id @db.Uuid
+  id               String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId           String        @db.Uuid
   courseId         String        @db.Uuid
   completedLessons Int           @default(0)
@@ -183,10 +189,12 @@ model course_progress {
   user_profiles    user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([lastAccessedAt(sort: Desc)])
 }
 
 model courses {
-  id               String            @id @default(uuid()) @db.Uuid
+  id               String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   title            String
   slug             String            @unique
   description      String
@@ -214,10 +222,19 @@ model courses {
   enrollments      enrollments[]
   lessons          lessons[]
   reviews          reviews[]
+
+  @@index([slug])
+  @@index([instructorId])
+  @@index([category])
+  @@index([level])
+  @@index([isPublished, publishedAt(sort: Desc)])
+  @@index([isPublished, category])
+  @@index([createdAt(sort: Desc)])
+  @@index([isFree])
 }
 
 model enrollments {
-  id              String        @id @db.Uuid
+  id              String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId          String        @db.Uuid
   courseId        String        @db.Uuid
   enrolledAt      DateTime      @default(now())
@@ -230,10 +247,13 @@ model enrollments {
   user_profiles   user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([enrolledAt(sort: Desc)])
+  @@index([paymentStatus])
 }
 
 model event_registrations {
-  id            String        @id @db.Uuid
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   eventId       String        @db.Uuid
   userId        String        @db.Uuid
   registeredAt  DateTime      @default(now())
@@ -249,7 +269,7 @@ model event_registrations {
 }
 
 model event_speakers {
-  id       String  @id @db.Uuid
+  id       String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   eventId  String  @db.Uuid
   name     String
   title    String?
@@ -265,7 +285,7 @@ model event_speakers {
 }
 
 model events {
-  id                  String                @id @db.Uuid
+  id                  String                @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   title               String
   slug                String                @unique
   description         String
@@ -294,7 +314,7 @@ model events {
 }
 
 model lesson_progress {
-  id              String        @id @db.Uuid
+  id              String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId          String        @db.Uuid
   lessonId        String        @db.Uuid
   isCompleted     Boolean       @default(false)
@@ -306,10 +326,12 @@ model lesson_progress {
   user_profiles   user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+  @@index([lessonId])
+  @@index([isCompleted])
 }
 
 model lessons {
-  id              String            @id @default(uuid()) @db.Uuid
+  id              String            @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   courseId        String            @db.Uuid
   title           String
   description     String?
@@ -328,10 +350,12 @@ model lessons {
   courses         courses           @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, order])
+  @@index([courseId])
+  @@index([isPublished])
 }
 
 model notifications {
-  id            String        @id @db.Uuid
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId        String        @db.Uuid
   type          String
   title         String
@@ -347,7 +371,7 @@ model notifications {
 }
 
 model product_partners {
-  id          String     @id @db.Uuid
+  id          String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   name        String
   slug        String     @unique
   logo        String?
@@ -365,7 +389,7 @@ model product_partners {
 }
 
 model products {
-  id                 String           @id @db.Uuid
+  id                 String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   slug               String           @unique
   title              String
   description        String
@@ -403,7 +427,7 @@ model products {
 }
 
 model reviews {
-  id            String        @id @db.Uuid
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   userId        String        @db.Uuid
   courseId      String        @db.Uuid
   rating        Int
@@ -416,10 +440,13 @@ model reviews {
   user_profiles user_profiles @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([isPublished, createdAt(sort: Desc)])
+  @@index([rating])
 }
 
 model user_profiles {
-  id                    String                  @id @db.Uuid
+  id                    String                  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   fullName              String?
   displayName           String?
   bio                   String?
@@ -459,6 +486,8 @@ model user_profiles {
   lesson_progress       lesson_progress[]
   notifications         notifications[]
   reviews               reviews[]
+  newsletter_campaigns  newsletter_campaigns[]
+  system_emails_updated system_email_templates[] @relation("SystemEmailUpdatedBy")
 
   @@index([createdAt(sort: Desc)])
   @@index([displayName])
@@ -473,6 +502,65 @@ model user_roles {
   updatedAt DateTime
 
   @@unique([userId, role])
+  @@index([userId])
+  @@index([role])
+}
+
+model newsletter_subscribers {
+  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  email           String    @unique
+  status          NewsletterStatus @default(ACTIVE)
+  unsubscribeToken String   @unique @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  source          String?   // Where they signed up from (footer, popup, etc.)
+  ipAddress       String?   // For rate limiting and fraud detection
+  confirmedAt     DateTime? // Email confirmation timestamp
+  unsubscribedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model newsletter_campaigns {
+  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name            String    // Internal name for the campaign
+  subject         String    // Email subject line
+  previewText     String?   // Preview text shown in email clients
+  content         String    // HTML content of the email
+  ctaText         String?   // Call to action button text
+  ctaUrl          String?   // Call to action URL
+  status          CampaignStatus @default(DRAFT)
+  errorMessage    String?   // Error message if sending failed
+  scheduledAt     DateTime? // When to send (null = manual send)
+  sentAt          DateTime? // When it was actually sent
+  totalRecipients Int       @default(0)
+  sentCount       Int       @default(0)
+  failedCount     Int       @default(0)
+  createdById     String    @db.Uuid
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  createdBy       user_profiles @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([scheduledAt])
+}
+
+enum NewsletterStatus {
+  PENDING     // Awaiting email confirmation
+  ACTIVE      // Confirmed and receiving emails
+  UNSUBSCRIBED
+}
+
+enum CampaignStatus {
+  DRAFT       // Being edited
+  SCHEDULED   // Scheduled to send
+  SENDING     // Currently being sent
+  SENT        // Successfully sent
+  FAILED      // Failed to send
 }
 
 enum CommunityPostStatus {
@@ -505,4 +593,36 @@ enum UserRole {
   ADMIN
   INSTRUCTOR
   STUDENT
+}
+
+// System email templates - Configurable templates for transactional emails
+model system_email_templates {
+  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  code            String    @unique // e.g., 'welcome', 'password_reset', 'email_verification'
+  name            String    // Display name: "E-mail de Boas-vindas"
+  description     String?   // Description of when this email is sent
+  category        SystemEmailCategory
+  subject         String    // Email subject line
+  previewText     String?   // Preview text shown in email clients
+  htmlContent     String    // HTML content of the email
+  textContent     String?   // Plain text fallback
+  variables       String[]  // Available template variables: ['name', 'email', 'link']
+  isActive        Boolean   @default(true)
+  updatedById     String?   @db.Uuid
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  updatedBy       user_profiles? @relation("SystemEmailUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([code])
+  @@index([category])
+  @@index([isActive])
+}
+
+enum SystemEmailCategory {
+  AUTHENTICATION   // Signup, password reset, email verification
+  ACCOUNT          // Account updates, profile changes
+  NOTIFICATION     // General notifications
+  TRANSACTION      // Purchase confirmations, receipts
+  ENGAGEMENT       // Re-engagement, inactive user reminders
 }

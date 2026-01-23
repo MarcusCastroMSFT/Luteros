@@ -10,13 +10,13 @@ export const metadata: Metadata = {
   description: 'Participe de nossos eventos e workshops sobre saúde sexual e bem-estar. Encontre palestras, cursos presenciais e online.',
   keywords: ['eventos', 'workshops', 'palestras', 'saúde sexual', 'bem-estar', 'cursos'],
   openGraph: {
-    title: 'Eventos | Luteros',
+    title: 'Eventos | lutteros',
     description: 'Participe de nossos eventos e workshops sobre saúde sexual e bem-estar.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Eventos | Luteros',
+    title: 'Eventos | lutteros',
     description: 'Participe de nossos eventos e workshops sobre saúde sexual e bem-estar.',
   },
   alternates: {

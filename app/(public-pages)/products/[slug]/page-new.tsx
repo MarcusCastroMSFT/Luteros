@@ -31,22 +31,22 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: `${metadata.title} | Luteros`,
+    title: `${metadata.title} | lutteros`,
     description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
     keywords: [
       metadata.category.toLowerCase(),
       'desconto exclusivo',
       'cupom de desconto',
       metadata.partnerName.toLowerCase(),
-      'luteros',
+      'lutteros',
       'produtos para família',
     ],
     openGraph: {
-      title: `${metadata.title} - ${metadata.category} | Luteros`,
+      title: `${metadata.title} - ${metadata.category} | lutteros`,
       description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
       type: 'website',
       locale: 'pt_BR',
-      siteName: 'Luteros',
+      siteName: 'lutteros',
       ...(metadata.image && { 
         images: [{
           url: metadata.image,
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${metadata.title} | Luteros`,
+      title: `${metadata.title} | lutteros`,
       description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
       ...(metadata.image && { images: [metadata.image] }),
     },
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 function ProductJsonLd({ product }: { product: Awaited<ReturnType<typeof getProductBySlug>> }) {
   if (!product) return null
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com'
   
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -159,7 +159,7 @@ function ProductJsonLd({ product }: { product: Awaited<ReturnType<typeof getProd
 function BreadcrumbJsonLd({ product }: { product: Awaited<ReturnType<typeof getProductBySlug>> }) {
   if (!product) return null
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luteros.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com'
   
   const jsonLd = {
     '@context': 'https://schema.org',

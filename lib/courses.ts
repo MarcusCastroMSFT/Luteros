@@ -426,7 +426,7 @@ async function fetchCourseMetadata(slug: string) {
     category: course.category,
     level: course.level || 'Iniciante',
     date: course.publishedAt?.toISOString(),
-    instructorName: course.user_profiles.fullName || course.user_profiles.displayName || 'Luteros',
+    instructorName: course.user_profiles.fullName || course.user_profiles.displayName || 'lutteros',
   }
 }
 

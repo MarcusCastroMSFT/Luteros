@@ -25,7 +25,7 @@ export function Logo({
     <div className={`flex items-center ${className}`}>
       <Image
         src="/images/logo/lutteros-logo.svg"
-        alt="Luteros"
+        alt="lutteros"
         width={iconSizes[iconSize].width}
         height={iconSizes[iconSize].height}
         className="object-contain"
