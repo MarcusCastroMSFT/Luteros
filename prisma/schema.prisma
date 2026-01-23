@@ -116,6 +116,24 @@ model community_likes {
   @@index([userId])
 }
 
+model community_reports {
+  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  entityType    String   // 'post' or 'reply'
+  entityId      String   @db.Uuid
+  reporterId    String   @db.Uuid
+  reason        String   // spam, harassment, hate, misinformation, inappropriate, privacy, other
+  details       String?
+  status        String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, DISMISSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user_profiles user_profiles @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([reporterId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
 model community_posts {
   id                String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   title             String
@@ -479,6 +497,7 @@ model user_profiles {
   community_posts       community_posts[]
   community_replies     community_replies[]
   community_reply_likes community_reply_likes[]
+  community_reports     community_reports[]
   course_progress       course_progress[]
   courses               courses[]
   enrollments           enrollments[]

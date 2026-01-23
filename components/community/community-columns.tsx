@@ -36,6 +36,7 @@ export interface CommunityPostRow {
   lastReply: string
   tags: string[]
   isReported: boolean
+  hasReportedReplies?: boolean
 }
 
 export interface CommunityColumnActions {
@@ -92,6 +93,18 @@ export function getCommunityColumns(actions: CommunityColumnActions): ColumnDef<
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Este post foi denunciado</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!row.original.isReported && row.original.hasReportedReplies && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <AlertTriangle className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Este post tem respostas denunciadas</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -156,6 +169,7 @@ export function getCommunityColumns(actions: CommunityColumnActions): ColumnDef<
       },
       cell: ({ row }) => {
         const isReported = row.original.isReported
+        const hasReportedReplies = row.original.hasReportedReplies
         const status = row.getValue("status") as string
         
         return (
@@ -165,6 +179,12 @@ export function getCommunityColumns(actions: CommunityColumnActions): ColumnDef<
               <Badge variant="destructive" className="text-xs w-fit">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 Denunciado
+              </Badge>
+            )}
+            {!isReported && hasReportedReplies && (
+              <Badge variant="outline" className="text-xs w-fit border-orange-500 text-orange-600">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Resp. Denunciadas
               </Badge>
             )}
           </div>

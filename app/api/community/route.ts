@@ -7,12 +7,13 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '0')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || searchParams.get('pageSize') || '10')
     const search = searchParams.get('search') || undefined
-    const status = searchParams.get('status') || undefined
-    const category = searchParams.get('category') || undefined
+    const status = searchParams.get('status') || searchParams.get('filter_status') || undefined
+    const category = searchParams.get('category') || searchParams.get('filter_category') || undefined
+    const isReported = searchParams.get('isReported') || searchParams.get('filter_isReported') || undefined
 
-    const result = await getCommunityPosts(page, limit, category, search, status)
+    const result = await getCommunityPosts(page, limit, category, search, status, isReported)
 
     return NextResponse.json({
       data: result.posts,

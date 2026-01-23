@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Heart, Flag, MoreHorizontal, User, UserX, Send } from 'lucide-react';
+import { MessageSquare, Heart, Flag, MoreHorizontal, User, UserX, Send, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CommunityPost, CommunityReply } from '@/types/community';
 import { ReportDialog } from './reportDialog';
 
@@ -19,11 +35,13 @@ interface RepliesDialogProps {
   onClose: () => void;
   post: CommunityPost | null;
   onReplyAdded?: (postId: string, reply: CommunityReply) => void;
+  onReplyDeleted?: (postId: string, replyId: string) => void;
   onPostLiked?: (postId: string, liked: boolean, likeCount: number) => void;
   isPostLikedInitial?: boolean;
+  isAdmin?: boolean;
 }
 
-export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked, isPostLikedInitial = false }: RepliesDialogProps) {
+export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onReplyDeleted, onPostLiked, isPostLikedInitial = false, isAdmin = false }: RepliesDialogProps) {
   const [reportedItems, setReportedItems] = useState<Set<string>>(new Set());
   const [likedReplies, setLikedReplies] = useState<Set<string>>(new Set());
   const [localReplies, setLocalReplies] = useState<CommunityReply[]>([]);
@@ -49,6 +67,76 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
     itemType: 'reply',
     itemAuthor: ''
   });
+
+  // Delete confirmation state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    replyId: string;
+    replyAuthor: string;
+  }>({
+    isOpen: false,
+    replyId: '',
+    replyAuthor: ''
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletedReplies, setDeletedReplies] = useState<Set<string>>(new Set());
+
+  // Report details state (for admin)
+  interface ReportDetails {
+    id: string;
+    reason: string;
+    reasonLabel: string;
+    details: string | null;
+    reporter: { id: string; name: string; avatar: string | null };
+    createdDateFormatted: string;
+  }
+  const [postReports, setPostReports] = useState<ReportDetails[]>([]);
+  const [replyReports, setReplyReports] = useState<Map<string, ReportDetails[]>>(new Map());
+  const [loadingReports, setLoadingReports] = useState(false);
+
+  // Fetch reports for admin when dialog opens
+  useEffect(() => {
+    if (isOpen && isAdmin && post) {
+      fetchReports();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isAdmin, post?.id]);
+
+  const fetchReports = async () => {
+    if (!post) return;
+    
+    setLoadingReports(true);
+    try {
+      // Fetch post reports
+      if (post.isReported) {
+        const postResponse = await fetch(`/api/community/reports?entityType=post&entityId=${post.id}`);
+        if (postResponse.ok) {
+          const postData = await postResponse.json();
+          setPostReports(postData.reports || []);
+        }
+      }
+
+      // Fetch reply reports for reported replies
+      const reportedReplies = post.replies.filter(r => r.isReported);
+      if (reportedReplies.length > 0) {
+        const replyReportsMap = new Map<string, ReportDetails[]>();
+        for (const reply of reportedReplies) {
+          const replyResponse = await fetch(`/api/community/reports?entityType=reply&entityId=${reply.id}`);
+          if (replyResponse.ok) {
+            const replyData = await replyResponse.json();
+            if (replyData.reports?.length > 0) {
+              replyReportsMap.set(reply.id, replyData.reports);
+            }
+          }
+        }
+        setReplyReports(replyReportsMap);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+    } finally {
+      setLoadingReports(false);
+    }
+  };
 
   // Initialize post like count and state when post changes or dialog opens
   useEffect(() => {
@@ -168,14 +256,149 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
     });
   };
 
-  const handleReportSubmit = (reason: string, details: string) => {
-    const newReported = new Set(reportedItems);
-    newReported.add(reportDialog.itemId);
-    setReportedItems(newReported);
+  // Handle delete reply (admin only)
+  const handleDeleteReply = async () => {
+    if (!post || !deleteDialog.replyId) return;
     
-    console.log(`Reported reply ${reportDialog.itemId}:`, { reason, details });
+    setIsDeleting(true);
     
-    setReportDialog({ isOpen: false, itemId: '', itemType: 'reply', itemAuthor: '' });
+    try {
+      const response = await fetch(`/api/community/${post.id}/replies/${deleteDialog.replyId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error('Erro ao excluir resposta', {
+          description: data.error || 'Tente novamente mais tarde.',
+        });
+        return;
+      }
+      
+      // Mark reply as deleted locally
+      setDeletedReplies(prev => new Set([...prev, deleteDialog.replyId]));
+      
+      // Notify parent component
+      if (onReplyDeleted) {
+        onReplyDeleted(post.id, deleteDialog.replyId);
+      }
+      
+      toast.success('Resposta excluída', {
+        description: 'A resposta foi removida com sucesso.',
+      });
+      
+      setDeleteDialog({ isOpen: false, replyId: '', replyAuthor: '' });
+    } catch (error) {
+      console.error('Failed to delete reply:', error);
+      toast.error('Erro ao excluir resposta', {
+        description: 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Track dismissed reports for UI updates
+  const [dismissedReports, setDismissedReports] = useState<Set<string>>(new Set());
+  const [isDismissing, setIsDismissing] = useState(false);
+
+  // Handle dismiss report (admin only) - marks the reply as not reported
+  const handleDismissReport = async (replyId: string, entityType: 'post' | 'reply' = 'reply') => {
+    if (!post) return;
+    
+    setIsDismissing(true);
+    
+    try {
+      const response = await fetch(`/api/community/reports/dismiss`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entityType,
+          entityId: replyId,
+        }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error('Erro ao dispensar denúncia', {
+          description: data.error || 'Tente novamente mais tarde.',
+        });
+        return;
+      }
+      
+      // Mark as dismissed locally
+      setDismissedReports(prev => new Set([...prev, replyId]));
+      
+      // Remove from reply reports
+      if (entityType === 'reply') {
+        setReplyReports(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(replyId);
+          return newMap;
+        });
+      } else {
+        setPostReports([]);
+      }
+      
+      toast.success('Denúncia dispensada', {
+        description: 'O conteúdo foi marcado como apropriado.',
+      });
+    } catch (error) {
+      console.error('Failed to dismiss report:', error);
+      toast.error('Erro ao dispensar denúncia', {
+        description: 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setIsDismissing(false);
+    }
+  };
+
+  const handleReportSubmit = async (reason: string, details: string) => {
+    if (!post) return;
+    
+    try {
+      const response = await fetch('/api/community/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entityType: reportDialog.itemType,
+          entityId: reportDialog.itemId,
+          reason,
+          details,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 409) {
+          toast.info('Você já reportou este item');
+        } else {
+          toast.error('Erro ao enviar reporte', {
+            description: data.error || 'Tente novamente mais tarde.',
+          });
+        }
+        return;
+      }
+
+      const newReported = new Set(reportedItems);
+      newReported.add(reportDialog.itemId);
+      setReportedItems(newReported);
+      
+      toast.success('Reporte enviado!', {
+        description: 'Obrigado por ajudar a manter a comunidade segura.',
+      });
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      toast.error('Erro ao enviar reporte', {
+        description: 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setReportDialog({ isOpen: false, itemId: '', itemType: 'reply', itemAuthor: '' });
+    }
   };
 
   const handleReportClose = () => {
@@ -245,6 +468,9 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
     setIsAnonymous(false);
     setShowReplyForm(false);
     setLocalReplies([]);
+    setDeletedReplies(new Set());
+    setPostReports([]);
+    setReplyReports(new Map());
     onClose();
   };
 
@@ -253,8 +479,8 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
     return null;
   }
 
-  // Combine original replies with locally added ones
-  const allReplies = [...post.replies, ...localReplies];
+  // Combine original replies with locally added ones, filter out deleted ones
+  const allReplies = [...post.replies, ...localReplies].filter(reply => !deletedReplies.has(reply.id));
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleDialogClose}>
@@ -308,6 +534,36 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
             </div>
           </DialogHeader>
 
+          {/* Post Report Details (Admin Only) */}
+          {isAdmin && post.isReported && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mx-1 mb-2">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle size={16} className="text-red-600" />
+                <h4 className="text-sm font-semibold text-red-700">Post Denunciado</h4>
+              </div>
+              {loadingReports ? (
+                <p className="text-sm text-red-600">Carregando detalhes...</p>
+              ) : postReports.length > 0 ? (
+                <div className="space-y-3">
+                  {postReports.map((report) => (
+                    <div key={report.id} className="bg-white rounded border border-red-100 p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-sm font-medium text-red-700">{report.reasonLabel}</span>
+                        <span className="text-xs text-gray-500">{report.createdDateFormatted}</span>
+                      </div>
+                      {report.details && (
+                        <p className="text-sm text-gray-700 mb-2">&quot;{report.details}&quot;</p>
+                      )}
+                      <p className="text-xs text-gray-500">Reportado por: {report.reporter.name}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-red-600">Nenhum detalhe de denúncia encontrado.</p>
+              )}
+            </div>
+          )}
+
           {/* Replies Content */}
           <div className="flex-1 py-4 min-h-0" style={{ maxHeight: 'calc(85vh - 280px)' }}>
             {allReplies.length === 0 ? (
@@ -345,26 +601,77 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
                 {allReplies.map((reply) => (
                   <div key={reply.id} className="flex gap-3">
                     {/* Reply Avatar */}
-                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-600 font-medium text-xs">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      reply.isReported ? 'bg-red-100' : 'bg-gray-100'
+                    }`}>
+                      <span className={`font-medium text-xs ${
+                        reply.isReported ? 'text-red-600' : 'text-gray-600'
+                      }`}>
                         {reply.isAnonymous ? 'A' : reply.author.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     
                     {/* Reply Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className={`rounded-lg p-3 ${
+                        reply.isReported && !dismissedReports.has(reply.id)
+                          ? 'bg-red-50 border border-red-200' 
+                          : dismissedReports.has(reply.id)
+                            ? 'bg-green-50 border border-green-200'
+                            : 'bg-gray-50'
+                      }`}>
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <span className="font-medium text-gray-900">
+                            <span className={`font-medium ${reply.isReported && !dismissedReports.has(reply.id) ? 'text-red-700' : 'text-gray-900'}`}>
                               {reply.isAnonymous ? 'Anônimo' : reply.author}
                             </span>
+                            {reply.isReported && !dismissedReports.has(reply.id) && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+                                <AlertTriangle size={10} />
+                                Denunciado
+                              </span>
+                            )}
+                            {dismissedReports.has(reply.id) && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                                <CheckCircle size={10} />
+                                Aprovado
+                              </span>
+                            )}
                             <span>•</span>
                             <span>{formatDate(reply.createdDate)}</span>
                           </div>
-                          <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
-                            <MoreHorizontal size={16} />
-                          </button>
+                          {isAdmin ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
+                                  <MoreHorizontal size={16} />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {(reply.isReported && !dismissedReports.has(reply.id)) && (
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDismissReport(reply.id, 'reply')}
+                                    disabled={isDismissing}
+                                    className="text-green-600 focus:text-green-600 cursor-pointer"
+                                  >
+                                    <CheckCircle size={14} className="mr-2" />
+                                    Dispensar denúncia
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem 
+                                  onClick={() => setDeleteDialog({
+                                    isOpen: true,
+                                    replyId: reply.id,
+                                    replyAuthor: reply.author
+                                  })}
+                                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                                >
+                                  <Trash2 size={14} className="mr-2" />
+                                  Excluir resposta
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : null}
                         </div>
                         
                         <p className="text-gray-900 text-sm mb-3">
@@ -393,16 +700,32 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
                           <button 
                             onClick={() => reportItem(reply.id, reply.author)}
                             className={`flex items-center gap-2 transition-colors cursor-pointer ${
-                              reportedItems.has(reply.id) 
+                              reportedItems.has(reply.id) || reply.isReported
                                 ? 'text-red-500' 
                                 : 'hover:text-red-500'
                             }`}
-                            disabled={reportedItems.has(reply.id)}
+                            disabled={reportedItems.has(reply.id) || reply.isReported}
                           >
                             <Flag size={14} />
-                            <span>{reportedItems.has(reply.id) ? 'Reportado' : 'Reportar'}</span>
+                            <span>{reportedItems.has(reply.id) || reply.isReported ? 'Denunciado' : 'Reportar'}</span>
                           </button>
                         </div>
+
+                        {/* Reply Report Details (Admin Only) */}
+                        {isAdmin && reply.isReported && replyReports.has(reply.id) && (
+                          <div className="mt-3 pt-3 border-t border-red-200">
+                            <p className="text-xs font-medium text-red-700 mb-2">Motivo da denúncia:</p>
+                            {replyReports.get(reply.id)?.map((report) => (
+                              <div key={report.id} className="text-xs text-red-600 mb-1">
+                                <span className="font-medium">{report.reasonLabel}</span>
+                                {report.details && (
+                                  <span className="text-gray-600"> - &quot;{report.details}&quot;</span>
+                                )}
+                                <span className="text-gray-500 ml-2">({report.reporter.name})</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -517,6 +840,33 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onPostLiked
         itemType={reportDialog.itemType}
         itemAuthor={reportDialog.itemAuthor}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.isOpen} onOpenChange={(open) => !open && setDeleteDialog({ isOpen: false, replyId: '', replyAuthor: '' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir resposta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. A resposta de &quot;{deleteDialog.replyAuthor}&quot; será permanentemente excluída.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              disabled={isDeleting}
+              className="cursor-pointer"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteReply}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

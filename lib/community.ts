@@ -114,6 +114,9 @@ function transformPost(post: CommunityPostWithRelations, includeReplies = false)
     ? post.community_replies.map(transformReply)
     : []
   
+  // Check if any reply is reported
+  const hasReportedReplies = replies.some(reply => reply.isReported)
+  
   return {
     id: post.id,
     title: post.title,
@@ -130,6 +133,7 @@ function transformPost(post: CommunityPostWithRelations, includeReplies = false)
     lastReply: post.lastReplyAt ? formatDate(post.lastReplyAt) : '',
     tags: post.tags,
     isReported: post.isReported,
+    hasReportedReplies,
   }
 }
 
@@ -139,18 +143,33 @@ async function fetchCommunityPosts(
   limit: number, 
   category?: string,
   search?: string,
-  status?: string
+  status?: string,
+  isReported?: string
 ) {
   const whereCondition: Record<string, unknown> = {}
   
-  // Filter by status (default to active posts only for public view)
+  // Filter by isReported - includes posts that are reported OR have reported replies
+  if (isReported === 'true') {
+    whereCondition.OR = [
+      { isReported: true },
+      {
+        community_replies: {
+          some: { isReported: true }
+        }
+      }
+    ]
+  } else if (isReported === 'false') {
+    whereCondition.isReported = false
+  }
+  
+  // Filter by status (default to active posts only for public view, but not when filtering reported)
   if (status) {
     const statusKey = Object.entries(statusMap).find(([, v]) => v.toLowerCase() === status.toLowerCase())?.[0]
     if (statusKey) {
       whereCondition.status = statusKey
     }
-  } else {
-    whereCondition.status = 'ACTIVE' // Default to active posts
+  } else if (!isReported) {
+    whereCondition.status = 'ACTIVE' // Default to active posts only when not filtering by reported
   }
   
   // Filter by category
@@ -278,13 +297,14 @@ export async function getCommunityPosts(
   limit: number, 
   category?: string,
   search?: string,
-  status?: string
+  status?: string,
+  isReported?: string
 ) {
   'use cache'
   cacheLife('minutes') // Community posts change frequently
-  cacheTag('community', `community-posts-${page}-${limit}-${category || 'all'}-${search || ''}-${status || ''}`)
+  cacheTag('community', `community-posts-${page}-${limit}-${category || 'all'}-${search || ''}-${status || ''}-${isReported || ''}`)
   
-  return fetchCommunityPosts(page, limit, category, search, status)
+  return fetchCommunityPosts(page, limit, category, search, status, isReported)
 }
 
 // Internal function to fetch single post
@@ -396,12 +416,14 @@ export async function updatePost(
   }
 
   // Get user role to check if admin
-  const user = await prisma.user_profiles.findUnique({
-    where: { id: userId },
+  const roleAssignment = await prisma.user_roles.findFirst({
+    where: { userId },
     select: { role: true },
+    orderBy: { createdAt: 'desc' },
   })
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const userRole = roleAssignment?.role || 'STUDENT'
+  const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
 
   // Only admin or author can update
@@ -498,12 +520,14 @@ export async function deletePost(id: string, userId: string) {
   }
 
   // Get user role to check if admin
-  const user = await prisma.user_profiles.findUnique({
-    where: { id: userId },
+  const roleAssignment = await prisma.user_roles.findFirst({
+    where: { userId },
     select: { role: true },
+    orderBy: { createdAt: 'desc' },
   })
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const userRole = roleAssignment?.role || 'STUDENT'
+  const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
 
   // Only admin or author can delete

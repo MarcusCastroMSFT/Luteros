@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { CommunityPost, CommunityReply } from '@/types/community';
 import { ReportDialog } from './reportDialog';
@@ -150,14 +151,48 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
     });
   };
 
-  const handleReportSubmit = (reason: string, details: string) => {
-    const newReported = new Set(reportedItems);
-    newReported.add(reportDialog.itemId);
-    setReportedItems(newReported);
-    
-    console.log(`Reported ${reportDialog.itemType} ${reportDialog.itemId}:`, { reason, details });
-    
-    setReportDialog({ isOpen: false, itemId: '', itemType: 'post', itemAuthor: '' });
+  const handleReportSubmit = async (reason: string, details: string) => {
+    try {
+      const response = await fetch('/api/community/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entityType: reportDialog.itemType,
+          entityId: reportDialog.itemId,
+          reason,
+          details,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 409) {
+          toast.info('Você já reportou este item');
+        } else {
+          toast.error('Erro ao enviar reporte', {
+            description: data.error || 'Tente novamente mais tarde.',
+          });
+        }
+        return;
+      }
+
+      const newReported = new Set(reportedItems);
+      newReported.add(reportDialog.itemId);
+      setReportedItems(newReported);
+      
+      toast.success('Reporte enviado!', {
+        description: 'Obrigado por ajudar a manter a comunidade segura.',
+      });
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      toast.error('Erro ao enviar reporte', {
+        description: 'Tente novamente mais tarde.',
+      });
+    } finally {
+      setReportDialog({ isOpen: false, itemId: '', itemType: 'post', itemAuthor: '' });
+    }
   };
 
   const handleReportClose = () => {

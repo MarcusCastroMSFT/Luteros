@@ -8,6 +8,7 @@ export interface UseServerSideDataParams {
   initialPageSize?: number
   initialSorting?: SortingState
   initialFilters?: ColumnFiltersState
+  extraParams?: Record<string, string>
 }
 
 export interface ServerSideDataState<T> {
@@ -38,6 +39,7 @@ export function useServerSideData<T>({
   initialPageSize = 10,
   initialSorting = [],
   initialFilters = [],
+  extraParams = {},
 }: UseServerSideDataParams): ServerSideDataState<T> & ServerSideDataActions {
   const [data, setData] = useState<T[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -53,6 +55,10 @@ export function useServerSideData<T>({
   
   // Use ref to track the actual search term being used for API calls
   const effectiveSearchRef = useRef("")
+  
+  // Track previous endpoint to detect changes
+  const prevEndpointRef = useRef(endpoint)
+  const extraParamsString = JSON.stringify(extraParams)
 
   const fetchData = useCallback(async (searchTerm: string) => {
     setLoading(true)
@@ -64,6 +70,11 @@ export function useServerSideData<T>({
         page: pageIndex.toString(),
         pageSize: pageSize.toString(),
         search: searchTerm,
+      })
+      
+      // Add extra params
+      Object.entries(extraParams).forEach(([key, value]) => {
+        if (value) params.append(key, value)
       })
       
       // Add sorting parameters
@@ -79,7 +90,9 @@ export function useServerSideData<T>({
         }
       })
       
-      const response = await fetch(`${endpoint}?${params}`)
+      // Build URL - handle endpoints that already have query params
+      const separator = endpoint.includes('?') ? '&' : '?'
+      const response = await fetch(`${endpoint}${separator}${params}`)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -99,6 +112,15 @@ export function useServerSideData<T>({
       setLoading(false)
     }
   }, [endpoint, pageIndex, pageSize, sorting, columnFilters])
+  
+  // Effect for handling endpoint or extraParams changes (reset and refetch)
+  useEffect(() => {
+    if (prevEndpointRef.current !== endpoint) {
+      prevEndpointRef.current = endpoint
+      setPageIndex(0) // Reset to first page when endpoint changes
+      fetchData(effectiveSearchRef.current)
+    }
+  }, [endpoint, extraParamsString, fetchData])
   
   // Effect for handling pagination, sorting, and filters (immediate fetch)
   useEffect(() => {

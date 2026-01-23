@@ -24,6 +24,7 @@ export interface CommunityPost {
   lastReply: string;
   tags: string[];
   isReported: boolean;
+  hasReportedReplies?: boolean;
 }
 
 export interface CommunityPagination {

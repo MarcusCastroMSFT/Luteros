@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { ServerSideDataTable } from "@/components/common/server-side-data-table"
 import { CommunityStats } from "@/components/community/communityStats"
 import { getCommunityColumns, type CommunityPostRow } from "@/components/community/community-columns"
+import { RepliesDialog } from "@/components/community/repliesDialog"
 import { useServerSideData } from "@/hooks/use-server-side-data"
 import { toast } from "sonner"
+import { CommunityPost, CommunityReply } from "@/types/community"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +25,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,6 +44,10 @@ import {
 import { IconLoader2, IconAlertTriangle } from "@tabler/icons-react"
 
 export default function CommunityPage() {
+  // Tab state for filtering
+  const [activeTab, setActiveTab] = useState<'all' | 'reported'>('all')
+  const [reportedCount, setReportedCount] = useState<number>(0)
+  
   const {
     data: communityPosts,
     loading,
@@ -55,9 +65,15 @@ export default function CommunityPage() {
     setSearchValue,
     refetch,
   } = useServerSideData<CommunityPostRow>({
-    endpoint: '/api/community',
+    endpoint: activeTab === 'reported' ? '/api/community?isReported=true' : '/api/community',
     initialPageSize: 10,
   })
+
+  // Handle tab change with pagination reset
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value as 'all' | 'reported')
+    setPagination({ pageIndex: 0, pageSize })
+  }, [setPagination, pageSize])
 
   // Dialog states
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -65,8 +81,47 @@ export default function CommunityPage() {
   const [moderateOpen, setModerateOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [selectedPost, setSelectedPost] = useState<CommunityPostRow | null>(null)
+  const [selectedPostForView, setSelectedPostForView] = useState<CommunityPost | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  // Helper function to convert CommunityPostRow to CommunityPost for the dialog
+  const convertToViewPost = useCallback((post: CommunityPostRow): CommunityPost => {
+    return {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      author: post.author,
+      category: post.category,
+      subcategory: post.subcategory,
+      status: post.status,
+      replies: (post.replies || []) as CommunityReply[],
+      repliesCount: post.repliesCount,
+      likes: post.likes,
+      isAnonymous: post.isAnonymous,
+      createdDate: post.createdDate,
+      lastReply: post.lastReply,
+      tags: post.tags,
+      isReported: post.isReported,
+      hasReportedReplies: post.hasReportedReplies,
+    }
+  }, [])
+
+  // Fetch reported posts count
+  useEffect(() => {
+    const fetchReportedCount = async () => {
+      try {
+        const response = await fetch('/api/community?isReported=true&pageSize=1')
+        if (response.ok) {
+          const data = await response.json()
+          setReportedCount(data.totalCount || 0)
+        }
+      } catch (error) {
+        console.error('Error fetching reported count:', error)
+      }
+    }
+    fetchReportedCount()
+  }, [refetch])
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -80,8 +135,9 @@ export default function CommunityPage() {
   // Action handlers
   const handleViewDetails = useCallback((post: CommunityPostRow) => {
     setSelectedPost(post)
+    setSelectedPostForView(convertToViewPost(post))
     setDetailsOpen(true)
-  }, [])
+  }, [convertToViewPost])
 
   const handleEdit = useCallback((post: CommunityPostRow) => {
     setSelectedPost(post)
@@ -265,6 +321,26 @@ export default function CommunityPage() {
           {/* Stats Cards */}
           <CommunityStats />
           
+          {/* Tabs for filtering */}
+          <div className="px-4 lg:px-6 mb-4">
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
+              <TabsList>
+                <TabsTrigger value="all" className="cursor-pointer">
+                  Todos os Posts
+                </TabsTrigger>
+                <TabsTrigger value="reported" className="cursor-pointer">
+                  <IconAlertTriangle className="h-4 w-4 mr-2 text-red-500" />
+                  Denunciados
+                  {reportedCount > 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                      {reportedCount}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
           {/* Community Table */}
           <ServerSideDataTable
             columns={columns}
@@ -290,58 +366,37 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* View Details Dialog */}
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedPost?.title}
-              {selectedPost?.isReported && (
-                <Badge variant="destructive" className="ml-2">
-                  <IconAlertTriangle className="h-3 w-3 mr-1" />
-                  Denunciado
-                </Badge>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              por {selectedPost?.isAnonymous ? 'Anônimo' : selectedPost?.author} • {selectedPost?.createdDate}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedPost && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Badge>{selectedPost.category}</Badge>
-                {selectedPost.subcategory && (
-                  <Badge variant="outline">{selectedPost.subcategory}</Badge>
-                )}
-                <Badge variant={selectedPost.status === 'Ativo' ? 'default' : selectedPost.status === 'Fechado' ? 'secondary' : 'destructive'}>
-                  {selectedPost.status}
-                </Badge>
-              </div>
-              
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <p className="whitespace-pre-wrap">{selectedPost.content}</p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {selectedPost.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 border-t">
-                <span>{selectedPost.repliesCount} respostas</span>
-                <span>{selectedPost.likes} curtidas</span>
-                {selectedPost.lastReply && (
-                  <span>Última resposta: {selectedPost.lastReply}</span>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* View Details Dialog - Reusing RepliesDialog from public page */}
+      <RepliesDialog
+        isOpen={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        post={selectedPostForView}
+        isAdmin={true}
+        onReplyAdded={(postId, reply) => {
+          // Update the local post data when a reply is added
+          if (selectedPostForView) {
+            setSelectedPostForView({
+              ...selectedPostForView,
+              replies: [...selectedPostForView.replies, reply],
+              repliesCount: selectedPostForView.repliesCount + 1,
+            })
+          }
+          // Refetch to update the table
+          refetch()
+        }}
+        onReplyDeleted={(postId, replyId) => {
+          // Update the local post data when a reply is deleted
+          if (selectedPostForView) {
+            setSelectedPostForView({
+              ...selectedPostForView,
+              replies: selectedPostForView.replies.filter(r => r.id !== replyId),
+              repliesCount: Math.max(0, selectedPostForView.repliesCount - 1),
+            })
+          }
+          // Refetch to update the table
+          refetch()
+        }}
+      />
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
