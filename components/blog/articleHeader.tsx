@@ -4,7 +4,7 @@ import { Calendar, User, Clock, MessageCircle } from 'lucide-react';
 import { ArticleBookmarkButton } from './article-bookmark-button';
 
 interface ArticleHeaderProps {
-  articleId: string;
+  articleId?: string;
   title: string;
   excerpt: string;
   image?: string;
@@ -69,7 +69,7 @@ export function ArticleHeader({
             </div>
           )}
         </div>
-        <ArticleBookmarkButton articleId={articleId} />
+        {articleId && <ArticleBookmarkButton articleId={articleId} />}
       </div>
 
       {/* Featured Image - Only show if image exists */}
