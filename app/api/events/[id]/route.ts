@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag, revalidatePath } from 'next/cache'
-import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireAdmin } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 interface RouteParams {
@@ -14,8 +14,8 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    // Require authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    // Require authentication and authorization (admin only)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -127,8 +127,8 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
-    // Require authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    // Require authentication and authorization (admin only)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -232,7 +232,7 @@ export async function PUT(
     }
     revalidatePath('/events')
     revalidatePath(`/events/${existingEvent.slug}`)
-    revalidatePath('/dashboard/events')
+    revalidatePath('/admin/events')
 
     return NextResponse.json({
       success: true,
@@ -260,8 +260,8 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    // Require authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    // Require authentication and authorization (admin only)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -305,7 +305,7 @@ export async function DELETE(
       revalidatePath(`/events/${eventToDelete.slug}`)
     }
     revalidatePath('/events')
-    revalidatePath('/dashboard/events')
+    revalidatePath('/admin/events')
 
     return NextResponse.json({
       success: true,

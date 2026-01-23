@@ -227,8 +227,8 @@ export default function PrivacyPage() {
                 Para exercer seus direitos ou esclarecer dúvidas sobre privacidade:
               </p>
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <p className="text-gray-800"><strong>Data Protection Officer (DPO):</strong> dpo@lutteros.com</p>
-                <p className="text-gray-800"><strong>Email Geral:</strong> privacidade@lutteros.com</p>
+                <p className="text-gray-800"><strong>Data Protection Officer (DPO):</strong> dpo@lutteros.com.br</p>
+                <p className="text-gray-800"><strong>Email Geral:</strong> privacidade@lutteros.com.br</p>
                 <p className="text-gray-800"><strong>Telefone:</strong> (11) 9999-9999</p>
                 <p className="text-gray-800"><strong>Endereço:</strong> [Endereço da empresa]</p>
                 <p className="text-gray-800"><strong>Horário:</strong> Segunda a Sexta, 9h às 18h</p>

@@ -1,9 +1,11 @@
 "use client"
 
 import {
-  IconCreditCard,
+  IconBook,
+  IconBookmark,
+  IconCalendarEvent,
   IconLogout,
-  IconNotification,
+  IconSettings,
   IconUserCircle,
 } from "@tabler/icons-react"
 
@@ -20,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export function HeaderUserMenu() {
   const { user, userProfile, signOut } = useAuth()
@@ -33,6 +36,9 @@ export function HeaderUserMenu() {
   // Get display name with fallbacks
   const displayName = userProfile?.displayName || userProfile?.fullName || user?.email?.split('@')[0] || 'User'
   const userEmail = user?.email || 'user@example.com'
+  
+  // Check if user is admin
+  const isAdmin = userProfile?.role === 'ADMIN'
 
   return (
     <DropdownMenu>
@@ -62,18 +68,43 @@ export function HeaderUserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {isAdmin && (
+          <>
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/admin">
+                  <IconSettings className="mr-2 h-4 w-4" />
+                  <span>Administração</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuGroup>
-          <DropdownMenuItem className="cursor-pointer">
-            <IconUserCircle className="mr-2 h-4 w-4" />
-            <span>Conta</span>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/profile">
+              <IconUserCircle className="mr-2 h-4 w-4" />
+              <span>Meu Perfil</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">
-            <IconCreditCard className="mr-2 h-4 w-4" />
-            <span>Faturamento</span>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/courses/my-courses">
+              <IconBook className="mr-2 h-4 w-4" />
+              <span>Meus Cursos</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">
-            <IconNotification className="mr-2 h-4 w-4" />
-            <span>Notificações</span>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/events/my-events">
+              <IconCalendarEvent className="mr-2 h-4 w-4" />
+              <span>Meus Eventos</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/blog/saved">
+              <IconBookmark className="mr-2 h-4 w-4" />
+              <span>Artigos Salvos</span>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

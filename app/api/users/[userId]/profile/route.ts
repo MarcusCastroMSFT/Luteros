@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
+import { createServiceClient } from '@/lib/supabase/server'
+
+// Helper to sync user role to Supabase app_metadata
+async function syncRoleToMetadata(userId: string, role: string) {
+  try {
+    const supabaseAdmin = createServiceClient()
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      app_metadata: { role },
+    })
+  } catch (error) {
+    // Log but don't fail the request - this is an optimization
+    console.error('Failed to sync role to app_metadata:', error)
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -49,7 +63,15 @@ export async function GET(
       select: { role: true },
       orderBy: { createdAt: 'desc' }
     })
-    const role = roleAssignment?.role || 'STUDENT'
+    const role = roleAssignment?.role || 'USER'
+    
+    // Sync role to app_metadata if it differs from current
+    // This ensures the middleware can read the role from JWT
+    const currentMetadataRole = user.app_metadata?.role
+    if (currentMetadataRole !== role) {
+      // Fire and forget - don't wait for this
+      syncRoleToMetadata(userId, role)
+    }
 
     if (!profile) {
       // Profile doesn't exist yet, create it

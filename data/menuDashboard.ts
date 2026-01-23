@@ -40,37 +40,37 @@ export const sidebarData: SidebarData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/admin",
       icon: "IconDashboard",
     },
     {
       title: "Cursos",
-      url: "/dashboard/courses",
+      url: "/admin/courses",
       icon: "IconListDetails",
     },
     {
       title: "Artigos",
-      url: "/dashboard/articles",
+      url: "/admin/articles",
       icon: "IconReport",
     },
     {
       title: "Produtos",
-      url: "/dashboard/products",
+      url: "/admin/products",
       icon: "IconPackage",
     },
     {
       title: "Parceiros",
-      url: "/dashboard/partners",
+      url: "/admin/partners",
       icon: "IconBuildingStore",
     },
     {
       title: "Eventos",
-      url: "/dashboard/events",
+      url: "/admin/events",
       icon: "IconCalendarEvent",
     },
     {
       title: "Comunidade",
-      url: "/dashboard/community",
+      url: "/admin/community",
       icon: "IconDatabase",
     },
   ],
@@ -122,54 +122,33 @@ export const sidebarData: SidebarData = {
       ],
     },
   ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: "IconSettings",
-    },
-    {
-      title: "Get Help",
-      url: "/dashboard/help",
-      icon: "IconHelp",
-    },
-    {
-      title: "Search",
-      url: "/dashboard/search",
-      icon: "IconSearch",
-    },
-  ],
+  navSecondary: [],
   newsletter: [
     {
       name: "Inscritos",
-      url: "/dashboard/newsletter",
+      url: "/admin/newsletter",
       icon: "IconUsers",
     },
     {
       name: "Campanhas",
-      url: "/dashboard/newsletter/campaigns",
+      url: "/admin/newsletter/campaigns",
       icon: "IconSend",
     },
   ],
   documents: [
     {
       name: "Usuários",
-      url: "/dashboard/users",
+      url: "/admin/users",
       icon: "IconUsers",
     },
     {
       name: "E-mails do Sistema",
-      url: "/dashboard/system-emails",
+      url: "/admin/system-emails",
       icon: "IconMail",
     },
     {
-      name: "Relatórios",
-      url: "/dashboard/reports",
-      icon: "IconReport",
-    },
-    {
       name: "Agents AI",
-      url: "/dashboard/word-assistant",
+      url: "/admin/word-assistant",
       icon: "IconRobot",
     },
   ],

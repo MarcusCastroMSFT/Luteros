@@ -25,25 +25,25 @@ export function SystemEmailPreview({
     const samples: Record<string, string> = {
       name: 'João Silva',
       email: 'joao@exemplo.com',
-      appUrl: 'https://lutteros.com',
+      appUrl: 'https://lutteros.com.br',
       year: new Date().getFullYear().toString(),
-      verificationLink: 'https://lutteros.com/verify?token=abc123',
-      resetLink: 'https://lutteros.com/reset-password?token=abc123',
+      verificationLink: 'https://lutteros.com.br/verify?token=abc123',
+      resetLink: 'https://lutteros.com.br/reset-password?token=abc123',
       expiresIn: '24 horas',
       changedAt: new Date().toLocaleString('pt-BR'),
       updatedAt: new Date().toLocaleString('pt-BR'),
       oldEmail: 'antigo@exemplo.com',
       newEmail: 'novo@exemplo.com',
       courseName: 'Introdução ao Bem-Estar',
-      courseUrl: 'https://lutteros.com/courses/introducao',
+      courseUrl: 'https://lutteros.com.br/courses/introducao',
       instructorName: 'Dra. Maria Santos',
       progress: '65',
       lastLesson: 'Módulo 3: Práticas Diárias',
       eventName: 'Workshop de Meditação',
       eventDate: '15 de Janeiro de 2026',
       eventLocation: 'Online via Zoom',
-      eventUrl: 'https://lutteros.com/events/meditacao',
-      certificateUrl: 'https://lutteros.com/certificates/12345',
+      eventUrl: 'https://lutteros.com.br/events/meditacao',
+      certificateUrl: 'https://lutteros.com.br/certificates/12345',
       completedAt: '10 de Janeiro de 2026',
       orderNumber: '12345',
       orderDate: new Date().toLocaleDateString('pt-BR'),
@@ -113,7 +113,7 @@ export function SystemEmailPreview({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-sm">lutteros</span>
-                <span className="text-xs text-muted-foreground">&lt;noreply@lutteros.com&gt;</span>
+                <span className="text-xs text-muted-foreground">&lt;noreply@lutteros.com.br&gt;</span>
               </div>
               <p className="font-semibold text-sm truncate mt-0.5">{subject}</p>
               {previewText && (

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { ProductsApiResponse } from '@/types/product';
-import { requireAdminOrInstructor } from '@/lib/auth-helpers';
+import { requireAdmin } from '@/lib/auth-helpers';
 import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     
     if (isAdminRequest) {
       // Admin dashboard format - requires authentication
-      const authResult = await requireAdminOrInstructor(request);
+      const authResult = await requireAdmin(request);
       if (authResult instanceof NextResponse) {
         return authResult;
       }
@@ -297,7 +297,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -402,7 +402,7 @@ export async function POST(request: NextRequest) {
     revalidateTag('product-slugs', {});
     revalidatePath('/products');
     revalidatePath(`/products/${slug}`);
-    revalidatePath('/dashboard/products');
+    revalidatePath('/admin/products');
 
     return NextResponse.json({
       success: true,

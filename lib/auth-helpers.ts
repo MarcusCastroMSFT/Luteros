@@ -7,7 +7,7 @@ const AUTH_CACHE_KEY = Symbol.for('supabase.auth.user')
 const ROLE_CACHE_KEY = Symbol.for('supabase.auth.role')
 
 // Valid user roles
-type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'STUDENT'
+type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'USER' | 'PROFESSIONAL'
 
 // Extend NextRequest to support our cache keys
 interface CachedRequest extends NextRequest {
@@ -79,7 +79,7 @@ export async function getUserRole(request: NextRequest, userId: string): Promise
     orderBy: { createdAt: 'desc' }
   })
   
-  const role = (roleAssignment?.role as UserRole) || 'STUDENT'
+  const role = (roleAssignment?.role as UserRole) || 'USER'
   
   // Cache the result in the request object
   ;(request as CachedRequest)[ROLE_CACHE_KEY] = role

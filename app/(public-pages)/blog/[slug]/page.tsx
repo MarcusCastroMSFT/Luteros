@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import nextDynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
+import { FloatingBookmarkButton } from '@/components/blog/floating-bookmark-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getArticleBySlug, getArticleMetadata, getAllArticleSlugs } from '@/lib/articles';
 
@@ -49,7 +50,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { article, relatedArticles } = articleData;
 
   // Generate full URL for sharing
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
   const articleUrl = `${baseUrl}/blog/${article.slug}`;
 
   // JSON-LD structured data for SEO (following schema.org best practices)
@@ -104,6 +105,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <div className="max-w-4xl mx-auto">
           {/* Article Header */}
           <ArticleHeader
+            articleId={article.id}
             title={article.title}
             excerpt={article.excerpt}
             image={article.image}
@@ -142,6 +144,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           className="max-w-6xl mx-auto"
         />
       </div>
+
+      {/* Floating Bookmark Button */}
+      <FloatingBookmarkButton articleId={article.id} />
     </>
   );
 }
@@ -161,7 +166,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
   const articleUrl = `${baseUrl}/blog/${slug}`;
   const imageUrl = article.image?.startsWith('http') 
     ? article.image 

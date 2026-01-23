@@ -12,7 +12,7 @@ interface UserProfile {
   avatar: string | null
   bio: string | null
   email?: string
-  role?: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT'
+  role?: 'ADMIN' | 'INSTRUCTOR' | 'USER' | 'PROFESSIONAL'
 }
 
 interface AuthContextType {
@@ -210,7 +210,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password,
       })
       if (error) throw error
-      router.push('/dashboard')
+      router.push('/admin')
     } catch (error) {
       console.error('Sign in error:', error)
       throw error

@@ -265,7 +265,7 @@ export const coursesColumns: ColumnDef<CourseRow>[] = [
               )}
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onClick={() => window.location.href = `/dashboard/courses/${course.id}/edit`}
+                onClick={() => window.location.href = `/admin/courses/${course.id}/edit`}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Editar curso

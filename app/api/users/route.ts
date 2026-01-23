@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireAdmin } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   
   try {
     // Verify authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -121,7 +121,8 @@ export async function GET(request: NextRequest) {
     const roleLabelMap: Record<string, string> = {
       'ADMIN': 'Administrador',
       'INSTRUCTOR': 'Instrutor',
-      'STUDENT': 'Estudante'
+      'USER': 'Usuário',
+      'PROFESSIONAL': 'Profissional'
     }
     
     // Define type for user from Prisma query
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
 
     // Map database results to frontend format
     const formattedUsers = users.map((user: UserWithProfile) => {
-      const userRole = (roleMap.get(user.id) || 'STUDENT') as string
+      const userRole = (roleMap.get(user.id) || 'USER') as string
       return {
         id: user.id,
         name: user.displayName || user.fullName || 'No Name',

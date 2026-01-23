@@ -164,7 +164,7 @@ Este é um email automático, por favor não responda.`,
   Se você fez essa alteração, não precisa fazer mais nada. Se você não reconhece essa atividade, entre em contato conosco imediatamente.
 </p>
 
-${button('Ver Meu Perfil', `${appUrl}/dashboard/settings`)}
+${button('Ver Meu Perfil', `${appUrl}/admin/settings`)}
 `, 'As informações do seu perfil foram atualizadas.'),
   },
 
@@ -435,7 +435,7 @@ Este é um email automático, por favor não responda.`,
   </tr>
 </table>
 
-${button('Acessar Meus Produtos', `${appUrl}/dashboard`)}
+${button('Acessar Meus Produtos', `${appUrl}/admin`)}
 
 <p style="margin: 24px 0 0; font-size: 14px; line-height: 1.6; color: ${mutedColor};">
   Obrigado pela compra! Se tiver alguma dúvida, estamos aqui para ajudar.
@@ -601,7 +601,7 @@ export function renderEmailTemplate(
 
   // Add default variables
   const allVariables = {
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com',
+    appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br',
     year: new Date().getFullYear().toString(),
     ...variables,
   }

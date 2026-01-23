@@ -10,7 +10,7 @@ interface LayoutWrapperProps {
 }
 
 // Define route patterns that should use the dashboard layout
-const PROTECTED_ROUTES = ['/dashboard'];
+const PROTECTED_ROUTES = ['/admin'];
 const PUBLIC_ROUTES = ['/login', '/register'];
 
 function isProtectedRoute(pathname: string): boolean {

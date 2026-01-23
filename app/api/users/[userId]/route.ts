@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
+
+// Helper to sync user role to Supabase app_metadata
+async function syncRoleToMetadata(userId: string, role: string) {
+  try {
+    const supabaseAdmin = createServiceClient()
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      app_metadata: { role },
+    })
+  } catch (error) {
+    console.error('Failed to sync role to app_metadata:', error)
+  }
+}
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    // Verify authentication and authorization (admin only)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -100,8 +113,8 @@ export async function PATCH(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    // Verify authentication and authorization (admin only)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -165,6 +178,10 @@ export async function PATCH(
           }
         })
       }
+      
+      // Sync the new role to Supabase app_metadata
+      // This allows middleware to read the role from JWT without database calls
+      await syncRoleToMetadata(userId, body.role)
     }
 
     // Update user profile
@@ -206,8 +223,8 @@ export async function DELETE(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    // Verify authentication and authorization (admin only)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }

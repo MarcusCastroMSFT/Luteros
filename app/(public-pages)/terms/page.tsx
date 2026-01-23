@@ -287,7 +287,7 @@ export default function TermsPage() {
             <div className="space-y-4">
               <p className="text-gray-700 leading-relaxed">Para questões sobre estes termos:</p>
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <p className="text-gray-800"><strong>Email:</strong> legal@lutteros.com</p>
+                <p className="text-gray-800"><strong>Email:</strong> legal@lutteros.com.br</p>
                 <p className="text-gray-800"><strong>Telefone:</strong> (11) 9999-9999</p>
                 <p className="text-gray-800"><strong>Endereço:</strong> [Endereço da empresa]</p>
                 <p className="text-gray-800"><strong>Horário de Atendimento:</strong> Segunda a Sexta, 9h às 18h</p>

@@ -214,7 +214,7 @@ export const articleColumns: ColumnDef<ArticleRow>[] = [
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onClick={() => window.location.href = `/dashboard/articles/${article.id}/edit`}
+                onClick={() => window.location.href = `/admin/articles/${article.id}/edit`}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Editar artigo

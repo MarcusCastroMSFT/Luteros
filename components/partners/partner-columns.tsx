@@ -198,7 +198,7 @@ export const partnerColumns: ColumnDef<PartnerRow>[] = [
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <a
-                  href={`/dashboard/partners/${partner.id}/edit`}
+                  href={`/admin/partners/${partner.id}/edit`}
                   className="cursor-pointer flex items-center"
                 >
                   <Edit className="mr-2 h-4 w-4" />

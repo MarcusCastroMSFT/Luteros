@@ -240,8 +240,8 @@ function UnsubscribeContent() {
                   <p className="text-sm text-blue-800">
                     <strong>💡 Dica:</strong> Se você acha que está recebendo muitos emails, 
                     podemos reduzir a frequência. Entre em contato conosco em{' '}
-                    <a href="mailto:contato@lutteros.com" className="underline">
-                      contato@lutteros.com
+                    <a href="mailto:contato@lutteros.com.br" className="underline">
+                      contato@lutteros.com.br
                     </a>
                   </p>
                 </div>

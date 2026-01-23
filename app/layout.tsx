@@ -19,7 +19,7 @@ const cardo = Cardo({
   variable: "--font-cardo",
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

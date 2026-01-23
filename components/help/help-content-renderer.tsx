@@ -27,7 +27,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">1. Acesse a página de registro</h2>
             <p className="text-gray-700 mb-4">
               Clique no botão <strong className="font-semibold text-gray-900">&ldquo;Registrar&rdquo;</strong> no canto superior direito da página inicial ou acesse diretamente 
-              o link <Link href="/register" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer">lutteros.com/register</Link>.
+              o link <Link href="/register" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer">lutteros.com.br/register</Link>.
             </p>
 
             <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">2. Preencha seus dados básicos</h2>
@@ -187,7 +187,7 @@ export function HelpContentRenderer({ slug }: HelpContentRendererProps) {
             <ul className="list-disc pl-6 space-y-2 mb-6 text-gray-700">
               <li>Usar o chat de suporte disponível 24/7</li>
               <li>Consultar nossa <Link href="/faq" className="text-cta-highlight hover:text-cta-highlight/80 cursor-pointer">seção de FAQ</Link></li>
-              <li>Entrar em contato por email: suporte@lutteros.com</li>
+              <li>Entrar em contato por email: suporte@lutteros.com.br</li>
             </ul>
           </div>
         );

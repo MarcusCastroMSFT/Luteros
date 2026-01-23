@@ -428,7 +428,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
       } else {
         toast.success(publish ? 'Curso publicado com sucesso!' : 'Rascunho salvo com sucesso!');
       }
-      router.push('/dashboard/courses');
+      router.push('/admin/courses');
     } catch (err) {
       console.error(`Error ${mode === 'edit' ? 'updating' : 'creating'} course:`, err);
       const errorMessage = err instanceof Error ? err.message : `Erro ao ${mode === 'edit' ? 'atualizar' : 'criar'} curso`;

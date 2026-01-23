@@ -370,7 +370,7 @@ export const quickActions: QuickAction[] = [
   },
   {
     title: 'Email de Suporte',
-    description: 'suporte@lutteros.com',
+    description: 'suporte@lutteros.com.br',
     icon: 'Mail',
     action: 'email',
     available: true

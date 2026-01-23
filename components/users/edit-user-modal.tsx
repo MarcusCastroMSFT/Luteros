@@ -50,14 +50,15 @@ interface UserFormData {
 const userRoles = [
   { value: 'ADMIN', label: 'Administrador' },
   { value: 'INSTRUCTOR', label: 'Instrutor' },
-  { value: 'STUDENT', label: 'Estudante' },
+  { value: 'USER', label: 'Usuário' },
+  { value: 'PROFESSIONAL', label: 'Profissional' },
 ]
 
 export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUserModalProps) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [role, setRole] = useState<string>('STUDENT')
+  const [role, setRole] = useState<string>('USER')
   
   const { register, handleSubmit, reset, setValue, formState: { isDirty } } = useForm<UserFormData>()
 

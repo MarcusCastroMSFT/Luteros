@@ -25,67 +25,51 @@ export interface ContactInfo {
 
 export const contactInfo: ContactInfo = {
   phone: "+1 (555) 123-4567",
-  email: "support@lutteros.com",
+  email: "suporte@lutteros.com.br",
   address: "58 Howard Street #2 San Francisco"
 };
 
 export const navigationMenu: NavigationMenuItem[] = [
   {
-    title: "Home",
-    items: [
-      {
-        title: "Homepage",
-        href: "/",
-        description: "Discover our featured courses and latest updates."
-      },
-      {
-        title: "About Us",
-        href: "/about",
-        description: "Learn more about our mission and team."
-      },
-      {
-        title: "Contact",
-        href: "/contact",
-        description: "Get in touch with our support team."
-      }
-    ]
+    title: "Início",
+    href: "/"
   },
   {
     title: "Cursos",
     href: "/courses"
   },
   {
-    title: "Pages",
+    title: "Páginas",
     items: [
       {
-        title: "Instructors",
-        href: "/instructors",
-        description: "Meet our expert teaching team."
+        title: "Sobre Nós",
+        href: "/about",
+        description: "Saiba mais sobre nossa missão e equipe."
       },
       {
-        title: "Testimonials",
-        href: "/testimonials",
-        description: "Success stories from our students."
+        title: "Contato",
+        href: "/contact",
+        description: "Entre em contato com nossa equipe de suporte."
       },
       {
-        title: "Pricing",
+        title: "Preços",
         href: "/pricing",
-        description: "Find the perfect plan for your learning journey."
+        description: "Encontre o plano perfeito para sua jornada de aprendizado."
       },
       {
         title: "FAQ",
         href: "/faq",
-        description: "Frequently asked questions and support."
+        description: "Perguntas frequentes e suporte."
       },
       {
-        title: "Careers",
+        title: "Carreiras",
         href: "/careers",
-        description: "Join our growing team of educators."
+        description: "Junte-se à nossa equipe de educadores."
       },
       {
-        title: "Partnerships",
+        title: "Parcerias",
         href: "/partnerships",
-        description: "Corporate training and educational partnerships."
+        description: "Treinamento corporativo e parcerias educacionais."
       }
     ]
   },

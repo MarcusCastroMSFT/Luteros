@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/pageHeader';
 import { CourseInfo } from '@/components/courses/courseInfo';
 import { Star, Clock, BookOpen, Users, Globe } from 'lucide-react';
@@ -44,6 +46,37 @@ interface CourseDetailClientProps {
 }
 
 export function CourseDetailClient({ course, lessons, slug }: CourseDetailClientProps) {
+  const router = useRouter();
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+
+  // Check enrollment status on mount with AbortController for cleanup
+  useEffect(() => {
+    const abortController = new AbortController();
+    
+    async function checkEnrollment() {
+      try {
+        const response = await fetch(`/api/courses/${course.id}/enroll`, {
+          signal: abortController.signal,
+        });
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        if (data.success && data.isEnrolled) {
+          setIsEnrolled(true);
+        }
+      } catch (error) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') return;
+        console.error('Error checking enrollment:', error);
+      }
+    }
+    
+    checkEnrollment();
+    
+    return () => abortController.abort();
+  }, [course.id]);
+
   // Transform lessons into sections
   const sections = useMemo(() => {
     const sectionsMap = new Map<string, Lesson[]>();
@@ -81,10 +114,48 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     return result;
   }, [lessons]);
 
-  const handleEnroll = () => {
-    // Handle enrollment logic
-    console.log('Add to cart clicked for course:', course.id);
-  };
+  const handleEnroll = useCallback(async () => {
+    if (isEnrolled) {
+      // Already enrolled, navigate to course lessons
+      router.push(`/courses/${slug}/lessons`);
+      return;
+    }
+
+    if (isEnrolling) return; // Prevent double-clicks
+
+    setIsEnrolling(true);
+    try {
+      const response = await fetch(`/api/courses/${course.id}/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Você precisa estar logado para se inscrever no curso');
+          router.push('/login?redirect=' + encodeURIComponent(`/courses/${slug}`));
+          return;
+        }
+        toast.error(data.error || 'Erro ao se inscrever no curso');
+        return;
+      }
+
+      toast.success(data.message || 'Você foi inscrito no curso com sucesso!');
+      setIsEnrolled(true);
+      
+      // Redirect to course lessons after successful enrollment
+      router.push(`/courses/${slug}/lessons`);
+    } catch (error) {
+      console.error('Error enrolling:', error);
+      toast.error('Erro ao se inscrever no curso. Tente novamente.');
+    } finally {
+      setIsEnrolling(false);
+    }
+  }, [isEnrolled, isEnrolling, course.id, slug, router]);
 
   const formatStudentsCount = (count: number) => {
     if (count >= 1000) {
@@ -93,8 +164,8 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     return count.toString();
   };
 
-  // Create a course-like object for CourseInfo component
-  const courseForInfo = {
+  // Create a course-like object for CourseInfo component - memoized to prevent re-renders
+  const courseForInfo = useMemo(() => ({
     ...course,
     video: course.previewVideo,
     image: course.image || course.coverImage,
@@ -106,7 +177,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
       'Acesso vitalício',
       'Certificado de conclusão',
     ],
-  };
+  }), [course, sections]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -199,6 +270,8 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
               <CourseInfo
                 course={courseForInfo}
                 onEnroll={handleEnroll}
+                isEnrolling={isEnrolling}
+                isEnrolled={isEnrolled}
               />
             </div>
           </div>

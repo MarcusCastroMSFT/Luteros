@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 function ProductJsonLd({ product }: { product: Awaited<ReturnType<typeof getProductBySlug>> }) {
   if (!product) return null
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
   
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -159,7 +159,7 @@ function ProductJsonLd({ product }: { product: Awaited<ReturnType<typeof getProd
 function BreadcrumbJsonLd({ product }: { product: Awaited<ReturnType<typeof getProductBySlug>> }) {
   if (!product) return null
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
   
   const jsonLd = {
     '@context': 'https://schema.org',

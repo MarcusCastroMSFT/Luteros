@@ -5,8 +5,8 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Email configuration
 export const EMAIL_CONFIG = {
-  from: process.env.EMAIL_FROM || 'lutteros <noreply@lutteros.com>',
-  replyTo: process.env.EMAIL_REPLY_TO || 'contato@lutteros.com',
+  from: process.env.EMAIL_FROM || 'lutteros <noreply@lutteros.com.br>',
+  replyTo: process.env.EMAIL_REPLY_TO || 'contato@lutteros.com.br',
 }
 
 // Types
@@ -175,7 +175,7 @@ export async function sendWelcomeEmail(email: string): Promise<EmailResult> {
               <table role="presentation" style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td align="center">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com'}" 
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'}" 
                        style="display: inline-block; padding: 14px 32px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">
                       Explorar Cursos
                     </a>
@@ -191,7 +191,7 @@ export async function sendWelcomeEmail(email: string): Promise<EmailResult> {
               <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #71717a; text-align: center;">
                 Você está recebendo este email porque se inscreveu na newsletter da lutteros.
                 <br>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com'}/unsubscribe?email=${encodeURIComponent(email)}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'}/unsubscribe?email=${encodeURIComponent(email)}" 
                    style="color: #71717a; text-decoration: underline;">
                   Cancelar inscrição
                 </a>
@@ -249,7 +249,7 @@ export async function sendCampaignEmail(
   },
   unsubscribeToken?: string
 ): Promise<EmailResult> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'
   const unsubscribeUrl = unsubscribeToken 
     ? `${appUrl}/unsubscribe?token=${unsubscribeToken}`
     : `${appUrl}/unsubscribe`

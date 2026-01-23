@@ -428,7 +428,7 @@ export async function updatePost(
     orderBy: { createdAt: 'desc' },
   })
 
-  const userRole = roleAssignment?.role || 'STUDENT'
+  const userRole = roleAssignment?.role || 'USER'
   const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
 
@@ -532,7 +532,7 @@ export async function deletePost(id: string, userId: string) {
     orderBy: { createdAt: 'desc' },
   })
 
-  const userRole = roleAssignment?.role || 'STUDENT'
+  const userRole = roleAssignment?.role || 'USER'
   const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
 

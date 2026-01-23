@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
 import prisma from '@/lib/prisma'
-import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -13,7 +13,7 @@ export async function PATCH(
     await connection()
 
     // Verify authentication and authorization (admin only)
-    const authResult = await requireAdminOrInstructor(request)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult
     }
@@ -102,7 +102,7 @@ export async function DELETE(
     await connection()
 
     // Verify authentication and authorization (admin only)
-    const authResult = await requireAdminOrInstructor(request)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult
     }

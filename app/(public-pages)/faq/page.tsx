@@ -210,7 +210,7 @@ const faqData: FAQItem[] = [
         <p>Oferecemos várias formas de suporte:</p>
         <ul className="list-disc pl-6 space-y-1">
           <li><strong>Chat online:</strong> Disponível 24/7 na plataforma</li>
-          <li><strong>Email:</strong> suporte@lutteros.com (resposta em até 24h)</li>
+          <li><strong>Email:</strong> suporte@lutteros.com.br (resposta em até 24h)</li>
           <li><strong>WhatsApp:</strong> (11) 9999-9999 (horário comercial)</li>
           <li><strong>Central de Ajuda:</strong> Base de conhecimento completa</li>
         </ul>
@@ -360,7 +360,7 @@ export default function FAQPage() {
                       <strong>Chat:</strong> Disponível 24/7
                     </p>
                     <p className="text-brand-800">
-                      <strong>Email:</strong> suporte@lutteros.com
+                      <strong>Email:</strong> suporte@lutteros.com.br
                     </p>
                     <p className="text-brand-800">
                       <strong>WhatsApp:</strong> (11) 9999-9999

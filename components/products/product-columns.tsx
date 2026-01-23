@@ -300,7 +300,7 @@ export const productColumns: ColumnDef<ProductRow>[] = [
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onClick={() => window.location.href = `/dashboard/products/${product.id}/edit`}
+                onClick={() => window.location.href = `/admin/products/${product.id}/edit`}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Editar produto

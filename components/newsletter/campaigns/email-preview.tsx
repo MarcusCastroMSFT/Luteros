@@ -85,7 +85,7 @@ export function EmailPreview({
                     <p style="margin: 0; font-size: 14px;">
                       <a href="#" style="color: #71717a; text-decoration: underline;">Cancelar inscrição</a>
                       &nbsp;•&nbsp;
-                      <a href="https://lutteros.com" style="color: #71717a; text-decoration: underline;">Visitar site</a>
+                      <a href="https://lutteros.com.br" style="color: #71717a; text-decoration: underline;">Visitar site</a>
                     </p>
                   </td>
                 </tr>
@@ -155,7 +155,7 @@ export function EmailPreview({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-medium text-sm">lutteros</span>
               <span className="text-xs text-muted-foreground">
-                &lt;noreply@lutteros.com&gt;
+                &lt;noreply@lutteros.com.br&gt;
               </span>
             </div>
             <p className="font-semibold text-sm mt-1 truncate">{subject || 'Sem assunto'}</p>

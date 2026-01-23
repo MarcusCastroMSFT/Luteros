@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// Re-export the admin client from the dedicated admin module
+// This keeps all admin functionality in one place
+export { createAdminClient as createServiceClient } from './admin'
+
 export async function createClient() {
   const cookieStore = await cookies()
 

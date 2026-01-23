@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connection } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requireAdminOrInstructor } from '@/lib/auth-helpers';
+import { requireAdmin } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
   // Signal that this route needs request data (auth uses cookies)
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   
   try {
     // Verify authentication
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

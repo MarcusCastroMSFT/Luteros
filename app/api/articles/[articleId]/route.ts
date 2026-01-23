@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { requireAdminOrInstructor } from '@/lib/auth-helpers';
+import { requireAdmin } from '@/lib/auth-helpers';
 import prisma from '@/lib/prisma';
 
 export async function GET(
@@ -8,8 +8,8 @@ export async function GET(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request);
+    // Require authentication and authorization (admin only)
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult; // Return 401/403 response
     }
@@ -84,8 +84,8 @@ export async function PUT(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request);
+    // Require authentication and authorization (admin only)
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult; // Return 401/403 response
     }
@@ -201,8 +201,8 @@ export async function DELETE(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request);
+    // Require authentication and authorization (admin only)
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult; // Return 401/403 response
     }

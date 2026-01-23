@@ -31,7 +31,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '📝 Novos artigos para você na lutteros!',
     previewText: 'Confira as últimas publicações do nosso blog...',
     ctaText: 'Ver Todos os Artigos',
-    ctaUrl: 'https://lutteros.com/blog',
+    ctaUrl: 'https://lutteros.com.br/blog',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>
@@ -87,7 +87,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '🎓 Novos cursos disponíveis na lutteros!',
     previewText: 'Comece sua jornada de aprendizado hoje mesmo...',
     ctaText: 'Explorar Cursos',
-    ctaUrl: 'https://lutteros.com/courses',
+    ctaUrl: 'https://lutteros.com.br/courses',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>
@@ -162,7 +162,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '🚀 Novo curso: [Nome do Curso] - Vagas limitadas!',
     previewText: 'Aprenda [tema] com nosso novo curso exclusivo...',
     ctaText: 'Inscreva-se Agora',
-    ctaUrl: 'https://lutteros.com/courses/slug-do-curso',
+    ctaUrl: 'https://lutteros.com.br/courses/slug-do-curso',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>
@@ -266,7 +266,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '🛍️ Novidades na loja lutteros!',
     previewText: 'Confira os produtos que acabaram de chegar...',
     ctaText: 'Ver Produtos',
-    ctaUrl: 'https://lutteros.com/products',
+    ctaUrl: 'https://lutteros.com.br/products',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>
@@ -358,7 +358,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '💬 O que está acontecendo na comunidade lutteros',
     previewText: 'Confira as discussões mais populares desta semana...',
     ctaText: 'Participar da Comunidade',
-    ctaUrl: 'https://lutteros.com/community',
+    ctaUrl: 'https://lutteros.com.br/community',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>
@@ -459,7 +459,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '📅 Eventos imperdíveis na lutteros!',
     previewText: 'Confira os próximos eventos e reserve sua vaga...',
     ctaText: 'Ver Todos os Eventos',
-    ctaUrl: 'https://lutteros.com/events',
+    ctaUrl: 'https://lutteros.com.br/events',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>

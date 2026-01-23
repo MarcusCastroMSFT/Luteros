@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag, revalidatePath } from 'next/cache'
-import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireAdmin } from '@/lib/auth-helpers'
 import prisma from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request)
+    const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult // Return 401/403 response
     }
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     revalidateTag('upcoming-events-count', {})
     revalidatePath('/events')
     revalidatePath(`/events/${slug}`)
-    revalidatePath('/dashboard/events')
+    revalidatePath('/admin/events')
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { ProductApiResponse } from '@/types/product';
-import { requireAdminOrInstructor } from '@/lib/auth-helpers';
+import { requireAdmin } from '@/lib/auth-helpers';
 import { revalidatePath, revalidateTag } from 'next/cache';
 
 interface Props {
@@ -232,8 +232,8 @@ export async function DELETE(request: NextRequest, { params }: Props) {
   try {
     const { slug } = await params;
 
-    // Verify authentication and authorization (admin or instructor only)
-    const authResult = await requireAdminOrInstructor(request);
+    // Verify authentication and authorization (admin only)
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult; // Return 401/403 response
     }
@@ -268,7 +268,7 @@ export async function DELETE(request: NextRequest, { params }: Props) {
     revalidateTag(`related-products-${product.id}`, {});
     revalidatePath('/products');
     revalidatePath(`/products/${product.slug}`);
-    revalidatePath('/dashboard/products');
+    revalidatePath('/admin/products');
 
     return NextResponse.json({
       success: true,
@@ -289,7 +289,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const { slug: productSlugOrId } = await params;
 
     // Verify authentication
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -408,7 +408,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
     }
     revalidatePath('/products');
     revalidatePath(`/products/${slug}`);
-    revalidatePath('/dashboard/products');
+    revalidatePath('/admin/products');
 
     return NextResponse.json({
       success: true,

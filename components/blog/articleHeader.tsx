@@ -1,8 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
 import { Calendar, User, Clock, MessageCircle } from 'lucide-react';
+import { ArticleBookmarkButton } from './article-bookmark-button';
 
 interface ArticleHeaderProps {
+  articleId: string;
   title: string;
   excerpt: string;
   image?: string;
@@ -14,6 +16,7 @@ interface ArticleHeaderProps {
 }
 
 export function ArticleHeader({
+  articleId,
   title,
   excerpt,
   image,
@@ -45,25 +48,28 @@ export function ArticleHeader({
       </p>
 
       {/* Meta Information */}
-      <div className="flex flex-wrap items-center gap-6 text-gray-500 text-sm mb-8">
-        <div className="flex items-center gap-2">
-          <User className="w-4 h-4" />
-          <span>{author}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          <span>{date}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          <span>{readTime}</span>
-        </div>
-        {commentCount > 0 && (
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div className="flex flex-wrap items-center gap-6 text-gray-500 text-sm">
           <div className="flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" />
-            <span>{commentCount} comentários</span>
+            <User className="w-4 h-4" />
+            <span>{author}</span>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            <span>{date}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>{readTime}</span>
+          </div>
+          {commentCount > 0 && (
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              <span>{commentCount} comentários</span>
+            </div>
+          )}
+        </div>
+        <ArticleBookmarkButton articleId={articleId} />
       </div>
 
       {/* Featured Image - Only show if image exists */}

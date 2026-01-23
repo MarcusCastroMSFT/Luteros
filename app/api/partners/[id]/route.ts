@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { requireAdminOrInstructor } from '@/lib/auth-helpers';
+import { requireAdmin } from '@/lib/auth-helpers';
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     // Verify authentication
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -67,7 +67,7 @@ export async function PUT(
 ) {
   try {
     // Verify authentication
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -135,7 +135,7 @@ export async function DELETE(
 ) {
   try {
     // Verify authentication
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdmin(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
