@@ -152,63 +152,9 @@ export async function sendSystemEmail(
 // Convenience functions for specific emails
 // ============================================
 
-/**
- * Send welcome email after user registration
- */
-export async function sendWelcomeUserEmail(
-  to: string,
-  name: string
-): Promise<EmailResult> {
-  return sendSystemEmail('welcome', to, { name, email: to })
-}
-
-/**
- * Send email verification email
- */
-export async function sendVerificationEmail(
-  to: string,
-  name: string,
-  verificationLink: string,
-  expiresIn = '24 horas'
-): Promise<EmailResult> {
-  return sendSystemEmail('email_verification', to, {
-    name,
-    email: to,
-    verificationLink,
-    expiresIn,
-  })
-}
-
-/**
- * Send password reset email
- */
-export async function sendPasswordResetEmail(
-  to: string,
-  name: string,
-  resetLink: string,
-  expiresIn = '1 hora'
-): Promise<EmailResult> {
-  return sendSystemEmail('password_reset', to, {
-    name,
-    email: to,
-    resetLink,
-    expiresIn,
-  })
-}
-
-/**
- * Send password changed confirmation email
- */
-export async function sendPasswordChangedEmail(
-  to: string,
-  name: string
-): Promise<EmailResult> {
-  return sendSystemEmail('password_changed', to, {
-    name,
-    email: to,
-    changedAt: new Date().toLocaleString('pt-BR'),
-  })
-}
+// NOTE: Authentication emails (welcome, email verification, password reset,
+// password changed, email changed) are now handled by Supabase Auth.
+// Configure them in Supabase Dashboard > Authentication > Email Templates
 
 /**
  * Send profile updated notification email
@@ -221,22 +167,6 @@ export async function sendProfileUpdatedEmail(
     name,
     email: to,
     updatedAt: new Date().toLocaleString('pt-BR'),
-  })
-}
-
-/**
- * Send email changed notification to old email
- */
-export async function sendEmailChangedEmail(
-  oldEmail: string,
-  newEmail: string,
-  name: string
-): Promise<EmailResult> {
-  return sendSystemEmail('email_changed', oldEmail, {
-    name,
-    oldEmail,
-    newEmail,
-    changedAt: new Date().toLocaleString('pt-BR'),
   })
 }
 
