@@ -128,75 +128,76 @@ export function PostCard({
   });
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-start gap-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <div className="flex items-start gap-3 md:gap-4">
         {/* Avatar */}
-        <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-cta-highlight font-medium text-sm">
+        <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-cta-highlight font-medium text-xs md:text-sm">
             {post.isAnonymous ? 'A' : post.author.charAt(0).toUpperCase()}
           </span>
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
               <h3 
                 onClick={() => onViewReplies(getUpdatedPost())}
-                className="text-lg font-semibold text-gray-900 mb-2 cursor-pointer hover:text-primary transition-colors"
+                className="text-base md:text-lg font-semibold text-gray-900 mb-1.5 md:mb-2 cursor-pointer hover:text-primary transition-colors line-clamp-2"
               >
                 {post.title}
               </h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+              <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
                 <span>{post.isAnonymous ? 'Anônimo' : post.author}</span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span>{formatDate(post.createdDate)}</span>
-                <span>•</span>
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                <span className="text-xs bg-gray-100 px-2 py-0.5 md:py-1 rounded hidden sm:inline-block">
                   {post.subcategory}
                 </span>
               </div>
-              <p className={`text-gray-600 mb-4 ${!showFullContent ? 'line-clamp-3' : ''}`}>
+              <p className={`text-sm md:text-base text-gray-600 mb-3 md:mb-4 ${!showFullContent ? 'line-clamp-2 md:line-clamp-3' : ''}`}>
                 {post.content}
               </p>
             </div>
-            <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer">
+            <button className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer shrink-0">
               <MoreHorizontal size={16} />
             </button>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-6 text-sm text-gray-500">
+          {/* Actions - Compact on mobile */}
+          <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
             <button 
               onClick={handleLike}
               disabled={isLiking}
-              className={`flex items-center gap-2 transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 md:gap-2 transition-colors cursor-pointer ${
                 isLiked 
                   ? 'text-red-500' 
                   : 'hover:text-red-500'
               } ${isLiking ? 'opacity-50' : ''}`}
             >
-              <Heart size={16} className={isLiked ? 'fill-current' : ''} />
+              <Heart size={14} className={`md:w-4 md:h-4 ${isLiked ? 'fill-current' : ''}`} />
               <span>{likeCount}</span>
             </button>
             <button 
               onClick={() => onViewReplies(getUpdatedPost())}
-              className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 md:gap-2 hover:text-primary transition-colors cursor-pointer"
             >
-              <MessageSquare size={16} />
-              <span>Ver {post.repliesCount} respostas</span>
+              <MessageSquare size={14} className="md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Ver </span>
+              <span>{post.repliesCount}</span>
+              <span className="hidden sm:inline"> respostas</span>
             </button>
             <button 
               onClick={() => onReport(post.id, post.author)}
-              className={`flex items-center gap-2 transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 md:gap-2 transition-colors cursor-pointer ${
                 isReported 
                   ? 'text-red-500' 
                   : 'hover:text-red-500'
               }`}
               disabled={isReported}
             >
-              <Flag size={16} />
-              <span>{isReported ? 'Reportado' : 'Reportar'}</span>
+              <Flag size={14} className="md:w-4 md:h-4" />
+              <span className="hidden sm:inline">{isReported ? 'Reportado' : 'Reportar'}</span>
             </button>
           </div>
         </div>

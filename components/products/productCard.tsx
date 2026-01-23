@@ -36,37 +36,37 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 33vw"
           />
           
-          {/* Badges Overlay */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            <ProductBadge availability={product.availability} />
+          {/* Badges Overlay - Compact on mobile */}
+          <div className="absolute top-2 md:top-3 left-2 md:left-3 flex flex-col gap-1 md:gap-2">
+            <ProductBadge availability={product.availability} className="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1" />
             {product.isFeatured && (
-              <Badge className="bg-yellow-500 text-white border-yellow-500">
+              <Badge className="bg-yellow-500 text-white border-yellow-500 text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1">
                 Em Destaque
               </Badge>
             )}
             {isExpiringSoon() && (
-              <Badge variant="destructive" className="animate-pulse">
+              <Badge variant="destructive" className="animate-pulse text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1">
                 Últimos Dias
               </Badge>
             )}
           </div>
 
-          {/* Discount Badge */}
-          <div className="absolute top-3 right-3">
-            <div className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-              <Percent size={12} />
-              {product.discount.percentage}% OFF
+          {/* Discount Badge - Compact on mobile */}
+          <div className="absolute top-2 md:top-3 right-2 md:right-3">
+            <div className="bg-red-500 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-[10px] md:text-sm font-bold flex items-center gap-0.5 md:gap-1">
+              <Percent size={10} className="md:w-3 md:h-3" />
+              {product.discount.percentage}%
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          {/* Partner Info */}
-          <div className="flex items-center gap-2 mb-2">
+        {/* Content - Compact on mobile */}
+        <div className="p-2.5 md:p-4">
+          {/* Partner Info - Hidden on mobile for space */}
+          <div className="hidden md:flex items-center gap-2 mb-2">
             <div className="relative w-6 h-6 rounded-full overflow-hidden">
               <Image
                 src={product.partner.logo}
@@ -81,43 +81,47 @@ export function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
 
-          {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-cta-highlight transition-colors">
+          {/* Title - Smaller on mobile */}
+          <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-1 md:mb-2 line-clamp-2 group-hover:text-cta-highlight transition-colors leading-tight">
             {product.title}
           </h3>
 
-          {/* Short Description */}
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          {/* Short Description - Hidden on mobile */}
+          <p className="hidden md:block text-gray-600 text-sm mb-3 line-clamp-2">
             {product.shortDescription}
           </p>
 
-          {/* Category and Tags */}
-          <div className="flex flex-wrap gap-1 mb-3">
-            <Badge variant="outline" className="text-xs">
+          {/* Category - Single badge on mobile */}
+          <div className="flex flex-wrap gap-1 mb-2 md:mb-3">
+            <Badge variant="outline" className="text-[10px] md:text-xs">
               {product.category}
             </Badge>
-            {product.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
+            {/* Hide tags on mobile */}
+            <div className="hidden md:contents">
+              {product.tags.slice(0, 2).map((tag) => (
+                <Badge key={tag} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
 
-          {/* Pricing */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="space-y-1">
+          {/* Pricing - Simplified on mobile */}
+          <div className="flex items-end justify-between mb-2 md:mb-3">
+            <div>
               {product.discount.originalPrice && (
-                <div className="text-sm text-gray-500 line-through">
+                <div className="text-[10px] md:text-sm text-gray-500 line-through">
                   R$ {product.discount.originalPrice.toFixed(2).replace('.', ',')}
                 </div>
               )}
               {product.discount.discountedPrice && (
-                <div className="text-lg font-bold text-green-600">
+                <div className="text-sm md:text-lg font-bold text-green-600">
                   R$ {product.discount.discountedPrice.toFixed(2).replace('.', ',')}
                 </div>
               )}
             </div>
-            <div className="text-right">
+            {/* Economy - Hidden on mobile */}
+            <div className="hidden md:block text-right">
               <div className="text-xs text-gray-500">Economia</div>
               <div className="text-sm font-medium text-red-600">
                 R$ {(product.discount.originalPrice! - product.discount.discountedPrice!).toFixed(2).replace('.', ',')}
@@ -125,22 +129,24 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           </div>
 
-          {/* Promo Code */}
-          <div className="flex items-center gap-2 mb-3 p-2 bg-gray-50 rounded">
-            <Tag size={14} className="text-cta-highlight" />
-            <span className="text-sm font-mono font-medium text-gray-900">
+          {/* Promo Code - Compact on mobile */}
+          <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-3 p-1.5 md:p-2 bg-gray-50 rounded">
+            <Tag size={12} className="md:w-3.5 md:h-3.5 text-cta-highlight shrink-0" />
+            <span className="text-[10px] md:text-sm font-mono font-medium text-gray-900 truncate">
               {product.promoCode}
             </span>
           </div>
 
-          {/* Valid Until */}
-          <div className="flex items-center gap-1 text-xs text-gray-500 mb-4">
-            <CalendarDays size={12} />
-            Válido até {formatDate(product.validUntil)}
+          {/* Valid Until - Smaller on mobile */}
+          <div className="flex items-center gap-1 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-4">
+            <CalendarDays size={10} className="md:w-3 md:h-3" />
+            <span className="hidden md:inline">Válido até </span>
+            <span className="md:hidden">Até </span>
+            {formatDate(product.validUntil)}
           </div>
 
-          {/* Usage Stats */}
-          <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
+          {/* Usage Stats - Hidden on mobile */}
+          <div className="hidden md:flex justify-between items-center text-xs text-gray-500 mb-4">
             <span>{product.usageCount} usos</span>
             {product.maxUsages && (
               <span>
@@ -151,18 +157,20 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      {/* Action Buttons */}
-      <div className="p-4 pt-0 flex gap-2">
-        <Button asChild className="flex-1 cursor-pointer">
+      {/* Action Buttons - Simplified on mobile */}
+      <div className="p-2.5 md:p-4 pt-0 flex gap-2">
+        <Button asChild className="flex-1 cursor-pointer text-xs md:text-sm h-8 md:h-10">
           <Link href={`/products/${product.slug}`}>
-            Ver Detalhes
+            <span className="hidden md:inline">Ver Detalhes</span>
+            <span className="md:hidden">Ver mais</span>
           </Link>
         </Button>
+        {/* External link button - Hidden on mobile, available on detail page */}
         <Button 
           variant="outline" 
           size="sm" 
           asChild
-          className="cursor-pointer"
+          className="cursor-pointer hidden md:flex"
         >
           <Link 
             href={product.partner.website} 

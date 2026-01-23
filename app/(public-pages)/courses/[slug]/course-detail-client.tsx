@@ -235,17 +235,6 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
             {/* Separator */}
             <div className="border-t border-gray-200"></div>
 
-            {/* Instructor Section */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Instrutor
-              </h2>
-              <InstructorCard instructor={course.instructor} />
-            </div>
-
-            {/* Separator */}
-            <div className="border-t border-gray-200"></div>
-
             {/* Course Content Section */}
             {sections.length > 0 && (
               <div>
@@ -262,6 +251,17 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                 />
               </div>
             )}
+
+            {/* Separator */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Instructor Section */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Instrutor
+              </h2>
+              <InstructorCard instructor={course.instructor} />
+            </div>
           </div>
           
           {/* Sidebar */}

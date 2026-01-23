@@ -15,9 +15,10 @@ import {
 interface CommunitySidebarProps {
   onCategorySelect: (category: string) => void;
   selectedCategory: string;
+  isMobile?: boolean;
 }
 
-export function CommunitySidebar({ onCategorySelect, selectedCategory }: CommunitySidebarProps) {
+export function CommunitySidebar({ onCategorySelect, selectedCategory, isMobile = false }: CommunitySidebarProps) {
   const userSections = [
     { id: 'my-posts', label: 'Meus posts', icon: MessageSquare },
     { id: 'my-replies', label: 'Minhas respostas', icon: Reply },
@@ -63,51 +64,53 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory }: Communi
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {/* User Sections */}
-      <div className="mb-8">
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
-          MINHA COMUNIDADE
-        </h3>
-        <div className="space-y-2">
-          {userSections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => onCategorySelect(section.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
-                  selectedCategory === section.id
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Icon size={18} />
-                <span className="text-sm font-medium">{section.label}</span>
-              </button>
-            );
-          })}
+    <div className={isMobile ? '' : 'bg-white rounded-lg shadow-sm border border-gray-200 p-6'}>
+      {/* User Sections - Hide on mobile since we have quick access tabs */}
+      {!isMobile && (
+        <div className="mb-8">
+          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
+            MINHA COMUNIDADE
+          </h3>
+          <div className="space-y-2">
+            {userSections.map((section) => {
+              const Icon = section.icon;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => onCategorySelect(section.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
+                    selectedCategory === section.id
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="text-sm font-medium">{section.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Category Sections */}
       {categorySections.map((category, categoryIndex) => (
-        <div key={categoryIndex} className="mb-6">
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+        <div key={categoryIndex} className={isMobile ? 'mb-6' : 'mb-6'}>
+          <h3 className={`font-medium text-gray-500 uppercase tracking-wider ${isMobile ? 'text-xs mb-3' : 'text-xs mb-3'}`}>
             {category.title}
           </h3>
-          <div className="space-y-1">
+          <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
             {category.items.map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
                   onClick={() => onCategorySelect(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
+                  className={`${isMobile ? '' : 'w-full'} flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors cursor-pointer ${
                     selectedCategory === item.id
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                      ? 'bg-brand-50 text-brand-700 border-brand-200'
+                      : 'text-gray-700 hover:bg-gray-50 border-gray-100'
+                  } ${isMobile ? 'border' : ''}`}
                 >
                   <Icon size={16} className={item.color} />
                   <span className="text-sm">{item.label}</span>

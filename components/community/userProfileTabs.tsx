@@ -196,64 +196,65 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
     switch (activeTab) {
       case 'posts':
         return (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {posts.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-gray-500 mb-2">
+              <div className="text-center py-6 md:py-8">
+                <div className="text-gray-500 mb-2 text-sm md:text-base">
                   Você ainda não criou nenhum post
                 </div>
-                <p className="text-sm text-gray-400">
+                <p className="text-xs md:text-sm text-gray-400">
                   Comece a participar da comunidade criando seu primeiro post
                 </p>
               </div>
             ) : (
               posts.map((post) => (
-                <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary">
+                <div key={post.id} className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                  <div className="flex items-start justify-between mb-2 md:mb-3 gap-2">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900 cursor-pointer hover:text-primary line-clamp-2">
                       {post.title}
                     </h3>
-                    <button className="text-gray-400 hover:text-gray-600 p-1">
+                    <button className="text-gray-400 hover:text-gray-600 p-1 shrink-0">
                       <MoreHorizontal size={16} />
                     </button>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
                     <span>{formatDate(post.createdDate)}</span>
-                    <span>•</span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <span className="hidden sm:inline">•</span>
+                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded hidden sm:inline-block">
                       {post.category}
                     </span>
-                    <span>•</span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <span className="hidden sm:inline">•</span>
+                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded hidden sm:inline-block">
                       {post.subcategory}
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
                     {post.content}
                   </p>
                   
-                  <div className="flex items-center gap-6 text-sm text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <Heart size={16} />
+                  <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <Heart size={14} className="md:w-4 md:h-4" />
                       <span>{post.likes}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <MessageSquare size={16} />
-                      <span>{post.repliesCount} respostas</span>
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <MessageSquare size={14} className="md:w-4 md:h-4" />
+                      <span>{post.repliesCount}</span>
+                      <span className="hidden sm:inline"> respostas</span>
                     </div>
                     <button 
                       onClick={() => reportItem(post.id, post.author)}
-                      className={`flex items-center gap-2 transition-colors cursor-pointer ${
+                      className={`flex items-center gap-1.5 md:gap-2 transition-colors cursor-pointer ${
                         reportedItems.has(post.id) 
                           ? 'text-red-500' 
                           : 'hover:text-red-500'
                       }`}
                       disabled={reportedItems.has(post.id)}
                     >
-                      <Flag size={16} />
-                      <span>{reportedItems.has(post.id) ? 'Reportado' : 'Reportar'}</span>
+                      <Flag size={14} className="md:w-4 md:h-4" />
+                      <span className="hidden sm:inline">{reportedItems.has(post.id) ? 'Reportado' : 'Reportar'}</span>
                     </button>
                   </div>
                 </div>
@@ -272,51 +273,51 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
         }
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {replies.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-gray-500 mb-2">
+              <div className="text-center py-6 md:py-8">
+                <div className="text-gray-500 mb-2 text-sm md:text-base">
                   Você ainda não respondeu nenhum post
                 </div>
-                <p className="text-sm text-gray-400">
+                <p className="text-xs md:text-sm text-gray-400">
                   Participe das discussões respondendo aos posts da comunidade
                 </p>
               </div>
             ) : (
               replies.map((reply) => (
-                <div key={reply.id} className="bg-white rounded-lg border border-gray-200 p-6">
+                <div key={reply.id} className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
                   {/* Link to original post */}
                   <Link 
                     href={`/community/${reply.post.id}`}
-                    className="flex items-center gap-2 text-sm text-primary hover:underline mb-3"
+                    className="flex items-center gap-2 text-xs md:text-sm text-primary hover:underline mb-2 md:mb-3"
                   >
-                    <ExternalLink size={14} />
-                    <span>Em resposta a: {reply.post.title}</span>
+                    <ExternalLink size={12} className="md:w-3.5 md:h-3.5 shrink-0" />
+                    <span className="truncate">Em resposta a: {reply.post.title}</span>
                   </Link>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
                     <span>{formatDate(reply.createdAt)}</span>
-                    <span>•</span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <span className="hidden sm:inline">•</span>
+                    <span className="text-xs bg-gray-100 px-2 py-0.5 rounded hidden sm:inline-block">
                       {reply.post.category}
                     </span>
                     {reply.post.subcategory && (
                       <>
-                        <span>•</span>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                        <span className="hidden sm:inline">•</span>
+                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded hidden sm:inline-block">
                           {reply.post.subcategory}
                         </span>
                       </>
                     )}
                   </div>
                   
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
                     {reply.content}
                   </p>
                   
-                  <div className="flex items-center gap-6 text-sm text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <Heart size={16} />
+                  <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <Heart size={14} className="md:w-4 md:h-4" />
                       <span>{reply.likesCount}</span>
                     </div>
                   </div>
@@ -338,13 +339,13 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
         const hasNoFavorites = likedPosts.length === 0 && likedReplies.length === 0;
 
         return (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {hasNoFavorites ? (
-              <div className="text-center py-8">
-                <div className="text-gray-500 mb-2">
+              <div className="text-center py-6 md:py-8">
+                <div className="text-gray-500 mb-2 text-sm md:text-base">
                   Você ainda não curtiu nenhum post ou resposta
                 </div>
-                <p className="text-sm text-gray-400">
+                <p className="text-xs md:text-sm text-gray-400">
                   Curta posts e respostas interessantes para encontrá-los facilmente depois
                 </p>
               </div>
@@ -353,43 +354,44 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
                 {/* Liked Posts Section */}
                 {likedPosts.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <Heart size={16} className="text-red-500" />
+                    <h3 className="text-xs md:text-sm font-semibold text-gray-700 mb-2 md:mb-3 flex items-center gap-2">
+                      <Heart size={14} className="md:w-4 md:h-4 text-red-500" />
                       Posts Curtidos ({likedPosts.length})
                     </h3>
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                       {likedPosts.map((post) => (
                         <Link 
                           key={post.id} 
                           href={`/community/${post.id}`}
-                          className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-primary transition-colors"
+                          className="block bg-white rounded-lg border border-gray-200 p-4 md:p-6 hover:border-primary transition-colors"
                         >
-                          <h4 className="text-lg font-semibold text-gray-900 mb-2 hover:text-primary">
+                          <h4 className="text-base md:text-lg font-semibold text-gray-900 mb-1.5 md:mb-2 hover:text-primary line-clamp-2">
                             {post.title}
                           </h4>
                           
-                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
                             <span>{post.author.name}</span>
-                            <span>•</span>
+                            <span className="hidden sm:inline">•</span>
                             <span>{formatDate(post.createdAt)}</span>
-                            <span>•</span>
-                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            <span className="hidden sm:inline">•</span>
+                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded hidden sm:inline-block">
                               {post.category}
                             </span>
                           </div>
                           
-                          <p className="text-gray-600 mb-4 line-clamp-2">
+                          <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4 line-clamp-2">
                             {post.content}
                           </p>
                           
-                          <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <div className="flex items-center gap-2">
-                              <Heart size={16} className="text-red-500 fill-red-500" />
+                          <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
+                            <div className="flex items-center gap-1.5 md:gap-2">
+                              <Heart size={14} className="md:w-4 md:h-4 text-red-500 fill-red-500" />
                               <span>{post.likeCount}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <MessageSquare size={16} />
-                              <span>{post.replyCount} respostas</span>
+                            <div className="flex items-center gap-1.5 md:gap-2">
+                              <MessageSquare size={14} className="md:w-4 md:h-4" />
+                              <span>{post.replyCount}</span>
+                              <span className="hidden sm:inline"> respostas</span>
                             </div>
                           </div>
                         </Link>
@@ -401,38 +403,38 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
                 {/* Liked Replies Section */}
                 {likedReplies.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <MessageSquare size={16} className="text-primary" />
+                    <h3 className="text-xs md:text-sm font-semibold text-gray-700 mb-2 md:mb-3 flex items-center gap-2">
+                      <MessageSquare size={14} className="md:w-4 md:h-4 text-primary" />
                       Respostas Curtidas ({likedReplies.length})
                     </h3>
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                       {likedReplies.map((reply) => (
-                        <div key={reply.id} className="bg-white rounded-lg border border-gray-200 p-6">
+                        <div key={reply.id} className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
                           <Link 
                             href={`/community/${reply.post.id}`}
-                            className="flex items-center gap-2 text-sm text-primary hover:underline mb-3"
+                            className="flex items-center gap-2 text-xs md:text-sm text-primary hover:underline mb-2 md:mb-3"
                           >
-                            <ExternalLink size={14} />
-                            <span>No post: {reply.post.title}</span>
+                            <ExternalLink size={12} className="md:w-3.5 md:h-3.5 shrink-0" />
+                            <span className="truncate">No post: {reply.post.title}</span>
                           </Link>
                           
-                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
                             <span>{reply.author.name}</span>
-                            <span>•</span>
+                            <span className="hidden sm:inline">•</span>
                             <span>{formatDate(reply.createdAt)}</span>
-                            <span>•</span>
-                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                            <span className="hidden sm:inline">•</span>
+                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded hidden sm:inline-block">
                               {reply.post.category}
                             </span>
                           </div>
                           
-                          <p className="text-gray-600 mb-4 line-clamp-3">
+                          <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
                             {reply.content}
                           </p>
                           
-                          <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <div className="flex items-center gap-2">
-                              <Heart size={16} className="text-red-500 fill-red-500" />
+                          <div className="flex items-center gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
+                            <div className="flex items-center gap-1.5 md:gap-2">
+                              <Heart size={14} className="md:w-4 md:h-4 text-red-500 fill-red-500" />
                               <span>{reply.likeCount}</span>
                             </div>
                           </div>
@@ -453,22 +455,22 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <div className="flex">
+      {/* Tab Navigation - Horizontal scroll on mobile */}
+      <div className="border-b border-gray-200 overflow-x-auto scrollbar-hide">
+        <div className="flex min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-6 py-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+              className={`flex-1 min-w-[100px] px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'border-primary text-primary bg-brand-50'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-center gap-2">
-                <span>{tab.label}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
+              <div className="flex items-center justify-center gap-1.5 md:gap-2">
+                <span className="truncate">{tab.label}</span>
+                <span className={`text-xs px-1.5 md:px-2 py-0.5 rounded-full ${
                   activeTab === tab.id
                     ? 'bg-brand-100 text-brand-600'
                     : 'bg-gray-100 text-gray-500'
@@ -482,7 +484,7 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {getTabContent()}
       </div>
 

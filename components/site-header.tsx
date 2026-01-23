@@ -1,9 +1,9 @@
 "use client"
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -13,6 +13,19 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { navigationMenu } from "@/data/menu";
 import { Logo } from "@/components/common/logo";
 import { useAuth } from "@/contexts/auth-context";
@@ -20,6 +33,8 @@ import { HeaderUserMenu } from "@/components/header-user-menu";
 
 export function SiteHeader() {
   const { user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <header className="w-full border-b border-border bg-background/80 backdrop-blur-sm relative z-50">
       <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10">
@@ -27,7 +42,7 @@ export function SiteHeader() {
       {/* Logo */}
       <div className="flex-shrink-0">
         <Logo iconSize="lg" textSize="lg" showText asLink />
-      </div>          {/* Navigation */}
+      </div>          {/* Navigation - Desktop */}
           <NavigationMenu viewport={false} className="hidden lg:flex">
             <NavigationMenuList>
               {navigationMenu.map((item) => (
@@ -84,18 +99,85 @@ export function SiteHeader() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Right side - Cart, Auth */}
-          <div className="flex items-center space-x-4">
-            {/* Cart */}
-            <Button variant="ghost" size="sm" className="relative p-2 cursor-pointer hover:bg-transparent hover:text-cta-highlight transition-colors">
-              <ShoppingCart className="w-5 h-5" />
-            </Button>
+          {/* Right side - Mobile Menu, Cart, Auth */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Mobile Menu Button */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="lg:hidden p-2 cursor-pointer hover:bg-transparent hover:text-cta-highlight transition-colors">
+                  <Menu className="w-6 h-6" />
+                  <span className="sr-only">Abrir menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[350px] overflow-y-auto p-0">
+                {/* Header with Logo */}
+                <SheetHeader className="px-6 py-5 border-b bg-gray-50/50">
+                  <SheetTitle className="text-left">
+                    <Logo iconSize="md" textSize="md" showText />
+                  </SheetTitle>
+                </SheetHeader>
+                
+                {/* Navigation */}
+                <nav className="flex flex-col px-6 py-4">
+                  <Accordion type="single" collapsible className="w-full">
+                    {navigationMenu.map((item, index) => (
+                      item.items ? (
+                        <AccordionItem key={item.title} value={`item-${index}`} className="border-b border-gray-100">
+                          <AccordionTrigger className="py-4 text-base font-medium hover:no-underline hover:text-cta-highlight">
+                            {item.title}
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="flex flex-col space-y-1 pl-3 pb-2">
+                              {item.items.map((subItem) => (
+                                <Link
+                                  key={subItem.href}
+                                  href={subItem.href}
+                                  className="py-2.5 px-3 text-sm text-muted-foreground hover:text-cta-highlight hover:bg-gray-50 rounded-md transition-colors"
+                                  onClick={() => setMobileMenuOpen(false)}
+                                >
+                                  {subItem.title}
+                                </Link>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ) : (
+                        <Link
+                          key={item.title}
+                          href={item.href!}
+                          className="flex py-4 text-base font-medium hover:text-cta-highlight transition-colors border-b border-gray-100"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.title}
+                        </Link>
+                      )
+                    ))}
+                  </Accordion>
+                </nav>
+                  
+                {/* Mobile Auth Buttons */}
+                {!user && (
+                  <div className="flex flex-col gap-3 px-6 py-6 mt-auto border-t bg-gray-50/50">
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                      <Button variant="outline" className="w-full h-11 cursor-pointer text-base">
+                        Entrar
+                      </Button>
+                    </Link>
+                    <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                      <Button className="w-full h-11 bg-gray-900 text-white hover:bg-gray-800 cursor-pointer text-base">
+                        Criar Conta
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
 
-            {/* Authentication */}
+            {/* Authentication - Desktop */}
             {user ? (
               <HeaderUserMenu />
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="hidden sm:flex items-center space-x-2">
                 <Link href="/login">
                   <Button variant="ghost" size="sm" className="text-text-primary hover:text-cta-highlight hover:bg-transparent cursor-pointer">
                     Log In

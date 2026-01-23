@@ -67,9 +67,9 @@ export async function GET(request: NextRequest) {
             include: {
               user_profiles: {
                 select: {
-                  firstName: true,
-                  lastName: true,
-                  avatarUrl: true,
+                  fullName: true,
+                  displayName: true,
+                  avatar: true,
                 },
               },
             },
@@ -89,9 +89,9 @@ export async function GET(request: NextRequest) {
             include: {
               user_profiles: {
                 select: {
-                  firstName: true,
-                  lastName: true,
-                  avatarUrl: true,
+                  fullName: true,
+                  displayName: true,
+                  avatar: true,
                 },
               },
               community_posts: {
@@ -131,9 +131,9 @@ export async function GET(request: NextRequest) {
         likeCount: number;
         replyCount: number;
         user_profiles: {
-          firstName: string | null;
-          lastName: string | null;
-          avatarUrl: string | null;
+          fullName: string | null;
+          displayName: string | null;
+          avatar: string | null;
         };
       };
     }) => ({
@@ -146,8 +146,8 @@ export async function GET(request: NextRequest) {
       likeCount: like.community_posts.likeCount,
       replyCount: like.community_posts.replyCount,
       author: {
-        name: `${like.community_posts.user_profiles.firstName || ''} ${like.community_posts.user_profiles.lastName || ''}`.trim() || 'Anônimo',
-        avatar: like.community_posts.user_profiles.avatarUrl,
+        name: like.community_posts.user_profiles.displayName || like.community_posts.user_profiles.fullName || 'Anônimo',
+        avatar: like.community_posts.user_profiles.avatar,
       },
     }));
 
@@ -158,9 +158,9 @@ export async function GET(request: NextRequest) {
         createdAt: Date;
         likeCount: number;
         user_profiles: {
-          firstName: string | null;
-          lastName: string | null;
-          avatarUrl: string | null;
+          fullName: string | null;
+          displayName: string | null;
+          avatar: string | null;
         };
         community_posts: {
           id: string;
@@ -179,8 +179,8 @@ export async function GET(request: NextRequest) {
         category: like.community_replies.community_posts.category,
       },
       author: {
-        name: `${like.community_replies.user_profiles.firstName || ''} ${like.community_replies.user_profiles.lastName || ''}`.trim() || 'Anônimo',
-        avatar: like.community_replies.user_profiles.avatarUrl,
+        name: like.community_replies.user_profiles.displayName || like.community_replies.user_profiles.fullName || 'Anônimo',
+        avatar: like.community_replies.user_profiles.avatar,
       },
     }));
 

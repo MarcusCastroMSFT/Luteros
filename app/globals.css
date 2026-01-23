@@ -369,3 +369,13 @@ input[type="range"].slider::-moz-range-thumb {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #6b7280;
 }
+
+/* Hide scrollbar for horizontal scroll areas */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

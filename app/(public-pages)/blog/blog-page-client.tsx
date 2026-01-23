@@ -108,7 +108,7 @@ export function BlogPageClient({ initialArticles, initialPagination, initialCate
   return (
     <>
       {/* Category Filter */}
-      <div className="mb-8 overflow-x-auto pb-2">
+      <div className="mb-6 md:mb-8">
         <CategoryFilter
           categories={categories}
           activeCategory={activeCategory}
@@ -117,8 +117,8 @@ export function BlogPageClient({ initialArticles, initialPagination, initialCate
       </div>
 
       {/* Results Count */}
-      <div className="mb-6">
-        <p className="text-gray-600">
+      <div className="mb-4 md:mb-6">
+        <p className="text-sm md:text-base text-gray-600">
           {pagination.totalArticles === 0 
             ? 'Nenhum artigo encontrado'
             : `${pagination.totalArticles} artigo${pagination.totalArticles !== 1 ? 's' : ''} encontrado${pagination.totalArticles !== 1 ? 's' : ''}`
@@ -132,7 +132,7 @@ export function BlogPageClient({ initialArticles, initialPagination, initialCate
         <ArticleListSkeleton count={ARTICLES_PER_PAGE} />
       ) : articles.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {articles.map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}

@@ -26,21 +26,21 @@ export function PageHeader({ title, description, breadcrumbs, className = '', al
   const isLeft = align === 'left';
   
   return (
-    <section className={`py-16 lg:py-16 bg-cta-background ${className}`}>
+    <section className={`py-8 md:py-12 lg:py-16 bg-cta-background ${className}`}>
       <div className="container mx-auto px-4 max-w-[1428px]">
         <div className={`${isLeft ? 'text-left' : 'text-center max-w-4xl mx-auto'}`}>
           {/* Breadcrumb */}
-          <Breadcrumb className={`${isLeft ? 'justify-start' : 'justify-center'} mb-6`}>
+          <Breadcrumb className={`${isLeft ? 'justify-start' : 'justify-center'} mb-3 md:mb-6`}>
             <BreadcrumbList>
               {breadcrumbs.map((item, index) => (
                 <React.Fragment key={index}>
                   <BreadcrumbItem>
                     {item.href ? (
-                      <BreadcrumbLink href={item.href} className="text-gray-600 hover:text-primary">
+                      <BreadcrumbLink href={item.href} className="text-sm md:text-base text-gray-600 hover:text-primary">
                         {item.label}
                       </BreadcrumbLink>
                     ) : (
-                      <BreadcrumbPage className="text-gray-900 font-medium">
+                      <BreadcrumbPage className="text-sm md:text-base text-gray-900 font-medium">
                         {item.label}
                       </BreadcrumbPage>
                     )}
@@ -52,13 +52,13 @@ export function PageHeader({ title, description, breadcrumbs, className = '', al
           </Breadcrumb>
 
           {/* Title */}
-          <DisplayHeading size="md" className={`font-cardo mb-6 ${isLeft ? 'max-w-3xl' : ''}`}>
+          <DisplayHeading size="md" className={`font-cardo mb-3 md:mb-6 text-3xl md:text-4xl lg:text-5xl ${isLeft ? 'max-w-3xl' : ''}`}>
             {title}
           </DisplayHeading>
 
           {/* Description */}
           {description && (
-            <p className={`text-lg text-gray-600 ${isLeft ? 'max-w-3xl' : 'max-w-2xl mx-auto'}`}>
+            <p className={`text-base md:text-lg text-gray-600 ${isLeft ? 'max-w-3xl' : 'max-w-2xl mx-auto'}`}>
               {description}
             </p>
           )}

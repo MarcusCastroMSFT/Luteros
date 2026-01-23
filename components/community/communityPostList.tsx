@@ -292,40 +292,41 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">
+      <div className="p-4 md:p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
             {getCategoryTitle()}
           </h2>
-          <Button onClick={() => setCreatePostDialog(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
-            <Plus size={16} className="mr-2" />
-            Criar novo post
+          <Button onClick={() => setCreatePostDialog(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer shrink-0" size="sm">
+            <Plus size={16} className="md:mr-2" />
+            <span className="hidden md:inline">Criar novo post</span>
+            <span className="md:hidden">Novo</span>
           </Button>
         </div>
 
         {/* Search and Filters */}
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {/* Search */}
           <div className="relative">
-            <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Buscar na comunidade"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4">
+          {/* Filters - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {/* Subcategory Filter */}
             {subcategories.length > 0 && (
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-0">
                 <select
                   value={selectedSubcategory}
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="all">Todas as subcategorias</option>
                   {subcategories.map(subcategory => (
@@ -338,10 +339,10 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
             )}
 
             {/* Sort Filter */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-gray-100 rounded-lg p-1 self-start">
               <button
                 onClick={() => setSortBy('popular')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors cursor-pointer ${
                   sortBy === 'popular'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -351,7 +352,7 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
               </button>
               <button
                 onClick={() => setSortBy('recent')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors cursor-pointer ${
                   sortBy === 'recent'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -365,7 +366,7 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
       </div>
 
       {/* Posts List */}
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4 p-2 md:p-0">
         {filteredPosts.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
             <div className="text-gray-500 mb-2">
