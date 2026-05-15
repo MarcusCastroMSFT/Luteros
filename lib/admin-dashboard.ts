@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import {
   blogArticles,
   communityReports,
+  courses,
   enrollments,
   eventRegistrations,
   events,
@@ -106,6 +107,8 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     [{ moderationPending }],
     recentSubsRows,
     [contentCounts],
+    [coursesCountRow],
+    [eventsCountRow],
   ] = await Promise.all([
     // Subscriber + MRR aggregates in one shot
     db
@@ -226,13 +229,18 @@ export async function getAdminOverview(): Promise<AdminOverview> {
         draftArticles: sql<number>`count(*) filter (where ${blogArticles.isPublished} = false)::int`,
       })
       .from(blogArticles),
-  ])
 
-  // Course + upcoming-event counts via tiny side queries (parallel with the rest)
-  // — done here because Drizzle's TypeScript inference balks at sql-from-subquery
-  const [[{ publishedCoursesCount }], [{ upcomingEventsCount }]] = await Promise.all([
-    db.execute(sql<{ publishedCoursesCount: number }[]>`select count(*)::int as "publishedCoursesCount" from "courses" where "isPublished" = true`).then((r) => (r as unknown as { publishedCoursesCount: number }[])),
-    db.execute(sql<{ upcomingEventsCount: number }[]>`select count(*)::int as "upcomingEventsCount" from "events" where "isPublished" = true and "isCancelled" = false and "eventDate" >= ${now}`).then((r) => (r as unknown as { upcomingEventsCount: number }[])),
+    // Published courses count
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(courses)
+      .where(eq(courses.isPublished, true)),
+
+    // Upcoming events count
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(events)
+      .where(and(eq(events.isPublished, true), eq(events.isCancelled, false), gte(events.eventDate, now))),
   ])
 
   const stats = subStats[0] ?? { activeCount: 0, mrrCurrent: 0, mrrPrevMonth: 0, newThisMonth: 0, newPrevMonth: 0 }
@@ -303,8 +311,8 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     contentCounts: {
       publishedArticles: Number(contentCounts.publishedArticles),
       draftArticles: Number(contentCounts.draftArticles),
-      publishedCourses: Number(publishedCoursesCount),
-      upcomingEvents: Number(upcomingEventsCount),
+      publishedCourses: Number(coursesCountRow?.count ?? 0),
+      upcomingEvents: Number(eventsCountRow?.count ?? 0),
     },
   }
 }
