@@ -1,7 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { and, asc, eq, gte, ilike, ne, or, sql } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { db } from '@/lib/db'
-import { events, eventSpeakers } from '@/lib/db/schema'
+import { events, eventRegistrations, eventSpeakers } from '@/lib/db/schema'
 import { type Event, type EventsPagination } from '@/types/event'
 import { type Speaker } from '@/components/common/speakers'
 
@@ -56,12 +57,20 @@ async function fetchEvents(page: number, limit: number, search?: string) {
 }
 
 // Get paginated events with optional search filter using Next.js 16 Cache Components
-export async function getEvents(page: number, limit: number, search?: string) {
+// Cached path (no search) — single tag so revalidateTag('events') covers all pages
+async function getEventsCached(page: number, limit: number) {
   'use cache'
-  cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
-  cacheTag('events', `events-list-${page}-${limit}-${search || 'all'}`)
-  
-  return fetchEvents(page, limit, search)
+  cacheLife('minutes')
+  cacheTag('events')
+
+  return fetchEvents(page, limit)
+}
+
+export async function getEvents(page: number, limit: number, search?: string) {
+  if (search) {
+    return fetchEvents(page, limit, search)
+  }
+  return getEventsCached(page, limit)
 }
 
 async function fetchEventBySlug(slug: string) {
@@ -136,6 +145,22 @@ export async function getInitialEvents() {
   'use cache'
   cacheLife('minutes')
   cacheTag('events', 'events-initial')
-  
+
   return fetchEvents(1, 9) // First page with 9 events
+}
+
+// Server-side check whether the current authenticated user is registered for the given event.
+// Used by /events/[slug] page to avoid a cascading client-side fetch on mount.
+export async function isCurrentUserRegisteredForEvent(eventId: string): Promise<boolean> {
+  const session = await auth()
+  if (!session?.user?.id) return false
+
+  const row = await db
+    .select({ id: eventRegistrations.id })
+    .from(eventRegistrations)
+    .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.userId, session.user.id)))
+    .limit(1)
+    .then((r) => r[0] ?? null)
+
+  return !!row
 }

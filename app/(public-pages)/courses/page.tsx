@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getInitialCourses } from '@/lib/courses'
+import { getCourses } from '@/lib/courses'
 import { CoursesPageClient } from './courses-page-client'
 import { PageHeader } from '@/components/common/pageHeader'
 import { CourseListSkeleton } from '@/components/courses/courseSkeleton'
 import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
+
+const COURSES_PER_PAGE = 12
 
 export const metadata: Metadata = {
   title: 'Cursos',
@@ -25,20 +27,23 @@ export const metadata: Metadata = {
   },
 }
 
-// Server Component for initial data fetching
-async function CoursesContent() {
-  const initialData = await getInitialCourses()
-  
+interface CoursesPageProps {
+  searchParams: Promise<{ page?: string; category?: string }>
+}
+
+async function CoursesContent({ page, category }: { page: number; category: string }) {
+  const data = await getCourses(page, COURSES_PER_PAGE, category === 'Todos' ? undefined : category)
+
   return (
-    <CoursesPageClient 
-      initialCourses={initialData.courses}
-      initialPagination={initialData.pagination}
-      initialCategories={initialData.categories}
+    <CoursesPageClient
+      courses={data.courses}
+      pagination={data.pagination}
+      categories={data.categories}
+      activeCategory={category}
     />
   )
 }
 
-// Fallback component while loading
 function CoursesPageFallback() {
   return (
     <>
@@ -50,7 +55,11 @@ function CoursesPageFallback() {
   )
 }
 
-export default function CoursesPage() {
+export default async function CoursesPage({ searchParams }: CoursesPageProps) {
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const category = sp.category ?? 'Todos'
+
   return (
     <div className="min-h-screen">
       <PageHeader
@@ -61,10 +70,10 @@ export default function CoursesPage() {
           { label: 'Cursos' }
         ]}
       />
-      
+
       <div className="container mx-auto px-4 max-w-[1428px] py-16">
-        <Suspense fallback={<CoursesPageFallback />}>
-          <CoursesContent />
+        <Suspense key={`${page}-${category}`} fallback={<CoursesPageFallback />}>
+          <CoursesContent page={page} category={category} />
         </Suspense>
       </div>
     </div>

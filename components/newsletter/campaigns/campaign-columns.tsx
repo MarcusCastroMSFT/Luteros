@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, MoreVertical, Send, Trash, Eye, Edit, AlertCircle, MailPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/common/badges/status-badge"
 import {
@@ -12,15 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { 
-  IconDotsVertical, 
-  IconSend, 
-  IconTrash, 
-  IconEye,
-  IconEdit,
-  IconAlertCircle,
-  IconMailForward,
-} from "@tabler/icons-react"
 import { DeleteCampaignModal } from "./delete-campaign-modal"
 import { SendCampaignModal } from "./send-campaign-modal"
 import { TestCampaignModal } from "./test-campaign-modal"
@@ -129,7 +120,7 @@ export function getCampaignColumns(
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button className="text-red-500 hover:text-red-600">
-                      <IconAlertCircle className="h-4 w-4" />
+                      <AlertCircle className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="max-w-xs">
@@ -230,7 +221,7 @@ function CampaignActionsMenu({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
             <span className="sr-only">Abrir menu</span>
-            <IconDotsVertical className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -239,9 +230,9 @@ function CampaignActionsMenu({
             onClick={() => onEdit(campaign)}
           >
             {canEdit ? (
-              <IconEdit className="mr-2 h-4 w-4" />
+              <Edit className="mr-2 h-4 w-4" />
             ) : (
-              <IconEye className="mr-2 h-4 w-4" />
+              <Eye className="mr-2 h-4 w-4" />
             )}
             {canEdit ? 'Editar' : 'Visualizar'}
           </DropdownMenuItem>
@@ -250,7 +241,7 @@ function CampaignActionsMenu({
             className="cursor-pointer"
             onClick={() => setShowTestModal(true)}
           >
-            <IconMailForward className="mr-2 h-4 w-4" />
+            <MailPlus className="mr-2 h-4 w-4" />
             Enviar teste
           </DropdownMenuItem>
 
@@ -259,7 +250,7 @@ function CampaignActionsMenu({
               className="cursor-pointer"
               onClick={() => setShowSendModal(true)}
             >
-              <IconSend className="mr-2 h-4 w-4" />
+              <Send className="mr-2 h-4 w-4" />
               Enviar agora
             </DropdownMenuItem>
           )}
@@ -271,7 +262,7 @@ function CampaignActionsMenu({
                 className="text-red-600 cursor-pointer"
                 onClick={() => setShowDeleteModal(true)}
               >
-                <IconTrash className="mr-2 h-4 w-4" />
+                <Trash className="mr-2 h-4 w-4" />
                 Excluir
               </DropdownMenuItem>
             </>

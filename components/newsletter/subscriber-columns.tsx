@@ -2,7 +2,7 @@
 
 import { useState, createContext, useContext, useCallback, useMemo } from "react"
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, MoreVertical, MailX, MailCheck, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { StatusBadge } from "@/components/common/badges/status-badge"
@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { IconDotsVertical, IconMailX, IconMailCheck, IconLoader2 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 export interface Subscriber {
@@ -303,9 +302,9 @@ function SubscriberActionsMenu({
         <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer" disabled={isLoading}>
           <span className="sr-only">Abrir menu</span>
           {isLoading ? (
-            <IconLoader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <IconDotsVertical className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -316,7 +315,7 @@ function SubscriberActionsMenu({
             onClick={() => handleStatusChange('ACTIVE')}
             disabled={isLoading}
           >
-            <IconMailCheck className="mr-2 h-4 w-4" />
+            <MailCheck className="mr-2 h-4 w-4" />
             Reativar inscrição
           </DropdownMenuItem>
         ) : (
@@ -325,7 +324,7 @@ function SubscriberActionsMenu({
             onClick={() => handleStatusChange('UNSUBSCRIBED')}
             disabled={isLoading}
           >
-            <IconMailX className="mr-2 h-4 w-4" />
+            <MailX className="mr-2 h-4 w-4" />
             Cancelar inscrição
           </DropdownMenuItem>
         )}

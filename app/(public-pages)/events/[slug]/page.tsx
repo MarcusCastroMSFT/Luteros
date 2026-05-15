@@ -1,7 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getEventBySlug, getEventMetadata } from '@/lib/events'
+import { getEventBySlug, getEventMetadata, isCurrentUserRegisteredForEvent } from '@/lib/events'
 import { EventDetailClient } from './event-detail-client'
 
 interface EventPageProps {
@@ -49,14 +49,22 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
 
 export default async function EventPage({ params }: EventPageProps) {
   const { slug } = await params
-  
+
   // Fetch event data on the server using direct database access
   const eventData = await getEventBySlug(slug)
-  
   if (!eventData) {
     notFound()
   }
 
-  // Pass the data to the client component for interactivity
-  return <EventDetailClient initialData={eventData} slug={slug} />
+  // SSR the registration status alongside the event so the client doesn't need
+  // a follow-up fetch on mount.
+  const initialIsRegistered = await isCurrentUserRegisteredForEvent(eventData.event.id)
+
+  return (
+    <EventDetailClient
+      initialData={eventData}
+      initialIsRegistered={initialIsRegistered}
+      slug={slug}
+    />
+  )
 }

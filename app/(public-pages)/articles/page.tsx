@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getInitialArticles } from '@/lib/articles'
+import { getArticles } from '@/lib/articles'
 import { ArticlesPageClient } from './articles-page-client'
 import { PageHeader } from '@/components/common/pageHeader'
 import { ArticleListSkeleton } from '@/components/blog/articleSkeleton'
 import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
+
+const ARTICLES_PER_PAGE = 12
 
 export const metadata: Metadata = {
   title: 'Artigos',
@@ -25,14 +27,19 @@ export const metadata: Metadata = {
   },
 }
 
-async function ArticlesContent() {
-  const initialData = await getInitialArticles()
+interface ArticlesPageProps {
+  searchParams: Promise<{ page?: string; category?: string }>
+}
+
+async function ArticlesContent({ page, category }: { page: number; category: string }) {
+  const data = await getArticles(page, ARTICLES_PER_PAGE, category === 'Todos' ? undefined : category)
 
   return (
     <ArticlesPageClient
-      initialArticles={initialData.articles}
-      initialPagination={initialData.pagination}
-      initialCategories={initialData.categories}
+      articles={data.articles}
+      pagination={data.pagination}
+      categories={data.categories}
+      activeCategory={category}
     />
   )
 }
@@ -48,7 +55,11 @@ function ArticlesPageFallback() {
   )
 }
 
-export default function ArticlesPage() {
+export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const category = sp.category ?? 'Todos'
+
   return (
     <div className="min-h-screen">
       <PageHeader
@@ -61,8 +72,8 @@ export default function ArticlesPage() {
       />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1428px] py-8 md:py-16">
-        <Suspense fallback={<ArticlesPageFallback />}>
-          <ArticlesContent />
+        <Suspense key={`${page}-${category}`} fallback={<ArticlesPageFallback />}>
+          <ArticlesContent page={page} category={category} />
         </Suspense>
       </div>
     </div>

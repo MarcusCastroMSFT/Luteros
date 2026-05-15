@@ -18,9 +18,9 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // id/email/role are already on the caller's session; skip selecting them
     const profile = await db
       .select({
-        id: users.id,
         name: users.name,
         displayName: users.displayName,
         image: users.image,
@@ -33,8 +33,6 @@ export async function GET(
         language: users.language,
         timezone: users.timezone,
         lastLoginAt: users.lastLoginAt,
-        role: users.role,
-        email: users.email,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -47,6 +45,9 @@ export async function GET(
 
     return NextResponse.json({
       ...profile,
+      id: authUser.id,
+      email: authUser.email,
+      role: authUser.role,
       fullName: profile.name,
       avatar: profile.image,
     })

@@ -1,9 +1,11 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { getInitialEvents } from '@/lib/events'
+import { getEvents } from '@/lib/events'
 import { EventsPageClient } from './events-page-client'
 import { PageHeader } from '@/components/common/pageHeader'
 import { EventListSkeleton } from '@/components/events/eventSkeleton'
+
+const EVENTS_PER_PAGE = 9
 
 export const metadata: Metadata = {
   title: 'Eventos',
@@ -24,19 +26,22 @@ export const metadata: Metadata = {
   },
 }
 
-// Server Component for initial data fetching
-async function EventsContent() {
-  const initialData = await getInitialEvents()
-  
+interface EventsPageProps {
+  searchParams: Promise<{ page?: string; search?: string }>
+}
+
+async function EventsContent({ page, search }: { page: number; search: string }) {
+  const data = await getEvents(page, EVENTS_PER_PAGE, search || undefined)
+
   return (
-    <EventsPageClient 
-      initialEvents={initialData.events}
-      initialPagination={initialData.pagination}
+    <EventsPageClient
+      events={data.events}
+      pagination={data.pagination}
+      activeSearch={search}
     />
   )
 }
 
-// Fallback component while loading
 function EventsPageFallback() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
@@ -51,7 +56,11 @@ function EventsPageFallback() {
   )
 }
 
-export default function EventsPage() {
+export default async function EventsPage({ searchParams }: EventsPageProps) {
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const search = sp.search ?? ''
+
   return (
     <div className="bg-gray-50 pb-16">
       <PageHeader
@@ -62,9 +71,9 @@ export default function EventsPage() {
           { label: 'Eventos' }
         ]}
       />
-      
-      <Suspense fallback={<EventsPageFallback />}>
-        <EventsContent />
+
+      <Suspense key={`${page}-${search}`} fallback={<EventsPageFallback />}>
+        <EventsContent page={page} search={search} />
       </Suspense>
     </div>
   )

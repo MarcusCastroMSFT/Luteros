@@ -1,6 +1,5 @@
 import Image from 'next/image'
-import { Star, Users, BookOpen } from 'lucide-react'
-import { IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconWorld } from '@tabler/icons-react'
+import { Star, Users, BookOpen, Facebook, Instagram, Linkedin, Globe } from 'lucide-react'
 import { Instructor } from '@/types/course'
 
 interface InstructorCardProps {
@@ -20,11 +19,11 @@ const formatNumber = (num: number): string => {
 
 const getSocialIcon = (platform: string) => {
   const iconProps = { size: 16, className: "text-muted-foreground hover:text-primary transition-colors" }
-  
-  if (platform.includes('linkedin')) return <IconBrandLinkedin {...iconProps} />
-  if (platform.includes('instagram')) return <IconBrandInstagram {...iconProps} />
-  if (platform.includes('facebook')) return <IconBrandFacebook {...iconProps} />
-  return <IconWorld {...iconProps} />
+
+  if (platform.includes('linkedin')) return <Linkedin {...iconProps} />
+  if (platform.includes('instagram')) return <Instagram {...iconProps} />
+  if (platform.includes('facebook')) return <Facebook {...iconProps} />
+  return <Globe {...iconProps} />
 }
 
 export function InstructorCard({ instructor, className }: InstructorCardProps) {

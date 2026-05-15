@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/common/pageHeader'
 import { EventInfo } from '@/components/events/eventInfo'
@@ -16,49 +16,21 @@ interface EventDetailClientProps {
     event: Event
     relatedEvents: Event[]
   }
+  initialIsRegistered: boolean
   slug: string
 }
 
-export function EventDetailClient({ initialData, slug }: EventDetailClientProps) {
+export function EventDetailClient({ initialData, initialIsRegistered, slug }: EventDetailClientProps) {
   const router = useRouter()
   const { user } = useAuth()
   const [eventData, setEventData] = useState(initialData)
-  const [isRegistered, setIsRegistered] = useState(false)
+  const [isRegistered, setIsRegistered] = useState(initialIsRegistered)
   const [isRegistering, setIsRegistering] = useState(false)
-  const [isCheckingRegistration, setIsCheckingRegistration] = useState(true)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const { event } = eventData
 
-  const checkRegistrationStatus = async (eventId: string) => {
-    setIsCheckingRegistration(true)
-    try {
-      const response = await fetch(`/api/events/${eventId}/register`)
-      const data = await response.json()
-
-      if (data.success) {
-        setIsRegistered(data.isRegistered)
-      }
-    } catch (error) {
-      console.error('Error checking registration:', error)
-    } finally {
-      setIsCheckingRegistration(false)
-    }
-  }
-
-  // Check registration status on mount and when user changes
-  useEffect(() => {
-    if (user) {
-      // check registration status when user changes
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      checkRegistrationStatus(event.id)
-    } else {
-      setIsCheckingRegistration(false)
-      setIsRegistered(false)
-    }
-  }, [user, event.id])
-
-  // Refresh event data (for slot count updates)
+  // Refresh event data (for slot count updates after registration changes)
   const refreshEventData = async () => {
     try {
       const response = await fetch(`/api/events-public/${slug}`)
@@ -258,7 +230,7 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
                 onBookNow={handleBookNow}
                 isRegistered={isRegistered}
                 isRegistering={isRegistering}
-                isCheckingRegistration={isCheckingRegistration}
+                isCheckingRegistration={false}
                 onCancelRegistration={() => setShowCancelDialog(true)}
               />
             </div>

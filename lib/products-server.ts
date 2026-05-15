@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { products, productPartners } from '@/lib/db/schema'
 import { Product, ProductCategory } from '@/types/product'
@@ -73,6 +73,63 @@ export async function getInitialProducts() {
   const totalProducts = Number(total)
 
   return { products: transformedProducts, categories, totalProducts, totalPages: Math.ceil(totalProducts / 12) }
+}
+
+interface ProductFilters {
+  search?: string
+  category?: string
+  availability?: string
+  featured?: boolean
+}
+
+async function fetchProducts(page: number, limit: number, filters: ProductFilters = {}) {
+  const conditions: SQL[] = [eq(products.isActive, true)]
+  if (filters.category) conditions.push(eq(products.category, filters.category))
+  if (filters.availability) conditions.push(eq(products.availability, filters.availability))
+  if (filters.featured) conditions.push(eq(products.isFeatured, true))
+  if (filters.search) {
+    const term = `%${filters.search}%`
+    const searchCondition = or(
+      ilike(products.title, term),
+      ilike(products.shortDescription, term),
+      ilike(products.category, term),
+      ilike(productPartners.name, term),
+    )
+    if (searchCondition) conditions.push(searchCondition)
+  }
+  const where = and(...conditions)
+
+  const [rows, categoriesRaw, [{ total }]] = await Promise.all([
+    db.select(productCols).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(where).orderBy(desc(products.isFeatured), desc(products.createdAt)).offset((page - 1) * limit).limit(limit),
+    db.select({ category: products.category, count: sql<number>`count(*)::int` }).from(products).where(eq(products.isActive, true)).groupBy(products.category),
+    db.select({ total: sql<number>`count(*)::int` }).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(where),
+  ])
+
+  const transformedProducts = rows.map(transformProduct)
+  const categories: ProductCategory[] = categoriesRaw.map((cat) => ({
+    name: cat.category,
+    slug: cat.category.toLowerCase().replace(/\s+/g, '-'),
+    count: Number(cat.count),
+  }))
+  const totalProducts = Number(total)
+  return { products: transformedProducts, categories, totalProducts, totalPages: Math.ceil(totalProducts / limit) }
+}
+
+// Cached path (no search) — single 'products' tag invalidates all cached pages
+async function getProductsCached(page: number, limit: number, filters: ProductFilters) {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag('products')
+
+  return fetchProducts(page, limit, filters)
+}
+
+export async function getProducts(page: number, limit: number, filters: ProductFilters = {}) {
+  if (filters.search) {
+    // Free-text search bypasses the cache; cardinality would explode the cache entries
+    return fetchProducts(page, limit, filters)
+  }
+  return getProductsCached(page, limit, filters)
 }
 
 export async function getFeaturedProducts(limit: number = 4) {

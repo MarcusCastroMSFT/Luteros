@@ -1,105 +1,46 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { EventList } from '@/components/events/eventList';
-import { EventListSkeleton } from '@/components/events/eventSkeleton';
 import { Pagination } from '@/components/common/pagination';
 import { Input } from '@/components/ui/input';
-import { type Event, type EventsApiResponse, type EventsPagination } from '@/types/event';
-
-const EVENTS_PER_PAGE = 9;
+import { type Event, type EventsPagination } from '@/types/event';
 
 interface EventsPageClientProps {
-  initialEvents: Event[];
-  initialPagination: EventsPagination;
+  events: Event[];
+  pagination: EventsPagination;
+  activeSearch: string;
 }
 
-export function EventsPageClient({ initialEvents, initialPagination }: EventsPageClientProps) {
-  const [events, setEvents] = useState<Event[]>(initialEvents);
-  const [pagination, setPagination] = useState<EventsPagination>(initialPagination);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+export function EventsPageClient({ events, pagination, activeSearch }: EventsPageClientProps) {
+  const router = useRouter();
+  // Local input state so typing isn't gated on round-trips; we debounce-commit to the URL.
+  const [searchInput, setSearchInput] = useState(activeSearch);
 
-  const fetchEvents = async (page: number = 1, search: string = '') => {
-    setError(null);
-
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: EVENTS_PER_PAGE.toString(),
-      });
-
-      if (search.trim()) {
-        params.append('search', search.trim());
-      }
-
-      const response = await fetch(`/api/events-public?${params}`);
-      const data: EventsApiResponse = await response.json();
-
-      if (data.success && data.data) {
-        setEvents(data.data.events);
-        setPagination(data.data.pagination);
-      } else {
-        setError(data.error || 'Erro ao carregar eventos');
-      }
-    } catch (err) {
-      setError('Erro ao carregar eventos');
-      console.error('Error fetching events:', err);
-    }
+  const buildUrl = (page: number, search: string) => {
+    const params = new URLSearchParams();
+    if (page > 1) params.set('page', String(page));
+    if (search.trim()) params.set('search', search.trim());
+    const qs = params.toString();
+    return qs ? `/events?${qs}` : '/events';
   };
 
-  // Handle search with debounce
+  // Debounce: commit the typed search to the URL 300ms after the last keystroke
   useEffect(() => {
-    if (searchTerm === '' && currentPage === 1) {
-      // reset to SSR data when search cleared
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEvents(initialEvents);
-       
-      setPagination(initialPagination);
-      return;
-    }
-
+    if (searchInput === activeSearch) return;
     const timeoutId = setTimeout(() => {
-      startTransition(() => {
-        fetchEvents(1, searchTerm);
-        setCurrentPage(1);
-      });
+      router.push(buildUrl(1, searchInput));
     }, 300);
-
     return () => clearTimeout(timeoutId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, initialEvents, initialPagination]);
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    startTransition(() => {
-      fetchEvents(page, searchTerm);
-    });
-    // Scroll to top when page changes
+    router.push(buildUrl(page, activeSearch));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Erro</h2>
-        <p className="text-gray-600 mb-6">{error}</p>
-        <button 
-          onClick={() => fetchEvents(currentPage, searchTerm)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
@@ -110,8 +51,8 @@ export function EventsPageClient({ initialEvents, initialPagination }: EventsPag
           <Input
             type="text"
             placeholder="Buscar eventos..."
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -120,21 +61,18 @@ export function EventsPageClient({ initialEvents, initialPagination }: EventsPag
       {/* Results Count */}
       <div className="mb-6">
         <p className="text-gray-600">
-          {pagination.totalEvents === 0 
+          {pagination.totalEvents === 0
             ? 'Nenhum evento encontrado'
             : `${pagination.totalEvents} evento${pagination.totalEvents !== 1 ? 's' : ''} encontrado${pagination.totalEvents !== 1 ? 's' : ''}`
           }
         </p>
       </div>
 
-      {/* Events List or Skeleton */}
-      {isPending ? (
-        <EventListSkeleton count={EVENTS_PER_PAGE} />
-      ) : events.length > 0 ? (
+      {/* Events List */}
+      {events.length > 0 ? (
         <>
           <EventList events={events} />
-          
-          {/* Pagination */}
+
           {pagination.totalPages > 1 && (
             <div className="mt-12">
               <Pagination
@@ -148,11 +86,11 @@ export function EventsPageClient({ initialEvents, initialPagination }: EventsPag
       ) : (
         <div className="text-center py-16">
           <p className="text-gray-500 mb-4">
-            {searchTerm ? 'Nenhum evento encontrado com os termos de busca.' : 'Nenhum evento disponível no momento.'}
+            {activeSearch ? 'Nenhum evento encontrado com os termos de busca.' : 'Nenhum evento disponível no momento.'}
           </p>
-          {searchTerm && (
-            <button 
-              onClick={() => handleSearchChange('')}
+          {activeSearch && (
+            <button
+              onClick={() => setSearchInput('')}
               className="text-[var(--cta-highlight)] hover:underline"
             >
               Limpar busca
