@@ -146,10 +146,5 @@ export const sidebarData: SidebarData = {
       url: "/admin/system-emails",
       icon: "IconMail",
     },
-    {
-      name: "Agents AI",
-      url: "/admin/word-assistant",
-      icon: "IconRobot",
-    },
   ],
 };
