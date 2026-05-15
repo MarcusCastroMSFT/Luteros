@@ -130,13 +130,19 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
   // Update activeTab when initialTab prop changes (from sidebar navigation)
   // and trigger data fetch if needed
   useEffect(() => {
+    // switch active tab when URL navigation changes initialTab prop
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveTab(initialTab);
-    
+
     // Immediately fetch data for the new tab if not already loaded
     if (initialTab === 'replies' && !repliesLoaded) {
+      // lazy fetch tab content on first activation
+       
       fetchReplies();
     }
     if (initialTab === 'bookmarks' && !favoritesLoaded) {
+      // lazy fetch tab content on first activation
+       
       fetchFavorites();
     }
   }, [initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -144,9 +150,13 @@ export function UserProfileTabs({ posts, initialTab = 'posts' }: UserProfileTabs
   // Load data when tab becomes active (via tab click)
   useEffect(() => {
     if (activeTab === 'replies' && !repliesLoaded) {
+      // lazy fetch tab content on first activation
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchReplies();
     }
     if (activeTab === 'bookmarks' && !favoritesLoaded) {
+      // lazy fetch tab content on first activation
+       
       fetchFavorites();
     }
   }, [activeTab, repliesLoaded, favoritesLoaded, fetchReplies, fetchFavorites]);

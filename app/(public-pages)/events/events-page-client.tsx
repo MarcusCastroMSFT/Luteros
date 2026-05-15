@@ -54,8 +54,10 @@ export function EventsPageClient({ initialEvents, initialPagination }: EventsPag
   // Handle search with debounce
   useEffect(() => {
     if (searchTerm === '' && currentPage === 1) {
-      // Reset to initial data when search is cleared
+      // reset to SSR data when search cleared
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEvents(initialEvents);
+       
       setPagination(initialPagination);
       return;
     }

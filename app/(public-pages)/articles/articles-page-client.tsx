@@ -65,8 +65,10 @@ export function ArticlesPageClient({ initialArticles, initialPagination, initial
   // Category change
   useEffect(() => {
     if (activeCategory === 'Todos' && currentPage === 1) {
-      // Reset to initial data
+      // reset to SSR data when filter is cleared
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setArticles(initialArticles);
+       
       setPagination(initialPagination);
       return;
     }

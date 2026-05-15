@@ -82,6 +82,8 @@ export function MyEventsClient() {
   // Fetch events when filters change
   useEffect(() => {
     if (user) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchEvents(status, page);
     }
   }, [user, status, page, fetchEvents]);

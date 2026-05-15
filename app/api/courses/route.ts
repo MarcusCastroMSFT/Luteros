@@ -7,9 +7,9 @@ import { db } from '@/lib/db'
 import { courses, users } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '0')
     const pageSize = parseInt(searchParams.get('pageSize') || searchParams.get('limit') || '10')

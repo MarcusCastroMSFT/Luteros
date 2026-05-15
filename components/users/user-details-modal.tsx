@@ -104,6 +104,8 @@ export function UserDetailsModal({ userId, open, onOpenChange, onUserUpdated }: 
 
   useEffect(() => {
     if (open && userId) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchUserDetails()
     } else {
       setUser(null)

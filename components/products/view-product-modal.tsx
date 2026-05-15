@@ -97,10 +97,15 @@ export function ViewProductModal({
       // Check cache first
       const cached = productCache.get(productId);
       if (cached) {
+        // hydrate from cache before async fetch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProduct(cached);
+         
         setLoading(false);
         return;
       }
+      // fetch when filters change
+       
       fetchProduct();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

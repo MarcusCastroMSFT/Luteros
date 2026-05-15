@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, connection } from 'next/server'
 import { sql } from 'drizzle-orm'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
@@ -6,6 +6,8 @@ import { newsletterCampaigns } from '@/lib/db/schema'
 
 // GET /api/newsletter/campaigns/stats - Get campaign statistics
 export async function GET(request: Request) {
+  await connection()
+
   try {
     const authUser = await requireAdminOrInstructor(request as import('next/server').NextRequest)
     if (authUser instanceof NextResponse) return authUser

@@ -49,6 +49,31 @@ interface ToolbarState {
   blockType: string;
 }
 
+const ToolbarButton = ({
+  onClick,
+  isActive = false,
+  children,
+  title
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  children: React.ReactNode;
+  title: string;
+}) => (
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={onClick}
+    title={title}
+    className={cn(
+      'h-8 w-8 p-0 hover:bg-gray-100',
+      isActive && 'bg-gray-100 text-primary'
+    )}
+  >
+    {children}
+  </Button>
+);
+
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -146,70 +171,41 @@ export function ToolbarPlugin() {
     console.log('Insert horizontal rule');
   };
 
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive = false, 
-    children, 
-    title 
-  }: { 
-    onClick: () => void; 
-    isActive?: boolean; 
-    children: React.ReactNode; 
-    title: string;
-  }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onClick}
-      title={title}
-      className={cn(
-        'h-8 w-8 p-0 hover:bg-gray-100',
-        isActive && 'bg-gray-100 text-primary'
-      )}
-    >
-      {children}
-    </Button>
-  );
-
-  const BlockTypeDropdown = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-3 text-sm">
-          {getBlockTypeLabel(toolbarState.blockType)}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem onClick={() => formatParagraph()}>
-          <Type className="mr-2 h-4 w-4" />
-          Parágrafo
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => formatHeading('h1')}>
-          <Heading1 className="mr-2 h-4 w-4" />
-          Título 1
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => formatHeading('h2')}>
-          <Heading2 className="mr-2 h-4 w-4" />
-          Título 2
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => formatHeading('h3')}>
-          <Heading3 className="mr-2 h-4 w-4" />
-          Título 3
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => formatQuote()}>
-          <Quote className="mr-2 h-4 w-4" />
-          Citação
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
   return (
-    <div 
+    <div
       className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50"
       ref={toolbarRef}
     >
       {/* Block Type */}
-      <BlockTypeDropdown />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 px-3 text-sm">
+            {getBlockTypeLabel(toolbarState.blockType)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => formatParagraph()}>
+            <Type className="mr-2 h-4 w-4" />
+            Parágrafo
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => formatHeading('h1')}>
+            <Heading1 className="mr-2 h-4 w-4" />
+            Título 1
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => formatHeading('h2')}>
+            <Heading2 className="mr-2 h-4 w-4" />
+            Título 2
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => formatHeading('h3')}>
+            <Heading3 className="mr-2 h-4 w-4" />
+            Título 3
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => formatQuote()}>
+            <Quote className="mr-2 h-4 w-4" />
+            Citação
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       
       <Separator orientation="vertical" className="mx-1 h-6" />
       

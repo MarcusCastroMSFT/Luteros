@@ -56,6 +56,8 @@ export function GenericDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  // TanStack Table's useReactTable returns non-memoizable functions — library limitation
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

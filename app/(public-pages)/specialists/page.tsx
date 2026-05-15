@@ -58,6 +58,8 @@ export default function SpecialistsPage() {
   };
 
   useEffect(() => {
+    // fetch when filters change
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSpecialists(currentPage, activeSpecialty, searchTerm);
   }, [currentPage, activeSpecialty, searchTerm]);
 

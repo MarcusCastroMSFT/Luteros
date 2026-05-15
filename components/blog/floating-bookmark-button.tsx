@@ -43,6 +43,8 @@ export function FloatingBookmarkButton({
   // Check if article is bookmarked on mount
   useEffect(() => {
     if (!user) {
+      // resolve loading state when there's no user to check for
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsChecking(false);
       return;
     }

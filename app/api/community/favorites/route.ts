@@ -38,9 +38,9 @@ export interface LikedReply {
 
 // GET - Get all posts and replies that the current user has liked
 export async function GET(request: NextRequest) {
-  try {
-    await connection();
+  await connection();
 
+  try {
     const authUser = await requireAuth(request);
     if (authUser instanceof NextResponse) return authUser;
 

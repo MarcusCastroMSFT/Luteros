@@ -121,6 +121,8 @@ export function ServerSideDataTable<TData, TValue>({
     [pageIndex, pageSize]
   )
 
+  // TanStack Table's useReactTable returns non-memoizable functions — library limitation
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

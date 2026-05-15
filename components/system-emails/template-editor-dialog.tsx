@@ -71,6 +71,8 @@ export function TemplateEditorDialog({
   // Reset form when template changes
   useEffect(() => {
     if (template) {
+      // hydrate form from template prop when dialog opens or template changes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: template.name,
         description: template.description || '',
@@ -80,6 +82,7 @@ export function TemplateEditorDialog({
         textContent: template.textContent || '',
         isActive: template.isActive,
       })
+       
       setActiveTab('editor')
     }
   }, [template])

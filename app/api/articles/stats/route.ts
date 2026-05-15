@@ -5,9 +5,9 @@ import { blogArticles } from '@/lib/db/schema'
 import { and, eq, gte, lt, sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
-  try {
-    await connection()
+  await connection()
 
+  try {
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult

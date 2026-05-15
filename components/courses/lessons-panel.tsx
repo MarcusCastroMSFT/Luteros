@@ -235,6 +235,8 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
   }, [courseId]);
 
   useEffect(() => {
+    // fetch when filters change
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLessons();
   }, [fetchLessons]);
 

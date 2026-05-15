@@ -9,28 +9,28 @@ interface FileOperationsBarProps {
   onTogglePreview?: () => void;
 }
 
+const FileButton = ({
+  onClick,
+  children,
+  title
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  title: string;
+}) => (
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={onClick}
+    title={title}
+    className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100"
+  >
+    {children}
+  </Button>
+);
+
 export function FileOperationsBar({ isPreviewMode = false, onTogglePreview }: FileOperationsBarProps) {
   const { importFromFile, exportAsMarkdown, exportAsHtml } = useFileOperations();
-
-  const FileButton = ({ 
-    onClick, 
-    children, 
-    title 
-  }: { 
-    onClick: () => void; 
-    children: React.ReactNode; 
-    title: string;
-  }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onClick}
-      title={title}
-      className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100"
-    >
-      {children}
-    </Button>
-  );
 
   return (
     <div className="flex items-center justify-between gap-1 p-2 bg-gray-100 border-t border-gray-200">

@@ -30,8 +30,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
     const { postId } = await params
     if (!postId || !isValidUUID(postId)) {
       return NextResponse.json({ error: 'Invalid post ID format' }, { status: 400 })
@@ -76,8 +77,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
     const { postId } = await params
     if (!postId || !isValidUUID(postId)) {
       return NextResponse.json({ error: 'Invalid post ID format' }, { status: 400 })

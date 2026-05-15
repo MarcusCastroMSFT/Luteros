@@ -2,9 +2,9 @@ import { NextRequest, NextResponse, connection } from 'next/server'
 import { sampleNewsletters, type Newsletter } from '@/data/newsletter'
 
 export async function GET(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '0')
     const limit = parseInt(searchParams.get('limit') || '10')

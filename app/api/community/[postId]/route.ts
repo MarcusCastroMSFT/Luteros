@@ -6,11 +6,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
-    
     const { postId } = await params
-    
+
     if (!postId) {
       return NextResponse.json(
         { error: 'Post ID is required' },
@@ -41,11 +41,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
-    
     const { postId } = await params
-    
+
     if (!postId) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }
@@ -79,11 +79,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
-    
     const { postId } = await params
-    
+
     if (!postId) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }

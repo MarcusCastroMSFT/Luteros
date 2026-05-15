@@ -145,17 +145,29 @@ export default function EditProductPage() {
     }
   }, [productId]);
 
-  // Calculate discounted price when original price or discount changes
-  useEffect(() => {
-    if (originalPrice && discountPercentage) {
-      const original = parseFloat(originalPrice);
-      const discount = parseFloat(discountPercentage);
+  // Calculate discounted price from original price and discount
+  const computeDiscountedPrice = (price: string, percentage: string) => {
+    if (price && percentage) {
+      const original = parseFloat(price);
+      const discount = parseFloat(percentage);
       if (!isNaN(original) && !isNaN(discount)) {
-        const discounted = original * (1 - discount / 100);
-        setDiscountedPrice(discounted.toFixed(2));
+        return (original * (1 - discount / 100)).toFixed(2);
       }
     }
-  }, [originalPrice, discountPercentage]);
+    return null;
+  };
+
+  const handleOriginalPriceChange = (value: string) => {
+    setOriginalPrice(value);
+    const computed = computeDiscountedPrice(value, discountPercentage);
+    if (computed !== null) setDiscountedPrice(computed);
+  };
+
+  const handleDiscountPercentageChange = (value: string) => {
+    setDiscountPercentage(value);
+    const computed = computeDiscountedPrice(originalPrice, value);
+    if (computed !== null) setDiscountedPrice(computed);
+  };
 
   // Handle tags
   const addTag = () => {
@@ -507,7 +519,7 @@ export default function EditProductPage() {
                       min="0"
                       max="100"
                       value={discountPercentage}
-                      onChange={(e) => setDiscountPercentage(e.target.value)}
+                      onChange={(e) => handleDiscountPercentageChange(e.target.value)}
                       required
                       disabled={loading}
                     />
@@ -521,7 +533,7 @@ export default function EditProductPage() {
                       step="0.01"
                       min="0"
                       value={originalPrice}
-                      onChange={(e) => setOriginalPrice(e.target.value)}
+                      onChange={(e) => handleOriginalPriceChange(e.target.value)}
                       placeholder="99.90"
                       disabled={loading}
                     />

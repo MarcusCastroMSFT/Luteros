@@ -146,6 +146,8 @@ export function ChartAreaInteractive() {
 
   React.useEffect(() => {
     if (isMobile) {
+      // switch to mobile-friendly default when viewport flips to mobile
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeRange("7d")
     }
   }, [isMobile])

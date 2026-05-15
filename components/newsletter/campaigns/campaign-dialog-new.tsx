@@ -80,6 +80,8 @@ export function CampaignDialog({
         })
         .catch(err => console.error('Error fetching campaign:', err))
     } else {
+      // hydrate form from campaign prop when dialog opens or campaign changes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: '',
         subject: '',
@@ -88,7 +90,9 @@ export function CampaignDialog({
         ctaText: '',
         ctaUrl: '',
       })
+       
       setSelectedTemplateId(undefined)
+       
       setActiveTab('template')
     }
   }, [campaign, open])

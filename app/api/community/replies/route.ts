@@ -20,9 +20,9 @@ export interface UserReply {
 
 // GET - Get all replies by the current user
 export async function GET(request: NextRequest) {
-  try {
-    await connection();
+  await connection();
 
+  try {
     const authUser = await requireAuth(request);
     if (authUser instanceof NextResponse) return authUser;
 

@@ -43,6 +43,8 @@ export function LinkDialog({ open, onOpenChange, onConfirm, selectedText }: Link
   // Update text when selectedText changes and dialog opens
   useEffect(() => {
     if (open && selectedText !== undefined) {
+      // pre-fill text with selection when dialog opens
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setText(selectedText);
     }
   }, [open, selectedText]);

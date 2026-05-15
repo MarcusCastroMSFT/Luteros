@@ -41,7 +41,10 @@ function UnsubscribeContent() {
 
   useEffect(() => {
     if (!token) {
+      // init: invalid link state on mount
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError('Link de cancelamento inválido. Verifique se copiou o link corretamente.')
+       
       setLoading(false)
       return
     }

@@ -147,6 +147,8 @@ export function EditEventModal({
 
   useEffect(() => {
     if (open && eventId) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchEvent();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

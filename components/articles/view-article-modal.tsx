@@ -77,7 +77,10 @@ export function ViewArticleModal({
       // Check cache first
       const cached = articleCache.get(articleId);
       if (cached) {
+        // hydrate from cache before async fetch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setArticle(cached);
+         
         setLoading(false);
         return;
       }

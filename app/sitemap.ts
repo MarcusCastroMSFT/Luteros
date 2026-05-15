@@ -1,9 +1,12 @@
 import { MetadataRoute } from 'next'
+import { connection } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { blogArticles, courses, events, products } from '@/lib/db/schema'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  await connection()
+
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
 
   // Static pages
@@ -91,7 +94,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published blog articles
   let articlePages: MetadataRoute.Sitemap = []
   try {
-    const articles = await db.select({ slug: blogArticles.slug, updatedAt: blogArticles.updatedAt, publishedAt: blogArticles.publishedAt }).from(blogArticles).where(eq(blogArticles.isPublished, true)).orderBy()
+    const articles = await db.select({ slug: blogArticles.slug, updatedAt: blogArticles.updatedAt, publishedAt: blogArticles.publishedAt }).from(blogArticles).where(eq(blogArticles.isPublished, true))
 
     articlePages = articles.map((article) => ({
       url: `${baseUrl}/articles/${article.slug}`,

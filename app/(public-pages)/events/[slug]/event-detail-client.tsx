@@ -49,6 +49,8 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
   // Check registration status on mount and when user changes
   useEffect(() => {
     if (user) {
+      // check registration status when user changes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       checkRegistrationStatus(event.id)
     } else {
       setIsCheckingRegistration(false)

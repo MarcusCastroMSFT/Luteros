@@ -260,6 +260,8 @@ export function SystemEmailsTable() {
     return result
   }, [templates, searchValue, categoryFilter])
 
+  // TanStack Table's useReactTable returns non-memoizable functions — library limitation
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filteredTemplates,
     columns,

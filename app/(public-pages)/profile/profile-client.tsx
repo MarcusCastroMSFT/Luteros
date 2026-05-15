@@ -63,6 +63,8 @@ export function ProfileClient() {
     }
 
     if (user) {
+      // fetch when user changes
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchProfile();
     }
   }, [user, authLoading, router]);

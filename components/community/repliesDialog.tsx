@@ -149,6 +149,8 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onReplyDele
   // Fetch reports for admin when dialog opens
   useEffect(() => {
     if (isOpen && isAdmin && post) {
+      // fetch reports when admin opens the dialog
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchReports();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -157,7 +159,10 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onReplyDele
   // Initialize post like count and state when post changes or dialog opens
   useEffect(() => {
     if (post && isOpen) {
+      // re-sync state when dialog reopens with a new post
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPostLikeCount(post.likes);
+       
       setIsPostLiked(isPostLikedInitial);
     }
   }, [post, isOpen, isPostLikedInitial]);

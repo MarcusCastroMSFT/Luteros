@@ -99,10 +99,15 @@ export function ViewEventModal({
       // Check cache first
       const cached = eventCache.get(eventId);
       if (cached) {
+        // hydrate from cache before async fetch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEvent(cached);
+         
         setLoading(false);
         return;
       }
+      // fetch when filters change
+       
       fetchEvent();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

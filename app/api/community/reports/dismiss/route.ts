@@ -9,9 +9,9 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 // POST - Dismiss a report (admin only)
 export async function POST(request: NextRequest) {
-  try {
-    await connection()
+  await connection()
 
+  try {
     const authUser = await requireAdmin(request)
     if (authUser instanceof NextResponse) return authUser
 

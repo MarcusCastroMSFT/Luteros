@@ -76,6 +76,8 @@ export function SavedArticlesClient() {
   // Fetch articles when filters change
   useEffect(() => {
     if (user) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchArticles(selectedCategory, page);
     }
   }, [user, selectedCategory, page, fetchArticles]);

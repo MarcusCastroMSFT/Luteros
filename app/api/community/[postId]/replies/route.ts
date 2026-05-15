@@ -35,9 +35,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
-    
     const { postId } = await params
 
     // Validate postId format
@@ -134,8 +134,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
     const { postId } = await params
 
     const { searchParams } = new URL(request.url)

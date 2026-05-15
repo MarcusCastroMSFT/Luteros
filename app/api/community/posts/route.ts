@@ -39,9 +39,9 @@ function checkRateLimit(userId: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     const authUser = await requireAuth(request)
     if (authUser instanceof NextResponse) return authUser
 

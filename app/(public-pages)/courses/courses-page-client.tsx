@@ -68,6 +68,8 @@ export function CoursesPageClient({
   // Fetch when category changes (after initial load)
   useEffect(() => {
     if (activeCategory !== 'Todos' || currentPage !== 1) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchCourses(currentPage, activeCategory);
     }
   }, [activeCategory, currentPage, fetchCourses]);

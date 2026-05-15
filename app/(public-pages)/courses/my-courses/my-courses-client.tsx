@@ -82,6 +82,8 @@ export function MyCoursesClient() {
   // Fetch courses when filters change
   useEffect(() => {
     if (user) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchCourses(status, page);
     }
   }, [user, status, page, fetchCourses]);

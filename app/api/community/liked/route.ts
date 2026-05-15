@@ -5,9 +5,9 @@ import { db } from '@/lib/db'
 import { communityLikes } from '@/lib/db/schema'
 
 export async function GET(_request: NextRequest) {
-  try {
-    await connection()
+  await connection()
 
+  try {
     const authUser = await getAuthUser()
     if (!authUser) return NextResponse.json({ likedPostIds: [] })
 

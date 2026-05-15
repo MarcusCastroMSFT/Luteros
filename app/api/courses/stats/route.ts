@@ -3,9 +3,9 @@ import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { getCourseStats } from '@/lib/courses'
 
 export async function GET(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     // Verify authentication and authorization (admin or instructor only)
     const authResult = await requireAdminOrInstructor(request)
     if (authResult instanceof NextResponse) {

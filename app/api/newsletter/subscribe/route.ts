@@ -38,9 +38,9 @@ function getClientIP(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    await connection()
+  await connection()
 
+  try {
     // Get client IP for rate limiting
     const clientIP = getClientIP(request)
     

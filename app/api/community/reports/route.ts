@@ -12,9 +12,9 @@ const VALID_REASONS = ['spam', 'harassment', 'hate', 'misinformation', 'inapprop
 
 // POST - Create a new report
 export async function POST(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     const authUser = await requireAuth(request)
     if (authUser instanceof NextResponse) return authUser
     const reporterId = authUser.id
@@ -92,9 +92,9 @@ export async function POST(request: NextRequest) {
 
 // GET - Get reports for an entity (admin only)
 export async function GET(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     const authUser = await getAuthUser()
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

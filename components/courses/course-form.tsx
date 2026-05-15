@@ -127,6 +127,23 @@ const fieldLabels: Record<string, string> = {
   previewVideo: 'Vídeo de apresentação',
 };
 
+// Character counter component
+const CharacterCounter = ({ current, max, className }: { current: number; max: number; className?: string }) => {
+  const percentage = (current / max) * 100;
+  const isWarning = percentage > 80;
+  const isError = percentage > 100;
+
+  return (
+    <span className={cn(
+      "text-xs",
+      isError ? "text-destructive" : isWarning ? "text-amber-500" : "text-muted-foreground",
+      className
+    )}>
+      {current}/{max}
+    </span>
+  );
+};
+
 export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -437,23 +454,6 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
       setLoading(false);
       setSavingDraft(false);
     }
-  };
-
-  // Character counter component
-  const CharacterCounter = ({ current, max, className }: { current: number; max: number; className?: string }) => {
-    const percentage = (current / max) * 100;
-    const isWarning = percentage > 80;
-    const isError = percentage > 100;
-    
-    return (
-      <span className={cn(
-        "text-xs",
-        isError ? "text-destructive" : isWarning ? "text-amber-500" : "text-muted-foreground",
-        className
-      )}>
-        {current}/{max}
-      </span>
-    );
   };
 
   const pageTitle = mode === 'edit' ? 'Editar Curso' : 'Novo Curso';

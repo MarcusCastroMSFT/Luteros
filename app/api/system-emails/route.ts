@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, connection } from 'next/server'
 import { asc, eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
@@ -6,6 +6,8 @@ import { systemEmailTemplates, users } from '@/lib/db/schema'
 
 // GET - List all system email templates
 export async function GET(request: NextRequest) {
+  await connection()
+
   try {
     const authUser = await requireAuth(request)
     if (authUser instanceof NextResponse) return authUser

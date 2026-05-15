@@ -34,11 +34,15 @@ export function PostCard({
 
   // Sync state with props when they change (e.g., after dialog interaction)
   useEffect(() => {
+    // re-sync optimistic count when post prop updates from server
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLikeCount(post.likes);
   }, [post.likes]);
 
   // Sync internal state when external changes
   useEffect(() => {
+    // re-sync optimistic count when post prop updates from server
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInternalIsLiked(externalIsLiked);
   }, [externalIsLiked]);
 

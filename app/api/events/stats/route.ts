@@ -5,9 +5,9 @@ import { db } from '@/lib/db'
 import { events, eventRegistrations } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
+  await connection()
+
   try {
-    await connection()
-    
     // Verify authentication and authorization (admin or instructor only)
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {

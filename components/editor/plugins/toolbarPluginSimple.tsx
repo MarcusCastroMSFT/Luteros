@@ -88,6 +88,31 @@ const TEXT_COLORS = [
   { name: 'Blanco', value: '#FFFFFF' },
 ];
 
+const ToolbarButton = ({
+  onClick,
+  isActive = false,
+  children,
+  title
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  children: React.ReactNode;
+  title: string;
+}) => (
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={onClick}
+    title={title}
+    className={cn(
+      'h-8 w-8 p-0 cursor-pointer hover:bg-gray-100',
+      isActive && 'bg-gray-100 text-primary'
+    )}
+  >
+    {children}
+  </Button>
+);
+
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -342,31 +367,6 @@ export function ToolbarPlugin() {
   const insertHorizontalRule = () => {
     editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
   };
-
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive = false, 
-    children, 
-    title 
-  }: { 
-    onClick: () => void; 
-    isActive?: boolean; 
-    children: React.ReactNode; 
-    title: string;
-  }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onClick}
-      title={title}
-      className={cn(
-        'h-8 w-8 p-0 cursor-pointer hover:bg-gray-100',
-        isActive && 'bg-gray-100 text-primary'
-      )}
-    >
-      {children}
-    </Button>
-  );
 
   return (
     <div className="border-b border-gray-200 bg-gray-50">

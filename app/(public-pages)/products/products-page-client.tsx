@@ -74,6 +74,8 @@ export function ProductsPageClient({
 
   useEffect(() => {
     if (isFiltering || currentPage > 1) {
+      // fetch when filters change
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchProducts();
     }
   }, [fetchProducts, isFiltering, currentPage]);

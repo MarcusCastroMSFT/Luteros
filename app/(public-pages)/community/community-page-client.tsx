@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Filter, MessageSquare, Reply, Bookmark } from 'lucide-react'
 import { CommunitySidebar } from '@/components/community/communitySidebar'
 import { CommunityPostList } from '@/components/community/communityPostList'
@@ -26,7 +26,7 @@ export function CommunityPageClient({
   const [isContentLoading, setIsContentLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const isInitialLoadRef = useRef(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
   // Quick access tabs for mobile - "My Community" section
@@ -73,18 +73,20 @@ export function CommunityPageClient({
 
   useEffect(() => {
     // Skip fetch on initial render - we already have SSR data
-    if (isInitialLoad) {
-      setIsInitialLoad(false)
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false
       return
     }
-    
+
     // Skip fetch for user sections (my-posts, my-activity)
     if (selectedCategory?.includes('my-')) {
       return
     }
 
+    // fetch when filters change
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPosts(selectedCategory, page)
-  }, [selectedCategory, page, fetchPosts, isInitialLoad])
+  }, [selectedCategory, page, fetchPosts])
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category)

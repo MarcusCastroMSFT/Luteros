@@ -10,9 +10,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await connection()
+  await connection()
 
+  try {
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult
@@ -98,9 +98,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await connection()
+  await connection()
 
+  try {
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult

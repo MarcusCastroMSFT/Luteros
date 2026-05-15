@@ -12,8 +12,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string; replyId: string }> }
 ) {
+  await connection()
+
   try {
-    await connection()
     const { postId, replyId } = await params
 
     if (!UUID_REGEX.test(postId) || !UUID_REGEX.test(replyId)) {
