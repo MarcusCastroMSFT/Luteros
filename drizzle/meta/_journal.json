@@ -15,6 +15,13 @@
       "when": 1779100000000,
       "tag": "0001_search_trigram_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778867238259,
+      "tag": "0002_watery_captain_cross",
+      "breakpoints": true
     }
   ]
 }

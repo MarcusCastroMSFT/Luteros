@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
           author: {
             id: bookmark.authorId,
             name: authorName,
-            avatar: bookmark.authorAvatar || '/images/default-avatar.jpg',
+            avatar: bookmark.authorAvatar || '/images/default-avatar.svg',
           },
         },
       };

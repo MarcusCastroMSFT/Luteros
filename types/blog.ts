@@ -12,6 +12,8 @@ export interface Article {
   date: string;
   readTime: string;
   commentCount?: number;
+  accessType?: 'free' | 'paid';
+  targetAudience?: 'general' | 'doctors';
 }
 
 export interface BlogPagination {

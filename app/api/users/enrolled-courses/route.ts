@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
           instructor: {
             id: row.instructorId,
             name: instructorName,
-            avatar: row.instructorAvatar || '/images/default-avatar.jpg',
+            avatar: row.instructorAvatar || '/images/default-avatar.svg',
           },
         },
         lastAccessedAt: progress?.lastAccessedAt?.toISOString() || null,

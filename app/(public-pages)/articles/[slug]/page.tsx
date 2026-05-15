@@ -4,8 +4,16 @@ import nextDynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
 import { FloatingBookmarkButton } from '@/components/blog/floating-bookmark-button';
+import { Paywall } from '@/components/blog/paywall';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getArticleBySlug, getArticleMetadata } from '@/lib/articles';
+import {
+  getCurrentUserAccessContext,
+  hasArticleAccess,
+  truncateHtmlContent,
+} from '@/lib/subscriptions';
+
+const PAYWALL_PREVIEW_CHARS = 500;
 
 // Dynamically import non-critical components for better performance
 const ArticleShare = nextDynamic(() => import('@/components/blog/articleShare').then(mod => ({ default: mod.ArticleShare })), {
@@ -32,15 +40,26 @@ interface ArticlePageProps {
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  
-  // Fetch article data directly from database
+
+  // Fetch article data directly from database (cached, full content)
   const articleData = await getArticleBySlug(slug);
-  
+
   if (!articleData) {
     notFound();
   }
 
   const { article, relatedArticles } = articleData;
+
+  // Access check happens OUTSIDE the cached article fetch so the cache stays
+  // per-article, not per-user. Each render does one quick subscription read.
+  const accessContext = await getCurrentUserAccessContext();
+  const isGated = !hasArticleAccess(
+    { accessType: article.accessType ?? 'free', targetAudience: article.targetAudience ?? 'general' },
+    accessContext,
+  );
+  const displayContent = isGated && article.content
+    ? truncateHtmlContent(article.content, PAYWALL_PREVIEW_CHARS)
+    : article.content;
 
   // Generate full URL for sharing
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
@@ -107,10 +126,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             date={article.date}
             readTime={article.readTime}
             commentCount={article.commentCount}
+            accessType={article.accessType}
+            targetAudience={article.targetAudience}
           />
 
-          {/* Article Content */}
-          <ArticleContent content={article.content} className="mb-12" />
+          {/* Article Content (truncated if paywalled) */}
+          <ArticleContent content={displayContent} className="mb-12" />
+
+          {isGated && (
+            <Paywall
+              audience={article.targetAudience ?? 'general'}
+              isAuthenticated={accessContext.isAuthenticated}
+              redirectTo={`/articles/${article.slug}`}
+            />
+          )}
 
           {/* Share Section */}
           <div className="border-t border-b border-gray-200 py-8 mb-12">

@@ -110,6 +110,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 iconSize="lg"
                 showText={false}
                 asLink
+                newTab
                 className="flex items-center justify-center"
               />
             </div>

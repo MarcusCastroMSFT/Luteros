@@ -146,12 +146,13 @@ export async function POST(request: NextRequest) {
       commentCount: 0,
     }).returning()
 
-    revalidatePath('/articles')
-    revalidatePath(`/articles/${slug}`)
-    revalidateTag('articles')
-    revalidateTag('articles-initial')
-    revalidateTag('article-slugs')
-    revalidateTag(`article-${slug}`)
+    // Cache invalidation so users see the new article immediately
+    revalidateTag('articles')         // public list + home (via getArticles)
+    revalidateTag('article-slugs')    // getAllArticleSlugs (used by generateStaticParams)
+    revalidateTag(`article-${slug}`)  // detail page + metadata for this slug
+    revalidatePath('/')               // home renders latest 4
+    revalidatePath('/articles')       // list page
+    revalidatePath(`/articles/${slug}`) // detail page
 
     return NextResponse.json({ success: true, data: article })
   } catch (error) {

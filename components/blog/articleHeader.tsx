@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Calendar, User, Clock, MessageCircle } from 'lucide-react';
 import { ArticleBookmarkButton } from './article-bookmark-button';
+import { ArticleAccessBadge, ArticleAudienceBadge } from './article-access-badges';
 
 interface ArticleHeaderProps {
   articleId?: string;
@@ -13,6 +14,8 @@ interface ArticleHeaderProps {
   date: string;
   readTime: string;
   commentCount?: number;
+  accessType?: 'free' | 'paid';
+  targetAudience?: 'general' | 'doctors';
 }
 
 export function ArticleHeader({
@@ -24,17 +27,21 @@ export function ArticleHeader({
   author,
   date,
   readTime,
-  commentCount = 0
+  commentCount = 0,
+  accessType,
+  targetAudience,
 }: ArticleHeaderProps) {
   const hasImage = image && image.trim() !== '';
-  
+
   return (
     <div className="mb-12">
-      {/* Category Badge */}
-      <div className="mb-6">
+      {/* Category + access badges */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
           {category}
         </span>
+        <ArticleAccessBadge accessType={accessType} />
+        <ArticleAudienceBadge audience={targetAudience} />
       </div>
 
       {/* Title */}

@@ -3,9 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, MoreHorizontal, ExternalLink, Eye, Edit, Trash2 } from "lucide-react"
 import { useState } from "react"
-import { PaidBadge } from "@/components/common/badges/paid-badge"
 import { StatusBadge } from "@/components/common/badges/status-badge"
-import { AudienceBadge } from "@/components/common/badges/audience-badge"
+import { ArticleAccessBadge, ArticleAudienceBadge } from "@/components/blog/article-access-badges"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -106,7 +105,9 @@ export const articleColumns: ColumnDef<ArticleRow>[] = [
     header: "Tipo",
     cell: ({ row }) => {
       const paid = row.getValue("paid") as string
-      return <PaidBadge value={paid} />
+      // Map the localized row value into the canonical access type the badge expects
+      const accessType = paid === 'Pago' || paid === 'Paid' ? 'paid' : 'free'
+      return <ArticleAccessBadge accessType={accessType} showFree />
     },
   },
   {
@@ -114,7 +115,8 @@ export const articleColumns: ColumnDef<ArticleRow>[] = [
     header: "Público",
     cell: ({ row }) => {
       const audience = row.getValue("audience") as string
-      return <AudienceBadge value={audience} />
+      const canonical = audience === 'Médicos' || audience === 'doctors' ? 'doctors' : 'general'
+      return <ArticleAudienceBadge audience={canonical} showGeneral />
     },
   },
   {

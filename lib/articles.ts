@@ -14,9 +14,9 @@ function formatDate(date: Date): string {
 }
 
 // Transform DB article to frontend Article type
-function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null }, includeContent = false): Article {
+function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null; accessType?: string; targetAudience?: string }, includeContent = false): Article {
   const articleDate = article.publishedAt || article.createdAt
-  
+
   return {
     id: article.id,
     slug: article.slug,
@@ -26,11 +26,13 @@ function transformArticle(article: { id: string; slug: string; title: string; ex
     image: article.image || '',
     category: article.category,
     author: article.authorDisplayName || article.authorName || 'Unknown',
-    authorAvatar: article.authorAvatar || '/images/default-avatar.jpg',
+    authorAvatar: article.authorAvatar || '/images/default-avatar.svg',
     authorSlug: '',
     date: formatDate(new Date(articleDate)),
     readTime: `${article.readTime} min`,
     commentCount: article.commentCount,
+    accessType: (article.accessType === 'paid' ? 'paid' : 'free'),
+    targetAudience: (article.targetAudience === 'doctors' ? 'doctors' : 'general'),
   }
 }
 
@@ -58,6 +60,8 @@ async function fetchArticles(page: number, limit: number, category?: string, sea
     publishedAt: blogArticles.publishedAt,
     createdAt: blogArticles.createdAt,
     relatedArticleIds: blogArticles.relatedArticleIds,
+    accessType: blogArticles.accessType,
+    targetAudience: blogArticles.targetAudience,
     authorName: users.name,
     authorDisplayName: users.displayName,
     authorAvatar: users.image,
@@ -120,6 +124,8 @@ async function fetchArticleBySlug(slug: string) {
     publishedAt: blogArticles.publishedAt,
     createdAt: blogArticles.createdAt,
     relatedArticleIds: blogArticles.relatedArticleIds,
+    accessType: blogArticles.accessType,
+    targetAudience: blogArticles.targetAudience,
     authorName: users.name,
     authorDisplayName: users.displayName,
     authorAvatar: users.image,

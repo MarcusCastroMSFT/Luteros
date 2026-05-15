@@ -62,7 +62,7 @@ export async function GET(
         category: row.category,
         author: {
           name: row.authorName || 'Unknown',
-          avatar: row.authorAvatar || '/images/default-avatar.jpg',
+          avatar: row.authorAvatar || '/images/default-avatar.svg',
         },
         date: formattedDate,
         readTime: `${row.readTime} min`,
@@ -150,16 +150,18 @@ export async function PUT(
       .where(eq(blogArticles.id, articleId))
       .returning()
 
+    // Cache invalidation so users see edits immediately
+    revalidateTag('articles')
+    revalidateTag('article-slugs')
+    revalidateTag(`article-${slug}`)
+    revalidatePath('/')
     revalidatePath('/articles')
     revalidatePath(`/articles/${slug}`)
     if (slug !== existing.slug) {
-      revalidatePath(`/articles/${existing.slug}`)
+      // Slug changed — also bust the old URL so search-engine-cached references die
       revalidateTag(`article-${existing.slug}`)
+      revalidatePath(`/articles/${existing.slug}`)
     }
-    revalidateTag('articles')
-    revalidateTag('articles-initial')
-    revalidateTag('article-slugs')
-    revalidateTag(`article-${slug}`)
 
     return NextResponse.json({ success: true, data: updated })
   } catch (error) {
@@ -191,12 +193,13 @@ export async function DELETE(
 
     await db.delete(blogArticles).where(eq(blogArticles.id, articleId))
 
-    revalidatePath('/articles')
-    revalidatePath(`/articles/${article.slug}`)
+    // Cache invalidation so the deleted article disappears immediately
     revalidateTag('articles')
-    revalidateTag('articles-initial')
     revalidateTag('article-slugs')
     revalidateTag(`article-${article.slug}`)
+    revalidatePath('/')
+    revalidatePath('/articles')
+    revalidatePath(`/articles/${article.slug}`)
 
     return NextResponse.json({ success: true, message: 'Article deleted successfully' })
   } catch (error) {

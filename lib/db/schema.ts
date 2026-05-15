@@ -25,6 +25,7 @@ export const systemEmailCategoryEnum = pgEnum('SystemEmailCategory', [
 ])
 export const subscriptionStatusEnum = pgEnum('SubscriptionStatus', ['ACTIVE', 'INACTIVE', 'CANCELLED', 'TRIAL'])
 export const subscriptionTierEnum = pgEnum('SubscriptionTier', ['FREE', 'BASIC', 'PREMIUM', 'ENTERPRISE'])
+export const subscriptionAudienceEnum = pgEnum('SubscriptionAudience', ['general', 'doctors'])
 
 // ─── NextAuth: users ──────────────────────────────────────────────────────────
 // Merged with user_profiles - single table for auth + profile data
@@ -644,6 +645,42 @@ export const systemEmailTemplates = pgTable('system_email_templates', {
   index('system_email_templates_code_idx').on(t.code),
   index('system_email_templates_category_idx').on(t.category),
   index('system_email_templates_isActive_idx').on(t.isActive),
+])
+
+// ─── Subscription plans & user subscriptions ─────────────────────────────────
+
+export const subscriptionPlans = pgTable('subscription_plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  code: text('code').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  audience: subscriptionAudienceEnum('audience').notNull(),
+  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
+  currency: text('currency').default('BRL').notNull(),
+  billingPeriod: text('billingPeriod').notNull(), // 'monthly' | 'yearly' | 'lifetime'
+  isActive: boolean('isActive').default(true).notNull(),
+  sortOrder: integer('sortOrder').default(0).notNull(),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { mode: 'date' }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex('subscription_plans_code_unique').on(t.code),
+  index('subscription_plans_audience_idx').on(t.audience),
+  index('subscription_plans_isActive_idx').on(t.isActive),
+])
+
+export const userSubscriptions = pgTable('user_subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  planId: uuid('planId').notNull().references(() => subscriptionPlans.id, { onDelete: 'restrict' }),
+  status: subscriptionStatusEnum('status').default('ACTIVE').notNull(),
+  startsAt: timestamp('startsAt', { mode: 'date' }).defaultNow().notNull(),
+  endsAt: timestamp('endsAt', { mode: 'date' }),
+  cancelledAt: timestamp('cancelledAt', { mode: 'date' }),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { mode: 'date' }).defaultNow().notNull(),
+}, (t) => [
+  index('user_subscriptions_userId_idx').on(t.userId),
+  index('user_subscriptions_active_idx').on(t.userId, t.status, t.endsAt),
 ])
 
 // ─── Type exports ─────────────────────────────────────────────────────────────

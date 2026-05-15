@@ -20,11 +20,6 @@ const defaultButtons: CTAButton[] = [
     text: 'Começar Gratuitamente',
     variant: 'primary',
   },
-  {
-    href: '/contact',
-    text: 'Falar com Vendas',
-    variant: 'secondary',
-  },
 ];
 
 export const FinalCTA = memo<FinalCTAProps>(function FinalCTA({

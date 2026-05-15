@@ -78,7 +78,7 @@ export async function GET(
         instructor: {
           id: row.instructorId,
           name: row.instructorName || row.instructorDisplayName || 'Unknown',
-          avatar: row.instructorAvatar || '/images/default-avatar.jpg',
+          avatar: row.instructorAvatar || '/images/default-avatar.svg',
         },
         createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
       },

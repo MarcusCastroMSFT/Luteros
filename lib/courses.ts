@@ -99,7 +99,7 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
       slug: course.instructorId,
       title: '',
       bio: course.instructorBio || '',
-      image: course.instructorAvatar || '/images/default-avatar.jpg',
+      image: course.instructorAvatar || '/images/default-avatar.svg',
       rating: 0,
       reviewsCount: 0,
       studentsCount: 0,

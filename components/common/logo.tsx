@@ -7,6 +7,8 @@ interface LogoProps {
   textSize?: "sm" | "md" | "lg" | "xl";
   showText?: boolean;
   asLink?: boolean;
+  /** When asLink is true, open the home page in a new tab. */
+  newTab?: boolean;
 }
 
 const iconSizes = {
@@ -16,10 +18,11 @@ const iconSizes = {
   xl: { width: 200, height: 200 }
 };
 
-export function Logo({ 
-  className = "", 
+export function Logo({
+  className = "",
   iconSize = "md",
-  asLink = false
+  asLink = false,
+  newTab = false,
 }: LogoProps) {
   const content = (
     <div className={`flex items-center ${className}`}>
@@ -35,7 +38,11 @@ export function Logo({
 
   if (asLink) {
     return (
-      <Link href="/" className="flex items-center">
+      <Link
+        href="/"
+        className="flex items-center"
+        {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >
         {content}
       </Link>
     );

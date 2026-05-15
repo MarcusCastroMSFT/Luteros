@@ -136,6 +136,67 @@ export const pricingPlans: PricingPlan[] = [
     buttonText: 'Assinar Premium',
     buttonVariant: 'filled',
   },
+  {
+    id: 'doctors',
+    name: 'Médicos e Especialistas',
+    description: 'Conteúdo clínico exclusivo para profissionais de saúde, mais tudo do plano Premium',
+    price: {
+      monthly: 59.90,
+      yearly: 599.00, // 10 months price (2 months free)
+    },
+    currency: 'R$',
+    features: [
+      {
+        id: 'free-articles',
+        text: 'Acesso a artigos básicos',
+        included: true,
+      },
+      {
+        id: 'premium-articles',
+        text: 'Artigos premium e exclusivos',
+        included: true,
+        highlight: true,
+      },
+      {
+        id: 'doctor-articles',
+        text: 'Artigos técnicos para profissionais',
+        included: true,
+        highlight: true,
+      },
+      {
+        id: 'protocols',
+        text: 'Protocolos clínicos e estudos de caso',
+        included: true,
+        highlight: true,
+      },
+      {
+        id: 'all-courses',
+        text: 'Acesso completo a todos os cursos',
+        included: true,
+        highlight: true,
+      },
+      {
+        id: 'events-access',
+        text: 'Participação em eventos e webinars',
+        included: true,
+        highlight: true,
+      },
+      {
+        id: 'priority-support',
+        text: 'Suporte prioritário',
+        included: true,
+        highlight: true,
+      },
+      {
+        id: 'certificates',
+        text: 'Certificados de conclusão',
+        included: true,
+        highlight: true,
+      },
+    ],
+    buttonText: 'Assinar plano Médicos',
+    buttonVariant: 'filled',
+  },
 ];
 
 export const pricingFAQ = [

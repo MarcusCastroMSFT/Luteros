@@ -3,12 +3,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, User, FileText } from 'lucide-react';
 import { ArticleCardProps } from '@/types/blog';
+import { ArticleAccessBadge, ArticleAudienceBadge } from './article-access-badges';
 
 // Re-export types for convenience
 export type { Article, ArticleCardProps } from '@/types/blog';
 
 export default function ArticleCard({ article, priority = false }: ArticleCardProps & { priority?: boolean }) {
   const hasImage = article.image && article.image.trim() !== '';
+  const hasAccessBadge = article.accessType === 'paid' || article.targetAudience === 'doctors';
 
   return (
     <article className="overflow-hidden group">
@@ -28,6 +30,14 @@ export default function ArticleCard({ article, priority = false }: ArticleCardPr
             <div className="absolute inset-0 bg-gradient-to-br from-brand-50 via-brand-100 to-brand-secondary-50 flex flex-col items-center justify-center transition-transform duration-700 group-hover:scale-105">
               <FileText className="w-12 h-12 md:w-16 md:h-16 text-amber-400/60 mb-2" strokeWidth={1.5} />
               <span className="text-xs md:text-sm text-amber-600/60 font-medium">Artigo</span>
+            </div>
+          )}
+
+          {/* Access badges overlay */}
+          {hasAccessBadge && (
+            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+              <ArticleAccessBadge accessType={article.accessType} className="backdrop-blur" />
+              <ArticleAudienceBadge audience={article.targetAudience} className="backdrop-blur" />
             </div>
           )}
         </div>
