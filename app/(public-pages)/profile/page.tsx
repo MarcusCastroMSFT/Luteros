@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/common/pageHeader';
+import { getCurrentUserProfile } from '@/lib/profile';
 import { ProfileClient } from './profile-client';
 
 export const metadata: Metadata = {
@@ -11,7 +13,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const profile = await getCurrentUserProfile();
+  if (!profile) redirect('/login?redirectTo=/profile');
+
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader
@@ -24,7 +29,7 @@ export default function ProfilePage() {
       />
 
       <div className="container mx-auto px-4 max-w-[1428px] py-12">
-        <ProfileClient />
+        <ProfileClient initialProfile={profile} />
       </div>
     </div>
   );

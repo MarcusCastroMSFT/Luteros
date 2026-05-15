@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, count } from 'drizzle-orm';
-import { auth } from '@/auth';
+import { eq, count, sql } from 'drizzle-orm';
+import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { users, enrollments, eventRegistrations, blogBookmarks, certificates } from '@/lib/db/schema';
 import { connection } from 'next/server';
@@ -35,24 +35,29 @@ export interface UserProfileData {
   };
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   await connection();
 
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 });
-    }
-    const userId = session.user.id;
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult.id;
 
-    const [profile, [{ enrolledCount }], [{ completedCount }], [{ eventsCount }], [{ savedCount }], [{ certsCount }]] = await Promise.all([
+    const [profile, [enrollmentStats], [{ eventsCount }], [{ savedCount }], [{ certsCount }]] = await Promise.all([
       db.select().from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null),
-      db.select({ enrolledCount: count() }).from(enrollments).where(eq(enrollments.userId, userId)),
-      db.select({ completedCount: count() }).from(enrollments).where(eq(enrollments.userId, userId)),
+      db
+        .select({
+          enrolledCount: count(),
+          completedCount: sql<number>`count(*) filter (where ${enrollments.completedAt} is not null)::int`,
+        })
+        .from(enrollments)
+        .where(eq(enrollments.userId, userId)),
       db.select({ eventsCount: count() }).from(eventRegistrations).where(eq(eventRegistrations.userId, userId)),
       db.select({ savedCount: count() }).from(blogBookmarks).where(eq(blogBookmarks.userId, userId)),
       db.select({ certsCount: count() }).from(certificates).where(eq(certificates.userId, userId)),
     ]);
+
+    const { enrolledCount, completedCount } = enrollmentStats;
 
     if (!profile) {
       return NextResponse.json({ success: false, error: 'Perfil não encontrado' }, { status: 404 });

@@ -1,10 +1,10 @@
 ﻿import { NextRequest, NextResponse, connection } from 'next/server'
 import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
-import { asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
-import { courses, users } from '@/lib/db/schema'
+import { courses, lessons, users } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
   await connection()
@@ -68,10 +68,20 @@ export async function GET(request: NextRequest) {
         reviewCount: courses.reviewCount, createdAt: courses.createdAt, updatedAt: courses.updatedAt,
         instructorId: instructor.id, instructorName: instructor.name,
         instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
-        lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND l."isPublished" = true)`,
       }).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id))
         .where(where).orderBy(orderFn(sortCol)).offset(page * pageSize).limit(pageSize),
     ])
+
+    // Batch lesson counts for all courses on this page in one query
+    const courseIds = coursesRows.map((c) => c.id)
+    const lessonCounts = courseIds.length > 0
+      ? await db
+          .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
+          .from(lessons)
+          .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
+          .groupBy(lessons.courseId)
+      : []
+    const lessonCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.count]))
 
     // Format duration from minutes to readable string
     const formatDuration = (minutes: number | null): string => {
@@ -109,7 +119,7 @@ export async function GET(request: NextRequest) {
         reviewsCount: course.reviewCount,
         price: discountPrice !== null ? discountPrice : price,
         originalPrice: discountPrice !== null ? price : undefined,
-        lessonsCount: course.lessonsCount,
+        lessonsCount: lessonCountMap.get(course.id) ?? 0,
         duration: formatDuration(course.duration),
         status: course.isPublished ? 'Ativo' : 'Rascunho',
         isBestSeller: course.enrollmentCount > 1000,

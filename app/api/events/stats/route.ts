@@ -20,24 +20,25 @@ export async function GET(request: NextRequest) {
     const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
 
-    const [rows] = await db.select({
-      totalEvents: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false)::int`,
-      eventsThisMonth: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false AND ${events.createdAt} >= ${firstDayThisMonth})::int`,
-      eventsLastMonth: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false AND ${events.createdAt} >= ${firstDayLastMonth} AND ${events.createdAt} <= ${lastDayLastMonth})::int`,
-    }).from(events)
-
-    const [regRows] = await db.select({
-      totalRegistrations: sql<number>`count(*)::int`,
-      registrationsThisMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayThisMonth})::int`,
-      registrationsLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
-      totalRevenue: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
-      revenueThisMonth: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' AND ${eventRegistrations.registeredAt} >= ${firstDayThisMonth} then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
-      revenueLastMonth: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' AND ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth} then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
-      totalAttendees: sql<number>`count(*)::int`,
-      attendedCount: sql<number>`count(*) filter (where ${eventRegistrations.attended} = true)::int`,
-      totalRegsLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
-      attendedLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.attended} = true AND ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
-    }).from(eventRegistrations)
+    const [[rows], [regRows]] = await Promise.all([
+      db.select({
+        totalEvents: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false)::int`,
+        eventsThisMonth: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false AND ${events.createdAt} >= ${firstDayThisMonth})::int`,
+        eventsLastMonth: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false AND ${events.createdAt} >= ${firstDayLastMonth} AND ${events.createdAt} <= ${lastDayLastMonth})::int`,
+      }).from(events),
+      db.select({
+        totalRegistrations: sql<number>`count(*)::int`,
+        registrationsThisMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayThisMonth})::int`,
+        registrationsLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
+        totalRevenue: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
+        revenueThisMonth: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' AND ${eventRegistrations.registeredAt} >= ${firstDayThisMonth} then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
+        revenueLastMonth: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' AND ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth} then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
+        totalAttendees: sql<number>`count(*)::int`,
+        attendedCount: sql<number>`count(*) filter (where ${eventRegistrations.attended} = true)::int`,
+        totalRegsLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
+        attendedLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.attended} = true AND ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
+      }).from(eventRegistrations),
+    ])
 
     const totalEvents = Number(rows.totalEvents)
     const eventsThisMonth = Number(rows.eventsThisMonth)

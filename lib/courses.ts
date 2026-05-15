@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { and, asc, desc, eq, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
 import { courses, lessons, users } from '@/lib/db/schema'
@@ -144,7 +144,6 @@ async function fetchCourses(page: number, limit: number, category?: string) {
     instructorId: instructor.id, instructorName: instructor.name,
     instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
     instructorBio: instructor.bio,
-    lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND l."isPublished" = true)`,
   }
 
   const [rows, [{ total }], categoriesRaw] = await Promise.all([
@@ -153,7 +152,18 @@ async function fetchCourses(page: number, limit: number, category?: string) {
     db.selectDistinct({ category: courses.category }).from(courses).where(eq(courses.isPublished, true)).orderBy(asc(courses.category)),
   ])
 
-  const transformedCourses = rows.map(transformCourse)
+  // Batch lesson counts for all courses on this page in one query (avoids correlated subquery per row)
+  const courseIds = rows.map((r) => r.id)
+  const lessonCounts = courseIds.length > 0
+    ? await db
+        .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
+        .from(lessons)
+        .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
+        .groupBy(lessons.courseId)
+    : []
+  const lessonCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.count]))
+
+  const transformedCourses = rows.map((r) => transformCourse({ ...r, lessonsCount: lessonCountMap.get(r.id) ?? 0 }))
   const totalCourses = Number(total)
   const totalPages = Math.ceil(totalCourses / limit)
   const categories = ['Todos', ...categoriesRaw.map((c) => c.category)]
@@ -188,7 +198,6 @@ async function fetchCourseBySlug(slug: string) {
     instructorId: instructor.id, instructorName: instructor.name,
     instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
     instructorBio: instructor.bio,
-    lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND l."isPublished" = true)`,
   }
 
   const course = await db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.slug, slug), eq(courses.isPublished, true))).limit(1).then((r) => r[0] ?? null)
@@ -199,10 +208,21 @@ async function fetchCourseBySlug(slug: string) {
     db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.category, course.category), ne(courses.slug, slug), eq(courses.isPublished, true))).orderBy(desc(courses.enrollmentCount)).limit(3),
   ])
 
+  // Batch lesson counts for related courses; main course's count is courseLessons.length
+  const relatedIds = related.map((r) => r.id)
+  const relatedLessonCounts = relatedIds.length > 0
+    ? await db
+        .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
+        .from(lessons)
+        .where(and(inArray(lessons.courseId, relatedIds), eq(lessons.isPublished, true)))
+        .groupBy(lessons.courseId)
+    : []
+  const relatedLessonCountMap = new Map(relatedLessonCounts.map((c) => [c.courseId, c.count]))
+
   return {
-    course: transformCourse(course),
+    course: transformCourse({ ...course, lessonsCount: courseLessons.length }),
     lessons: courseLessons,
-    relatedCourses: related.map(transformCourse),
+    relatedCourses: related.map((r) => transformCourse({ ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0 })),
   }
 }
 

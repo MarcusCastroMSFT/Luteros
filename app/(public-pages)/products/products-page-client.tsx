@@ -388,8 +388,8 @@ export function ProductsPageClient({
 
             {/* Products Grid - 2 columns on mobile */}
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-8">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product, i) => (
+                <ProductCard key={product.id} product={product} priority={i < 3} />
               ))}
             </div>
 

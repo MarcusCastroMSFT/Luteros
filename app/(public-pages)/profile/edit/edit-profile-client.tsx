@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { 
-  IconUser, 
-  IconBriefcase, 
-  IconWorld, 
+import {
+  IconUser,
+  IconBriefcase,
+  IconWorld,
   IconSettings,
   IconArrowLeft,
   IconDeviceFloppy,
@@ -17,87 +16,36 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import type { UserProfileData } from '@/app/api/users/profile/route';
 
-export function EditProfileClient() {
-  const { user, isLoading: authLoading, refreshProfile } = useAuth();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+interface EditProfileClientProps {
+  initialProfile: UserProfileData;
+}
+
+export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
+  const { refreshProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Form state
+  // Form state seeded from SSR-fetched profile
   const [formData, setFormData] = useState({
-    fullName: '',
-    displayName: '',
-    bio: '',
-    phone: '',
-    dateOfBirth: '',
-    title: '',
-    company: '',
-    website: '',
-    linkedin: '',
-    twitter: '',
-    instagram: '',
-    language: 'pt',
-    timezone: 'America/Sao_Paulo',
-    emailNotifications: true,
-    marketingEmails: false,
+    fullName: initialProfile.fullName || '',
+    displayName: initialProfile.displayName || '',
+    bio: initialProfile.bio || '',
+    phone: initialProfile.phone || '',
+    dateOfBirth: initialProfile.dateOfBirth ? initialProfile.dateOfBirth.split('T')[0] : '',
+    title: initialProfile.title || '',
+    company: initialProfile.company || '',
+    website: initialProfile.website || '',
+    linkedin: initialProfile.linkedin || '',
+    twitter: initialProfile.twitter || '',
+    instagram: initialProfile.instagram || '',
+    language: initialProfile.language || 'pt',
+    timezone: initialProfile.timezone || 'America/Sao_Paulo',
+    emailNotifications: initialProfile.emailNotifications ?? true,
+    marketingEmails: initialProfile.marketingEmails ?? false,
   });
-
-  const fetchProfile = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/users/profile');
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Erro ao carregar perfil');
-        return;
-      }
-
-      const p = data.data;
-      setFormData({
-        fullName: p.fullName || '',
-        displayName: p.displayName || '',
-        bio: p.bio || '',
-        phone: p.phone || '',
-        dateOfBirth: p.dateOfBirth ? p.dateOfBirth.split('T')[0] : '',
-        title: p.title || '',
-        company: p.company || '',
-        website: p.website || '',
-        linkedin: p.linkedin || '',
-        twitter: p.twitter || '',
-        instagram: p.instagram || '',
-        language: p.language || 'pt',
-        timezone: p.timezone || 'America/Sao_Paulo',
-        emailNotifications: p.emailNotifications ?? true,
-        marketingEmails: p.marketingEmails ?? false,
-      });
-    } catch (err) {
-      console.error('Error fetching profile:', err);
-      setError('Erro ao carregar perfil');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login?redirect=/profile/edit');
-      return;
-    }
-
-    if (user) {
-      // fetch when user changes
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchProfile();
-    }
-  }, [user, authLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -130,12 +78,10 @@ export function EditProfileClient() {
       }
 
       toast.success('Perfil atualizado com sucesso!');
-      
-      // Refresh the auth context profile
+
+      // Refresh the auth context profile, then go back to profile
       await refreshProfile();
-      
-      // Redirect back to profile page
-      router.push('/profile');
+      window.location.assign('/profile');
     } catch (err) {
       console.error('Error saving profile:', err);
       toast.error('Erro ao salvar perfil');
@@ -144,18 +90,6 @@ export function EditProfileClient() {
     }
   };
 
-  if (authLoading || isLoading) {
-    return <EditProfileSkeleton />;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={fetchProfile}>Tentar novamente</Button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -424,36 +358,5 @@ export function EditProfileClient() {
         </Button>
       </div>
     </form>
-  );
-}
-
-// Skeleton Loader
-function EditProfileSkeleton() {
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-10 w-40" />
-        <Skeleton className="h-10 w-40" />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[...Array(4)].map((_, j) => (
-                <div key={j} className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
   );
 }

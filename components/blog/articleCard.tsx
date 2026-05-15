@@ -7,9 +7,9 @@ import { ArticleCardProps } from '@/types/blog';
 // Re-export types for convenience
 export type { Article, ArticleCardProps } from '@/types/blog';
 
-export default function ArticleCard({ article }: ArticleCardProps) {
+export default function ArticleCard({ article, priority = false }: ArticleCardProps & { priority?: boolean }) {
   const hasImage = article.image && article.image.trim() !== '';
-  
+
   return (
     <article className="overflow-hidden group">
       <Link href={`/articles/${article.slug}`} className="block">
@@ -21,6 +21,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
+              priority={priority}
+              loading={priority ? undefined : 'lazy'}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-brand-50 via-brand-100 to-brand-secondary-50 flex flex-col items-center justify-center transition-transform duration-700 group-hover:scale-105">

@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
+import React, { useState } from 'react';
 import { 
   IconUser, 
   IconMail, 
@@ -27,11 +25,13 @@ import { UserAvatar } from '@/components/ui/user-avatar';
 import Link from 'next/link';
 import { type UserProfileData } from '@/app/api/users/profile/route';
 
-export function ProfileClient() {
-  const { user, isLoading: authLoading } = useAuth();
-  const router = useRouter();
-  const [profile, setProfile] = useState<UserProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface ProfileClientProps {
+  initialProfile: UserProfileData;
+}
+
+export function ProfileClient({ initialProfile }: ProfileClientProps) {
+  const [profile, setProfile] = useState<UserProfileData>(initialProfile);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async () => {
@@ -56,19 +56,6 @@ export function ProfileClient() {
     }
   };
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login?redirect=/profile');
-      return;
-    }
-
-    if (user) {
-      // fetch when user changes
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchProfile();
-    }
-  }, [user, authLoading, router]);
-
   // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
@@ -89,7 +76,7 @@ export function ProfileClient() {
     });
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return <ProfileSkeleton />;
   }
 
@@ -98,14 +85,6 @@ export function ProfileClient() {
       <div className="text-center py-16">
         <p className="text-red-600 mb-4">{error}</p>
         <Button onClick={fetchProfile}>Tentar novamente</Button>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-gray-600">Perfil não encontrado.</p>
       </div>
     );
   }

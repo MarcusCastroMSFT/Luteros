@@ -136,8 +136,8 @@ export function ArticlesPageClient({ initialArticles, initialPagination, initial
       ) : articles.length > 0 ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {articles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
+            {articles.map((article, i) => (
+              <ArticleCard key={article.id} article={article} priority={i < 3} />
             ))}
           </div>
           

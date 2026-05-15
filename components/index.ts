@@ -56,7 +56,6 @@ export { EventCardSkeleton, EventListSkeleton } from "./events/eventSkeleton";
 export { ArticlesStats } from "./articles/articlesStats";
 
 // Layout components
-export { LayoutWrapper } from "./layout-wrapper";
 export { Providers } from "./providers";
 
 // UI components

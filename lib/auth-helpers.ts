@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 
@@ -12,11 +13,8 @@ export interface AuthUser {
   displayName: string | null | undefined
 }
 
-/**
- * Get the authenticated user from the NextAuth JWT session.
- * No database call required — role is stored in the JWT.
- */
-export async function getAuthUser(_request?: NextRequest): Promise<AuthUser | null> {
+// Memoized per request: multiple helpers in the same request share one auth() call.
+export const getAuthUser = cache(async (_request?: NextRequest): Promise<AuthUser | null> => {
   const session = await auth()
   if (!session?.user?.id) return null
   return {
@@ -27,7 +25,7 @@ export async function getAuthUser(_request?: NextRequest): Promise<AuthUser | nu
     role: (session.user.role as UserRole) ?? 'USER',
     displayName: session.user.displayName,
   }
-}
+})
 
 /**
  * Require authentication for API routes.

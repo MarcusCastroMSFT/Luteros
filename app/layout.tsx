@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Cardo } from "next/font/google";
 import "./globals.css";
-import { LayoutWrapper } from "../components/layout-wrapper";
 import { Providers } from "../components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -89,9 +88,7 @@ export default function RootLayout({
       >
         <Suspense>
           <Providers>
-            <LayoutWrapper>
-              {children}
-            </LayoutWrapper>
+            {children}
             <Toaster />
             <SpeedInsights />
             <Analytics />

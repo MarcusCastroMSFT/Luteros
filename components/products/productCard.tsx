@@ -8,9 +8,10 @@ import { Product } from '@/types/product';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, priority = false }: ProductCardProps) {
   const isExpiringSoon = () => {
     const validUntil = new Date(product.validUntil);
     const now = new Date();
@@ -37,6 +38,8 @@ export function ProductCard({ product }: ProductCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
+            loading={priority ? undefined : 'lazy'}
           />
           
           {/* Badges Overlay - Compact on mobile */}

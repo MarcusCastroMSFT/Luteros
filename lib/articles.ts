@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { blogArticles, users } from '@/lib/db/schema'
 import { type Article } from '@/types/blog'
@@ -34,10 +34,16 @@ function transformArticle(article: { id: string; slug: string; title: string; ex
   }
 }
 
-async function fetchArticles(page: number, limit: number, category?: string) {
+async function fetchArticles(page: number, limit: number, category?: string, search?: string) {
   const where = and(
     eq(blogArticles.isPublished, true),
     category && category !== 'Todos' ? eq(blogArticles.category, category) : undefined,
+    search
+      ? or(
+          ilike(blogArticles.title, `%${search}%`),
+          ilike(blogArticles.excerpt, `%${search}%`),
+        )
+      : undefined,
   )
 
   const articleCols = {
@@ -82,13 +88,22 @@ async function fetchArticles(page: number, limit: number, category?: string) {
   }
 }
 
-// Get paginated articles with optional category filter using Next.js 16 Cache Components
-export async function getArticles(page: number, limit: number, category?: string) {
+// Cached path (no search) — single tag so revalidateTag('articles') covers all pages
+async function getArticlesCached(page: number, limit: number, category?: string) {
   'use cache'
   cacheLife('hours') // Articles change less frequently - stale 1h, revalidate 1h, expire 1d
-  cacheTag('articles', `articles-list-${page}-${limit}-${category || 'all'}`)
-  
+  cacheTag('articles')
+
   return fetchArticles(page, limit, category)
+}
+
+// Get paginated articles with optional category filter. Searches bypass the cache
+// (cardinality of free-text would explode cache entries).
+export async function getArticles(page: number, limit: number, category?: string, search?: string) {
+  if (search) {
+    return fetchArticles(page, limit, category, search)
+  }
+  return getArticlesCached(page, limit, category)
 }
 
 async function fetchArticleBySlug(slug: string) {
@@ -113,14 +128,23 @@ async function fetchArticleBySlug(slug: string) {
   const article = await db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(eq(blogArticles.slug, slug), eq(blogArticles.isPublished, true))).limit(1).then((r) => r[0] ?? null)
   if (!article) return null
 
-  let relatedArticles = article.relatedArticleIds && article.relatedArticleIds.length > 0
-    ? await db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(inArray(blogArticles.id, article.relatedArticleIds), eq(blogArticles.isPublished, true))).limit(3)
-    : []
+  // Fetch explicit related + category fallback in parallel, then merge and trim to 3.
+  // Avoids the prior 1-then-1-conditionally pattern (up to 3 sequential round-trips).
+  const explicitIds = article.relatedArticleIds ?? []
+  const [explicitRelated, categoryFallback] = await Promise.all([
+    explicitIds.length > 0
+      ? db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(inArray(blogArticles.id, explicitIds), eq(blogArticles.isPublished, true))).limit(3)
+      : Promise.resolve([] as Array<typeof article>),
+    db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(eq(blogArticles.category, article.category), ne(blogArticles.id, article.id), eq(blogArticles.isPublished, true))).orderBy(desc(blogArticles.publishedAt)).limit(3),
+  ])
 
-  if (relatedArticles.length < 3) {
-    const existing = relatedArticles.map((a) => a.id)
-    const additional = await db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(eq(blogArticles.category, article.category), ne(blogArticles.slug, slug), eq(blogArticles.isPublished, true), existing.length > 0 ? ne(blogArticles.id, existing[0]) : undefined)).orderBy(desc(blogArticles.publishedAt)).limit(3 - relatedArticles.length)
-    relatedArticles = [...relatedArticles, ...additional]
+  const seen = new Set<string>([article.id])
+  const relatedArticles: typeof explicitRelated = []
+  for (const candidate of [...explicitRelated, ...categoryFallback]) {
+    if (relatedArticles.length >= 3) break
+    if (seen.has(candidate.id)) continue
+    seen.add(candidate.id)
+    relatedArticles.push(candidate)
   }
 
   return {

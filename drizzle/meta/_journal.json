@@ -8,6 +8,13 @@
       "when": 1777417392489,
       "tag": "0000_oval_iron_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779100000000,
+      "tag": "0001_search_trigram_indexes",
+      "breakpoints": true
     }
   ]
 }

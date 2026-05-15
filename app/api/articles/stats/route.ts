@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, connection } from 'next/server'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { blogArticles } from '@/lib/db/schema'
-import { and, eq, gte, lt, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
   await connection()
@@ -17,25 +17,18 @@ export async function GET(request: NextRequest) {
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
     const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate())
 
-    const [
-      [{ total }],
-      [{ published }],
-      [{ draft }],
-      [{ newThisMonth }],
-      [{ newLastMonth }],
-      [{ totalComments }],
-      [{ commentsThisMonth }],
-      [{ commentsLastMonth }],
-    ] = await Promise.all([
-      db.select({ total: sql<number>`count(*)::int` }).from(blogArticles),
-      db.select({ published: sql<number>`count(*)::int` }).from(blogArticles).where(eq(blogArticles.isPublished, true)),
-      db.select({ draft: sql<number>`count(*)::int` }).from(blogArticles).where(eq(blogArticles.isPublished, false)),
-      db.select({ newThisMonth: sql<number>`count(*)::int` }).from(blogArticles).where(gte(blogArticles.createdAt, lastMonth)),
-      db.select({ newLastMonth: sql<number>`count(*)::int` }).from(blogArticles).where(and(gte(blogArticles.createdAt, twoMonthsAgo), lt(blogArticles.createdAt, lastMonth))),
-      db.select({ totalComments: sql<number>`coalesce(sum(${blogArticles.commentCount}), 0)::int` }).from(blogArticles),
-      db.select({ commentsThisMonth: sql<number>`coalesce(sum(${blogArticles.commentCount}), 0)::int` }).from(blogArticles).where(gte(blogArticles.updatedAt, lastMonth)),
-      db.select({ commentsLastMonth: sql<number>`coalesce(sum(${blogArticles.commentCount}), 0)::int` }).from(blogArticles).where(and(gte(blogArticles.updatedAt, twoMonthsAgo), lt(blogArticles.updatedAt, lastMonth))),
-    ])
+    const [{ total, published, draft, newThisMonth, newLastMonth, totalComments, commentsThisMonth, commentsLastMonth }] = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        published: sql<number>`count(*) filter (where ${blogArticles.isPublished} = true)::int`,
+        draft: sql<number>`count(*) filter (where ${blogArticles.isPublished} = false)::int`,
+        newThisMonth: sql<number>`count(*) filter (where ${blogArticles.createdAt} >= ${lastMonth})::int`,
+        newLastMonth: sql<number>`count(*) filter (where ${blogArticles.createdAt} >= ${twoMonthsAgo} and ${blogArticles.createdAt} < ${lastMonth})::int`,
+        totalComments: sql<number>`coalesce(sum(${blogArticles.commentCount}), 0)::int`,
+        commentsThisMonth: sql<number>`coalesce(sum(${blogArticles.commentCount}) filter (where ${blogArticles.updatedAt} >= ${lastMonth}), 0)::int`,
+        commentsLastMonth: sql<number>`coalesce(sum(${blogArticles.commentCount}) filter (where ${blogArticles.updatedAt} >= ${twoMonthsAgo} and ${blogArticles.updatedAt} < ${lastMonth}), 0)::int`,
+      })
+      .from(blogArticles)
 
     const articlesGrowth = newLastMonth > 0
       ? ((newThisMonth - newLastMonth) / newLastMonth * 100).toFixed(1)

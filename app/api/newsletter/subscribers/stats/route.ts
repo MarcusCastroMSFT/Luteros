@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, connection } from 'next/server'
 import { db } from '@/lib/db'
 import { newsletterSubscribers } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth-helpers'
-import { and, eq, gte, lt, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
   await connection()
@@ -19,23 +19,17 @@ export async function GET(request: NextRequest) {
     const startOfWeek = new Date(now)
     startOfWeek.setDate(now.getDate() - 7)
 
-    const [
-      [{ total }],
-      [{ active }],
-      [{ newThisMonth }],
-      [{ newLastMonth }],
-      [{ newThisWeek }],
-      [{ unsubscribedThisMonth }],
-      [{ pending }],
-    ] = await Promise.all([
-      db.select({ total: sql<number>`count(*)::int` }).from(newsletterSubscribers),
-      db.select({ active: sql<number>`count(*)::int` }).from(newsletterSubscribers).where(eq(newsletterSubscribers.status, 'ACTIVE')),
-      db.select({ newThisMonth: sql<number>`count(*)::int` }).from(newsletterSubscribers).where(gte(newsletterSubscribers.createdAt, startOfMonth)),
-      db.select({ newLastMonth: sql<number>`count(*)::int` }).from(newsletterSubscribers).where(and(gte(newsletterSubscribers.createdAt, startOfLastMonth), lt(newsletterSubscribers.createdAt, startOfMonth))),
-      db.select({ newThisWeek: sql<number>`count(*)::int` }).from(newsletterSubscribers).where(gte(newsletterSubscribers.createdAt, startOfWeek)),
-      db.select({ unsubscribedThisMonth: sql<number>`count(*)::int` }).from(newsletterSubscribers).where(and(eq(newsletterSubscribers.status, 'UNSUBSCRIBED'), gte(newsletterSubscribers.unsubscribedAt, startOfMonth))),
-      db.select({ pending: sql<number>`count(*)::int` }).from(newsletterSubscribers).where(eq(newsletterSubscribers.status, 'PENDING')),
-    ])
+    const [{ total, active, newThisMonth, newLastMonth, newThisWeek, unsubscribedThisMonth, pending }] = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        active: sql<number>`count(*) filter (where ${newsletterSubscribers.status} = 'ACTIVE')::int`,
+        newThisMonth: sql<number>`count(*) filter (where ${newsletterSubscribers.createdAt} >= ${startOfMonth})::int`,
+        newLastMonth: sql<number>`count(*) filter (where ${newsletterSubscribers.createdAt} >= ${startOfLastMonth} and ${newsletterSubscribers.createdAt} < ${startOfMonth})::int`,
+        newThisWeek: sql<number>`count(*) filter (where ${newsletterSubscribers.createdAt} >= ${startOfWeek})::int`,
+        unsubscribedThisMonth: sql<number>`count(*) filter (where ${newsletterSubscribers.status} = 'UNSUBSCRIBED' and ${newsletterSubscribers.unsubscribedAt} >= ${startOfMonth})::int`,
+        pending: sql<number>`count(*) filter (where ${newsletterSubscribers.status} = 'PENDING')::int`,
+      })
+      .from(newsletterSubscribers)
 
     const monthlyGrowth = newLastMonth > 0
       ? ((newThisMonth - newLastMonth) / newLastMonth * 100).toFixed(1)
