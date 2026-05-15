@@ -1,9 +1,8 @@
 ﻿import { NextRequest, NextResponse, connection } from 'next/server'
 import { revalidateTag } from '@/lib/cache'
-import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
-import { communityPosts, users } from '@/lib/db/schema'
+import { communityPosts } from '@/lib/db/schema'
 import { sanitizeInput } from '@/lib/utils'
 
 // Rate limiting: simple in-memory store (in production, use Redis)
@@ -118,16 +117,11 @@ export async function POST(request: NextRequest) {
       })
       .returning()
 
-    const authorRow = await db
-      .select({ name: users.name, displayName: users.displayName })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1)
-      .then((r) => r[0] ?? null)
-
+    // Author is the current authenticated user — their name/displayName are
+    // already on the JWT session, no need for a follow-up SELECT against users.
     const authorName = newPost.isAnonymous
       ? 'AnÃ´nimo'
-      : (authorRow?.displayName || authorRow?.name || 'UsuÃ¡rio')
+      : (authUser.displayName || authUser.name || 'UsuÃ¡rio')
 
     // Revalidate community cache
     revalidateTag('community')

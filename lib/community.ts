@@ -285,10 +285,13 @@ export async function updatePost(
   },
   userId: string
 ) {
-  const post = await db.select({ userId: communityPosts.userId }).from(communityPosts).where(eq(communityPosts.id, id)).limit(1).then((r) => r[0] ?? null)
+  // Fetch post ownership and current user's role in parallel; they're independent reads.
+  const [post, currentUser] = await Promise.all([
+    db.select({ userId: communityPosts.userId }).from(communityPosts).where(eq(communityPosts.id, id)).limit(1).then((r) => r[0] ?? null),
+    db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null),
+  ])
   if (!post) return null
 
-  const currentUser = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null)
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
   if (!isAdmin && !isAuthor) return null
