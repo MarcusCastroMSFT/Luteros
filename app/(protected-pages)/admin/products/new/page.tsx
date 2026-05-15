@@ -57,7 +57,7 @@ export default function NewProductPage() {
   const [image, setImage] = useState('');
   const [partnerId, setPartnerId] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState('10');
-  const [discountType, setDiscountType] = useState('percentage');
+  const [discountType] = useState('percentage');
   const [originalPrice, setOriginalPrice] = useState('');
   const [discountedPrice, setDiscountedPrice] = useState('');
   const [promoCode, setPromoCode] = useState('');

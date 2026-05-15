@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { events as eventsTable, eventSpeakers } from '@/lib/db/schema'
 
 export async function POST(request: NextRequest) {
   try {
@@ -132,9 +134,7 @@ export async function POST(request: NextRequest) {
       
       try {
         // Check if event already exists
-        const existing = await prisma.events.findUnique({
-          where: { slug: event.slug }
-        })
+        const existing = await db.select({ id: eventsTable.id }).from(eventsTable).where(eq(eventsTable.slug, event.slug)).limit(1).then((r) => r[0] ?? null)
 
         if (existing) {
           console.log(`⏭️  Skipping existing event: ${event.title}`)
@@ -142,22 +142,18 @@ export async function POST(request: NextRequest) {
         }
 
         // Create event
-        const createdEvent = await prisma.events.create({
-          data: event,
-        })
+        const [createdEvent] = await db.insert(eventsTable).values({ ...event, cost: event.cost != null ? String(event.cost) : null }).returning()
 
         console.log(`✅ Created event: ${createdEvent.title}`)
 
         // Create speakers
         if (speakers && speakers.length > 0) {
           for (const speaker of speakers) {
-            await prisma.eventSpeaker.create({
-              data: {
-                eventId: createdEvent.id,
-                name: speaker.name,
-                title: speaker.title,
-                order: speaker.order,
-              },
+            await db.insert(eventSpeakers).values({
+              eventId: createdEvent.id,
+              name: speaker.name,
+              title: speaker.title,
+              order: speaker.order,
             })
           }
           console.log(`   Added ${speakers.length} speakers`)

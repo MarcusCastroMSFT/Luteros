@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Filter, MessageSquare, Reply, Bookmark, X } from 'lucide-react'
+import { Filter, MessageSquare, Reply, Bookmark } from 'lucide-react'
 import { CommunitySidebar } from '@/components/community/communitySidebar'
 import { CommunityPostList } from '@/components/community/communityPostList'
 import { UserProfileTabs } from '@/components/community/userProfileTabs'
 import { CommunityContentSkeleton } from '@/components/community/communityContentSkeleton'
 import { CommunityPost, CommunityPagination, CommunityApiResponse } from '@/types/community'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
 
 interface CommunityPageClientProps {
   initialPosts: CommunityPost[]
@@ -16,15 +15,14 @@ interface CommunityPageClientProps {
   initialCategories: string[]
 }
 
-export function CommunityPageClient({ 
-  initialPosts, 
+export function CommunityPageClient({
+  initialPosts,
   initialPagination,
-  initialCategories 
+  initialCategories: _initialCategories
 }: CommunityPageClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('pregnancy')
   const [posts, setPosts] = useState<CommunityPost[]>(initialPosts)
-  const [pagination, setPagination] = useState<CommunityPagination>(initialPagination)
-  const [categories] = useState<string[]>(initialCategories)
+  const [, setPagination] = useState<CommunityPagination>(initialPagination)
   const [isContentLoading, setIsContentLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)

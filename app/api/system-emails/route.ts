@@ -1,72 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
+import { asc, eq } from 'drizzle-orm'
+import { requireAuth } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { systemEmailTemplates, users } from '@/lib/db/schema'
 
 // GET - List all system email templates
 export async function GET(request: NextRequest) {
   try {
-    // Auth check - only admins should access this
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) return authUser
 
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
 
-    const whereClause: Record<string, unknown> = {}
-    if (category) {
-      whereClause.category = category
-    }
+    const rows = await db
+      .select({
+        id: systemEmailTemplates.id,
+        code: systemEmailTemplates.code,
+        name: systemEmailTemplates.name,
+        description: systemEmailTemplates.description,
+        category: systemEmailTemplates.category,
+        subject: systemEmailTemplates.subject,
+        previewText: systemEmailTemplates.previewText,
+        htmlContent: systemEmailTemplates.htmlContent,
+        textContent: systemEmailTemplates.textContent,
+        variables: systemEmailTemplates.variables,
+        isActive: systemEmailTemplates.isActive,
+        updatedById: systemEmailTemplates.updatedById,
+        createdAt: systemEmailTemplates.createdAt,
+        updatedAt: systemEmailTemplates.updatedAt,
+        updatedByName: users.name,
+        updatedByDisplayName: users.displayName,
+      })
+      .from(systemEmailTemplates)
+      .leftJoin(users, eq(systemEmailTemplates.updatedById, users.id))
+      .where(category ? eq(systemEmailTemplates.category, category as 'AUTHENTICATION' | 'ACCOUNT' | 'NOTIFICATION' | 'TRANSACTION' | 'ENGAGEMENT') : undefined)
+      .orderBy(asc(systemEmailTemplates.category), asc(systemEmailTemplates.name))
 
-    const templates = await prisma.system_email_templates.findMany({
-      where: whereClause,
-      orderBy: [
-        { category: 'asc' },
-        { name: 'asc' },
-      ],
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        description: true,
-        category: true,
-        subject: true,
-        previewText: true,
-        htmlContent: true,
-        textContent: true,
-        variables: true,
-        isActive: true,
-        updatedById: true,
-        createdAt: true,
-        updatedAt: true,
-        updatedBy: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-          },
-        },
-      },
-    })
+    const data = rows.map((r) => ({
+      ...r,
+      updatedBy: r.updatedById ? { id: r.updatedById, name: r.updatedByDisplayName || r.updatedByName || 'Unknown' } : null,
+    }))
 
-    return NextResponse.json({
-      success: true,
-      data: templates,
-    })
+    return NextResponse.json({ success: true, data })
   } catch (error) {
     console.error('Error fetching system email templates:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch system email templates' 
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Failed to fetch system email templates' }, { status: 500 })
   }
 }

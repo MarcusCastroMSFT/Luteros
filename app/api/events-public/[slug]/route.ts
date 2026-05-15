@@ -1,109 +1,92 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { events, eventRegistrations, eventSpeakers } from '@/lib/db/schema'
+import { and, asc, eq, gte, ne, sql } from 'drizzle-orm'
 
 interface Props {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>
 }
 
 export async function GET(request: NextRequest, { params }: Props) {
-  const headers = new Headers({
-    'Cache-Tag': 'events-public',
-  });
+  const headers = new Headers({ 'Cache-Tag': 'events-public' })
 
   try {
-    const { slug } = await params;
+    const { slug } = await params
 
-    // Find event by slug (only published, non-cancelled events)
-    const event = await prisma.events.findFirst({
-      where: {
-        slug,
-        isPublished: true,
-        isCancelled: false,
-      },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        fullDescription: true,
-        location: true,
-        eventDate: true,
-        eventTime: true,
-        duration: true,
-        image: true,
-        totalSlots: true,
-        cost: true,
-        isFree: true,
-        createdAt: true,
-        _count: {
-          select: {
-            event_registrations: true,
-          },
-        },
-        event_speakers: {
-          select: {
-            id: true,
-            name: true,
-            title: true,
-            bio: true,
-            image: true,
-            linkedin: true,
-            twitter: true,
-            website: true,
-            order: true,
-          },
-          orderBy: {
-            order: 'asc',
-          },
-        },
-      },
-    });
+    const event = await db
+      .select({
+        id: events.id,
+        slug: events.slug,
+        title: events.title,
+        description: events.description,
+        fullDescription: events.fullDescription,
+        location: events.location,
+        eventDate: events.eventDate,
+        eventTime: events.eventTime,
+        duration: events.duration,
+        image: events.image,
+        totalSlots: events.totalSlots,
+        cost: events.cost,
+        isFree: events.isFree,
+        createdAt: events.createdAt,
+        registrationCount: sql<number>`(select count(*)::int from ${eventRegistrations} where ${eventRegistrations.eventId} = ${events.id})`,
+      })
+      .from(events)
+      .where(and(eq(events.slug, slug), eq(events.isPublished, true), eq(events.isCancelled, false)))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!event) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Event not found',
-          data: null,
-        },
+        { success: false, error: 'Event not found', data: null },
         { status: 404, headers }
-      );
+      )
     }
 
-    // Get related events (upcoming published events, excluding current event)
-    const relatedEvents = await prisma.events.findMany({
-      where: {
-        slug: { not: slug },
-        isPublished: true,
-        isCancelled: false,
-        eventDate: { gte: new Date() },
-      },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        location: true,
-        eventDate: true,
-        eventTime: true,
-        duration: true,
-        image: true,
-        totalSlots: true,
-        cost: true,
-        isFree: true,
-        _count: {
-          select: {
-            event_registrations: true,
-          },
-        },
-      },
-      orderBy: {
-        eventDate: 'asc',
-      },
-      take: 3,
-    });
+    const speakers = await db
+      .select({
+        id: eventSpeakers.id,
+        name: eventSpeakers.name,
+        title: eventSpeakers.title,
+        bio: eventSpeakers.bio,
+        image: eventSpeakers.image,
+        linkedin: eventSpeakers.linkedin,
+        twitter: eventSpeakers.twitter,
+        website: eventSpeakers.website,
+        order: eventSpeakers.order,
+      })
+      .from(eventSpeakers)
+      .where(eq(eventSpeakers.eventId, event.id))
+      .orderBy(asc(eventSpeakers.order))
 
-    // Transform event to match frontend interface
+    const relatedRows = await db
+      .select({
+        id: events.id,
+        slug: events.slug,
+        title: events.title,
+        description: events.description,
+        location: events.location,
+        eventDate: events.eventDate,
+        eventTime: events.eventTime,
+        duration: events.duration,
+        image: events.image,
+        totalSlots: events.totalSlots,
+        cost: events.cost,
+        isFree: events.isFree,
+        registrationCount: sql<number>`(select count(*)::int from ${eventRegistrations} where ${eventRegistrations.eventId} = ${events.id})`,
+      })
+      .from(events)
+      .where(
+        and(
+          ne(events.slug, slug),
+          eq(events.isPublished, true),
+          eq(events.isCancelled, false),
+          gte(events.eventDate, new Date()),
+        )
+      )
+      .orderBy(asc(events.eventDate))
+      .limit(3)
+
     const transformedEvent = {
       id: event.id,
       slug: event.slug,
@@ -116,16 +99,15 @@ export async function GET(request: NextRequest, { params }: Props) {
       duration: event.duration,
       image: event.image || '',
       totalSlots: event.totalSlots,
-      bookedSlots: event._count.event_registrations,
-      availableSlots: event.totalSlots - event._count.event_registrations,
+      bookedSlots: event.registrationCount,
+      availableSlots: event.totalSlots - event.registrationCount,
       cost: event.cost,
       isFree: event.isFree,
       paid: event.isFree ? 'Gratuito' : 'Pago',
-      speakers: event.event_speakers,
-    };
+      speakers,
+    }
 
-    // Transform related events
-    const transformedRelatedEvents = relatedEvents.map((e: typeof relatedEvents[number]) => ({
+    const transformedRelatedEvents = relatedRows.map((e) => ({
       id: e.id,
       slug: e.slug,
       title: e.title,
@@ -136,12 +118,12 @@ export async function GET(request: NextRequest, { params }: Props) {
       duration: e.duration,
       image: e.image || '',
       totalSlots: e.totalSlots,
-      bookedSlots: e._count.event_registrations,
-      availableSlots: e.totalSlots - e._count.event_registrations,
+      bookedSlots: e.registrationCount,
+      availableSlots: e.totalSlots - e.registrationCount,
       cost: e.cost,
       isFree: e.isFree,
       paid: e.isFree ? 'Gratuito' : 'Pago',
-    }));
+    }))
 
     return NextResponse.json({
       success: true,
@@ -149,17 +131,13 @@ export async function GET(request: NextRequest, { params }: Props) {
         event: transformedEvent,
         relatedEvents: transformedRelatedEvents,
       },
-    }, { headers });
-
+    }, { headers })
   } catch (error) {
-    console.error('Error fetching event:', error);
+    console.error('Error fetching event:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch event',
-        data: null,
-      },
-      { status: 500, headers }
-    );
+      { success: false, error: 'Failed to fetch event', data: null },
+      { status: 500 }
+    )
   }
 }
+

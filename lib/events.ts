@@ -1,48 +1,12 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import prisma from '@/lib/prisma'
+import { and, asc, eq, gte, ilike, ne, or, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { events, eventSpeakers } from '@/lib/db/schema'
 import { type Event, type EventsPagination } from '@/types/event'
 import { type Speaker } from '@/components/common/speakers'
 
-// Type for event with count from Prisma
-type EventWithCount = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  fullDescription: string | null
-  location: string
-  eventDate: Date
-  eventTime: string
-  duration: string
-  image: string | null
-  totalSlots: number
-  cost: { toString(): string } | null // Prisma Decimal type
-  isFree: boolean
-  createdAt: Date
-  _count: {
-    event_registrations: number
-  }
-}
-
-// Type for event with speakers
-type EventWithSpeakers = EventWithCount & {
-  event_speakers: {
-    id: string
-    name: string
-    title: string
-    bio: string | null
-    image: string | null
-    linkedin: string | null
-    twitter: string | null
-    website: string | null
-    order: number
-  }[]
-}
-
-// Transform Prisma event to frontend Event type
-function transformEvent(event: EventWithCount | EventWithSpeakers): Event {
-  const bookedSlots = event._count.event_registrations
-  
+// Transform DB event row to frontend Event type
+function transformEvent(event: { id: string; slug: string; title: string; description: string | null; fullDescription: string | null; location: string; eventDate: Date; eventTime: string; duration: string | number | null; image: string | null; totalSlots: number; cost: string | null; isFree: boolean; createdAt: Date; bookedSlots: number }, speakers?: Speaker[]): Event {
   const baseEvent: Event = {
     id: event.id,
     slug: event.slug,
@@ -52,88 +16,42 @@ function transformEvent(event: EventWithCount | EventWithSpeakers): Event {
     location: event.location,
     date: event.eventDate.toISOString().split('T')[0],
     time: event.eventTime,
-    cost: event.cost ? event.cost.toString() : '0', // Convert Decimal to string
+    cost: event.cost ? event.cost.toString() : '0',
     isFree: event.isFree,
     totalSlots: event.totalSlots,
-    bookedSlots,
+    bookedSlots: event.bookedSlots,
     image: event.image || '',
   }
-
-  // Add speakers if present
-  if ('event_speakers' in event && event.event_speakers) {
-    baseEvent.speakers = event.event_speakers as Speaker[]
-  }
-
+  if (speakers) baseEvent.speakers = speakers
   return baseEvent
 }
 
-// Internal function to fetch events from database
 async function fetchEvents(page: number, limit: number, search?: string) {
-  // Build where clause for published events only
-  const whereClause: Record<string, unknown> = {
-    isPublished: true,
-    isCancelled: false,
+  const where = and(
+    eq(events.isPublished, true),
+    eq(events.isCancelled, false),
+    search && search.trim() ? or(ilike(events.title, `%${search}%`), ilike(events.location, `%${search}%`), ilike(events.description, `%${search}%`), ilike(events.fullDescription, `%${search}%`)) : undefined,
+  )
+
+  const eventCols = {
+    id: events.id, slug: events.slug, title: events.title, description: events.description,
+    fullDescription: events.fullDescription, location: events.location, eventDate: events.eventDate,
+    eventTime: events.eventTime, duration: events.duration, image: events.image,
+    totalSlots: events.totalSlots, cost: events.cost, isFree: events.isFree, createdAt: events.createdAt,
+    bookedSlots: sql<number>`(SELECT COUNT(*)::int FROM "event_registrations" er WHERE er."eventId" = ${events.id})`,
   }
 
-  // Add search filter if provided
-  if (search && search.trim()) {
-    whereClause.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { location: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
-      { fullDescription: { contains: search, mode: 'insensitive' } },
-    ]
-  }
-
-  // Get total count and paginated events in parallel
-  const [totalEvents, events] = await Promise.all([
-    prisma.events.count({ where: whereClause }),
-    prisma.events.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        fullDescription: true,
-        location: true,
-        eventDate: true,
-        eventTime: true,
-        duration: true,
-        image: true,
-        totalSlots: true,
-        cost: true,
-        isFree: true,
-        createdAt: true,
-        _count: {
-          select: {
-            event_registrations: true,
-          },
-        },
-      },
-      orderBy: {
-        eventDate: 'asc', // Upcoming events first
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
+  const [rows, [{ total }]] = await Promise.all([
+    db.select(eventCols).from(events).where(where).orderBy(asc(events.eventDate)).offset((page - 1) * limit).limit(limit),
+    db.select({ total: sql<number>`count(*)::int` }).from(events).where(where),
   ])
 
-  const transformedEvents = events.map((event: EventWithCount) => transformEvent(event))
-
-  // Calculate pagination
+  const totalEvents = Number(total)
   const totalPages = Math.ceil(totalEvents / limit)
 
   return {
-    events: transformedEvents,
-    pagination: {
-      currentPage: page,
-      totalPages,
-      totalEvents,
-      eventsPerPage: limit,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    } as EventsPagination,
+    events: rows.map((e) => transformEvent(e)),
+    pagination: { currentPage: page, totalPages, totalEvents, eventsPerPage: limit, hasNextPage: page < totalPages, hasPrevPage: page > 1 } as EventsPagination,
   }
 }
 
@@ -146,96 +64,26 @@ export async function getEvents(page: number, limit: number, search?: string) {
   return fetchEvents(page, limit, search)
 }
 
-// Internal function to fetch single event
 async function fetchEventBySlug(slug: string) {
-  // Find event by slug (only published, non-cancelled events)
-  const event = await prisma.events.findFirst({
-    where: {
-      slug,
-      isPublished: true,
-      isCancelled: false,
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      fullDescription: true,
-      location: true,
-      eventDate: true,
-      eventTime: true,
-      duration: true,
-      image: true,
-      totalSlots: true,
-      cost: true,
-      isFree: true,
-      createdAt: true,
-      _count: {
-        select: {
-          event_registrations: true,
-        },
-      },
-      event_speakers: {
-        select: {
-          id: true,
-          name: true,
-          title: true,
-          bio: true,
-          image: true,
-          linkedin: true,
-          twitter: true,
-          website: true,
-          order: true,
-        },
-        orderBy: {
-          order: 'asc',
-        },
-      },
-    },
-  })
-
-  if (!event) {
-    return null
+  const eventCols = {
+    id: events.id, slug: events.slug, title: events.title, description: events.description,
+    fullDescription: events.fullDescription, location: events.location, eventDate: events.eventDate,
+    eventTime: events.eventTime, duration: events.duration, image: events.image,
+    totalSlots: events.totalSlots, cost: events.cost, isFree: events.isFree, createdAt: events.createdAt,
+    bookedSlots: sql<number>`(SELECT COUNT(*)::int FROM "event_registrations" er WHERE er."eventId" = ${events.id})`,
   }
 
-  // Get related events (upcoming published events, excluding current event)
-  const relatedEvents = await prisma.events.findMany({
-    where: {
-      slug: { not: slug },
-      isPublished: true,
-      isCancelled: false,
-      eventDate: { gte: new Date() },
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      fullDescription: true,
-      location: true,
-      eventDate: true,
-      eventTime: true,
-      duration: true,
-      image: true,
-      totalSlots: true,
-      cost: true,
-      isFree: true,
-      createdAt: true,
-      _count: {
-        select: {
-          event_registrations: true,
-        },
-      },
-    },
-    orderBy: {
-      eventDate: 'asc',
-    },
-    take: 3,
-  })
+  const event = await db.select(eventCols).from(events).where(and(eq(events.slug, slug), eq(events.isPublished, true), eq(events.isCancelled, false))).limit(1).then((r) => r[0] ?? null)
+  if (!event) return null
+
+  const [speakers, related] = await Promise.all([
+    db.select({ id: eventSpeakers.id, name: eventSpeakers.name, title: eventSpeakers.title, bio: eventSpeakers.bio, image: eventSpeakers.image, linkedin: eventSpeakers.linkedin, twitter: eventSpeakers.twitter, website: eventSpeakers.website, order: eventSpeakers.order }).from(eventSpeakers).where(eq(eventSpeakers.eventId, event.id)).orderBy(asc(eventSpeakers.order)),
+    db.select(eventCols).from(events).where(and(ne(events.slug, slug), eq(events.isPublished, true), eq(events.isCancelled, false), gte(events.eventDate, new Date()))).orderBy(asc(events.eventDate)).limit(3),
+  ])
 
   return {
-    event: transformEvent(event as EventWithSpeakers),
-    relatedEvents: relatedEvents.map((e: EventWithCount) => transformEvent(e)),
+    event: transformEvent(event, speakers as Speaker[]),
+    relatedEvents: related.map((e) => transformEvent(e)),
   }
 }
 
@@ -248,36 +96,10 @@ export async function getEventBySlug(slug: string) {
   return fetchEventBySlug(slug)
 }
 
-// Internal function to fetch event metadata
 async function fetchEventMetadata(slug: string) {
-  const event = await prisma.events.findFirst({
-    where: { 
-      slug,
-      isPublished: true,
-      isCancelled: false,
-    },
-    select: {
-      title: true,
-      description: true,
-      image: true,
-      location: true,
-      eventDate: true,
-      eventTime: true,
-    },
-  })
-
-  if (!event) {
-    return null
-  }
-
-  return {
-    title: event.title,
-    description: event.description,
-    image: event.image,
-    location: event.location,
-    date: event.eventDate?.toISOString(),
-    time: event.eventTime,
-  }
+  const row = await db.select({ title: events.title, description: events.description, image: events.image, location: events.location, eventDate: events.eventDate, eventTime: events.eventTime }).from(events).where(and(eq(events.slug, slug), eq(events.isPublished, true), eq(events.isCancelled, false))).limit(1).then((r) => r[0] ?? null)
+  if (!row) return null
+  return { title: row.title, description: row.description, image: row.image, location: row.location, date: row.eventDate?.toISOString(), time: row.eventTime }
 }
 
 // Get event metadata only (for generateMetadata) using Next.js 16 Cache Components
@@ -295,30 +117,18 @@ export async function getUpcomingEventsCount() {
   cacheLife('minutes')
   cacheTag('events', 'upcoming-events-count')
   
-  return prisma.events.count({
-    where: {
-      isPublished: true,
-      isCancelled: false,
-      eventDate: { gte: new Date() },
-    },
-  })
+  const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(events).where(and(eq(events.isPublished, true), eq(events.isCancelled, false), gte(events.eventDate, new Date())))
+  return Number(count)
 }
 
 // Get all event slugs for generateStaticParams
 export async function getAllEventSlugs() {
   'use cache'
-  cacheLife('hours') // Cache slugs longer as they change less frequently
+  cacheLife('hours')
   cacheTag('events', 'event-slugs')
   
-  const events = await prisma.events.findMany({
-    where: { 
-      isPublished: true,
-      isCancelled: false,
-    },
-    select: { slug: true },
-  })
-  
-  return events.map((e: { slug: string }) => ({ slug: e.slug }))
+  const rows = await db.select({ slug: events.slug }).from(events).where(and(eq(events.isPublished, true), eq(events.isCancelled, false)))
+  return rows.map((e) => ({ slug: e.slug }))
 }
 
 // Get initial events for SSR (first page)

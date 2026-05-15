@@ -1,81 +1,78 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { requireAdmin } from '@/lib/auth-helpers';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath, revalidateTag } from '@/lib/cache'
+import { requireAdmin } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { blogArticles, users } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication and authorization (admin only)
-    const authResult = await requireAdmin(request);
-    if (authResult instanceof NextResponse) {
-      return authResult; // Return 401/403 response
+    const authResult = await requireAdmin(request)
+    if (authResult instanceof NextResponse) return authResult
+
+    const { articleId } = await context.params
+
+    const row = await db
+      .select({
+        id: blogArticles.id,
+        slug: blogArticles.slug,
+        title: blogArticles.title,
+        excerpt: blogArticles.excerpt,
+        content: blogArticles.content,
+        image: blogArticles.image,
+        category: blogArticles.category,
+        readTime: blogArticles.readTime,
+        commentCount: blogArticles.commentCount,
+        isPublished: blogArticles.isPublished,
+        publishedAt: blogArticles.publishedAt,
+        createdAt: blogArticles.createdAt,
+        authorId: users.id,
+        authorName: users.name,
+        authorAvatar: users.image,
+      })
+      .from(blogArticles)
+      .innerJoin(users, eq(blogArticles.authorId, users.id))
+      .where(eq(blogArticles.id, articleId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+
+    if (!row) {
+      return NextResponse.json({ success: false, error: 'Article not found' }, { status: 404 })
     }
-    
-    // In Next.js 15, params is a Promise
-    const params = await context.params;
-    const articleId = params.articleId;
 
-    // Fetch article with author details (optimized query)
-    const article = await prisma.blog_articles.findUnique({
-      where: { id: articleId },
-      include: {
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            avatar: true,
-          },
-        },
-      },
-    });
-
-    if (!article) {
-      return NextResponse.json(
-        { success: false, error: 'Article not found' },
-        { status: 404 }
-      );
-    }
-
-    // Format date in Portuguese
-    const articleDate = article.publishedAt || article.createdAt;
+    const articleDate = row.publishedAt || row.createdAt
     const formattedDate = new Intl.DateTimeFormat('pt-BR', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
-    }).format(new Date(articleDate));
-
-    // Transform to match frontend Article type
-    const transformedArticle = {
-      id: article.id,
-      slug: article.slug,
-      title: article.title,
-      excerpt: article.excerpt,
-      content: article.content,
-      image: article.image || '',
-      category: article.category,
-      author: {
-        name: article.user_profiles.fullName || 'Unknown',
-        avatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
-      },
-      date: formattedDate,
-      readTime: `${article.readTime} min`,
-      commentCount: article.commentCount,
-      status: article.isPublished ? 'published' : 'draft',
-    };
+    }).format(new Date(articleDate))
 
     return NextResponse.json({
       success: true,
-      data: transformedArticle,
-    });
+      data: {
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        excerpt: row.excerpt,
+        content: row.content,
+        image: row.image || '',
+        category: row.category,
+        author: {
+          name: row.authorName || 'Unknown',
+          avatar: row.authorAvatar || '/images/default-avatar.jpg',
+        },
+        date: formattedDate,
+        readTime: `${row.readTime} min`,
+        commentCount: row.commentCount,
+        status: row.isPublished ? 'published' : 'draft',
+      },
+    })
   } catch (error) {
-    console.error('Error fetching article:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Error fetching article:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -84,66 +81,57 @@ export async function PUT(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication and authorization (admin only)
-    const authResult = await requireAdmin(request);
-    if (authResult instanceof NextResponse) {
-      return authResult; // Return 401/403 response
-    }
-    
-    // In Next.js 15, params is a Promise
-    const params = await context.params;
-    const articleId = params.articleId;
+    const authResult = await requireAdmin(request)
+    if (authResult instanceof NextResponse) return authResult
 
-    // Parse request body
-    const body = await request.json();
-    const { title, slug, excerpt, content, image, category, readTime, isPublished, authorId, relatedArticleIds = [], accessType = 'free', targetAudience = 'general' } = body;
+    const { articleId } = await context.params
+    const body = await request.json()
+    const {
+      title, slug, excerpt, content, image, category, readTime,
+      isPublished, authorId, relatedArticleIds = [],
+      accessType = 'free', targetAudience = 'general',
+    } = body
 
-    // Validation
     if (!title || !slug || !excerpt || !content || !category) {
-      return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios faltando' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Campos obrigatórios faltando' }, { status: 400 })
     }
 
-    // Validate relatedArticleIds (max 3)
     if (relatedArticleIds && relatedArticleIds.length > 3) {
-      return NextResponse.json(
-        { success: false, error: 'Máximo de 3 artigos relacionados permitidos' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Máximo de 3 artigos relacionados permitidos' }, { status: 400 })
     }
 
-    // Check if article exists
-    const existingArticle = await prisma.blog_articles.findUnique({
-      where: { id: articleId },
-    });
+    const existing = await db
+      .select({
+        id: blogArticles.id,
+        slug: blogArticles.slug,
+        isPublished: blogArticles.isPublished,
+        publishedAt: blogArticles.publishedAt,
+        authorId: blogArticles.authorId,
+      })
+      .from(blogArticles)
+      .where(eq(blogArticles.id, articleId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
-    if (!existingArticle) {
-      return NextResponse.json(
-        { success: false, error: 'Artigo não encontrado' },
-        { status: 404 }
-      );
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Artigo não encontrado' }, { status: 404 })
     }
 
-    // Check if slug is being changed and if it conflicts with another article
-    if (slug !== existingArticle.slug) {
-      const slugConflict = await prisma.blog_articles.findUnique({
-        where: { slug },
-      });
-
-      if (slugConflict) {
-        return NextResponse.json(
-          { success: false, error: 'Já existe um artigo com esse slug' },
-          { status: 400 }
-        );
+    if (slug !== existing.slug) {
+      const conflict = await db
+        .select({ id: blogArticles.id })
+        .from(blogArticles)
+        .where(eq(blogArticles.slug, slug))
+        .limit(1)
+        .then((r) => r[0] ?? null)
+      if (conflict) {
+        return NextResponse.json({ success: false, error: 'Já existe um artigo com esse slug' }, { status: 400 })
       }
     }
 
-    // Update article
-    const updatedArticle = await prisma.blog_articles.update({
-      where: { id: articleId },
-      data: {
+    const [updated] = await db
+      .update(blogArticles)
+      .set({
         title,
         slug,
         excerpt,
@@ -152,47 +140,31 @@ export async function PUT(
         category,
         readTime: readTime || 5,
         isPublished,
-        publishedAt: isPublished && !existingArticle.isPublished ? new Date() : existingArticle.publishedAt,
-        authorId: authorId || existingArticle.authorId,
+        publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
+        authorId: authorId || existing.authorId,
         relatedArticleIds: relatedArticleIds || [],
         accessType,
         targetAudience,
-      },
-      include: {
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          }
-        }
-      }
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(blogArticles.id, articleId))
+      .returning()
 
-    // Invalidate cache so users see the updated article immediately
-    revalidatePath('/blog');
-    revalidatePath(`/blog/${slug}`);
-    // Also revalidate old slug if it changed
-    if (slug !== existingArticle.slug) {
-      revalidatePath(`/blog/${existingArticle.slug}`);
-      revalidateTag(`article-${existingArticle.slug}`, {});
+    revalidatePath('/articles')
+    revalidatePath(`/articles/${slug}`)
+    if (slug !== existing.slug) {
+      revalidatePath(`/articles/${existing.slug}`)
+      revalidateTag(`article-${existing.slug}`)
     }
-    revalidateTag('articles', {});
-    revalidateTag('articles-initial', {});
-    revalidateTag('article-slugs', {});
-    revalidateTag(`article-${slug}`, {});
+    revalidateTag('articles')
+    revalidateTag('articles-initial')
+    revalidateTag('article-slugs')
+    revalidateTag(`article-${slug}`)
 
-    return NextResponse.json({
-      success: true,
-      data: updatedArticle,
-    });
+    return NextResponse.json({ success: true, data: updated })
   } catch (error) {
-    console.error('Error updating article:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao atualizar artigo' },
-      { status: 500 }
-    );
+    console.error('Error updating article:', error)
+    return NextResponse.json({ success: false, error: 'Erro ao atualizar artigo' }, { status: 500 })
   }
 }
 
@@ -201,51 +173,36 @@ export async function DELETE(
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication and authorization (admin only)
-    const authResult = await requireAdmin(request);
-    if (authResult instanceof NextResponse) {
-      return authResult; // Return 401/403 response
-    }
-    
-    // In Next.js 15, params is a Promise
-    const params = await context.params;
-    const articleId = params.articleId;
+    const authResult = await requireAdmin(request)
+    if (authResult instanceof NextResponse) return authResult
 
-    // Check if article exists
-    const article = await prisma.blog_articles.findUnique({
-      where: { id: articleId },
-      select: { id: true, title: true, slug: true },
-    });
+    const { articleId } = await context.params
+
+    const article = await db
+      .select({ id: blogArticles.id, slug: blogArticles.slug })
+      .from(blogArticles)
+      .where(eq(blogArticles.id, articleId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!article) {
-      return NextResponse.json(
-        { success: false, error: 'Article not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Article not found' }, { status: 404 })
     }
 
-    // Delete the article (cascade will handle related records)
-    await prisma.blog_articles.delete({
-      where: { id: articleId },
-    });
+    await db.delete(blogArticles).where(eq(blogArticles.id, articleId))
 
-    // Invalidate cache so the deleted article is removed from listings
-    revalidatePath('/blog');
-    revalidatePath(`/blog/${article.slug}`);
-    revalidateTag('articles', {});
-    revalidateTag('articles-initial', {});
-    revalidateTag('article-slugs', {});
-    revalidateTag(`article-${article.slug}`, {});
+    revalidatePath('/articles')
+    revalidatePath(`/articles/${article.slug}`)
+    revalidateTag('articles')
+    revalidateTag('articles-initial')
+    revalidateTag('article-slugs')
+    revalidateTag(`article-${article.slug}`)
 
-    return NextResponse.json({
-      success: true,
-      message: 'Article deleted successfully',
-    });
+    return NextResponse.json({ success: true, message: 'Article deleted successfully' })
   } catch (error) {
-    console.error('Error deleting article:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Error deleting article:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

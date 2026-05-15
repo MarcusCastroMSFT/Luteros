@@ -1,12 +1,10 @@
 'use client'
 
-import Link from "next/link";
-import { Mail } from "lucide-react";
-import { footerMenu, contactInfo } from "@/data/menu";
+import { footerMenu } from "@/data/menu";
 import { SocialLinks } from "@/components/social-links";
-import { AppLinks } from "@/components/app-links";
 import { Subscribe } from "@/components/subscribe";
 import { Logo } from "@/components/common/logo";
+import Link from "next/link";
 
 export function Footer() {
   // Using state-based year to avoid hydration mismatch and prerender issues
@@ -21,15 +19,18 @@ export function Footer() {
             <div className="flex items-center">
               <Logo iconSize="lg" textSize="md" showText asLink />
             </div>
-            
-            <div className="text-sm text-text-primary">
-              <div className="flex items-center space-x-2">
-                <Mail size={14} className="text-text-primary" />
-                <span>{contactInfo.email}</span>
-              </div>
-            </div>
 
-            <SocialLinks />
+            <div className="flex items-center gap-2 text-sm text-text-primary">
+              <SocialLinks />
+              <Link
+                href="https://www.instagram.com/lutteros"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                @lutteros
+              </Link>
+            </div>
           </div>
 
           {/* Menu Sections */}
@@ -54,7 +55,6 @@ export function Footer() {
           {/* Subscribe Section */}
           <div className="col-span-2 lg:col-span-2 space-y-6 md:space-y-8">
             <Subscribe />
-            <AppLinks />
           </div>
         </div>
 

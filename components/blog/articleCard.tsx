@@ -12,7 +12,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
   
   return (
     <article className="overflow-hidden group">
-      <Link href={`/blog/${article.slug}`} className="block">
+      <Link href={`/articles/${article.slug}`} className="block">
         <div className="relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg aspect-[4/3] md:aspect-[16/10]">
           {hasImage ? (
             <Image
@@ -32,7 +32,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
       </Link>
       
       <div className="pt-4 md:pt-6">
-        <Link href={`/blog/${article.slug}`}>
+        <Link href={`/articles/${article.slug}`}>
           <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 md:mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2">
             {article.title}
           </h3>

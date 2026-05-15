@@ -62,16 +62,6 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
   
   const { register, handleSubmit, reset, setValue, formState: { isDirty } } = useForm<UserFormData>()
 
-  useEffect(() => {
-    if (open && userId) {
-      fetchUserData()
-    } else {
-      reset()
-      setError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, open])
-
   const fetchUserData = async () => {
     if (!userId) return
 
@@ -79,13 +69,13 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
     setError(null)
     try {
       const response = await fetch(`/api/users/${userId}`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch user data')
       }
-      
+
       const data = await response.json()
-      
+
       // Populate form with existing data
       const userRole = data.role || 'STUDENT'
       setRole(userRole)
@@ -112,6 +102,16 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (open && userId) {
+      fetchUserData()
+    } else {
+      reset()
+      setError(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, open])
 
   const onSubmit = async (data: UserFormData) => {
     if (!userId) return

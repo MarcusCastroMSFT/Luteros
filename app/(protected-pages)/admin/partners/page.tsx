@@ -32,7 +32,7 @@ export default function PartnersPage() {
     initialPageSize: 10,
   })
 
-  const handleDeletePartner = (partnerId: string) => {
+  const _handleDeletePartner = (partnerId: string) => {
     // Optimistic update: remove partner from table immediately
     setData(prevData => prevData.filter(partner => partner.id !== partnerId))
     setTotalCount(prevCount => prevCount - 1)

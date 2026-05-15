@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { and, asc, eq, ilike, or, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { events } from '@/lib/db/schema';
 
 export async function GET(request: NextRequest) {
   // Add cache tag for manual invalidation
@@ -14,80 +16,37 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search');
 
   try {
-    // Build where clause for published events only
-    const whereClause: Record<string, unknown> = {
-      isPublished: true,
-      isCancelled: false,
-    };
+    const where = and(
+      eq(events.isPublished, true),
+      eq(events.isCancelled, false),
+      search ? or(ilike(events.title, `%${search}%`), ilike(events.location, `%${search}%`), ilike(events.description, `%${search}%`), ilike(events.fullDescription, `%${search}%`)) : undefined,
+    )
 
-    // Add search filter if provided
-    if (search) {
-      whereClause.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { location: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { fullDescription: { contains: search, mode: 'insensitive' } },
-      ];
+    const eventCols = {
+      id: events.id, slug: events.slug, title: events.title, description: events.description,
+      fullDescription: events.fullDescription, location: events.location, eventDate: events.eventDate,
+      eventTime: events.eventTime, duration: events.duration, image: events.image,
+      totalSlots: events.totalSlots, cost: events.cost, isFree: events.isFree, createdAt: events.createdAt,
+      bookedSlots: sql<number>`(SELECT COUNT(*)::int FROM "event_registrations" er WHERE er."eventId" = ${events.id} AND er.status = 'CONFIRMED')`,
     }
 
-    // Get total count and paginated events in parallel
-    const [totalEvents, events] = await Promise.all([
-      prisma.events.count({ where: whereClause }),
-      prisma.events.findMany({
-        where: whereClause,
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          description: true,
-          fullDescription: true,
-          location: true,
-          eventDate: true,
-          eventTime: true,
-          duration: true,
-          image: true,
-          totalSlots: true,
-          cost: true,
-          isFree: true,
-          createdAt: true,
-          _count: {
-            select: {
-              event_registrations: true,
-            },
-          },
-        },
-        orderBy: {
-          eventDate: 'asc', // Upcoming events first
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
+    const [[{ total }], eventsRows] = await Promise.all([
+      db.select({ total: sql<number>`count(*)::int` }).from(events).where(where),
+      db.select(eventCols).from(events).where(where).orderBy(asc(events.eventDate)).offset((page - 1) * limit).limit(limit),
     ]);
 
-    // Transform events to match frontend interface
-    const transformedEvents = events.map((event: typeof events[number]) => {
-      const bookedSlots = event._count.event_registrations;
-      return {
-        id: event.id,
-        slug: event.slug,
-        title: event.title,
-        description: event.description || '',
-        fullDescription: event.fullDescription || '',
-        location: event.location,
-        date: event.eventDate.toISOString().split('T')[0],
-        time: event.eventTime,
-        duration: event.duration,
-        image: event.image || '',
-        totalSlots: event.totalSlots,
-        bookedSlots,
-        availableSlots: event.totalSlots - bookedSlots,
-        cost: event.cost,
-        isFree: event.isFree,
-        paid: event.isFree ? 'Gratuito' : 'Pago',
-      };
-    });
+    const transformedEvents = eventsRows.map((event) => ({
+      id: event.id, slug: event.slug, title: event.title,
+      description: event.description || '', fullDescription: event.fullDescription || '',
+      location: event.location, date: event.eventDate.toISOString().split('T')[0],
+      time: event.eventTime, duration: event.duration, image: event.image || '',
+      totalSlots: event.totalSlots, bookedSlots: event.bookedSlots,
+      availableSlots: event.totalSlots - event.bookedSlots,
+      cost: event.cost, isFree: event.isFree,
+      paid: event.isFree ? 'Gratuito' : 'Pago',
+    }));
 
-    // Calculate pagination
+    const totalEvents = Number(total);
     const totalPages = Math.ceil(totalEvents / limit);
 
     return NextResponse.json({

@@ -1,30 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
-
-// Type for bookmark from Prisma query
-interface BookmarkWithArticle {
-  id: string;
-  articleId: string;
-  userId: string;
-  createdAt: Date;
-  blog_articles: {
-    id: string;
-    slug: string;
-    title: string;
-    excerpt: string;
-    image: string | null;
-    category: string;
-    readTime: number;
-    publishedAt: Date | null;
-    user_profiles: {
-      id: string;
-      fullName: string | null;
-      displayName: string | null;
-      avatar: string | null;
-    };
-  };
-}
+import { and, desc, eq, count } from 'drizzle-orm';
+import { requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { blogBookmarks, blogArticles, users } from '@/lib/db/schema';
 
 // Type for saved article (API response)
 export interface SavedArticle {
@@ -52,119 +30,85 @@ export async function GET(request: NextRequest) {
   await connection();
 
   try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
+    const userId = authUser.id;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Você precisa estar logado para ver seus artigos salvos' },
-        { status: 401 }
-      );
-    }
-
-    // Parse query params for pagination
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const category = searchParams.get('category');
 
-    // Build where condition
-    type WhereCondition = {
-      userId: string;
-      blog_articles?: {
-        category: string;
-        isPublished: boolean;
-      };
-    };
+    const baseWhere = and(
+      eq(blogBookmarks.userId, userId),
+      eq(blogArticles.isPublished, true),
+      category ? eq(blogArticles.category, category) : undefined,
+    );
 
-    const whereCondition: WhereCondition = {
-      userId: user.id,
-    };
-
-    if (category) {
-      whereCondition.blog_articles = {
-        category,
-        isPublished: true,
-      };
-    }
-
-    // Fetch bookmarks with article data
-    const [bookmarks, totalCount] = await Promise.all([
-      prisma.blog_bookmarks.findMany({
-        where: whereCondition,
-        include: {
-          blog_articles: {
-            select: {
-              id: true,
-              slug: true,
-              title: true,
-              excerpt: true,
-              image: true,
-              category: true,
-              readTime: true,
-              publishedAt: true,
-              user_profiles: {
-                select: {
-                  id: true,
-                  fullName: true,
-                  displayName: true,
-                  avatar: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.blog_bookmarks.count({ where: whereCondition }),
+    const [bookmarks, [{ total }], allCategories] = await Promise.all([
+      db
+        .select({
+          id: blogBookmarks.id,
+          articleId: blogBookmarks.articleId,
+          savedAt: blogBookmarks.createdAt,
+          articleSlug: blogArticles.slug,
+          articleTitle: blogArticles.title,
+          articleExcerpt: blogArticles.excerpt,
+          articleImage: blogArticles.image,
+          articleCategory: blogArticles.category,
+          articleReadTime: blogArticles.readTime,
+          articlePublishedAt: blogArticles.publishedAt,
+          authorId: users.id,
+          authorName: users.name,
+          authorDisplayName: users.displayName,
+          authorAvatar: users.image,
+        })
+        .from(blogBookmarks)
+        .innerJoin(blogArticles, eq(blogBookmarks.articleId, blogArticles.id))
+        .innerJoin(users, eq(blogArticles.authorId, users.id))
+        .where(baseWhere)
+        .orderBy(desc(blogBookmarks.createdAt))
+        .limit(limit)
+        .offset((page - 1) * limit),
+      db
+        .select({ total: count() })
+        .from(blogBookmarks)
+        .innerJoin(blogArticles, eq(blogBookmarks.articleId, blogArticles.id))
+        .where(baseWhere),
+      db
+        .select({ category: blogArticles.category })
+        .from(blogBookmarks)
+        .innerJoin(blogArticles, eq(blogBookmarks.articleId, blogArticles.id))
+        .where(and(eq(blogBookmarks.userId, userId), eq(blogArticles.isPublished, true))),
     ]);
 
-    // Get unique categories for filter
-    const allBookmarks = await prisma.blog_bookmarks.findMany({
-      where: { userId: user.id },
-      include: {
-        blog_articles: {
-          select: { category: true },
-        },
-      },
-    });
+    const categories = [...new Set(allCategories.map((b) => b.category))].sort();
 
-    const categories = [...new Set(allBookmarks.map((b: { blog_articles: { category: string } }) => b.blog_articles.category))].sort();
-
-    // Transform data for response
-    const savedArticles: SavedArticle[] = (bookmarks as BookmarkWithArticle[]).map((bookmark) => {
-      const article = bookmark.blog_articles;
-      const authorName = article.user_profiles.fullName || article.user_profiles.displayName || 'Autor';
-
+    const savedArticles: SavedArticle[] = bookmarks.map((bookmark) => {
+      const authorName = bookmark.authorName || bookmark.authorDisplayName || 'Autor';
       return {
         id: bookmark.id,
-        articleId: article.id,
-        savedAt: bookmark.createdAt.toISOString(),
+        articleId: bookmark.articleId,
+        savedAt: bookmark.savedAt.toISOString(),
         article: {
-          id: article.id,
-          slug: article.slug,
-          title: article.title,
-          excerpt: article.excerpt,
-          image: article.image || '/images/article-placeholder.jpg',
-          category: article.category,
-          readTime: `${article.readTime} min`,
-          publishedAt: article.publishedAt?.toISOString() || bookmark.createdAt.toISOString(),
+          id: bookmark.articleId,
+          slug: bookmark.articleSlug,
+          title: bookmark.articleTitle,
+          excerpt: bookmark.articleExcerpt,
+          image: bookmark.articleImage || '/images/article-placeholder.jpg',
+          category: bookmark.articleCategory,
+          readTime: `${bookmark.articleReadTime} min`,
+          publishedAt: bookmark.articlePublishedAt?.toISOString() || bookmark.savedAt.toISOString(),
           author: {
-            id: article.user_profiles.id,
+            id: bookmark.authorId,
             name: authorName,
-            avatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
+            avatar: bookmark.authorAvatar || '/images/default-avatar.jpg',
           },
         },
       };
     });
 
-    // Calculate pagination
-    const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
       success: true,
@@ -173,22 +117,20 @@ export async function GET(request: NextRequest) {
         pagination: {
           currentPage: page,
           totalPages,
-          totalArticles: totalCount,
+          totalArticles: total,
           articlesPerPage: limit,
-          hasNextPage,
-          hasPrevPage,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
         },
         categories,
-        stats: {
-          total: totalCount,
-        },
+        stats: { total },
       },
     });
   } catch (error) {
     console.error('Error fetching saved articles:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao buscar artigos salvos' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

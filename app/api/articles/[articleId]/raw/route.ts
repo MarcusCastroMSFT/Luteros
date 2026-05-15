@@ -1,26 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-helpers';
-import prisma from '@/lib/prisma';
+import { db } from '@/lib/db';
+import { blogArticles } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ articleId: string }> }
 ) {
   try {
-    // Require authentication
     const authUser = await requireAuth(request);
     if (authUser instanceof NextResponse) {
-      return authUser; // Return 401 response
+      return authUser;
     }
-    
-    // In Next.js 15, params is a Promise
+
     const params = await context.params;
     const articleId = params.articleId;
 
-    // Fetch article with all raw data
-    const article = await prisma.blog_articles.findUnique({
-      where: { id: articleId },
-    });
+    const article = await db
+      .select()
+      .from(blogArticles)
+      .where(eq(blogArticles.id, articleId))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
     if (!article) {
       return NextResponse.json(
@@ -29,7 +31,6 @@ export async function GET(
       );
     }
 
-    // Return raw article data including authorId, relatedArticleIds, accessType and targetAudience
     return NextResponse.json({
       success: true,
       data: {

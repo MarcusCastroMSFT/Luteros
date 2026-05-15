@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next'
-import prisma from '@/lib/prisma'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { blogArticles, courses, events, products } from '@/lib/db/schema'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
@@ -13,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/blog`,
+      url: `${baseUrl}/articles`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
@@ -89,18 +91,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published blog articles
   let articlePages: MetadataRoute.Sitemap = []
   try {
-    const articles = await prisma.blog_articles.findMany({
-      where: { isPublished: true },
-      select: {
-        slug: true,
-        updatedAt: true,
-        publishedAt: true,
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
+    const articles = await db.select({ slug: blogArticles.slug, updatedAt: blogArticles.updatedAt, publishedAt: blogArticles.publishedAt }).from(blogArticles).where(eq(blogArticles.isPublished, true)).orderBy()
 
-    articlePages = articles.map((article: { slug: string; updatedAt: Date; publishedAt: Date | null }) => ({
-      url: `${baseUrl}/blog/${article.slug}`,
+    articlePages = articles.map((article) => ({
+      url: `${baseUrl}/articles/${article.slug}`,
       lastModified: article.updatedAt || article.publishedAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -112,15 +106,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published courses
   let coursePages: MetadataRoute.Sitemap = []
   try {
-    const courses = await prisma.courses.findMany({
-      where: { isPublished: true },
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-    })
+    const coursesRows = await db.select({ slug: courses.slug, updatedAt: courses.updatedAt }).from(courses).where(eq(courses.isPublished, true))
 
-    coursePages = courses.map((course: { slug: string; updatedAt: Date }) => ({
+    coursePages = coursesRows.map((course) => ({
       url: `${baseUrl}/courses/${course.slug}`,
       lastModified: course.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,
@@ -133,15 +121,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published events
   let eventPages: MetadataRoute.Sitemap = []
   try {
-    const events = await prisma.events.findMany({
-      where: { isPublished: true },
-      select: {
-        slug: true,
-        updatedAt: true,
-      },
-    })
+    const eventsRows = await db.select({ slug: events.slug, updatedAt: events.updatedAt }).from(events).where(eq(events.isPublished, true))
 
-    eventPages = events.map((event: { slug: string; updatedAt: Date }) => ({
+    eventPages = eventsRows.map((event) => ({
       url: `${baseUrl}/events/${event.slug}`,
       lastModified: event.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,
@@ -154,16 +136,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all active products
   let productPages: MetadataRoute.Sitemap = []
   try {
-    const products = await prisma.products.findMany({
-      where: { isActive: true },
-      select: {
-        slug: true,
-        updatedAt: true,
-        isFeatured: true,
-      },
-    })
+    const productsRows = await db.select({ slug: products.slug, updatedAt: products.updatedAt, isFeatured: products.isFeatured }).from(products).where(eq(products.isActive, true))
 
-    productPages = products.map((product: { slug: string; updatedAt: Date; isFeatured: boolean }) => ({
+    productPages = productsRows.map((product) => ({
       url: `${baseUrl}/products/${product.slug}`,
       lastModified: product.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,

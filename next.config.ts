@@ -35,12 +35,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.supabase.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'res.cloudinary.com',
         port: '',
         pathname: '/**',
@@ -89,7 +83,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/blog/:slug*',
+        source: '/articles/:slug*',
         headers: [
           {
             key: 'Cache-Control',
@@ -128,7 +122,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/api/blog/:path*',
+        source: '/api/articles-public/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -159,12 +153,16 @@ const nextConfig: NextConfig = {
   // Configure redirects if needed for SEO
   async redirects() {
     return [
-      // Example: redirect old blog URLs to new structure
-      // {
-      //   source: '/old-blog/:slug',
-      //   destination: '/blog/:slug',
-      //   permanent: true,
-      // },
+      {
+        source: '/blog',
+        destination: '/articles',
+        permanent: true,
+      },
+      {
+        source: '/blog/:slug*',
+        destination: '/articles/:slug*',
+        permanent: true,
+      },
     ];
   },
 };

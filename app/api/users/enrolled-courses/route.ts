@@ -1,38 +1,9 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
-
-// Type for enrollment from Prisma query
-interface EnrollmentWithCourse {
-  id: string;
-  userId: string;
-  courseId: string;
-  enrolledAt: Date;
-  completedAt: Date | null;
-  expiresAt: Date | null;
-  progressPercent: number;
-  paidAmount: unknown;
-  paymentStatus: string | null;
-  courses: {
-    id: string;
-    slug: string;
-    title: string;
-    shortDescription: string | null;
-    thumbnail: string | null;
-    category: string;
-    level: string;
-    duration: number | null;
-    user_profiles: {
-      id: string;
-      fullName: string | null;
-      displayName: string | null;
-      avatar: string | null;
-    };
-    _count: {
-      lessons: number;
-    };
-  };
-}
+import { and, count, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { courses, courseProgress, enrollments, users } from '@/lib/db/schema';
 
 // Type for enrolled course with progress (API response)
 export interface EnrolledCourse {
@@ -73,145 +44,105 @@ function formatDuration(minutes: number | null): string {
 }
 
 export async function GET(request: NextRequest) {
-  // Signal that this route uses request-specific data (auth cookies)
   await connection();
 
   try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
+    const userId = authUser.id;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Você precisa estar logado para ver seus cursos' },
-        { status: 401 }
-      );
-    }
-
-    // Parse query params for pagination and filtering
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
-    const status = searchParams.get('status'); // 'in-progress', 'completed', 'all'
+    const status = searchParams.get('status');
 
-    // Build where condition
-    const whereCondition: {
-      userId: string;
-      completedAt?: null | { not: null };
-    } = {
-      userId: user.id,
-    };
+    const statusCondition =
+      status === 'in-progress'
+        ? isNull(enrollments.completedAt)
+        : status === 'completed'
+          ? isNotNull(enrollments.completedAt)
+          : undefined;
 
-    // Filter by completion status
-    if (status === 'in-progress') {
-      whereCondition.completedAt = null;
-    } else if (status === 'completed') {
-      whereCondition.completedAt = { not: null };
-    }
+    const whereCondition = and(eq(enrollments.userId, userId), statusCondition);
 
-    // Fetch enrollments with course data and progress
-    const [enrollments, totalCount, courseProgress] = await Promise.all([
-      prisma.enrollments.findMany({
-        where: whereCondition,
-        include: {
-          courses: {
-            select: {
-              id: true,
-              slug: true,
-              title: true,
-              shortDescription: true,
-              thumbnail: true,
-              category: true,
-              level: true,
-              duration: true,
-              user_profiles: {
-                select: {
-                  id: true,
-                  fullName: true,
-                  displayName: true,
-                  avatar: true,
-                },
-              },
-              _count: {
-                select: {
-                  lessons: {
-                    where: { isPublished: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { enrolledAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.enrollments.count({ where: whereCondition }),
-      // Get progress for all enrolled courses
-      prisma.course_progress.findMany({
-        where: { userId: user.id },
-        select: {
-          courseId: true,
-          completedLessons: true,
-          totalLessons: true,
-          progressPercent: true,
-          lastAccessedAt: true,
-        },
-      }),
+    const instructors = alias(users, 'instructor');
+
+    const [enrollmentRows, [{ total }], progressRows] = await Promise.all([
+      db
+        .select({
+          id: enrollments.id,
+          courseId: enrollments.courseId,
+          enrolledAt: enrollments.enrolledAt,
+          completedAt: enrollments.completedAt,
+          progressPercent: enrollments.progressPercent,
+          courseSlug: courses.slug,
+          courseTitle: courses.title,
+          courseShortDescription: courses.shortDescription,
+          courseThumbnail: courses.thumbnail,
+          courseCategory: courses.category,
+          courseLevel: courses.level,
+          courseDuration: courses.duration,
+          instructorId: instructors.id,
+          instructorName: instructors.name,
+          instructorDisplayName: instructors.displayName,
+          instructorAvatar: instructors.image,
+          lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" WHERE "courseId" = ${courses.id} AND "isPublished" = true)`,
+        })
+        .from(enrollments)
+        .innerJoin(courses, eq(enrollments.courseId, courses.id))
+        .innerJoin(instructors, eq(courses.instructorId, instructors.id))
+        .where(whereCondition)
+        .orderBy(desc(enrollments.enrolledAt))
+        .limit(limit)
+        .offset((page - 1) * limit),
+      db.select({ total: count() }).from(enrollments).where(whereCondition),
+      db
+        .select({
+          courseId: courseProgress.courseId,
+          completedLessons: courseProgress.completedLessons,
+          totalLessons: courseProgress.totalLessons,
+          progressPercent: courseProgress.progressPercent,
+          lastAccessedAt: courseProgress.lastAccessedAt,
+        })
+        .from(courseProgress)
+        .where(eq(courseProgress.userId, userId)),
     ]);
 
-    // Type for course progress
-    type CourseProgressItem = {
-      courseId: string;
-      completedLessons: number;
-      totalLessons: number;
-      progressPercent: number;
-      lastAccessedAt: Date | null;
-    };
+    const progressMap = new Map(progressRows.map((p) => [p.courseId, p]));
 
-    // Create a map of course progress for quick lookup
-    const progressMap = new Map<string, CourseProgressItem>(
-      courseProgress.map((p: CourseProgressItem) => [p.courseId, p])
-    );
-
-    // Transform data for response
-    const enrolledCourses: EnrolledCourse[] = (enrollments as EnrollmentWithCourse[]).map((enrollment) => {
-      const course = enrollment.courses;
-      const progress = progressMap.get(course.id) as CourseProgressItem | undefined;
-      const instructorName = course.user_profiles.fullName || course.user_profiles.displayName || 'Instrutor';
-
+    const enrolledCourses: EnrolledCourse[] = enrollmentRows.map((row) => {
+      const progress = progressMap.get(row.courseId);
+      const instructorName = row.instructorName || row.instructorDisplayName || 'Instrutor';
       return {
-        id: enrollment.id,
-        courseId: course.id,
-        enrolledAt: enrollment.enrolledAt.toISOString(),
-        completedAt: enrollment.completedAt?.toISOString() || null,
-        progressPercent: progress?.progressPercent || enrollment.progressPercent || 0,
+        id: row.id,
+        courseId: row.courseId,
+        enrolledAt: row.enrolledAt.toISOString(),
+        completedAt: row.completedAt?.toISOString() || null,
+        progressPercent: progress?.progressPercent ?? row.progressPercent ?? 0,
         course: {
-          id: course.id,
-          slug: course.slug,
-          title: course.title,
-          shortDescription: course.shortDescription || '',
-          thumbnail: course.thumbnail || '/images/course-placeholder.jpg',
-          category: course.category,
-          level: course.level,
-          duration: formatDuration(course.duration),
-          lessonsCount: course._count.lessons,
+          id: row.courseId,
+          slug: row.courseSlug,
+          title: row.courseTitle,
+          shortDescription: row.courseShortDescription || '',
+          thumbnail: row.courseThumbnail || '/images/course-placeholder.jpg',
+          category: row.courseCategory,
+          level: row.courseLevel,
+          duration: formatDuration(row.courseDuration),
+          lessonsCount: row.lessonsCount,
           instructor: {
-            id: course.user_profiles.id,
+            id: row.instructorId,
             name: instructorName,
-            avatar: course.user_profiles.avatar || '/images/default-avatar.jpg',
+            avatar: row.instructorAvatar || '/images/default-avatar.jpg',
           },
         },
         lastAccessedAt: progress?.lastAccessedAt?.toISOString() || null,
-        completedLessons: progress?.completedLessons || 0,
-        totalLessons: progress?.totalLessons || course._count.lessons,
+        completedLessons: progress?.completedLessons ?? 0,
+        totalLessons: progress?.totalLessons ?? row.lessonsCount,
       };
     });
 
-    // Calculate pagination
-    const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
+    const totalNum = Number(total);
+    const totalPages = Math.ceil(totalNum / limit);
 
     return NextResponse.json({
       success: true,
@@ -220,15 +151,15 @@ export async function GET(request: NextRequest) {
         pagination: {
           currentPage: page,
           totalPages,
-          totalCourses: totalCount,
+          totalCourses: totalNum,
           coursesPerPage: limit,
-          hasNextPage,
-          hasPrevPage,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
         },
         stats: {
-          total: totalCount,
-          inProgress: (enrollments as EnrollmentWithCourse[]).filter((e) => !e.completedAt).length,
-          completed: (enrollments as EnrollmentWithCourse[]).filter((e) => e.completedAt).length,
+          total: totalNum,
+          inProgress: enrollmentRows.filter((e) => !e.completedAt).length,
+          completed: enrollmentRows.filter((e) => e.completedAt).length,
         },
       },
     });
@@ -236,7 +167,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching enrolled courses:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao buscar seus cursos' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

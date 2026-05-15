@@ -1,238 +1,163 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/db'
+import { blogArticles, users } from '@/lib/db/schema'
+import { asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  
-  // Extract pagination parameters
   const page = parseInt(searchParams.get('page') || '0')
   const pageSize = parseInt(searchParams.get('pageSize') || '10')
   const search = searchParams.get('search') || ''
-  
-  // Extract sorting parameters
   const sortBy = searchParams.get('sortBy') || 'createdAt'
   const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
-  
+
   try {
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
-    // Build where condition for Prisma query
-    const whereCondition: Record<string, unknown> = {}
-    
-    // Apply search filter
-    if (search) {
-      whereCondition.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { excerpt: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-      ]
-    }
-    
-    // Build orderBy condition - map frontend fields to database fields
-    const orderByMap: Record<string, Record<string, unknown>> = {
-      title: { title: sortOrder },
-      author: { user_profiles: { fullName: sortOrder } },
-      category: { category: sortOrder },
-      date: { publishedAt: sortOrder },
-      createdAt: { createdAt: sortOrder },
-      commentCount: { commentCount: sortOrder },
-    }
-    
-    const orderBy = orderByMap[sortBy] || { createdAt: sortOrder }
+    const orderDir = sortOrder === 'asc' ? asc : desc
+    const sortColumn =
+      sortBy === 'title' ? blogArticles.title :
+      sortBy === 'category' ? blogArticles.category :
+      sortBy === 'date' ? blogArticles.publishedAt :
+      sortBy === 'commentCount' ? blogArticles.commentCount :
+      blogArticles.createdAt
 
-    // Execute queries in parallel for performance
-    const [articles, totalCount] = await Promise.all([
-      prisma.blog_articles.findMany({
-        where: whereCondition,
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          excerpt: true,
-          image: true,
-          category: true,
-          readTime: true,
-          commentCount: true,
-          isPublished: true,
-          publishedAt: true,
-          createdAt: true,
-          updatedAt: true,
-          accessType: true,
-          targetAudience: true,
-          user_profiles: {
-            select: {
-              id: true,
-              fullName: true,
-              displayName: true,
-              avatar: true,
-            }
-          }
-        },
-        orderBy,
-        skip: page * pageSize,
-        take: pageSize,
-      }),
-      prisma.blog_articles.count({
-        where: whereCondition,
-      }),
+    const whereCondition = search
+      ? or(
+          ilike(blogArticles.title, `%${search}%`),
+          ilike(blogArticles.excerpt, `%${search}%`),
+          ilike(blogArticles.category, `%${search}%`),
+        )
+      : undefined
+
+    const [rows, [{ total }]] = await Promise.all([
+      db
+        .select({
+          id: blogArticles.id,
+          title: blogArticles.title,
+          slug: blogArticles.slug,
+          excerpt: blogArticles.excerpt,
+          image: blogArticles.image,
+          category: blogArticles.category,
+          readTime: blogArticles.readTime,
+          commentCount: blogArticles.commentCount,
+          isPublished: blogArticles.isPublished,
+          publishedAt: blogArticles.publishedAt,
+          createdAt: blogArticles.createdAt,
+          updatedAt: blogArticles.updatedAt,
+          accessType: blogArticles.accessType,
+          targetAudience: blogArticles.targetAudience,
+          authorId: users.id,
+          authorName: users.name,
+          authorDisplayName: users.displayName,
+          authorAvatar: users.image,
+        })
+        .from(blogArticles)
+        .innerJoin(users, eq(blogArticles.authorId, users.id))
+        .where(whereCondition)
+        .orderBy(orderDir(sortColumn))
+        .limit(pageSize)
+        .offset(page * pageSize),
+      db.select({ total: sql<number>`count(*)::int` }).from(blogArticles).where(whereCondition),
     ])
 
-    // Define the type for articles from Prisma query
-    type ArticleWithAuthor = {
-      id: string
-      title: string
-      slug: string
-      excerpt: string | null
-      image: string | null
-      category: string
-      readTime: number
-      commentCount: number
-      isPublished: boolean
-      publishedAt: Date | null
-      createdAt: Date
-      updatedAt: Date
-      accessType: string
-      targetAudience: string
-      user_profiles: {
-        id: string
-        fullName: string | null
-        displayName: string | null
-        avatar: string | null
-      }
-    }
-
-    // Transform data to match frontend interface
-    const transformedArticles = articles.map((article: ArticleWithAuthor) => ({
-      id: article.id,
-      title: article.title,
-      slug: article.slug,
-      image: article.image,
-      author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
-      authorId: article.user_profiles.id,
-      authorAvatar: article.user_profiles.avatar,
-      category: article.category,
-      status: article.isPublished ? 'Ativo' : 'Rascunho',
-      paid: article.accessType === 'paid' ? 'Pago' : 'Gratuito',
-      audience: article.targetAudience === 'doctors' ? 'Médicos' : 'Público Geral',
-      date: article.publishedAt?.toISOString() || article.createdAt.toISOString(),
-      readTime: `${article.readTime} min`,
-      commentCount: article.commentCount,
+    const transformedArticles = rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      slug: r.slug,
+      image: r.image,
+      author: r.authorName || r.authorDisplayName || 'Unknown',
+      authorId: r.authorId,
+      authorAvatar: r.authorAvatar,
+      category: r.category,
+      status: r.isPublished ? 'Ativo' : 'Rascunho',
+      paid: r.accessType === 'paid' ? 'Pago' : 'Gratuito',
+      audience: r.targetAudience === 'doctors' ? 'Médicos' : 'Público Geral',
+      date: r.publishedAt?.toISOString() || r.createdAt.toISOString(),
+      readTime: `${r.readTime} min`,
+      commentCount: r.commentCount,
     }))
 
-    const pageCount = Math.ceil(totalCount / pageSize)
+    const pageCount = Math.ceil(total / pageSize)
 
     return NextResponse.json({
       data: transformedArticles,
-      totalCount,
+      totalCount: total,
       pageCount,
       page,
       pageSize,
     })
   } catch (error) {
     console.error('Error fetching articles:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch articles' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch articles' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
-    // Parse request body
     const body = await request.json()
-    const { title, slug, excerpt, content, image, category, readTime, isPublished, authorId, relatedArticleIds = [], accessType = 'free', targetAudience = 'general' } = body
+    const {
+      title, slug, excerpt, content, image, category, readTime,
+      isPublished, authorId, relatedArticleIds = [],
+      accessType = 'free', targetAudience = 'general',
+    } = body
 
-    // Validation
     if (!title || !slug || !excerpt || !content || !category) {
-      return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios faltando' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'Campos obrigatÃ³rios faltando' }, { status: 400 })
     }
 
-    // Validate relatedArticleIds (max 3)
     if (relatedArticleIds && relatedArticleIds.length > 3) {
-      return NextResponse.json(
-        { success: false, error: 'Máximo de 3 artigos relacionados permitidos' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'MÃ¡ximo de 3 artigos relacionados permitidos' }, { status: 400 })
     }
 
-    // Use provided authorId or default to the authenticated user
     const finalAuthorId = authorId || authResult.user.id
 
-    // Check if slug already exists
-    const existingArticle = await prisma.blog_articles.findUnique({
-      where: { slug }
-    })
+    const existing = await db
+      .select({ id: blogArticles.id })
+      .from(blogArticles)
+      .where(eq(blogArticles.slug, slug))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
-    if (existingArticle) {
-      return NextResponse.json(
-        { success: false, error: 'Já existe um artigo com esse slug' },
-        { status: 400 }
-      )
+    if (existing) {
+      return NextResponse.json({ success: false, error: 'JÃ¡ existe um artigo com esse slug' }, { status: 400 })
     }
 
-    // Create article
-    const article = await prisma.blog_articles.create({
-      data: {
-        title,
-        slug,
-        excerpt,
-        content,
-        image: image || null,
-        category,
-        readTime: readTime || 5,
-        isPublished,
-        publishedAt: isPublished ? new Date() : null,
-        authorId: finalAuthorId,
-        relatedArticleIds: relatedArticleIds || [],
-        accessType,
-        targetAudience,
-        commentCount: 0,
-      },
-      include: {
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          }
-        }
-      }
-    })
+    const [article] = await db.insert(blogArticles).values({
+      title,
+      slug,
+      excerpt,
+      content,
+      image: image || null,
+      category,
+      readTime: readTime || 5,
+      isPublished,
+      publishedAt: isPublished ? new Date() : null,
+      authorId: finalAuthorId,
+      relatedArticleIds: relatedArticleIds || [],
+      accessType,
+      targetAudience,
+      commentCount: 0,
+    }).returning()
 
-    // Invalidate cache so users see the new article immediately
-    revalidatePath('/blog')
-    revalidatePath(`/blog/${slug}`)
-    revalidateTag('articles', {})
-    revalidateTag('articles-initial', {})
-    revalidateTag('article-slugs', {})
-    revalidateTag(`article-${slug}`, {})
+    revalidatePath('/articles')
+    revalidatePath(`/articles/${slug}`)
+    revalidateTag('articles')
+    revalidateTag('articles-initial')
+    revalidateTag('article-slugs')
+    revalidateTag(`article-${slug}`)
 
-    return NextResponse.json({
-      success: true,
-      data: article,
-    })
+    return NextResponse.json({ success: true, data: article })
   } catch (error) {
     console.error('Error creating article:', error)
-    return NextResponse.json(
-      { success: false, error: 'Erro ao criar artigo' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Erro ao criar artigo' }, { status: 500 })
   }
 }
+
+

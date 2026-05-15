@@ -9,7 +9,7 @@ interface CategoryFilterProps {
   basePath?: string; // For server-side navigation via URL
 }
 
-export function CategoryFilter({ categories, activeCategory, onCategoryChange, basePath = '/blog' }: CategoryFilterProps) {
+export function CategoryFilter({ categories, activeCategory, onCategoryChange, basePath = '/articles' }: CategoryFilterProps) {
   // If onCategoryChange is provided, use client-side navigation
   if (onCategoryChange) {
     return (

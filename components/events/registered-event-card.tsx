@@ -30,8 +30,7 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
   };
 
   // Calculate available slots
-  const availableSlots = event.totalSlots - event.registeredCount;
-  const isFull = availableSlots <= 0;
+
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">

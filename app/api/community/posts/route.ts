@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse, connection } from 'next/server'
-import { revalidateTag } from 'next/cache'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
+﻿import { NextRequest, NextResponse, connection } from 'next/server'
+import { revalidateTag } from '@/lib/cache'
+import { eq } from 'drizzle-orm'
+import { requireAuth } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { communityPosts, users } from '@/lib/db/schema'
 import { sanitizeInput } from '@/lib/utils'
 
 // Rate limiting: simple in-memory store (in production, use Redis)
@@ -12,8 +14,8 @@ const RATE_LIMIT_MAX_POSTS = 5 // max 5 posts per minute
 // Valid categories (whitelist for security)
 const VALID_CATEGORIES = [
   'Gravidez',
-  'Pós-parto', 
-  'Suporte Contínuo',
+  'PÃ³s-parto', 
+  'Suporte ContÃ­nuo',
   'Paternidade',
   'Fertilidade',
   'Menopausa',
@@ -40,18 +42,10 @@ export async function POST(request: NextRequest) {
   try {
     await connection()
     
-    // Get current user from Supabase Auth
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in to create posts' },
-        { status: 401 }
-      )
-    }
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) return authUser
 
-    const userId = user.id
+    const userId = authUser.id
 
     // Check rate limit
     if (!checkRateLimit(userId)) {
@@ -105,14 +99,14 @@ export async function POST(request: NextRequest) {
       ? tags.map((t: string) => sanitizeInput(t)).filter(Boolean).slice(0, 10)
       : []
 
-    // Create the post
-    const newPost = await prisma.community_posts.create({
-      data: {
+    const [newPost] = await db
+      .insert(communityPosts)
+      .values({
         title: sanitizedTitle,
         content: sanitizedContent,
         userId,
         category,
-        subcategory: subcategory || null,
+        subcategory: sanitizedSubcategory,
         tags: sanitizedTags,
         isAnonymous: isAnonymous || false,
         status: 'ACTIVE',
@@ -121,27 +115,22 @@ export async function POST(request: NextRequest) {
         viewCount: 0,
         replyCount: 0,
         likeCount: 0,
-        updatedAt: new Date(),
-      },
-      include: {
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          },
-        },
-      },
-    })
+      })
+      .returning()
 
-    // Format the response
-    const authorName = newPost.isAnonymous 
-      ? 'Anônimo' 
-      : (newPost.user_profiles.displayName || newPost.user_profiles.fullName || 'Usuário')
+    const authorRow = await db
+      .select({ name: users.name, displayName: users.displayName })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+
+    const authorName = newPost.isAnonymous
+      ? 'AnÃ´nimo'
+      : (authorRow?.displayName || authorRow?.name || 'UsuÃ¡rio')
 
     // Revalidate community cache
-    revalidateTag('community', {})
+    revalidateTag('community')
 
     return NextResponse.json({
       success: true,

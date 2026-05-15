@@ -1,110 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createServiceClient } from '@/lib/supabase/server'
+import { eq } from 'drizzle-orm'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
-
-// Helper to sync user role to Supabase app_metadata
-async function syncRoleToMetadata(userId: string, role: string) {
-  try {
-    const supabaseAdmin = createServiceClient()
-    await supabaseAdmin.auth.admin.updateUserById(userId, {
-      app_metadata: { role },
-    })
-  } catch (error) {
-    console.error('Failed to sync role to app_metadata:', error)
-  }
-}
+import { db } from '@/lib/db'
+import { users } from '@/lib/db/schema'
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
+    if (authResult instanceof NextResponse) return authResult
+
+    const { userId } = await context.params
+
+    const user = await db
+      .select({
+        id: users.id, name: users.name, email: users.email, emailVerified: users.emailVerified,
+        image: users.image, role: users.role, displayName: users.displayName, bio: users.bio,
+        phone: users.phone, dateOfBirth: users.dateOfBirth, title: users.title, company: users.company,
+        website: users.website, linkedin: users.linkedin, twitter: users.twitter, instagram: users.instagram,
+        rating: users.rating, reviewsCount: users.reviewsCount, studentsCount: users.studentsCount,
+        coursesCount: users.coursesCount, language: users.language, timezone: users.timezone,
+        emailNotifications: users.emailNotifications, marketingEmails: users.marketingEmails,
+        lastLoginAt: users.lastLoginAt, createdAt: users.createdAt, updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-
-    // In Next.js 15, params is a Promise
-    const params = await context.params
-    const userId = params.userId
-
-    // Execute both queries in parallel for better performance
-    const supabaseAdmin = createAdminClient()
-    
-    const [userProfile, authData] = await Promise.all([
-      // Fetch user profile from database
-      prisma.user_profiles.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          bio: true,
-          avatar: true,
-          phone: true,
-          dateOfBirth: true,
-          title: true,
-          company: true,
-          website: true,
-          linkedin: true,
-          twitter: true,
-          instagram: true,
-          rating: true,
-          reviewsCount: true,
-          studentsCount: true,
-          coursesCount: true,
-          language: true,
-          timezone: true,
-          emailNotifications: true,
-          marketingEmails: true,
-          createdAt: true,
-          updatedAt: true,
-          lastLoginAt: true,
-        }
-      }),
-      // Get email from Supabase Auth using Admin API
-      supabaseAdmin.auth.admin.getUserById(userId)
-        .then(result => result.data)
-        .catch(() => null)
-    ])
-
-    if (!userProfile) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    const email = authData?.user?.email || 'N/A'
-
-    // Determine status based on lastLoginAt
-    const status = userProfile.lastLoginAt ? 'Ativo' : 'Inativo'
-    
-    // Get actual role from UserRoleAssignment table
-    const roleAssignment = await prisma.user_roles.findFirst({
-      where: { userId },
-      select: { role: true },
-      orderBy: { createdAt: 'desc' }
-    })
-    
-    const role = roleAssignment?.role || 'STUDENT'
 
     return NextResponse.json({
-      ...userProfile,
-      email,
-      status,
-      role,
-      rating: userProfile.rating ? Number(userProfile.rating) : null,
+      ...user,
+      rating: user.rating ? Number(user.rating) : null,
+      status: user.lastLoginAt ? 'Ativo' : 'Inativo',
     })
   } catch (error) {
     console.error('Error fetching user details:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch user details' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch user details' }, { status: 500 })
   }
 }
 
@@ -113,36 +50,26 @@ export async function PATCH(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
-    // In Next.js 15, params is a Promise
-    const params = await context.params
-    const userId = params.userId
-
-    // Parse request body
+    const { userId } = await context.params
     const body = await request.json()
-    
-    // Validate that the user exists
-    const existingUser = await prisma.user_profiles.findUnique({
-      where: { id: userId },
-      select: { id: true }
-    })
 
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+
+    if (!existing) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Prepare update data - only include fields that are provided
-    const updateData: Record<string, unknown> = {}
-    
-    if (body.fullName !== undefined) updateData.fullName = body.fullName
+    const updateData: Partial<typeof users.$inferInsert> = {}
+    if (body.name !== undefined) updateData.name = body.name
+    if (body.fullName !== undefined) updateData.name = body.fullName
     if (body.displayName !== undefined) updateData.displayName = body.displayName
     if (body.bio !== undefined) updateData.bio = body.bio
     if (body.phone !== undefined) updateData.phone = body.phone
@@ -155,66 +82,20 @@ export async function PATCH(
     if (body.instagram !== undefined) updateData.instagram = body.instagram
     if (body.emailNotifications !== undefined) updateData.emailNotifications = body.emailNotifications
     if (body.marketingEmails !== undefined) updateData.marketingEmails = body.marketingEmails
+    if (body.role !== undefined) updateData.role = body.role
+    updateData.updatedAt = new Date()
 
-    // Handle role update separately in UserRoleAssignment table
-    if (body.role !== undefined) {
-      // Check if role assignment exists
-      const existingRole = await prisma.user_roles.findFirst({
-        where: { userId }
-      })
+    const [updated] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning()
 
-      if (existingRole) {
-        // Update existing role
-        await prisma.user_roles.update({
-          where: { id: existingRole.id },
-          data: { role: body.role }
-        })
-      } else {
-        // Create new role assignment
-        await prisma.user_roles.create({
-          data: {
-            userId,
-            role: body.role
-          }
-        })
-      }
-      
-      // Sync the new role to Supabase app_metadata
-      // This allows middleware to read the role from JWT without database calls
-      await syncRoleToMetadata(userId, body.role)
-    }
-
-    // Update user profile
-    const updatedUser = await prisma.user_profiles.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        fullName: true,
-        displayName: true,
-        bio: true,
-        avatar: true,
-        phone: true,
-        dateOfBirth: true,
-        title: true,
-        company: true,
-        website: true,
-        linkedin: true,
-        twitter: true,
-        instagram: true,
-        emailNotifications: true,
-        marketingEmails: true,
-        updatedAt: true,
-      }
-    })
-
-    return NextResponse.json(updatedUser)
+    const { password: _pw, ...safeUser } = updated
+    return NextResponse.json(safeUser)
   } catch (error) {
     console.error('Error updating user:', error)
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
   }
 }
 
@@ -223,61 +104,32 @@ export async function DELETE(
   context: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
     const { user: authUser } = authResult
 
-    // In Next.js 15, params is a Promise
-    const params = await context.params
-    const userId = params.userId
+    const { userId } = await context.params
 
-    // Prevent users from deleting themselves
     if (authUser.id === userId) {
-      return NextResponse.json(
-        { error: 'Cannot delete your own account' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
     }
 
-    // Validate that the user exists
-    const existingUser = await prisma.user_profiles.findUnique({
-      where: { id: userId },
-      select: { id: true, fullName: true }
-    })
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+    if (!existing) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Delete user profile (cascade will handle related records based on schema)
-    await prisma.user_profiles.delete({
-      where: { id: userId }
-    })
+    await db.delete(users).where(eq(users.id, userId))
 
-    // Optionally delete from Supabase Auth as well
-    const supabaseAdmin = createAdminClient()
-    try {
-      await supabaseAdmin.auth.admin.deleteUser(userId)
-    } catch (authError) {
-      console.error('Error deleting user from Supabase Auth:', authError)
-      // Continue even if auth deletion fails - user profile is already deleted
-    }
-
-    return NextResponse.json({ 
-      success: true,
-      message: 'User deleted successfully' 
-    })
+    return NextResponse.json({ success: true, message: 'User deleted successfully' })
   } catch (error) {
     console.error('Error deleting user:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete user' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 })
   }
 }

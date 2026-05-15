@@ -1,4 +1,6 @@
-import prisma from '@/lib/prisma'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { systemEmailTemplates } from '@/lib/db/schema'
 import { sendEmail, type EmailResult } from '@/lib/email'
 import { 
   renderEmailTemplate,
@@ -32,16 +34,12 @@ async function getTemplate(code: string): Promise<TemplateData | null> {
 
   try {
     // Try to get from database first
-    const dbTemplate = await prisma.system_email_templates.findUnique({
-      where: { code },
-      select: {
-        htmlContent: true,
-        textContent: true,
-        subject: true,
-        previewText: true,
-        isActive: true,
-      },
-    })
+    const dbTemplate = await db
+      .select({ htmlContent: systemEmailTemplates.htmlContent, textContent: systemEmailTemplates.textContent, subject: systemEmailTemplates.subject, previewText: systemEmailTemplates.previewText, isActive: systemEmailTemplates.isActive })
+      .from(systemEmailTemplates)
+      .where(eq(systemEmailTemplates.code, code))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     // If template exists but is inactive, return null (don't send email)
     if (dbTemplate && !dbTemplate.isActive) {

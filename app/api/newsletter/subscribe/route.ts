@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
-import prisma from '@/lib/prisma'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { newsletterSubscribers } from '@/lib/db/schema'
 import { sanitizeInput } from '@/lib/utils'
 import { validateEmail } from '@/lib/email-validation'
 import { sendWelcomeEmail } from '@/lib/email'
@@ -76,9 +78,7 @@ export async function POST(request: NextRequest) {
     const sanitizedSource = source ? sanitizeInput(String(source)).slice(0, 50) : 'footer'
 
     // Check if email already exists
-    const existingSubscriber = await prisma.newsletter_subscribers.findUnique({
-      where: { email: trimmedEmail },
-    })
+    const existingSubscriber = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, trimmedEmail)).limit(1).then((r) => r[0] ?? null)
 
     if (existingSubscriber) {
       // If already subscribed and active, return success (don't reveal subscription status)
@@ -91,16 +91,13 @@ export async function POST(request: NextRequest) {
       
       // If unsubscribed, reactivate
       if (existingSubscriber.status === 'UNSUBSCRIBED') {
-        await prisma.newsletter_subscribers.update({
-          where: { email: trimmedEmail },
-          data: {
-            status: 'ACTIVE',
-            unsubscribedAt: null,
-            confirmedAt: new Date(),
-            source: sanitizedSource,
-            ipAddress: clientIP,
-          },
-        })
+        await db.update(newsletterSubscribers).set({
+          status: 'ACTIVE',
+          unsubscribedAt: null,
+          confirmedAt: new Date(),
+          source: sanitizedSource,
+          ipAddress: clientIP,
+        }).where(eq(newsletterSubscribers.email, trimmedEmail))
 
         // Send welcome back email (don't wait for it)
         sendWelcomeEmail(trimmedEmail).catch(err => 
@@ -121,15 +118,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new subscriber
-    // Note: In production, you might want to set status to PENDING and send a confirmation email
-    await prisma.newsletter_subscribers.create({
-      data: {
-        email: trimmedEmail,
-        source: sanitizedSource,
-        ipAddress: clientIP,
-        status: 'ACTIVE', // Auto-confirm for now, change to PENDING if implementing double opt-in
-        confirmedAt: new Date(),
-      },
+    await db.insert(newsletterSubscribers).values({
+      email: trimmedEmail,
+      source: sanitizedSource,
+      ipAddress: clientIP,
+      status: 'ACTIVE',
+      confirmedAt: new Date(),
     })
 
     // Send welcome email (don't wait for it to complete)

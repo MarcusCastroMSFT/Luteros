@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { newsletterSubscribers } from '@/lib/db/schema'
 
 // GET /api/newsletter/unsubscribe?token=xxx - Get subscriber info by token
 export async function GET(request: NextRequest) {
@@ -14,15 +16,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const subscriber = await prisma.newsletter_subscribers.findUnique({
-      where: { unsubscribeToken: token },
-      select: {
-        id: true,
-        email: true,
-        status: true,
-        unsubscribedAt: true,
-      }
-    })
+    const subscriber = await db.select({ id: newsletterSubscribers.id, email: newsletterSubscribers.email, status: newsletterSubscribers.status, unsubscribedAt: newsletterSubscribers.unsubscribedAt }).from(newsletterSubscribers).where(eq(newsletterSubscribers.unsubscribeToken, token)).limit(1).then((r) => r[0] ?? null)
 
     if (!subscriber) {
       return NextResponse.json(
@@ -65,9 +59,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const subscriber = await prisma.newsletter_subscribers.findUnique({
-      where: { unsubscribeToken: token }
-    })
+    const subscriber = await db.select({ id: newsletterSubscribers.id, email: newsletterSubscribers.email, status: newsletterSubscribers.status, source: newsletterSubscribers.source }).from(newsletterSubscribers).where(eq(newsletterSubscribers.unsubscribeToken, token)).limit(1).then((r) => r[0] ?? null)
 
     if (!subscriber) {
       return NextResponse.json(
@@ -85,15 +77,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Update subscriber status
-    await prisma.newsletter_subscribers.update({
-      where: { unsubscribeToken: token },
-      data: {
-        status: 'UNSUBSCRIBED',
-        unsubscribedAt: new Date(),
-        // Store reason in source field with prefix (reusing field)
-        source: reason ? `unsubscribed: ${reason}` : subscriber.source,
-      }
-    })
+    await db.update(newsletterSubscribers).set({
+      status: 'UNSUBSCRIBED',
+      unsubscribedAt: new Date(),
+      source: reason ? `unsubscribed: ${reason}` : subscriber.source,
+    }).where(eq(newsletterSubscribers.unsubscribeToken, token))
 
     return NextResponse.json({
       success: true,

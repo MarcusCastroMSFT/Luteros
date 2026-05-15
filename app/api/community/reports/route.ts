@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
+import { and, desc, eq } from 'drizzle-orm'
+import { getAuthUser, requireAuth } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { communityPosts, communityReplies, communityReports, users } from '@/lib/db/schema'
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -13,18 +15,9 @@ export async function POST(request: NextRequest) {
   try {
     await connection()
     
-    // Get current user from Supabase Auth
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in to report' },
-        { status: 401 }
-      )
-    }
-
-    const reporterId = user.id
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) return authUser
+    const reporterId = authUser.id
 
     const body = await request.json()
     const { entityType, entityId, reason, details } = body
@@ -61,66 +54,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user already reported this entity
-    const existingReport = await prisma.community_reports.findFirst({
-      where: {
-        entityType,
-        entityId,
-        reporterId,
-      },
-    })
+    const existingReport = await db.select().from(communityReports).where(and(eq(communityReports.entityType, entityType), eq(communityReports.entityId, entityId), eq(communityReports.reporterId, reporterId))).limit(1).then((r) => r[0] ?? null)
+    if (existingReport) return NextResponse.json({ error: 'You have already reported this item' }, { status: 409 })
 
-    if (existingReport) {
-      return NextResponse.json(
-        { error: 'You have already reported this item' },
-        { status: 409 }
-      )
-    }
-
-    // Check if entity exists
     if (entityType === 'post') {
-      const post = await prisma.community_posts.findUnique({
-        where: { id: entityId },
-      })
-      if (!post) {
-        return NextResponse.json(
-          { error: 'Post not found' },
-          { status: 404 }
-        )
-      }
-      // Mark post as reported
-      await prisma.community_posts.update({
-        where: { id: entityId },
-        data: { isReported: true },
-      })
+      const post = await db.select({ id: communityPosts.id }).from(communityPosts).where(eq(communityPosts.id, entityId)).limit(1).then((r) => r[0] ?? null)
+      if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+      await db.update(communityPosts).set({ isReported: true }).where(eq(communityPosts.id, entityId))
     } else {
-      const reply = await prisma.community_replies.findUnique({
-        where: { id: entityId },
-      })
-      if (!reply) {
-        return NextResponse.json(
-          { error: 'Reply not found' },
-          { status: 404 }
-        )
-      }
-      // Mark reply as reported
-      await prisma.community_replies.update({
-        where: { id: entityId },
-        data: { isReported: true },
-      })
+      const reply = await db.select({ id: communityReplies.id }).from(communityReplies).where(eq(communityReplies.id, entityId)).limit(1).then((r) => r[0] ?? null)
+      if (!reply) return NextResponse.json({ error: 'Reply not found' }, { status: 404 })
+      await db.update(communityReplies).set({ isReported: true }).where(eq(communityReplies.id, entityId))
     }
 
-    // Create the report
-    const report = await prisma.community_reports.create({
-      data: {
-        entityType,
-        entityId,
-        reporterId,
-        reason,
-        details: details || null,
-        status: 'PENDING',
-      },
-    })
+    const [report] = await db.insert(communityReports).values({ entityType, entityId, reporterId, reason, details: details || null, status: 'PENDING' }).returning()
 
     return NextResponse.json({
       success: true,
@@ -148,83 +95,41 @@ export async function GET(request: NextRequest) {
   try {
     await connection()
     
-    // Get current user from Supabase Auth
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const authUser = await getAuthUser()
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Check if user is admin
-    const roleAssignment = await prisma.user_roles.findFirst({
-      where: { userId: user.id },
-      select: { role: true },
-      orderBy: { createdAt: 'desc' },
-    })
-
-    const userRole = roleAssignment?.role || 'STUDENT'
-    const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
-
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
-        { status: 403 }
-      )
+    const currentUser = await db.select({ role: users.role }).from(users).where(eq(users.id, authUser.id)).limit(1).then((r) => r[0] ?? null)
+    if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'INSTRUCTOR') {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
     const entityType = searchParams.get('entityType')
     const entityId = searchParams.get('entityId')
 
-    // Build where condition
-    const whereCondition: Record<string, unknown> = {}
-    
-    if (entityType) {
-      whereCondition.entityType = entityType
-    }
-    
-    if (entityId) {
-      if (!UUID_REGEX.test(entityId)) {
-        return NextResponse.json(
-          { error: 'Invalid entityId format' },
-          { status: 400 }
-        )
-      }
-      whereCondition.entityId = entityId
-    }
+    const where = and(
+      entityType ? eq(communityReports.entityType, entityType) : undefined,
+      entityId ? eq(communityReports.entityId, entityId) : undefined,
+    )
 
-    const reports: Array<{
-      id: string
-      entityType: string
-      entityId: string
-      reason: string
-      details: string | null
-      status: string
-      createdAt: Date
-      user_profiles: {
-        id: string
-        fullName: string | null
-        displayName: string | null
-        avatar: string | null
-      }
-    }> = await prisma.community_reports.findMany({
-      where: whereCondition,
-      include: {
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+    const rows = await db
+      .select({
+        id: communityReports.id,
+        entityType: communityReports.entityType,
+        entityId: communityReports.entityId,
+        reason: communityReports.reason,
+        details: communityReports.details,
+        status: communityReports.status,
+        createdAt: communityReports.createdAt,
+        reporterId: users.id,
+        reporterName: users.name,
+        reporterDisplayName: users.displayName,
+        reporterAvatar: users.image,
+      })
+      .from(communityReports)
+      .innerJoin(users, eq(communityReports.reporterId, users.id))
+      .where(where)
+      .orderBy(desc(communityReports.createdAt))
 
     // Map reasons to labels
     const reasonLabels: Record<string, string> = {
@@ -237,7 +142,7 @@ export async function GET(request: NextRequest) {
       other: 'Outro motivo',
     }
 
-    const formattedReports = reports.map(report => ({
+    const formattedReports = rows.map((report) => ({
       id: report.id,
       entityType: report.entityType,
       entityId: report.entityId,
@@ -245,19 +150,9 @@ export async function GET(request: NextRequest) {
       reasonLabel: reasonLabels[report.reason] || report.reason,
       details: report.details,
       status: report.status,
-      reporter: {
-        id: report.user_profiles.id,
-        name: report.user_profiles.displayName || report.user_profiles.fullName || 'Usuário',
-        avatar: report.user_profiles.avatar,
-      },
+      reporter: { id: report.reporterId, name: report.reporterDisplayName || report.reporterName || 'Usuário', avatar: report.reporterAvatar },
       createdAt: report.createdAt.toISOString(),
-      createdDateFormatted: new Intl.DateTimeFormat('pt-BR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(report.createdAt),
+      createdDateFormatted: new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(report.createdAt),
     }))
 
     return NextResponse.json({

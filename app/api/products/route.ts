@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { products, productPartners } from '@/lib/db/schema';
 import { ProductsApiResponse } from '@/types/product';
 import { requireAdmin } from '@/lib/auth-helpers';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from '@/lib/cache';
 
 export async function GET(request: NextRequest) {
   // Add cache tag for manual invalidation
@@ -30,67 +32,44 @@ export async function GET(request: NextRequest) {
       const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
       
       // Build where condition
-      const whereCondition: Record<string, unknown> = {};
-      
-      if (search) {
-        whereCondition.OR = [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { category: { contains: search, mode: 'insensitive' } },
-          { promoCode: { contains: search, mode: 'insensitive' } },
-          { partner: { name: { contains: search, mode: 'insensitive' } } },
-        ];
+      const searchWhere = search ? or(
+        ilike(products.title, `%${search}%`),
+        ilike(products.category, `%${search}%`),
+        ilike(products.promoCode, `%${search}%`),
+        ilike(productPartners.name, `%${search}%`),
+      ) : undefined
+
+      const sortColMap: Record<string, unknown> = {
+        title: products.title,
+        partner: productPartners.name,
+        category: products.category,
+        discount: products.discountPercentage,
+        usageCount: products.usageCount,
+        validUntil: products.validUntil,
+        createdAt: products.createdAt,
       }
-      
-      // Build orderBy condition
-      const orderByMap: Record<string, Record<string, unknown>> = {
-        title: { title: sortOrder },
-        partner: { partner: { name: sortOrder } },
-        category: { category: sortOrder },
-        discount: { discountPercentage: sortOrder },
-        usageCount: { usageCount: sortOrder },
-        validUntil: { validUntil: sortOrder },
-        createdAt: { createdAt: sortOrder },
-      };
-      
-      const orderBy = orderByMap[sortBy] || { createdAt: sortOrder };
-      
-      const [products, totalCount] = await Promise.all([
-        prisma.products.findMany({
-          where: whereCondition,
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            category: true,
-            discountPercentage: true,
-            promoCode: true,
-            availability: true,
-            isActive: true,
-            isFeatured: true,
-            usageCount: true,
-            maxUsages: true,
-            validUntil: true,
-            createdAt: true,
-            product_partners: {
-              select: {
-                name: true,
-              },
-            },
-          },
-          orderBy,
-          skip: page * pageSize,
-          take: pageSize,
-        }),
-        prisma.products.count({ where: whereCondition }),
-      ]);
-      
+      const sortCol = (sortColMap[sortBy] ?? products.createdAt) as Parameters<typeof asc>[0]
+      const orderFn = sortOrder === 'asc' ? asc : desc
+
+      const [productsRows, [{ total }]] = await Promise.all([
+        db.select({
+          id: products.id, title: products.title, slug: products.slug, category: products.category,
+          discountPercentage: products.discountPercentage, promoCode: products.promoCode,
+          availability: products.availability, isActive: products.isActive, isFeatured: products.isFeatured,
+          usageCount: products.usageCount, maxUsages: products.maxUsages, validUntil: products.validUntil,
+          createdAt: products.createdAt, partnerName: productPartners.name,
+        }).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id))
+          .where(searchWhere).orderBy(orderFn(sortCol)).offset(page * pageSize).limit(pageSize),
+        db.select({ total: sql<number>`count(*)::int` }).from(products)
+          .innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(searchWhere),
+      ])
+
       // Transform for admin dashboard table
-      const transformedProducts = products.map((product: typeof products[number]) => ({
+      const transformedProducts = productsRows.map((product) => ({
         id: product.id,
         title: product.title,
         slug: product.slug,
-        partner: product.product_partners.name,
+        partner: product.partnerName,
         category: product.category,
         discount: product.discountPercentage,
         promoCode: product.promoCode,
@@ -103,6 +82,7 @@ export async function GET(request: NextRequest) {
         createdAt: product.createdAt.toISOString(),
       }));
       
+      const totalCount = Number(total)
       const pageCount = Math.ceil(totalCount / pageSize);
       
       return NextResponse.json({
@@ -123,94 +103,43 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured') === 'true';
 
     // Build where clause for active products only
-    const whereClause: Record<string, unknown> = {
-      isActive: true,
-    };
+    const whereParts = [
+      eq(products.isActive, true),
+      search ? or(ilike(products.title, `%${search}%`), ilike(products.shortDescription, `%${search}%`), ilike(products.category, `%${search}%`), ilike(productPartners.name, `%${search}%`)) : undefined,
+      category ? eq(products.category, category) : undefined,
+      availability ? eq(products.availability, availability) : undefined,
+      featured ? eq(products.isFeatured, true) : undefined,
+    ] as const
+    const publicWhere = and(...whereParts)
 
-    // Add search filter if provided
-    if (search) {
-      whereClause.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { shortDescription: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-        { partner: { name: { contains: search, mode: 'insensitive' } } },
-      ];
-    }
-
-    // Add category filter if provided
-    if (category) {
-      whereClause.category = { equals: category, mode: 'insensitive' };
-    }
-
-    // Add availability filter if provided
-    if (availability) {
-      whereClause.availability = availability;
-    }
-
-    // Add featured filter if provided
-    if (featured) {
-      whereClause.isFeatured = true;
+    const productCols = {
+      id: products.id, slug: products.slug, title: products.title, description: products.description,
+      shortDescription: products.shortDescription, image: products.image,
+      discountPercentage: products.discountPercentage, discountType: products.discountType,
+      originalPrice: products.originalPrice, discountedPrice: products.discountedPrice,
+      discountAmount: products.discountAmount, promoCode: products.promoCode,
+      category: products.category, tags: products.tags, availability: products.availability,
+      validUntil: products.validUntil, termsAndConditions: products.termsAndConditions,
+      howToUse: products.howToUse, features: products.features,
+      isActive: products.isActive, isFeatured: products.isFeatured,
+      usageCount: products.usageCount, maxUsages: products.maxUsages, createdAt: products.createdAt,
+      partnerId: productPartners.id, partnerName: productPartners.name,
+      partnerSlug: productPartners.slug, partnerLogo: productPartners.logo, partnerWebsite: productPartners.website,
     }
 
     // Get total count, paginated products, and categories in parallel
-    const [totalProducts, products, categoriesRaw] = await Promise.all([
-      prisma.products.count({ where: whereClause }),
-      prisma.products.findMany({
-        where: whereClause,
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          description: true,
-          shortDescription: true,
-          image: true,
-          discountPercentage: true,
-          discountType: true,
-          originalPrice: true,
-          discountedPrice: true,
-          discountAmount: true,
-          promoCode: true,
-          category: true,
-          tags: true,
-          availability: true,
-          validUntil: true,
-          termsAndConditions: true,
-          howToUse: true,
-          features: true,
-          isActive: true,
-          isFeatured: true,
-          usageCount: true,
-          maxUsages: true,
-          createdAt: true,
-          product_partners: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              logo: true,
-              website: true,
-            },
-          },
-        },
-        orderBy: [
-          { isFeatured: 'desc' },
-          { createdAt: 'desc' },
-        ],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      // Get distinct categories with counts
-      prisma.products.groupBy({
-        by: ['category'],
-        where: { isActive: true },
-        _count: { category: true },
-        orderBy: { category: 'asc' },
-      }),
+    const [[{ totalProducts }], productsRows, categoriesRaw] = await Promise.all([
+      db.select({ totalProducts: sql<number>`count(*)::int` }).from(products)
+        .innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(publicWhere),
+      db.select(productCols).from(products)
+        .innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(publicWhere)
+        .orderBy(desc(products.isFeatured), desc(products.createdAt)).offset((page - 1) * limit).limit(limit),
+      db.select({ category: products.category, count: sql<number>`count(*)::int` }).from(products)
+        .where(eq(products.isActive, true)).groupBy(products.category).orderBy(asc(products.category)),
     ]);
 
     // Transform products to match frontend interface
-    const transformedProducts = products.map((product: typeof products[number]) => ({
+    const transformedProducts = productsRows.map((product) => ({
       id: product.id,
       slug: product.slug,
       title: product.title,
@@ -218,10 +147,10 @@ export async function GET(request: NextRequest) {
       shortDescription: product.shortDescription,
       image: product.image || '',
       partner: {
-        id: product.partner.id,
-        name: product.partner.name,
-        logo: product.partner.logo || '',
-        website: product.partner.website || '',
+        id: product.partnerId,
+        name: product.partnerName,
+        logo: product.partnerLogo || '',
+        website: product.partnerWebsite || '',
       },
       discount: {
         percentage: product.discountPercentage,
@@ -246,11 +175,11 @@ export async function GET(request: NextRequest) {
     }));
 
     // Transform categories
-    const categories = categoriesRaw.map((cat: typeof categoriesRaw[number], index: number) => ({
+    const categories = categoriesRaw.map((cat, index: number) => ({
       id: `cat-${index + 1}`,
       name: cat.category,
       slug: cat.category.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, ''),
-      count: cat._count.category,
+      count: cat.count,
     }));
 
     // Calculate pagination
@@ -331,37 +260,32 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!title || !slug || !description || !shortDescription || !partnerId || !promoCode || !category) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios faltando: título, slug, descrição, descrição curta, parceiro, código promocional e categoria são obrigatórios' },
+        { success: false, error: 'Campos obrigatÃ³rios faltando: tÃ­tulo, slug, descriÃ§Ã£o, descriÃ§Ã£o curta, parceiro, cÃ³digo promocional e categoria sÃ£o obrigatÃ³rios' },
         { status: 400 }
       );
     }
 
     // Check if slug already exists
-    const existingProduct = await prisma.products.findUnique({
-      where: { slug },
-    });
+    const existingProduct = await db.select({ id: products.id }).from(products).where(eq(products.slug, slug)).limit(1).then((r) => r[0] ?? null);
 
     if (existingProduct) {
       return NextResponse.json(
-        { success: false, error: 'Já existe um produto com este slug' },
+        { success: false, error: 'JÃ¡ existe um produto com este slug' },
         { status: 400 }
       );
     }
 
     // Check if partner exists
-    const partner = await prisma.product_partners.findUnique({
-      where: { id: partnerId },
-    });
+    const partner = await db.select({ id: productPartners.id }).from(productPartners).where(eq(productPartners.id, partnerId)).limit(1).then((r) => r[0] ?? null);
 
     if (!partner) {
       return NextResponse.json(
-        { success: false, error: 'Parceiro não encontrado' },
+        { success: false, error: 'Parceiro nÃ£o encontrado' },
         { status: 400 }
       );
     }
 
-    const product = await prisma.products.create({
-      data: {
+    const [product] = await db.insert(products).values({
         title,
         slug,
         description,
@@ -370,9 +294,9 @@ export async function POST(request: NextRequest) {
         partnerId,
         discountPercentage: discountPercentage || 0,
         discountType: discountType || 'percentage',
-        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
-        discountedPrice: discountedPrice ? parseFloat(discountedPrice) : null,
-        discountAmount: discountAmount ? parseFloat(discountAmount) : null,
+        originalPrice: originalPrice ? String(parseFloat(originalPrice)) : null,
+        discountedPrice: discountedPrice ? String(parseFloat(discountedPrice)) : null,
+        discountAmount: discountAmount ? String(parseFloat(discountAmount)) : null,
         promoCode,
         category,
         tags: tags || [],
@@ -384,22 +308,12 @@ export async function POST(request: NextRequest) {
         isActive: isActive ?? true,
         isFeatured: isFeatured ?? false,
         maxUsages: maxUsages || null,
-      },
-      include: {
-        product_partners: {
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-          },
-        },
-      },
-    });
+      }).returning();
 
     // Revalidate all product-related cache tags
-    revalidateTag('products', {});
-    revalidateTag('featured-products', {});
-    revalidateTag('product-slugs', {});
+    revalidateTag('products');
+    revalidateTag('featured-products');
+    revalidateTag('product-slugs');
     revalidatePath('/products');
     revalidatePath(`/products/${slug}`);
     revalidatePath('/admin/products');

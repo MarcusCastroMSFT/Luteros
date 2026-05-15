@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { BookOpen, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -201,7 +202,7 @@ export function MyCoursesClient() {
           </p>
           {status === 'all' && (
             <Button asChild>
-              <a href="/courses">Explorar Cursos</a>
+              <Link href="/courses">Explorar Cursos</Link>
             </Button>
           )}
         </div>

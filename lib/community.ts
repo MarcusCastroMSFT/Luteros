@@ -1,56 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import prisma from '@/lib/prisma'
+import { and, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { communityPosts, communityLikes, communityReplies, communityReplyLikes, users } from '@/lib/db/schema'
 import { CommunityPost, CommunityReply, CommunityPagination } from '@/types/community'
-
-// Type for post with author and replies from Prisma
-type CommunityPostWithRelations = {
-  id: string
-  title: string
-  content: string
-  userId: string
-  category: string
-  subcategory: string | null
-  tags: string[]
-  isAnonymous: boolean
-  status: 'ACTIVE' | 'CLOSED' | 'MODERATION'
-  isReported: boolean
-  isPinned: boolean
-  viewCount: number
-  replyCount: number
-  likeCount: number
-  createdAt: Date
-  updatedAt: Date
-  lastReplyAt: Date | null
-  user_profiles: {
-    id: string
-    fullName: string | null
-    displayName: string | null
-    avatar: string | null
-  }
-  community_replies: CommunityReplyWithAuthor[]
-  _count?: {
-    community_likes: number
-    community_replies: number
-  }
-}
-
-type CommunityReplyWithAuthor = {
-  id: string
-  postId: string
-  userId: string
-  content: string
-  isAnonymous: boolean
-  isReported: boolean
-  likeCount: number
-  createdAt: Date
-  updatedAt: Date
-  user_profiles: {
-    id: string
-    fullName: string | null
-    displayName: string | null
-    avatar: string | null
-  }
-}
 
 // Status mapping from enum to display format
 const statusMap: Record<string, 'Ativo' | 'Fechado' | 'Moderação'> = {
@@ -87,11 +39,11 @@ function formatDate(date: Date): string {
   }).format(date)
 }
 
-// Transform reply from Prisma to frontend format
-function transformReply(reply: CommunityReplyWithAuthor): CommunityReply {
+// Transform reply from DB to frontend format
+function transformReply(reply: { id: string; content: string; isAnonymous: boolean; isReported: boolean; likeCount: number; createdAt: Date; authorName: string | null; authorDisplayName: string | null }): CommunityReply {
   const authorName = reply.isAnonymous 
     ? 'Anônimo' 
-    : (reply.user_profiles.displayName || reply.user_profiles.fullName || 'Usuário')
+    : (reply.authorDisplayName || reply.authorName || 'Usuário')
   
   return {
     id: reply.id,
@@ -104,17 +56,12 @@ function transformReply(reply: CommunityReplyWithAuthor): CommunityReply {
   }
 }
 
-// Transform Prisma post to frontend CommunityPost type
-function transformPost(post: CommunityPostWithRelations, includeReplies = false): CommunityPost {
+// Transform DB post to frontend CommunityPost type
+function transformPost(post: { id: string; title: string; content: string; userId: string; category: string; subcategory: string | null; tags: string[]; isAnonymous: boolean; status: string; isReported: boolean; isPinned: boolean; viewCount: number; replyCount: number; likeCount: number; createdAt: Date; updatedAt: Date; lastReplyAt: Date | null; authorName: string | null; authorDisplayName: string | null }, replies: ReturnType<typeof transformReply>[] = []): CommunityPost {
   const authorName = post.isAnonymous 
     ? 'Anônimo' 
-    : (post.user_profiles.displayName || post.user_profiles.fullName || 'Usuário')
+    : (post.authorDisplayName || post.authorName || 'Usuário')
   
-  const replies = includeReplies && post.community_replies 
-    ? post.community_replies.map(transformReply)
-    : []
-  
-  // Check if any reply is reported
   const hasReportedReplies = replies.some(reply => reply.isReported)
   
   return {
@@ -126,7 +73,7 @@ function transformPost(post: CommunityPostWithRelations, includeReplies = false)
     subcategory: post.subcategory || '',
     status: statusMap[post.status] || 'Ativo',
     replies,
-    repliesCount: post._count?.community_replies ?? post.replyCount,
+    repliesCount: post.replyCount,
     likes: post.likeCount,
     isAnonymous: post.isAnonymous,
     createdDate: formatDate(post.createdAt),
@@ -146,143 +93,87 @@ async function fetchCommunityPosts(
   status?: string,
   isReported?: string
 ) {
-  const whereCondition: Record<string, unknown> = {}
-  
-  // Filter by isReported - includes posts that are reported OR have reported replies
-  if (isReported === 'true') {
-    whereCondition.OR = [
-      { isReported: true },
-      {
-        community_replies: {
-          some: { isReported: true }
-        }
-      }
-    ]
-  } else if (isReported === 'false') {
-    whereCondition.isReported = false
-  }
-  
-  // Filter by status (default to active posts only for public view, but not when filtering reported)
-  if (status) {
-    const statusKey = Object.entries(statusMap).find(([, v]) => v.toLowerCase() === status.toLowerCase())?.[0]
-    if (statusKey) {
-      whereCondition.status = statusKey
-    }
-  } else if (!isReported) {
-    whereCondition.status = 'ACTIVE' // Default to active posts only when not filtering by reported
-  }
-  
-  // Filter by category
-  if (category) {
-    // Support both Portuguese names and URL-friendly names
-    const categoryName = categoryMap[category.toLowerCase()] || category
-    whereCondition.category = categoryName
-  }
-  
-  // Search in title, content, and tags
-  if (search) {
-    // Use AND to combine with existing conditions (like isReported OR)
-    whereCondition.AND = [
-      ...(whereCondition.AND as Array<unknown> || []),
-      {
-        OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { content: { contains: search, mode: 'insensitive' } },
-          { tags: { has: search } },
-        ]
-      }
-    ]
-  }
-
-  const [posts, totalPosts, allCategories]: [unknown[], number, { category: string }[]] = await Promise.all([
-    prisma.community_posts.findMany({
-      where: whereCondition,
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        userId: true,
-        category: true,
-        subcategory: true,
-        tags: true,
-        isAnonymous: true,
-        status: true,
-        isReported: true,
-        isPinned: true,
-        viewCount: true,
-        replyCount: true,
-        likeCount: true,
-        createdAt: true,
-        updatedAt: true,
-        lastReplyAt: true,
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          },
-        },
-        _count: {
-          select: {
-            community_likes: true,
-            community_replies: true,
-          },
-        },
-        community_replies: {
-          select: {
-            id: true,
-            postId: true,
-            userId: true,
-            content: true,
-            isAnonymous: true,
-            isReported: true,
-            likeCount: true,
-            createdAt: true,
-            updatedAt: true,
-            user_profiles: {
-              select: {
-                id: true,
-                fullName: true,
-                displayName: true,
-                avatar: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' },
-          take: 10, // Limit replies per post for list view
-        },
-      },
-      orderBy: [
-        { isPinned: 'desc' },
-        { lastReplyAt: 'desc' },
-        { createdAt: 'desc' },
-      ],
-      skip: page * limit,
-      take: limit,
-    }),
-    prisma.community_posts.count({
-      where: whereCondition,
-    }),
-    prisma.community_posts.findMany({
-      where: { status: 'ACTIVE' },
-      select: { category: true },
-      distinct: ['category'],
-      orderBy: { category: 'asc' },
-    }),
-  ])
-
-  const transformedPosts = (posts as CommunityPostWithRelations[]).map((post) => 
-    transformPost(post, true)
+  const postWhere = and(
+    isReported === 'true' ? undefined : isReported === 'false' ? eq(communityPosts.isReported, false) : undefined,
+    status ? (() => { const k = Object.entries(statusMap).find(([, v]) => v.toLowerCase() === status.toLowerCase())?.[0]; return k ? eq(communityPosts.status, k as 'ACTIVE' | 'CLOSED' | 'MODERATION') : undefined })() : (!isReported ? eq(communityPosts.status, 'ACTIVE') : undefined),
+    category ? eq(communityPosts.category, categoryMap[category.toLowerCase()] || category) : undefined,
+    search ? or(ilike(communityPosts.title, `%${search}%`), ilike(communityPosts.content, `%${search}%`)) : undefined,
+    isReported === 'true' ? or(eq(communityPosts.isReported, true), sql`EXISTS (SELECT 1 FROM "community_replies" r WHERE r."postId" = ${communityPosts.id} AND r."isReported" = true)`) : undefined,
   )
 
-  const totalPages = Math.ceil(totalPosts / limit)
-  const categories = allCategories.map((c: { category: string }) => c.category)
+  const replyAuthor = (await import('drizzle-orm/pg-core')).alias(users, 'replyAuthor')
+
+  const [rows, [{ total }], categoriesRaw] = await Promise.all([
+    db
+      .select({
+        id: communityPosts.id,
+        title: communityPosts.title,
+        content: communityPosts.content,
+        userId: communityPosts.userId,
+        category: communityPosts.category,
+        subcategory: communityPosts.subcategory,
+        tags: communityPosts.tags,
+        isAnonymous: communityPosts.isAnonymous,
+        status: communityPosts.status,
+        isReported: communityPosts.isReported,
+        isPinned: communityPosts.isPinned,
+        viewCount: communityPosts.viewCount,
+        replyCount: communityPosts.replyCount,
+        likeCount: communityPosts.likeCount,
+        createdAt: communityPosts.createdAt,
+        updatedAt: communityPosts.updatedAt,
+        lastReplyAt: communityPosts.lastReplyAt,
+        authorName: users.name,
+        authorDisplayName: users.displayName,
+      })
+      .from(communityPosts)
+      .innerJoin(users, eq(communityPosts.userId, users.id))
+      .where(postWhere)
+      .orderBy(desc(communityPosts.isPinned), desc(communityPosts.lastReplyAt), desc(communityPosts.createdAt))
+      .offset(page * limit)
+      .limit(limit),
+    db.select({ total: sql<number>`count(*)::int` }).from(communityPosts).where(postWhere),
+    db.selectDistinct({ category: communityPosts.category }).from(communityPosts).where(eq(communityPosts.status, 'ACTIVE')).orderBy(communityPosts.category),
+  ])
+
+  // Fetch replies for all posts
+  const postIds = rows.map((p) => p.id)
+  const repliesRows = postIds.length > 0
+    ? await db
+        .select({
+          id: communityReplies.id,
+          postId: communityReplies.postId,
+          content: communityReplies.content,
+          isAnonymous: communityReplies.isAnonymous,
+          isReported: communityReplies.isReported,
+          likeCount: communityReplies.likeCount,
+          createdAt: communityReplies.createdAt,
+          authorName: replyAuthor.name,
+          authorDisplayName: replyAuthor.displayName,
+        })
+        .from(communityReplies)
+        .innerJoin(replyAuthor, eq(communityReplies.userId, replyAuthor.id))
+        .where(inArray(communityReplies.postId, postIds))
+        .orderBy(communityReplies.postId, communityReplies.createdAt)
+        .limit(10 * postIds.length)
+    : []
+
+  const repliesByPostId = repliesRows.reduce<Record<string, typeof repliesRows>>((acc, r) => {
+    if (!acc[r.postId]) acc[r.postId] = []
+    acc[r.postId].push(r)
+    return acc
+  }, {})
+
+  const transformedPosts = rows.map((post) => transformPost(post, (repliesByPostId[post.id] || []).map(transformReply)))
+
+  const totalCount = Number(total)
+  const totalPages = Math.ceil(totalCount / limit)
+  const categories = categoriesRaw.map((c) => c.category)
 
   const pagination: CommunityPagination = {
     page,
     pageSize: limit,
-    totalItems: totalPosts,
+    totalItems: totalCount,
     totalPages,
     hasNextPage: page < totalPages - 1,
     hasPreviousPage: page > 0,
@@ -292,7 +183,7 @@ async function fetchCommunityPosts(
     posts: transformedPosts,
     pagination,
     categories,
-    totalCount: totalPosts,
+    totalCount,
     pageCount: totalPages,
   }
 }
@@ -315,76 +206,59 @@ export async function getCommunityPosts(
 
 // Internal function to fetch single post
 async function fetchPostById(id: string) {
-  const post = await prisma.community_posts.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      title: true,
-      content: true,
-      userId: true,
-      category: true,
-      subcategory: true,
-      tags: true,
-      isAnonymous: true,
-      status: true,
-      isReported: true,
-      isPinned: true,
-      viewCount: true,
-      replyCount: true,
-      likeCount: true,
-      createdAt: true,
-      updatedAt: true,
-      lastReplyAt: true,
-      user_profiles: {
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          avatar: true,
-        },
-      },
-      _count: {
-        select: {
-          community_likes: true,
-          community_replies: true,
-        },
-      },
-      community_replies: {
-        select: {
-          id: true,
-          postId: true,
-          userId: true,
-          content: true,
-          isAnonymous: true,
-          isReported: true,
-          likeCount: true,
-          createdAt: true,
-          updatedAt: true,
-          user_profiles: {
-            select: {
-              id: true,
-              fullName: true,
-              displayName: true,
-              avatar: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'asc' },
-      },
-    },
-  })
+  const replyAuthor = (await import('drizzle-orm/pg-core')).alias(users, 'replyAuthor')
 
-  if (!post) {
-    return null
-  }
+  const row = await db
+    .select({
+      id: communityPosts.id,
+      title: communityPosts.title,
+      content: communityPosts.content,
+      userId: communityPosts.userId,
+      category: communityPosts.category,
+      subcategory: communityPosts.subcategory,
+      tags: communityPosts.tags,
+      isAnonymous: communityPosts.isAnonymous,
+      status: communityPosts.status,
+      isReported: communityPosts.isReported,
+      isPinned: communityPosts.isPinned,
+      viewCount: communityPosts.viewCount,
+      replyCount: communityPosts.replyCount,
+      likeCount: communityPosts.likeCount,
+      createdAt: communityPosts.createdAt,
+      updatedAt: communityPosts.updatedAt,
+      lastReplyAt: communityPosts.lastReplyAt,
+      authorName: users.name,
+      authorDisplayName: users.displayName,
+    })
+    .from(communityPosts)
+    .innerJoin(users, eq(communityPosts.userId, users.id))
+    .where(eq(communityPosts.id, id))
+    .limit(1)
+    .then((r) => r[0] ?? null)
+
+  if (!row) return null
+
+  const repliesRows = await db
+    .select({
+      id: communityReplies.id,
+      postId: communityReplies.postId,
+      content: communityReplies.content,
+      isAnonymous: communityReplies.isAnonymous,
+      isReported: communityReplies.isReported,
+      likeCount: communityReplies.likeCount,
+      createdAt: communityReplies.createdAt,
+      authorName: replyAuthor.name,
+      authorDisplayName: replyAuthor.displayName,
+    })
+    .from(communityReplies)
+    .innerJoin(replyAuthor, eq(communityReplies.userId, replyAuthor.id))
+    .where(eq(communityReplies.postId, id))
+    .orderBy(communityReplies.createdAt)
 
   // Increment view count (fire and forget)
-  prisma.community_posts.update({
-    where: { id },
-    data: { viewCount: { increment: 1 } },
-  }).catch(() => {}) // Ignore errors
+  db.update(communityPosts).set({ viewCount: sql`${communityPosts.viewCount} + 1` }).where(eq(communityPosts.id, id)).catch(() => {})
 
-  return transformPost(post as unknown as CommunityPostWithRelations, true)
+  return transformPost(row, repliesRows.map(transformReply))
 }
 
 // Get single post by ID with all replies using Next.js 16 Cache Components
@@ -411,151 +285,65 @@ export async function updatePost(
   },
   userId: string
 ) {
-  // Check if post exists and user has permission
-  const post = await prisma.community_posts.findUnique({
-    where: { id },
-    select: { userId: true },
-  })
+  const post = await db.select({ userId: communityPosts.userId }).from(communityPosts).where(eq(communityPosts.id, id)).limit(1).then((r) => r[0] ?? null)
+  if (!post) return null
 
-  if (!post) {
-    return null
-  }
-
-  // Get user role to check if admin
-  const roleAssignment = await prisma.user_roles.findFirst({
-    where: { userId },
-    select: { role: true },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  const userRole = roleAssignment?.role || 'USER'
-  const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+  const currentUser = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null)
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
+  if (!isAdmin && !isAuthor) return null
 
-  // Only admin or author can update
-  if (!isAdmin && !isAuthor) {
-    return null
-  }
+  const allowedFields = isAdmin ? data : { title: data.title, content: data.content, tags: data.tags }
 
-  // Authors can only update certain fields
-  const allowedFields = isAdmin 
-    ? data 
-    : {
-        title: data.title,
-        content: data.content,
-        tags: data.tags,
-      }
+  const replyAuthor = (await import('drizzle-orm/pg-core')).alias(users, 'replyAuthor')
 
-  const updatedPost = await prisma.community_posts.update({
-    where: { id },
-    data: {
-      ...allowedFields,
-      updatedAt: new Date(),
-    },
-    select: {
-      id: true,
-      title: true,
-      content: true,
-      userId: true,
-      category: true,
-      subcategory: true,
-      tags: true,
-      isAnonymous: true,
-      status: true,
-      isReported: true,
-      isPinned: true,
-      viewCount: true,
-      replyCount: true,
-      likeCount: true,
-      createdAt: true,
-      updatedAt: true,
-      lastReplyAt: true,
-      user_profiles: {
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          avatar: true,
-        },
-      },
-      _count: {
-        select: {
-          community_likes: true,
-          community_replies: true,
-        },
-      },
-      community_replies: {
-        select: {
-          id: true,
-          postId: true,
-          userId: true,
-          content: true,
-          isAnonymous: true,
-          isReported: true,
-          likeCount: true,
-          createdAt: true,
-          updatedAt: true,
-          user_profiles: {
-            select: {
-              id: true,
-              fullName: true,
-              displayName: true,
-              avatar: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'asc' },
-        take: 10,
-      },
-    },
-  })
+  await db.update(communityPosts).set({ ...allowedFields, updatedAt: new Date() }).where(eq(communityPosts.id, id))
 
-  return transformPost(updatedPost as unknown as CommunityPostWithRelations, true)
+  const fullRow = await db
+    .select({ id: communityPosts.id, title: communityPosts.title, content: communityPosts.content, userId: communityPosts.userId, category: communityPosts.category, subcategory: communityPosts.subcategory, tags: communityPosts.tags, isAnonymous: communityPosts.isAnonymous, status: communityPosts.status, isReported: communityPosts.isReported, isPinned: communityPosts.isPinned, viewCount: communityPosts.viewCount, replyCount: communityPosts.replyCount, likeCount: communityPosts.likeCount, createdAt: communityPosts.createdAt, updatedAt: communityPosts.updatedAt, lastReplyAt: communityPosts.lastReplyAt, authorName: users.name, authorDisplayName: users.displayName })
+    .from(communityPosts)
+    .innerJoin(users, eq(communityPosts.userId, users.id))
+    .where(eq(communityPosts.id, id))
+    .limit(1)
+    .then((r) => r[0] ?? null)
+
+  if (!fullRow) return null
+
+  const repliesRows = await db
+    .select({ id: communityReplies.id, postId: communityReplies.postId, content: communityReplies.content, isAnonymous: communityReplies.isAnonymous, isReported: communityReplies.isReported, likeCount: communityReplies.likeCount, createdAt: communityReplies.createdAt, authorName: replyAuthor.name, authorDisplayName: replyAuthor.displayName })
+    .from(communityReplies)
+    .innerJoin(replyAuthor, eq(communityReplies.userId, replyAuthor.id))
+    .where(eq(communityReplies.postId, id))
+    .orderBy(communityReplies.createdAt)
+    .limit(10)
+
+  return transformPost(fullRow, repliesRows.map(transformReply))
 }
 
 // Delete post (admin or author)
 export async function deletePost(id: string, userId: string) {
-  // Check if post exists and user has permission
-  const post = await prisma.community_posts.findUnique({
-    where: { id },
-    select: { userId: true },
-  })
+  const post = await db.select({ userId: communityPosts.userId }).from(communityPosts).where(eq(communityPosts.id, id)).limit(1).then((r) => r[0] ?? null)
+  if (!post) return false
 
-  if (!post) {
-    return false
-  }
-
-  // Get user role to check if admin
-  const roleAssignment = await prisma.user_roles.findFirst({
-    where: { userId },
-    select: { role: true },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  const userRole = roleAssignment?.role || 'USER'
-  const isAdmin = userRole === 'ADMIN' || userRole === 'INSTRUCTOR'
+  const currentUser = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null)
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'INSTRUCTOR'
   const isAuthor = post.userId === userId
+  if (!isAdmin && !isAuthor) return false
 
-  // Only admin or author can delete
-  if (!isAdmin && !isAuthor) {
-    return false
+  // Delete reply likes first (FK constraint), then replies and post likes
+  // Fetch IDs in batches to avoid unbounded result sets
+  let offset = 0
+  const BATCH = 500
+  while (true) {
+    const batch = await db.select({ id: communityReplies.id }).from(communityReplies).where(eq(communityReplies.postId, id)).limit(BATCH).offset(offset)
+    if (batch.length === 0) break
+    await db.delete(communityReplyLikes).where(inArray(communityReplyLikes.replyId, batch.map((r) => r.id)))
+    offset += BATCH
+    if (batch.length < BATCH) break
   }
-
-  // Delete related records first (replies, likes)
-  await prisma.$transaction([
-    prisma.community_reply_likes.deleteMany({
-      where: { community_replies: { postId: id } },
-    }),
-    prisma.community_replies.deleteMany({
-      where: { postId: id },
-    }),
-    prisma.community_likes.deleteMany({
-      where: { postId: id },
-    }),
-    prisma.community_posts.delete({
-      where: { id },
-    }),
-  ])
+  await db.delete(communityReplies).where(eq(communityReplies.postId, id))
+  await db.delete(communityLikes).where(eq(communityLikes.postId, id))
+  await db.delete(communityPosts).where(eq(communityPosts.id, id))
 
   return true
 }
@@ -566,34 +354,23 @@ export async function getPostMetadata(id: string) {
   cacheLife('minutes')
   cacheTag('community', `community-post-${id}`)
   
-  const post = await prisma.community_posts.findUnique({
-    where: { id },
-    select: {
-      title: true,
-      content: true,
-      category: true,
-      tags: true,
-      createdAt: true,
-      user_profiles: {
-        select: {
-          fullName: true,
-          displayName: true,
-        },
-      },
-    },
-  })
+  const row = await db
+    .select({ title: communityPosts.title, content: communityPosts.content, category: communityPosts.category, tags: communityPosts.tags, createdAt: communityPosts.createdAt, authorName: users.name, authorDisplayName: users.displayName })
+    .from(communityPosts)
+    .innerJoin(users, eq(communityPosts.userId, users.id))
+    .where(eq(communityPosts.id, id))
+    .limit(1)
+    .then((r) => r[0] ?? null)
 
-  if (!post) {
-    return null
-  }
+  if (!row) return null
 
   return {
-    title: post.title,
-    description: post.content.substring(0, 160),
-    category: post.category,
-    tags: post.tags,
-    date: post.createdAt.toISOString(),
-    author: post.user_profiles.fullName || post.user_profiles.displayName || 'Anônimo',
+    title: row.title,
+    description: row.content.substring(0, 160),
+    category: row.category,
+    tags: row.tags,
+    date: row.createdAt.toISOString(),
+    author: row.authorDisplayName || row.authorName || 'Anônimo',
   }
 }
 
@@ -612,17 +389,17 @@ export async function getCategoryStats() {
   cacheLife('hours')
   cacheTag('community', 'community-category-stats')
   
-  const stats = await prisma.community_posts.groupBy({
-    by: ['category'],
-    where: { status: 'ACTIVE' },
-    _count: { id: true },
-    orderBy: { category: 'asc' },
-  })
+  const stats = await db
+    .select({ category: communityPosts.category, count: sql<number>`count(*)::int` })
+    .from(communityPosts)
+    .where(eq(communityPosts.status, 'ACTIVE'))
+    .groupBy(communityPosts.category)
+    .orderBy(communityPosts.category)
 
-  return stats.map((stat: { category: string; _count: { id: number } }) => ({
+  return stats.map((stat) => ({
     category: stat.category,
     slug: reverseCategoryMap[stat.category] || stat.category.toLowerCase(),
-    count: stat._count.id,
+    count: Number(stat.count),
   }))
 }
 
@@ -632,60 +409,33 @@ export async function getRecentActivity(limit = 5) {
   cacheLife('minutes')
   cacheTag('community', 'community-recent-activity')
   
-  const recentReplies = await prisma.community_replies.findMany({
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      content: true,
-      createdAt: true,
-      isAnonymous: true,
-      user_profiles: {
-        select: {
-          displayName: true,
-          fullName: true,
-          avatar: true,
-        },
-      },
-      community_posts: {
-        select: {
-          id: true,
-          title: true,
-          category: true,
-        },
-      },
-    },
-  })
+  const replyAuthor = (await import('drizzle-orm/pg-core')).alias(users, 'replyAuthor')
 
-  type RecentReply = {
-    id: string
-    content: string
-    createdAt: Date
-    isAnonymous: boolean
-    user_profiles: {
-      displayName: string | null
-      fullName: string | null
-      avatar: string | null
-    }
-    community_posts: {
-      id: string
-      title: string
-      category: string
-    }
-  }
+  const rows = await db
+    .select({
+      id: communityReplies.id,
+      content: communityReplies.content,
+      createdAt: communityReplies.createdAt,
+      isAnonymous: communityReplies.isAnonymous,
+      authorDisplayName: replyAuthor.displayName,
+      authorName: replyAuthor.name,
+      authorAvatar: replyAuthor.image,
+      postId: communityPosts.id,
+      postTitle: communityPosts.title,
+      postCategory: communityPosts.category,
+    })
+    .from(communityReplies)
+    .innerJoin(replyAuthor, eq(communityReplies.userId, replyAuthor.id))
+    .innerJoin(communityPosts, eq(communityReplies.postId, communityPosts.id))
+    .orderBy(desc(communityReplies.createdAt))
+    .limit(limit)
 
-  return recentReplies.map((reply: RecentReply) => ({
+  return rows.map((reply) => ({
     id: reply.id,
     content: reply.content.substring(0, 100),
     createdAt: formatDate(reply.createdAt),
-    author: reply.isAnonymous 
-      ? 'Anônimo' 
-      : (reply.user_profiles.displayName || reply.user_profiles.fullName || 'Usuário'),
-    authorAvatar: reply.user_profiles.avatar,
-    post: {
-      id: reply.community_posts.id,
-      title: reply.community_posts.title,
-      category: reply.community_posts.category,
-    },
+    author: reply.isAnonymous ? 'Anônimo' : (reply.authorDisplayName || reply.authorName || 'Usuário'),
+    authorAvatar: reply.authorAvatar,
+    post: { id: reply.postId, title: reply.postTitle, category: reply.postCategory },
   }))
 }

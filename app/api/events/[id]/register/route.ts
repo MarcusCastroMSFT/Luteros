@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
+import { revalidateTag } from '@/lib/cache';
+import { and, count, eq } from 'drizzle-orm';
+import { getAuthUser, requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { eventRegistrations, events } from '@/lib/db/schema';
 
 export async function POST(
   request: NextRequest,
@@ -10,122 +12,67 @@ export async function POST(
   try {
     const { id } = await context.params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Check if event exists and has available slots
-    const event = await prisma.events.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        totalSlots: true,
-        isPublished: true,
-        isCancelled: true,
-        isFree: true,
-        cost: true,
-        _count: {
-          select: {
-            event_registrations: true,
-          },
-        },
-      },
-    });
+    const [event, [{ registeredCount }]] = await Promise.all([
+      db.select().from(events).where(eq(events.id, id)).limit(1).then((r) => r[0] ?? null),
+      db.select({ registeredCount: count() }).from(eventRegistrations).where(eq(eventRegistrations.eventId, id)),
+    ]);
 
     if (!event) {
-      return NextResponse.json(
-        { success: false, error: 'Event not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
     }
-
     if (!event.isPublished) {
-      return NextResponse.json(
-        { success: false, error: 'Event is not published' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Event is not published' }, { status: 400 });
     }
-
     if (event.isCancelled) {
-      return NextResponse.json(
-        { success: false, error: 'Event is cancelled' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Event is cancelled' }, { status: 400 });
+    }
+    if (registeredCount >= event.totalSlots) {
+      return NextResponse.json({ success: false, error: 'Event is fully booked' }, { status: 400 });
     }
 
-    if (event._count.event_registrations >= event.totalSlots) {
-      return NextResponse.json(
-        { success: false, error: 'Event is fully booked' },
-        { status: 400 }
-      );
-    }
+    const existing = await db
+      .select()
+      .from(eventRegistrations)
+      .where(and(eq(eventRegistrations.eventId, id), eq(eventRegistrations.userId, authUser.id)))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
-    // Check if user is already registered
-    const existingRegistration = await prisma.event_registrations.findUnique({
-      where: {
-        eventId_userId: {
-          eventId: id,
-          userId: user.id,
-        },
-      },
-    });
-
-    if (existingRegistration) {
+    if (existing) {
       return NextResponse.json(
         { success: false, error: 'You are already registered for this event' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Create registration
-    const result = await prisma.event_registrations.create({
-      data: {
+    const [result] = await db
+      .insert(eventRegistrations)
+      .values({
         eventId: id,
-        userId: user.id,
-        paidAmount: event.isFree ? 0 : event.cost,
+        userId: authUser.id,
+        paidAmount: event.isFree ? '0' : event.cost,
         paymentStatus: event.isFree ? 'COMPLETED' : 'PENDING',
-      },
-    });
+      })
+      .returning();
 
-    // Get event slug for cache invalidation
-    const eventWithSlug = await prisma.events.findUnique({
-      where: { id },
-      select: { slug: true }
-    });
-
-    // Revalidate event cache to update slot count
-    revalidateTag('events', {});
-    if (eventWithSlug?.slug) {
-      revalidateTag(`event-${eventWithSlug.slug}`, {});
-    }
+    revalidateTag('events');
+    revalidateTag(`event-${event.slug}`);
 
     return NextResponse.json({
       success: true,
       data: {
         registration: result,
-        message: event.isFree 
-          ? 'Successfully registered for the event!' 
-          : 'Registration pending payment',
+        message: event.isFree ? 'Successfully registered for the event!' : 'Registration pending payment',
       },
     });
   } catch (error) {
     console.error('Error registering for event:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Check registration status
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -133,32 +80,17 @@ export async function GET(
   try {
     const { id } = await context.params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, isRegistered: false },
-        { status: 200 }
-      );
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ success: true, isRegistered: false, registration: null });
     }
 
-    // Check if user is registered
-    const registration = await prisma.event_registrations.findUnique({
-      where: {
-        eventId_userId: {
-          eventId: id,
-          userId: user.id,
-        },
-      },
-      select: {
-        id: true,
-        registeredAt: true,
-        paymentStatus: true,
-        attended: true,
-      },
-    });
+    const registration = await db
+      .select()
+      .from(eventRegistrations)
+      .where(and(eq(eventRegistrations.eventId, id), eq(eventRegistrations.userId, authUser.id)))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
     return NextResponse.json({
       success: true,
@@ -167,14 +99,10 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error checking registration:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Cancel registration
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -182,62 +110,30 @@ export async function DELETE(
   try {
     const { id } = await context.params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Check if registration exists
-    const registration = await prisma.event_registrations.findUnique({
-      where: {
-        eventId_userId: {
-          eventId: id,
-          userId: user.id,
-        },
-      },
-    });
+    const registration = await db
+      .select()
+      .from(eventRegistrations)
+      .where(and(eq(eventRegistrations.eventId, id), eq(eventRegistrations.userId, authUser.id)))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
     if (!registration) {
-      return NextResponse.json(
-        { success: false, error: 'Registration not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Registration not found' }, { status: 404 });
     }
 
-    // Delete registration
-    await prisma.event_registrations.delete({
-      where: {
-        id: registration.id,
-      },
-    });
+    await db.delete(eventRegistrations).where(eq(eventRegistrations.id, registration.id));
 
-    // Get event slug for cache invalidation
-    const eventWithSlug = await prisma.events.findUnique({
-      where: { id },
-      select: { slug: true }
-    });
+    const event = await db.select({ slug: events.slug }).from(events).where(eq(events.id, id)).limit(1).then((r) => r[0] ?? null);
 
-    // Revalidate event cache to update slot count
-    revalidateTag('events', {});
-    if (eventWithSlug?.slug) {
-      revalidateTag(`event-${eventWithSlug.slug}`, {});
-    }
+    revalidateTag('events');
+    if (event?.slug) revalidateTag(`event-${event.slug}`);
 
-    return NextResponse.json({
-      success: true,
-      message: 'Registration cancelled successfully',
-    });
+    return NextResponse.json({ success: true, message: 'Registration cancelled successfully' });
   } catch (error) {
     console.error('Error cancelling registration:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

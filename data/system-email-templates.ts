@@ -23,7 +23,7 @@ export interface SystemEmailTemplate {
 
 // Shared styles
 const brandColor = '#84cc16' // Lime-500
-const brandColorDark = '#65a30d' // Lime-600
+const _brandColorDark = '#65a30d' // Lime-600
 const textColor = '#18181b'
 const mutedColor = '#71717a'
 const backgroundColor = '#f4f4f5'

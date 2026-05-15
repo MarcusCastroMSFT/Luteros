@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
+import { count, desc, eq } from 'drizzle-orm';
+import { requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { communityPosts, communityReplies } from '@/lib/db/schema';
 
 export interface UserReply {
   id: string;
@@ -21,86 +23,51 @@ export async function GET(request: NextRequest) {
   try {
     await connection();
 
-    // Get current user from Supabase Auth
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Não autorizado',
-      }, { status: 401 });
-    }
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '0');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const skip = page * limit;
 
-    // Fetch user's replies with post info
-    const [replies, totalCount] = await Promise.all([
-      prisma.community_replies.findMany({
-        where: { userId: user.id },
-        include: {
-          community_posts: {
-            select: {
-              id: true,
-              title: true,
-              category: true,
-              subcategory: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.community_replies.count({
-        where: { userId: user.id },
-      }),
+    const [rows, [{ total }]] = await Promise.all([
+      db
+        .select({
+          id: communityReplies.id,
+          content: communityReplies.content,
+          createdAt: communityReplies.createdAt,
+          updatedAt: communityReplies.updatedAt,
+          likeCount: communityReplies.likeCount,
+          postId: communityPosts.id,
+          postTitle: communityPosts.title,
+          postCategory: communityPosts.category,
+          postSubcategory: communityPosts.subcategory,
+        })
+        .from(communityReplies)
+        .innerJoin(communityPosts, eq(communityReplies.postId, communityPosts.id))
+        .where(eq(communityReplies.userId, authUser.id))
+        .orderBy(desc(communityReplies.createdAt))
+        .limit(limit)
+        .offset(page * limit),
+      db.select({ total: count() }).from(communityReplies).where(eq(communityReplies.userId, authUser.id)),
     ]);
 
-    const formattedReplies: UserReply[] = replies.map((reply: {
-      id: string;
-      content: string;
-      createdAt: Date;
-      updatedAt: Date;
-      likesCount: number;
-      community_posts: {
-        id: string;
-        title: string;
-        category: string;
-        subcategory: string | null;
-      };
-    }) => ({
-      id: reply.id,
-      content: reply.content,
-      createdAt: reply.createdAt.toISOString(),
-      updatedAt: reply.updatedAt.toISOString(),
-      likesCount: reply.likesCount,
-      post: {
-        id: reply.community_posts.id,
-        title: reply.community_posts.title,
-        category: reply.community_posts.category,
-        subcategory: reply.community_posts.subcategory,
-      },
+    const formattedReplies: UserReply[] = rows.map((r) => ({
+      id: r.id,
+      content: r.content,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      likesCount: r.likeCount,
+      post: { id: r.postId, title: r.postTitle, category: r.postCategory, subcategory: r.postSubcategory },
     }));
 
     return NextResponse.json({
       success: true,
       data: formattedReplies,
-      pagination: {
-        page,
-        limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-      },
+      pagination: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) },
     });
   } catch (error) {
     console.error('Get user replies error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar respostas' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erro ao buscar respostas' }, { status: 500 });
   }
 }

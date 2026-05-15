@@ -1,168 +1,85 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import prisma from '@/lib/prisma'
+import { and, desc, eq, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { products, productPartners } from '@/lib/db/schema'
 import { Product, ProductCategory } from '@/types/product'
 
-// Transform database product to frontend Product interface
-function transformProduct(product: {
-  id: string
-  slug: string
-  title: string
-  description: string
-  shortDescription: string
-  image: string | null
-  discountPercentage: number
-  discountType: string
-  originalPrice: { toNumber: () => number } | null
-  discountedPrice: { toNumber: () => number } | null
-  discountAmount: { toNumber: () => number } | null
-  promoCode: string
-  category: string
-  tags: string[]
-  availability: string
-  validUntil: Date | null
-  termsAndConditions: string | null
-  howToUse: string[]
-  features: string[]
-  isActive: boolean
-  isFeatured: boolean
-  usageCount: number
-  maxUsages: number | null
-  createdAt: Date
-  product_partners: {
-    id: string
-    name: string
-    slug: string
-    logo: string | null
-    website: string | null
-  }
-}): Product {
+type ProductRow = {
+  id: string; slug: string; title: string; description: string; shortDescription: string;
+  image: string | null; discountPercentage: number; discountType: string;
+  originalPrice: string | null; discountedPrice: string | null; discountAmount: string | null;
+  promoCode: string; category: string; tags: string[]; availability: string;
+  validUntil: Date | null; termsAndConditions: string | null; howToUse: string[];
+  features: string[]; isActive: boolean; isFeatured: boolean; usageCount: number;
+  maxUsages: number | null; createdAt: Date;
+  partnerId: string; partnerName: string; partnerSlug: string; partnerLogo: string | null; partnerWebsite: string | null;
+}
+
+function transformProduct(p: ProductRow): Product {
   return {
-    id: product.id,
-    slug: product.slug,
-    title: product.title,
-    description: product.description,
-    shortDescription: product.shortDescription,
-    image: product.image || '',
-    partner: {
-      id: product.product_partners.id,
-      name: product.product_partners.name,
-      logo: product.product_partners.logo || '',
-      website: product.product_partners.website || '',
-    },
+    id: p.id, slug: p.slug, title: p.title, description: p.description,
+    shortDescription: p.shortDescription, image: p.image || '',
+    partner: { id: p.partnerId, name: p.partnerName, logo: p.partnerLogo || '', website: p.partnerWebsite || '' },
     discount: {
-      percentage: product.discountPercentage,
-      amount: product.discountAmount ? product.discountAmount.toNumber() : undefined,
-      type: product.discountType as 'percentage' | 'fixed',
-      originalPrice: product.originalPrice ? product.originalPrice.toNumber() : undefined,
-      discountedPrice: product.discountedPrice ? product.discountedPrice.toNumber() : undefined,
+      percentage: p.discountPercentage,
+      amount: p.discountAmount ? Number(p.discountAmount) : undefined,
+      type: p.discountType as 'percentage' | 'fixed',
+      originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
+      discountedPrice: p.discountedPrice ? Number(p.discountedPrice) : undefined,
     },
-    promoCode: product.promoCode,
-    category: product.category,
-    tags: product.tags,
-    availability: product.availability as 'all' | 'members',
-    validUntil: product.validUntil?.toISOString().split('T')[0] || '',
-    termsAndConditions: product.termsAndConditions || '',
-    howToUse: product.howToUse,
-    features: product.features,
-    isActive: product.isActive,
-    isFeatured: product.isFeatured,
-    createdDate: product.createdAt.toISOString().split('T')[0],
-    usageCount: product.usageCount,
-    maxUsages: product.maxUsages || undefined,
+    promoCode: p.promoCode, category: p.category, tags: p.tags,
+    availability: p.availability as 'all' | 'members',
+    validUntil: p.validUntil?.toISOString().split('T')[0] || '',
+    termsAndConditions: p.termsAndConditions || '',
+    howToUse: p.howToUse, features: p.features,
+    isActive: p.isActive, isFeatured: p.isFeatured,
+    createdDate: p.createdAt.toISOString().split('T')[0],
+    usageCount: p.usageCount, maxUsages: p.maxUsages || undefined,
   }
 }
 
-const productSelect = {
-  id: true,
-  slug: true,
-  title: true,
-  description: true,
-  shortDescription: true,
-  image: true,
-  discountPercentage: true,
-  discountType: true,
-  originalPrice: true,
-  discountedPrice: true,
-  discountAmount: true,
-  promoCode: true,
-  category: true,
-  tags: true,
-  availability: true,
-  validUntil: true,
-  termsAndConditions: true,
-  howToUse: true,
-  features: true,
-  isActive: true,
-  isFeatured: true,
-  usageCount: true,
-  maxUsages: true,
-  createdAt: true,
-  product_partners: {
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      logo: true,
-      website: true,
-    },
-  },
+const productCols = {
+  id: products.id, slug: products.slug, title: products.title, description: products.description,
+  shortDescription: products.shortDescription, image: products.image,
+  discountPercentage: products.discountPercentage, discountType: products.discountType,
+  originalPrice: products.originalPrice, discountedPrice: products.discountedPrice,
+  discountAmount: products.discountAmount, promoCode: products.promoCode,
+  category: products.category, tags: products.tags, availability: products.availability,
+  validUntil: products.validUntil, termsAndConditions: products.termsAndConditions,
+  howToUse: products.howToUse, features: products.features, isActive: products.isActive,
+  isFeatured: products.isFeatured, usageCount: products.usageCount, maxUsages: products.maxUsages,
+  createdAt: products.createdAt,
+  partnerId: productPartners.id, partnerName: productPartners.name, partnerSlug: productPartners.slug,
+  partnerLogo: productPartners.logo, partnerWebsite: productPartners.website,
 }
 
-// Get initial products with caching for SSR using Next.js 16 Cache Components
 export async function getInitialProducts() {
   'use cache'
-  cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
+  cacheLife('minutes')
   cacheTag('products')
 
-  const [totalProducts, productsData, categoriesRaw] = await Promise.all([
-    prisma.products.count({ where: { isActive: true } }),
-    prisma.products.findMany({
-      where: { isActive: true },
-      select: productSelect,
-      orderBy: [
-        { isFeatured: 'desc' },
-        { createdAt: 'desc' },
-      ],
-      take: 12,
-    }),
-    prisma.products.groupBy({
-      by: ['category'],
-      where: { isActive: true },
-      _count: { category: true },
-    }),
+  const [rows, categoriesRaw, [{ total }]] = await Promise.all([
+    db.select(productCols).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(eq(products.isActive, true)).orderBy(desc(products.isFeatured), desc(products.createdAt)).limit(12),
+    db.select({ category: products.category, count: sql<number>`count(*)::int` }).from(products).where(eq(products.isActive, true)).groupBy(products.category),
+    db.select({ total: sql<number>`count(*)::int` }).from(products).where(eq(products.isActive, true)),
   ])
 
-  const transformedProducts = productsData.map(transformProduct)
-  
-  const categories: ProductCategory[] = categoriesRaw.map((cat: { category: string; _count: { category: number } }) => ({
+  const transformedProducts = rows.map(transformProduct)
+  const categories: ProductCategory[] = categoriesRaw.map((cat) => ({
     name: cat.category,
     slug: cat.category.toLowerCase().replace(/\s+/g, '-'),
-    count: cat._count.category,
+    count: Number(cat.count),
   }))
+  const totalProducts = Number(total)
 
-  return {
-    products: transformedProducts,
-    categories,
-    totalProducts,
-    totalPages: Math.ceil(totalProducts / 12),
-  }
+  return { products: transformedProducts, categories, totalProducts, totalPages: Math.ceil(totalProducts / 12) }
 }
 
-// Get featured products for homepage or other sections using Next.js 16 Cache Components
 export async function getFeaturedProducts(limit: number = 4) {
   'use cache'
-  cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
+  cacheLife('minutes')
   cacheTag('products', 'featured-products')
 
-  const featuredProducts = await prisma.products.findMany({
-    where: {
-      isActive: true,
-      isFeatured: true,
-    },
-    select: productSelect,
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-  })
-
-  return featuredProducts.map(transformProduct)
+  const rows = await db.select(productCols).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(and(eq(products.isActive, true), eq(products.isFeatured, true))).orderBy(desc(products.createdAt)).limit(limit)
+  return rows.map(transformProduct)
 }

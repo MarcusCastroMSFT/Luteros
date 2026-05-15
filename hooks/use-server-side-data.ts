@@ -129,8 +129,10 @@ export function useServerSideData<T>({
     } finally {
       setLoading(false)
     }
+  // extraParams is serialized as extraParamsString and monitored separately to avoid referential instability
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint, pageIndex, pageSize, sorting, columnFilters])
-  
+
   // Effect for handling endpoint or extraParams changes (reset and refetch)
   useEffect(() => {
     if (prevEndpointRef.current !== endpoint) {

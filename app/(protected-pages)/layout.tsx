@@ -30,7 +30,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
     // Check if user has an allowed role (admin or instructor)
     if (!isLoading && user && userProfile) {
-      const userRole = userProfile.role || 'STUDENT';
+      const userRole = userProfile.role || 'USER';
       if (!ALLOWED_ROLES.includes(userRole as typeof ALLOWED_ROLES[number])) {
         // Redirect students and unauthorized users to home page
         router.push('/');
@@ -52,7 +52,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
     return null;
   }
 
-  const userRole = userProfile.role || 'STUDENT';
+  const userRole = userProfile.role || 'USER';
   if (!ALLOWED_ROLES.includes(userRole as typeof ALLOWED_ROLES[number])) {
     return null;
   }
@@ -66,7 +66,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" user={user} />
+      <AppSidebar variant="inset" user={user ? { id: user.id, email: user.email ?? undefined, fullName: user.name, displayName: user.displayName, avatar: user.image } : null} />
       <SidebarInset>
         {children}
       </SidebarInset>

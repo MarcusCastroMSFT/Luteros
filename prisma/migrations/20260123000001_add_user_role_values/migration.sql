@@ -1,3 +1,0 @@
--- Add new values to UserRole enum
-ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'USER';
-ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'PROFESSIONAL';

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { blogArticles, users } from '@/lib/db/schema'
 
 // API Response types for better TypeScript support across platforms
 export interface APIResponse<T> {
@@ -62,105 +64,63 @@ export async function GET(request: NextRequest) {
   
   try {
     // Build where clause for search and filters
-    const where: any = {}
-    
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { excerpt: { contains: search, mode: 'insensitive' } },
-        { authorName: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-      ]
-    }
-    
-    // Apply status filter if provided
-    if (filters.status) {
-      const statusMap: Record<string, string> = {
-        'ativo': 'published',
-        'rascunho': 'draft',
-        'inativo': 'archived'
-      }
-      where.status = statusMap[filters.status.toLowerCase()] || filters.status
-    }
-    
-    // Apply category filter if provided
-    if (filters.category) {
-      where.category = { equals: filters.category, mode: 'insensitive' }
-    }
-    
+    const searchWhere = search ? or(
+      ilike(blogArticles.title, `%${search}%`),
+      ilike(blogArticles.excerpt, `%${search}%`),
+      ilike(users.name, `%${search}%`),
+      ilike(blogArticles.category, `%${search}%`),
+    ) : undefined
+
+    // Apply status filter
+    const statusWhere = filters.status
+      ? eq(blogArticles.isPublished, filters.status.toLowerCase() === 'ativo' || filters.status.toLowerCase() === 'published')
+      : undefined
+
+    // Apply category filter
+    const categoryWhere = filters.category ? eq(blogArticles.category, filters.category) : undefined
+
+    const where = and(searchWhere, statusWhere, categoryWhere)
+
     // Map sortBy to database columns
-    const sortByMap: Record<string, string> = {
-      'date': 'createdAt',
-      'title': 'title',
-      'author': 'authorName',
-      'category': 'category'
+    const sortColMap: Record<string, unknown> = {
+      date: blogArticles.createdAt, title: blogArticles.title,
+      author: users.name, category: blogArticles.category,
     }
-    const dbSortBy = sortByMap[sortBy] || 'createdAt'
-    
+    const sortCol = (sortColMap[sortBy] ?? blogArticles.createdAt) as Parameters<typeof asc>[0]
+    const orderFn = sortOrder === 'asc' ? asc : desc
+
     // Get total count
-    const totalCount = await prisma.article.count({ where })
-    
-    // Define article select type
-    type ArticleSelect = {
-      id: string
-      title: string
-      excerpt: string | null
-      slug: string
-      authorName: string | null
-      category: string | null
-      status: string
-      isPremium: boolean
-      readTime: string | null
-      createdAt: Date
-      featuredImage: string | null
-    }
-    
-    // Fetch articles from database
-    const articles: ArticleSelect[] = await prisma.article.findMany({
-      where,
-      orderBy: { [dbSortBy]: sortOrder as 'asc' | 'desc' },
-      skip: page * pageSize,
-      take: pageSize,
-      select: {
-        id: true,
-        title: true,
-        excerpt: true,
-        slug: true,
-        authorName: true,
-        category: true,
-        status: true,
-        isPremium: true,
-        readTime: true,
-        createdAt: true,
-        featuredImage: true,
-      }
-    })
+    const [[{ totalCount }], articles] = await Promise.all([
+      db.select({ totalCount: sql<number>`count(*)::int` }).from(blogArticles)
+        .innerJoin(users, eq(blogArticles.authorId, users.id)).where(where),
+      db.select({
+        id: blogArticles.id, title: blogArticles.title, excerpt: blogArticles.excerpt,
+        slug: blogArticles.slug, authorName: users.name, category: blogArticles.category,
+        isPublished: blogArticles.isPublished, accessType: blogArticles.accessType,
+        readTime: blogArticles.readTime, createdAt: blogArticles.createdAt,
+        image: blogArticles.image, commentCount: blogArticles.commentCount,
+      }).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id))
+        .where(where).orderBy(orderFn(sortCol)).offset(page * pageSize).limit(pageSize),
+    ])
     
     // Transform to mobile-friendly format
     const mobileArticles: MobileArticle[] = articles.map((article) => {
-      // Map database status to display status
-      const statusMap: Record<string, "Ativo" | "Rascunho" | "Inativo"> = {
-        'published': 'Ativo',
-        'draft': 'Rascunho',
-        'archived': 'Inativo'
-      }
-      
       return {
         id: article.id,
         title: article.title,
         excerpt: article.excerpt || '',
         author: article.authorName || 'Unknown',
         category: article.category || 'General',
-        status: statusMap[article.status] || 'Ativo',
-        paid: article.isPremium ? 'Pago' : 'Gratuito',
+        status: article.isPublished ? 'Ativo' : 'Rascunho',
+        paid: article.accessType === 'premium' ? 'Pago' : 'Gratuito',
         date: article.createdAt.toLocaleDateString('pt-BR', { 
           day: 'numeric', 
           month: 'long', 
           year: 'numeric' 
         }),
-        readTime: article.readTime || '5 min de leitura',
-        commentCount: 0, // TODO: Add comment count when comments are implemented
-        ...(includeImages && article.featuredImage && { imageUrl: article.featuredImage }),
+        readTime: article.readTime ? `${article.readTime} min de leitura` : '5 min de leitura',
+        commentCount: article.commentCount,
+        ...(includeImages && article.image && { imageUrl: article.image }),
         ...(platform === 'web' && { slug: article.slug })
       }
     })

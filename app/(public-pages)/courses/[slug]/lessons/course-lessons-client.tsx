@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { IconCheck, IconList, IconChevronLeft, IconX } from '@tabler/icons-react';
+import { IconCheck, IconList, IconChevronLeft } from '@tabler/icons-react';
 import { CourseContent } from '@/components/courses/courseContent';
 import { LessonViewer } from '@/components/lessons/lessonViewer';
 import { CourseSection, Lesson } from '@/types/course';

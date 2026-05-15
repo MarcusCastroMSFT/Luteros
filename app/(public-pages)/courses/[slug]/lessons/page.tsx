@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getCourseBySlug, getCourseMetadata, getAllCourseSlugs } from '@/lib/courses';
+import { getCourseBySlug, getCourseMetadata } from '@/lib/courses';
 import { CourseLessonsClient } from './course-lessons-client';
 import { CourseLessonsSkeleton } from '@/components/lessons/courseLessonsSkeleton';
 
@@ -44,12 +44,6 @@ export async function generateMetadata({ params }: LessonsPageProps): Promise<Me
       canonical: `/courses/${slug}/lessons`,
     },
   };
-}
-
-// Generate static params for pre-rendering
-export async function generateStaticParams() {
-  const slugs = await getAllCourseSlugs();
-  return slugs.map((slug) => ({ slug }));
 }
 
 // Server component to fetch course data

@@ -20,12 +20,10 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { type UserProfileData } from '@/app/api/users/profile/route';
 
 export function EditProfileClient() {
   const { user, isLoading: authLoading, refreshProfile } = useAuth();
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,17 +47,6 @@ export function EditProfileClient() {
     marketingEmails: false,
   });
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login?redirect=/profile/edit');
-      return;
-    }
-
-    if (user) {
-      fetchProfile();
-    }
-  }, [user, authLoading, router]);
-
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
@@ -73,9 +60,6 @@ export function EditProfileClient() {
         return;
       }
 
-      setProfile(data.data);
-      
-      // Populate form with current values
       const p = data.data;
       setFormData({
         fullName: p.fullName || '',
@@ -101,6 +85,17 @@ export function EditProfileClient() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/profile/edit');
+      return;
+    }
+
+    if (user) {
+      fetchProfile();
+    }
+  }, [user, authLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

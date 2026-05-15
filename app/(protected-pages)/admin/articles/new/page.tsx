@@ -30,10 +30,12 @@ interface Author {
 }
 
 const categories = [
-  'Educação',
-  'Saúde',
-  'Relacionamentos',
-  'Prevenção',
+  'Disfunções sexuais',
+  'Estudo de caso',
+  'Protocolos',
+  'Saúde genital',
+  'Saúde sexual',
+  'Sexualidade',
 ];
 
 export default function NewArticlePage() {
@@ -76,13 +78,21 @@ export default function NewArticlePage() {
         
         if (data.data && Array.isArray(data.data)) {
           // Filter to only show Admins and Instructors
-          const authorUsers = data.data.filter((user: Author & { role?: string }) => 
+          const authorUsers = data.data.filter((user: Author & { role?: string }) =>
             user.role === 'Administrador' || user.role === 'Instrutor'
           );
-          
+
+          // Pin "Lutteros" system user to the top of the list
+          const isLutteros = (u: Author) => u.name?.toLowerCase() === 'lutteros';
+          authorUsers.sort((a: Author, b: Author) => {
+            if (isLutteros(a) && !isLutteros(b)) return -1;
+            if (!isLutteros(a) && isLutteros(b)) return 1;
+            return 0;
+          });
+
           setAuthors(authorUsers);
-          
-          // Set the first user as default
+
+          // Default to Lutteros if present, otherwise the first user
           if (authorUsers.length > 0) {
             setSelectedAuthorId(authorUsers[0].id);
           }
@@ -275,7 +285,7 @@ export default function NewArticlePage() {
                       disabled={loading}
                     />
                     <p className="text-sm text-muted-foreground">
-                      URL do artigo: /blog/{slug || 'seu-artigo'}
+                      URL do artigo: /articles/{slug || 'seu-artigo'}
                     </p>
                   </div>
                 </div>

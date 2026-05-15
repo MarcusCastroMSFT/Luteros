@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
+import { eq, count } from 'drizzle-orm';
+import { auth } from '@/auth';
+import { db } from '@/lib/db';
+import { users, enrollments, eventRegistrations, blogBookmarks, certificates } from '@/lib/db/schema';
 import { connection } from 'next/server';
 
 export interface UserProfileData {
@@ -33,61 +35,36 @@ export interface UserProfileData {
   };
 }
 
-// GET /api/users/profile - Get current user's profile with stats
-export async function GET() {
+export async function GET(_request: NextRequest) {
   await connection();
 
   try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Não autorizado' },
-        { status: 401 }
-      );
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: 'Não autorizado' }, { status: 401 });
     }
+    const userId = session.user.id;
 
-    // Fetch user profile and stats in parallel
-    const [profile, enrolledCourses, completedCourses, registeredEvents, savedArticles, certificates] = await Promise.all([
-      prisma.user_profiles.findUnique({
-        where: { id: user.id },
-      }),
-      prisma.enrollments.count({
-        where: { userId: user.id },
-      }),
-      prisma.enrollments.count({
-        where: { 
-          userId: user.id,
-          completedAt: { not: null },
-        },
-      }),
-      prisma.event_registrations.count({
-        where: { userId: user.id },
-      }),
-      prisma.blog_bookmarks.count({
-        where: { userId: user.id },
-      }),
-      prisma.certificates.count({
-        where: { userId: user.id },
-      }),
+    const [profile, [{ enrolledCount }], [{ completedCount }], [{ eventsCount }], [{ savedCount }], [{ certsCount }]] = await Promise.all([
+      db.select().from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null),
+      db.select({ enrolledCount: count() }).from(enrollments).where(eq(enrollments.userId, userId)),
+      db.select({ completedCount: count() }).from(enrollments).where(eq(enrollments.userId, userId)),
+      db.select({ eventsCount: count() }).from(eventRegistrations).where(eq(eventRegistrations.userId, userId)),
+      db.select({ savedCount: count() }).from(blogBookmarks).where(eq(blogBookmarks.userId, userId)),
+      db.select({ certsCount: count() }).from(certificates).where(eq(certificates.userId, userId)),
     ]);
 
     if (!profile) {
-      return NextResponse.json(
-        { success: false, error: 'Perfil não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Perfil não encontrado' }, { status: 404 });
     }
 
     const profileData: UserProfileData = {
       id: profile.id,
-      fullName: profile.fullName,
+      fullName: profile.name,
       displayName: profile.displayName,
       bio: profile.bio,
-      avatar: profile.avatar,
-      email: user.email || '',
+      avatar: profile.image,
+      email: profile.email || '',
       phone: profile.phone,
       dateOfBirth: profile.dateOfBirth?.toISOString() || null,
       title: profile.title,
@@ -103,23 +80,18 @@ export async function GET() {
       createdAt: profile.createdAt.toISOString(),
       lastLoginAt: profile.lastLoginAt?.toISOString() || null,
       stats: {
-        enrolledCourses,
-        completedCourses,
-        registeredEvents,
-        savedArticles,
-        certificates,
+        enrolledCourses: Number(enrolledCount),
+        completedCourses: Number(completedCount),
+        registeredEvents: Number(eventsCount),
+        savedArticles: Number(savedCount),
+        certificates: Number(certsCount),
       },
     };
 
-    return NextResponse.json({
-      success: true,
-      data: profileData,
-    });
+    return NextResponse.json({ success: true, data: profileData });
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao buscar perfil' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erro ao buscar perfil' }, { status: 500 });
   }
 }
+

@@ -1,19 +1,13 @@
 import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getEventBySlug, getEventMetadata, getAllEventSlugs } from '@/lib/events'
+import { getEventBySlug, getEventMetadata } from '@/lib/events'
 import { EventDetailClient } from './event-detail-client'
 
 interface EventPageProps {
   params: Promise<{
     slug: string
   }>
-}
-
-// Generate static params for all events (SSG)
-// New events are accessible immediately via cache revalidation on creation
-export async function generateStaticParams() {
-  return getAllEventSlugs()
 }
 
 // Generate metadata for SEO

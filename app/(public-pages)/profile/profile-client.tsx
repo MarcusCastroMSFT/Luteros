@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/auth-context';
 import { 
   IconUser, 
   IconMail, 
-  IconPhone, 
   IconCalendar, 
   IconBriefcase, 
   IconWorld, 
@@ -20,7 +19,7 @@ import {
   IconSettings,
   IconEdit,
 } from '@tabler/icons-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,17 +33,6 @@ export function ProfileClient() {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login?redirect=/profile');
-      return;
-    }
-
-    if (user) {
-      fetchProfile();
-    }
-  }, [user, authLoading, router]);
 
   const fetchProfile = async () => {
     try {
@@ -67,6 +55,17 @@ export function ProfileClient() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/profile');
+      return;
+    }
+
+    if (user) {
+      fetchProfile();
+    }
+  }, [user, authLoading, router]);
 
   // Format date for display
   const formatDate = (dateString: string | null) => {
@@ -188,7 +187,7 @@ export function ProfileClient() {
           icon={<IconBookmark className="h-6 w-6 text-orange-600" />}
           label="Artigos Salvos"
           value={profile.stats.savedArticles}
-          href="/blog/saved"
+          href="/articles/saved"
         />
         <StatCard
           icon={<IconCertificate className="h-6 w-6 text-amber-600" />}

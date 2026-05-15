@@ -1,41 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import prisma from '@/lib/prisma'
-
-// Type for course with instructor from Prisma
-type CourseWithInstructor = {
-  id: string
-  slug: string
-  title: string
-  description: string
-  shortDescription: string | null
-  level: string
-  category: string
-  language: string
-  duration: number | null
-  thumbnail: string | null
-  coverImage: string | null
-  previewVideo: string | null
-  price: { toString(): string } | null // Decimal type
-  discountPrice: { toString(): string } | null // Decimal type
-  isFree: boolean
-  isPublished: boolean
-  publishedAt: Date | null
-  enrollmentCount: number
-  averageRating: { toString(): string } | null // Decimal type
-  reviewCount: number
-  createdAt: Date
-  updatedAt: Date
-  user_profiles: {
-    id: string
-    fullName: string | null
-    displayName: string | null
-    avatar: string | null
-    bio: string | null
-  }
-  _count?: {
-    lessons: number
-  }
-}
+import { and, asc, desc, eq, ne, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
+import { db } from '@/lib/db'
+import { courses, lessons, users } from '@/lib/db/schema'
 
 // Frontend Course type
 export type Course = {
@@ -106,19 +73,15 @@ function formatDate(date: Date): string {
   }).format(date)
 }
 
-// Transform Prisma course to frontend Course type
-function transformCourse(course: CourseWithInstructor): Course {
+// Transform DB course row to frontend Course type
+function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number }): Course {
   const price = course.price ? parseFloat(course.price.toString()) : 0
   const discountPrice = course.discountPrice ? parseFloat(course.discountPrice.toString()) : null
   const rating = course.averageRating ? parseFloat(course.averageRating.toString()) : 0
   
-  // Determine status based on isPublished
   let status: 'Ativo' | 'Rascunho' | 'Inativo' = 'Rascunho'
-  if (course.isPublished) {
-    status = 'Ativo'
-  }
+  if (course.isPublished) status = 'Ativo'
   
-  // Determine if course is a best seller (more than 1000 enrollments)
   const isBestSeller = course.enrollmentCount > 1000
   
   return {
@@ -131,13 +94,13 @@ function transformCourse(course: CourseWithInstructor): Course {
     coverImage: course.coverImage || '',
     previewVideo: course.previewVideo || '',
     instructor: {
-      id: course.user_profiles.id,
-      name: course.user_profiles.fullName || course.user_profiles.displayName || 'Unknown',
-      slug: course.user_profiles.id, // Using ID as slug for now
-      title: '', // Will be populated from separate query if needed
-      bio: course.user_profiles.bio || '',
-      image: course.user_profiles.avatar || '/images/default-avatar.jpg',
-      rating: 0, // Will be calculated from instructor's courses
+      id: course.instructorId,
+      name: course.instructorDisplayName || course.instructorName || 'Unknown',
+      slug: course.instructorId,
+      title: '',
+      bio: course.instructorBio || '',
+      image: course.instructorAvatar || '/images/default-avatar.jpg',
+      rating: 0,
       reviewsCount: 0,
       studentsCount: 0,
       coursesCount: 0,
@@ -145,8 +108,8 @@ function transformCourse(course: CourseWithInstructor): Course {
     price: discountPrice !== null ? discountPrice : price,
     originalPrice: discountPrice !== null ? price : null,
     isFree: course.isFree,
-    lessonsCount: course._count?.lessons || 0,
-    sectionsCount: 0, // Sections are derived from lessons
+    lessonsCount: course.lessonsCount,
+    sectionsCount: 0,
     duration: formatDuration(course.duration),
     rating,
     reviewsCount: course.reviewCount,
@@ -155,99 +118,49 @@ function transformCourse(course: CourseWithInstructor): Course {
     category: course.category,
     status,
     isBestSeller,
-    tags: [], // Will be populated from separate table if needed
+    tags: [],
     language: course.language,
     lastUpdated: formatDate(course.updatedAt),
     publishedAt: course.publishedAt ? course.publishedAt.toISOString() : null,
   }
 }
 
-// Internal function to fetch courses from database
 async function fetchCourses(page: number, limit: number, category?: string) {
-  const whereCondition: Record<string, unknown> = {
-    isPublished: true,
-  }
-  
-  if (category && category !== 'Todos') {
-    whereCondition.category = category
-  }
-
-  const [courses, totalCourses, allCategories] = await Promise.all([
-    prisma.courses.findMany({
-      where: whereCondition,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        shortDescription: true,
-        level: true,
-        category: true,
-        language: true,
-        duration: true,
-        thumbnail: true,
-        coverImage: true,
-        previewVideo: true,
-        price: true,
-        discountPrice: true,
-        isFree: true,
-        isPublished: true,
-        publishedAt: true,
-        enrollmentCount: true,
-        averageRating: true,
-        reviewCount: true,
-        createdAt: true,
-        updatedAt: true,
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-            bio: true,
-          },
-        },
-        _count: {
-          select: {
-            lessons: true,
-          },
-        },
-      },
-      orderBy: [
-        { enrollmentCount: 'desc' },
-        { averageRating: 'desc' },
-      ],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.courses.count({
-      where: whereCondition,
-    }),
-    prisma.courses.findMany({
-      where: { isPublished: true },
-      select: { category: true },
-      distinct: ['category'],
-      orderBy: { category: 'asc' },
-    }),
-  ])
-
-  const transformedCourses = courses.map((course: CourseWithInstructor) => 
-    transformCourse(course)
+  const instructor = alias(users, 'instructor')
+  const where = and(
+    eq(courses.isPublished, true),
+    category && category !== 'Todos' ? eq(courses.category, category) : undefined,
   )
 
+  const courseCols = {
+    id: courses.id, slug: courses.slug, title: courses.title, description: courses.description,
+    shortDescription: courses.shortDescription, level: courses.level, category: courses.category,
+    language: courses.language, duration: courses.duration, thumbnail: courses.thumbnail,
+    coverImage: courses.coverImage, previewVideo: courses.previewVideo, price: courses.price,
+    discountPrice: courses.discountPrice, isFree: courses.isFree, isPublished: courses.isPublished,
+    publishedAt: courses.publishedAt, enrollmentCount: courses.enrollmentCount,
+    averageRating: courses.averageRating, reviewCount: courses.reviewCount,
+    createdAt: courses.createdAt, updatedAt: courses.updatedAt,
+    instructorId: instructor.id, instructorName: instructor.name,
+    instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
+    instructorBio: instructor.bio,
+    lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND l."isPublished" = true)`,
+  }
+
+  const [rows, [{ total }], categoriesRaw] = await Promise.all([
+    db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(where).orderBy(desc(courses.enrollmentCount), desc(courses.averageRating)).offset((page - 1) * limit).limit(limit),
+    db.select({ total: sql<number>`count(*)::int` }).from(courses).where(where),
+    db.selectDistinct({ category: courses.category }).from(courses).where(eq(courses.isPublished, true)).orderBy(asc(courses.category)),
+  ])
+
+  const transformedCourses = rows.map(transformCourse)
+  const totalCourses = Number(total)
   const totalPages = Math.ceil(totalCourses / limit)
-  const categories = ['Todos', ...allCategories.map((c: { category: string }) => c.category)]
+  const categories = ['Todos', ...categoriesRaw.map((c) => c.category)]
 
   return {
     courses: transformedCourses,
-    pagination: {
-      currentPage: page,
-      totalPages,
-      totalCourses,
-      coursesPerPage: limit,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    },
+    pagination: { currentPage: page, totalPages, totalCourses, coursesPerPage: limit, hasNextPage: page < totalPages, hasPrevPage: page > 1 },
     categories,
   }
 }
@@ -261,124 +174,35 @@ export async function getCourses(page: number, limit: number, category?: string)
   return fetchCourses(page, limit, category)
 }
 
-// Internal function to fetch single course
 async function fetchCourseBySlug(slug: string) {
-  const course = await prisma.courses.findFirst({
-    where: { 
-      slug,
-      isPublished: true,
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      shortDescription: true,
-      level: true,
-      category: true,
-      language: true,
-      duration: true,
-      thumbnail: true,
-      coverImage: true,
-      previewVideo: true,
-      price: true,
-      discountPrice: true,
-      isFree: true,
-      isPublished: true,
-      publishedAt: true,
-      enrollmentCount: true,
-      averageRating: true,
-      reviewCount: true,
-      createdAt: true,
-      updatedAt: true,
-      user_profiles: {
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          avatar: true,
-          bio: true,
-        },
-      },
-      _count: {
-        select: {
-          lessons: true,
-        },
-      },
-      lessons: {
-        where: { isPublished: true },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          duration: true,
-          order: true,
-          sectionTitle: true,
-          isFree: true,
-          type: true,
-        },
-        orderBy: { order: 'asc' },
-      },
-    },
-  })
-
-  if (!course) {
-    return null
+  const instructor = alias(users, 'instructor')
+  const courseCols = {
+    id: courses.id, slug: courses.slug, title: courses.title, description: courses.description,
+    shortDescription: courses.shortDescription, level: courses.level, category: courses.category,
+    language: courses.language, duration: courses.duration, thumbnail: courses.thumbnail,
+    coverImage: courses.coverImage, previewVideo: courses.previewVideo, price: courses.price,
+    discountPrice: courses.discountPrice, isFree: courses.isFree, isPublished: courses.isPublished,
+    publishedAt: courses.publishedAt, enrollmentCount: courses.enrollmentCount,
+    averageRating: courses.averageRating, reviewCount: courses.reviewCount,
+    createdAt: courses.createdAt, updatedAt: courses.updatedAt,
+    instructorId: instructor.id, instructorName: instructor.name,
+    instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
+    instructorBio: instructor.bio,
+    lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND l."isPublished" = true)`,
   }
 
-  // Get related courses (same category)
-  const relatedCourses = await prisma.courses.findMany({
-    where: {
-      category: course.category,
-      slug: { not: slug },
-      isPublished: true,
-    },
-    take: 3,
-    orderBy: { enrollmentCount: 'desc' },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      shortDescription: true,
-      level: true,
-      category: true,
-      language: true,
-      duration: true,
-      thumbnail: true,
-      coverImage: true,
-      previewVideo: true,
-      price: true,
-      discountPrice: true,
-      isFree: true,
-      isPublished: true,
-      publishedAt: true,
-      enrollmentCount: true,
-      averageRating: true,
-      reviewCount: true,
-      createdAt: true,
-      updatedAt: true,
-      user_profiles: {
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          avatar: true,
-          bio: true,
-        },
-      },
-      _count: {
-        select: {
-          lessons: true,
-        },
-      },
-    },
-  })
+  const course = await db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.slug, slug), eq(courses.isPublished, true))).limit(1).then((r) => r[0] ?? null)
+  if (!course) return null
+
+  const [courseLessons, related] = await Promise.all([
+    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, type: lessons.type }).from(lessons).where(and(eq(lessons.courseId, course.id), eq(lessons.isPublished, true))).orderBy(asc(lessons.order)),
+    db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.category, course.category), ne(courses.slug, slug), eq(courses.isPublished, true))).orderBy(desc(courses.enrollmentCount)).limit(3),
+  ])
 
   return {
-    course: transformCourse(course as CourseWithInstructor),
-    lessons: course.lessons,
-    relatedCourses: relatedCourses.map((c: CourseWithInstructor) => transformCourse(c)),
+    course: transformCourse(course),
+    lessons: courseLessons,
+    relatedCourses: related.map(transformCourse),
   }
 }
 
@@ -391,42 +215,26 @@ export async function getCourseBySlug(slug: string) {
   return fetchCourseBySlug(slug)
 }
 
-// Internal function to fetch course metadata
 async function fetchCourseMetadata(slug: string) {
-  const course = await prisma.courses.findFirst({
-    where: { 
-      slug,
-      isPublished: true,
-    },
-    select: {
-      title: true,
-      description: true,
-      shortDescription: true,
-      thumbnail: true,
-      category: true,
-      level: true,
-      publishedAt: true,
-      user_profiles: {
-        select: {
-          fullName: true,
-          displayName: true,
-        },
-      },
-    },
-  })
+  const instructor = alias(users, 'instructor')
+  const row = await db
+    .select({ title: courses.title, description: courses.description, shortDescription: courses.shortDescription, thumbnail: courses.thumbnail, category: courses.category, level: courses.level, publishedAt: courses.publishedAt, instructorName: instructor.name, instructorDisplayName: instructor.displayName })
+    .from(courses)
+    .innerJoin(instructor, eq(courses.instructorId, instructor.id))
+    .where(and(eq(courses.slug, slug), eq(courses.isPublished, true)))
+    .limit(1)
+    .then((r) => r[0] ?? null)
 
-  if (!course) {
-    return null
-  }
+  if (!row) return null
 
   return {
-    title: course.title,
-    description: course.shortDescription || course.description,
-    image: course.thumbnail,
-    category: course.category,
-    level: course.level || 'Iniciante',
-    date: course.publishedAt?.toISOString(),
-    instructorName: course.user_profiles.fullName || course.user_profiles.displayName || 'lutteros',
+    title: row.title,
+    description: row.shortDescription || row.description,
+    image: row.thumbnail,
+    category: row.category,
+    level: row.level || 'Iniciante',
+    date: row.publishedAt?.toISOString(),
+    instructorName: row.instructorDisplayName || row.instructorName || 'lutteros',
   }
 }
 
@@ -445,19 +253,9 @@ export async function getAllCourseSlugs(): Promise<string[]> {
   cacheLife('hours')
   cacheTag('courses', 'course-slugs')
   
-  const courses = await prisma.courses.findMany({
-    where: { isPublished: true },
-    select: { slug: true },
-  })
-  
-  const slugs = courses.map((c: { slug: string }) => c.slug)
-  
-  // If no courses exist, return a placeholder slug for build validation
-  // The actual page will return 404 for non-existent courses
-  if (slugs.length === 0) {
-    return ['_placeholder']
-  }
-  
+  const rows = await db.select({ slug: courses.slug }).from(courses).where(eq(courses.isPublished, true))
+  const slugs = rows.map((c) => c.slug)
+  if (slugs.length === 0) return ['_placeholder']
   return slugs
 }
 
@@ -472,26 +270,22 @@ export async function getInitialCourses() {
 
 // Get course stats for dashboard
 async function fetchCourseStats() {
-  const [totalCourses, publishedCourses, totalEnrollments, avgRating] = await Promise.all([
-    prisma.courses.count(),
-    prisma.courses.count({ where: { isPublished: true } }),
-    prisma.courses.aggregate({
-      _sum: { enrollmentCount: true },
-    }),
-    prisma.courses.aggregate({
-      _avg: { averageRating: true },
-      where: { isPublished: true },
-    }),
-  ])
+  const [rows] = await db.select({
+    total: sql<number>`count(*)::int`,
+    published: sql<number>`count(*) filter (where ${courses.isPublished} = true)::int`,
+    totalEnrollments: sql<number>`coalesce(sum(${courses.enrollmentCount}), 0)::int`,
+    avgRating: sql<number>`avg(case when ${courses.isPublished} then ${courses.averageRating}::float else null end)`,
+  }).from(courses)
+
+  const totalCourses = Number(rows.total)
+  const publishedCourses = Number(rows.published)
 
   return {
     totalCourses,
     publishedCourses,
     draftCourses: totalCourses - publishedCourses,
-    totalEnrollments: totalEnrollments._sum.enrollmentCount || 0,
-    averageRating: avgRating._avg.averageRating 
-      ? parseFloat(avgRating._avg.averageRating.toString()) 
-      : 0,
+    totalEnrollments: Number(rows.totalEnrollments),
+    averageRating: rows.avgRating ? parseFloat(String(rows.avgRating)) : 0,
   }
 }
 

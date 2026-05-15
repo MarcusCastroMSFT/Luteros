@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse, connection } from 'next/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+﻿import { NextRequest, NextResponse, connection } from 'next/server'
+import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
+import { db } from '@/lib/db'
+import { courses, users } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,122 +26,52 @@ export async function GET(request: NextRequest) {
       return authResult // Return 401/403 response
     }
 
-    // Build where condition for Prisma query
-    const whereCondition: Record<string, unknown> = {}
+    const instructor = alias(users, 'instructor')
 
-    // Apply search filter
-    if (search) {
-      whereCondition.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-        { user_profiles: { fullName: { contains: search, mode: 'insensitive' } } },
-      ]
+    const searchWhere = search ? or(
+      ilike(courses.title, `%${search}%`),
+      ilike(courses.description, `%${search}%`),
+      ilike(courses.category, `%${search}%`),
+      ilike(instructor.name, `%${search}%`),
+    ) : undefined
+
+    const statusWhere = status.toLowerCase() === 'ativo' ? eq(courses.isPublished, true)
+      : status.toLowerCase() === 'rascunho' ? eq(courses.isPublished, false)
+      : undefined
+
+    const where = searchWhere && statusWhere ? sql`${searchWhere} AND ${statusWhere}`
+      : searchWhere || statusWhere || undefined
+
+    const sortColMap: Record<string, unknown> = {
+      title: courses.title,
+      category: courses.category,
+      level: courses.level,
+      rating: courses.averageRating,
+      studentsCount: courses.enrollmentCount,
+      price: courses.price,
+      createdAt: courses.createdAt,
+      instructor: instructor.name,
     }
+    const sortCol = (sortColMap[sortBy] ?? courses.createdAt) as Parameters<typeof asc>[0]
+    const orderFn = sortOrder === 'asc' ? asc : desc
 
-    // Apply status filter
-    if (status) {
-      if (status.toLowerCase() === 'ativo') {
-        whereCondition.isPublished = true
-      } else if (status.toLowerCase() === 'rascunho') {
-        whereCondition.isPublished = false
-      }
-    }
-
-    // Build orderBy condition
-    const orderByMap: Record<string, Record<string, unknown>> = {
-      title: { title: sortOrder },
-      instructor: { user_profiles: { fullName: sortOrder } },
-      category: { category: sortOrder },
-      level: { level: sortOrder },
-      rating: { averageRating: sortOrder },
-      studentsCount: { enrollmentCount: sortOrder },
-      price: { price: sortOrder },
-      createdAt: { createdAt: sortOrder },
-    }
-    
-    const orderBy = orderByMap[sortBy] || { createdAt: sortOrder }
-
-    // Execute queries in parallel for performance
-    const [courses, totalCount] = await Promise.all([
-      prisma.courses.findMany({
-        where: whereCondition,
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          description: true,
-          shortDescription: true,
-          thumbnail: true,
-          category: true,
-          level: true,
-          duration: true,
-          price: true,
-          discountPrice: true,
-          isFree: true,
-          isPublished: true,
-          publishedAt: true,
-          enrollmentCount: true,
-          averageRating: true,
-          reviewCount: true,
-          createdAt: true,
-          updatedAt: true,
-          user_profiles: {
-            select: {
-              id: true,
-              fullName: true,
-              displayName: true,
-              avatar: true,
-              bio: true,
-            }
-          },
-          _count: {
-            select: {
-              lessons: true,
-            },
-          },
-        },
-        orderBy,
-        skip: page * pageSize,
-        take: pageSize,
-      }),
-      prisma.courses.count({
-        where: whereCondition,
-      }),
+    const [[{ totalCount }], coursesRows] = await Promise.all([
+      db.select({ totalCount: sql<number>`count(*)::int` }).from(courses)
+        .innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(where),
+      db.select({
+        id: courses.id, title: courses.title, slug: courses.slug,
+        description: courses.description, shortDescription: courses.shortDescription,
+        thumbnail: courses.thumbnail, category: courses.category, level: courses.level,
+        duration: courses.duration, price: courses.price, discountPrice: courses.discountPrice,
+        isFree: courses.isFree, isPublished: courses.isPublished, publishedAt: courses.publishedAt,
+        enrollmentCount: courses.enrollmentCount, averageRating: courses.averageRating,
+        reviewCount: courses.reviewCount, createdAt: courses.createdAt, updatedAt: courses.updatedAt,
+        instructorId: instructor.id, instructorName: instructor.name,
+        instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
+        lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND l."isPublished" = true)`,
+      }).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id))
+        .where(where).orderBy(orderFn(sortCol)).offset(page * pageSize).limit(pageSize),
     ])
-
-    // Define the type for courses from Prisma query
-    type CourseWithInstructor = {
-      id: string
-      title: string
-      slug: string
-      description: string
-      shortDescription: string | null
-      thumbnail: string | null
-      category: string
-      level: string
-      duration: number | null
-      price: { toString(): string } | null
-      discountPrice: { toString(): string } | null
-      isFree: boolean
-      isPublished: boolean
-      publishedAt: Date | null
-      enrollmentCount: number
-      averageRating: { toString(): string } | null
-      reviewCount: number
-      createdAt: Date
-      updatedAt: Date
-      user_profiles: {
-        id: string
-        fullName: string | null
-        displayName: string | null
-        avatar: string | null
-        bio: string | null
-      }
-      _count: {
-        lessons: number
-      }
-    }
 
     // Format duration from minutes to readable string
     const formatDuration = (minutes: number | null): string => {
@@ -153,23 +86,22 @@ export async function GET(request: NextRequest) {
     // Map level from database format to Portuguese
     const levelDisplayMap: Record<string, string> = {
       'BEGINNER': 'Iniciante',
-      'INTERMEDIATE': 'Intermediário',
-      'ADVANCED': 'Avançado',
+      'INTERMEDIATE': 'IntermediÃ¡rio',
+      'ADVANCED': 'AvanÃ§ado',
     }
 
-    // Transform data to match frontend interface
-    const transformedCourses = courses.map((course: CourseWithInstructor) => {
+    const transformedCourses = coursesRows.map((course) => {
       const price = course.price ? parseFloat(course.price.toString()) : 0
       const discountPrice = course.discountPrice ? parseFloat(course.discountPrice.toString()) : null
       const rating = course.averageRating ? parseFloat(course.averageRating.toString()) : 0
-      
+
       return {
         id: course.id,
         title: course.title,
         slug: course.slug,
-        instructor: course.user_profiles.fullName || course.user_profiles.displayName || 'Unknown',
-        instructorId: course.user_profiles.id,
-        instructorTitle: '', // Could be populated from profile if needed
+        instructor: course.instructorName || course.instructorDisplayName || 'Unknown',
+        instructorId: course.instructorId,
+        instructorTitle: '',
         category: course.category,
         level: levelDisplayMap[course.level] || course.level,
         studentsCount: course.enrollmentCount,
@@ -177,7 +109,7 @@ export async function GET(request: NextRequest) {
         reviewsCount: course.reviewCount,
         price: discountPrice !== null ? discountPrice : price,
         originalPrice: discountPrice !== null ? price : undefined,
-        lessonsCount: course._count.lessons,
+        lessonsCount: course.lessonsCount,
         duration: formatDuration(course.duration),
         status: course.isPublished ? 'Ativo' : 'Rascunho',
         isBestSeller: course.enrollmentCount > 1000,
@@ -235,16 +167,16 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!title || !slug || !description || !level || !category) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios faltando' },
+        { success: false, error: 'Campos obrigatÃ³rios faltando' },
         { status: 400 }
       )
     }
 
     // Valid levels
-    const validLevels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'Iniciante', 'Intermediário', 'Avançado']
+    const validLevels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'Iniciante', 'IntermediÃ¡rio', 'AvanÃ§ado']
     if (!validLevels.includes(level)) {
       return NextResponse.json(
-        { success: false, error: 'Nível inválido' },
+        { success: false, error: 'NÃ­vel invÃ¡lido' },
         { status: 400 }
       )
     }
@@ -252,8 +184,8 @@ export async function POST(request: NextRequest) {
     // Map Portuguese levels to database format
     const levelMap: Record<string, string> = {
       'Iniciante': 'BEGINNER',
-      'Intermediário': 'INTERMEDIATE', 
-      'Avançado': 'ADVANCED',
+      'IntermediÃ¡rio': 'INTERMEDIATE', 
+      'AvanÃ§ado': 'ADVANCED',
     }
     const dbLevel = levelMap[level] || level
 
@@ -261,20 +193,17 @@ export async function POST(request: NextRequest) {
     const finalInstructorId = instructorId || authResult.user.id
 
     // Check if slug already exists
-    const existingCourse = await prisma.courses.findUnique({
-      where: { slug }
-    })
+    const existingCourse = await db.select({ id: courses.id }).from(courses).where(eq(courses.slug, slug)).limit(1).then((r) => r[0] ?? null)
 
     if (existingCourse) {
       return NextResponse.json(
-        { success: false, error: 'Já existe um curso com esse slug' },
+        { success: false, error: 'JÃ¡ existe um curso com esse slug' },
         { status: 400 }
       )
     }
 
     // Create course
-    const course = await prisma.courses.create({
-      data: {
+    const [course] = await db.insert(courses).values({
         title,
         slug,
         description,
@@ -282,39 +211,28 @@ export async function POST(request: NextRequest) {
         level: dbLevel,
         category,
         language,
-        duration: duration || null,
+        duration: duration ? parseInt(duration) : null,
         thumbnail: thumbnail || null,
         coverImage: coverImage || null,
         previewVideo: previewVideo || null,
-        price: price ? parseFloat(price) : null,
-        discountPrice: discountPrice ? parseFloat(discountPrice) : null,
+        price: price ? String(parseFloat(price)) : null,
+        discountPrice: discountPrice ? String(parseFloat(discountPrice)) : null,
         isFree,
         isPublished,
         publishedAt: isPublished ? new Date() : null,
         instructorId: finalInstructorId,
         enrollmentCount: 0,
         reviewCount: 0,
-      },
-      include: {
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          }
-        }
-      }
-    })
+      }).returning()
 
     // Invalidate cache so users see the new course immediately
     revalidatePath('/courses')
     revalidatePath(`/courses/${slug}`)
-    revalidateTag('courses', {})
-    revalidateTag('courses-initial', {})
-    revalidateTag('course-slugs', {})
-    revalidateTag(`course-${slug}`, {})
-    revalidateTag('courses-stats', {})
+    revalidateTag('courses')
+    revalidateTag('courses-initial')
+    revalidateTag('course-slugs')
+    revalidateTag(`course-${slug}`)
+    revalidateTag('courses-stats')
 
     return NextResponse.json({
       success: true,

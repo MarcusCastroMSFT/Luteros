@@ -49,20 +49,13 @@ export function ViewRegistrationsModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open && eventId) {
-      fetchRegistrations()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, eventId])
-
   const fetchRegistrations = async () => {
     setLoading(true)
     setError(null)
 
     try {
       const response = await fetch(`/api/events/${eventId}/registrations`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch registrations')
       }
@@ -76,6 +69,13 @@ export function ViewRegistrationsModal({
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (open && eventId) {
+      fetchRegistrations()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, eventId])
 
   const getPaymentStatusBadge = (status: string | null) => {
     if (!status) return null

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
+import { and, eq } from 'drizzle-orm';
+import { getAuthUser, requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { blogArticles, blogBookmarks } from '@/lib/db/schema';
 
-// Toggle bookmark for an article
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ articleId: string }> }
@@ -12,80 +13,40 @@ export async function POST(
   try {
     const { articleId } = await params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Você precisa estar logado para salvar artigos' },
-        { status: 401 }
-      );
-    }
-
-    // Check if article exists
-    const article = await prisma.blog_articles.findUnique({
-      where: { id: articleId },
-      select: { id: true, title: true },
-    });
+    const article = await db
+      .select({ id: blogArticles.id })
+      .from(blogArticles)
+      .where(eq(blogArticles.id, articleId))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
     if (!article) {
-      return NextResponse.json(
-        { success: false, error: 'Artigo não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Artigo não encontrado' }, { status: 404 });
     }
 
-    // Check if already bookmarked
-    const existingBookmark = await prisma.blog_bookmarks.findUnique({
-      where: {
-        articleId_userId: {
-          articleId,
-          userId: user.id,
-        },
-      },
-    });
+    const existing = await db
+      .select()
+      .from(blogBookmarks)
+      .where(and(eq(blogBookmarks.articleId, articleId), eq(blogBookmarks.userId, authUser.id)))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
-    if (existingBookmark) {
-      // Remove bookmark
-      await prisma.blog_bookmarks.delete({
-        where: { id: existingBookmark.id },
-      });
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          isBookmarked: false,
-          message: 'Artigo removido dos salvos',
-        },
-      });
+    if (existing) {
+      await db.delete(blogBookmarks).where(eq(blogBookmarks.id, existing.id));
+      return NextResponse.json({ success: true, data: { isBookmarked: false, message: 'Artigo removido dos salvos' } });
     } else {
-      // Add bookmark
-      await prisma.blog_bookmarks.create({
-        data: {
-          articleId,
-          userId: user.id,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          isBookmarked: true,
-          message: 'Artigo salvo com sucesso',
-        },
-      });
+      await db.insert(blogBookmarks).values({ articleId, userId: authUser.id });
+      return NextResponse.json({ success: true, data: { isBookmarked: true, message: 'Artigo salvo com sucesso' } });
     }
   } catch (error) {
     console.error('Error toggling bookmark:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao salvar artigo' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erro ao salvar artigo' }, { status: 500 });
   }
 }
 
-// Check if article is bookmarked
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ articleId: string }> }
@@ -95,36 +56,21 @@ export async function GET(
   try {
     const { articleId } = await params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({
-        success: true,
-        data: { isBookmarked: false },
-      });
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ success: true, data: { isBookmarked: false } });
     }
 
-    // Check if bookmarked
-    const bookmark = await prisma.blog_bookmarks.findUnique({
-      where: {
-        articleId_userId: {
-          articleId,
-          userId: user.id,
-        },
-      },
-    });
+    const bookmark = await db
+      .select()
+      .from(blogBookmarks)
+      .where(and(eq(blogBookmarks.articleId, articleId), eq(blogBookmarks.userId, authUser.id)))
+      .limit(1)
+      .then((r) => r[0] ?? null);
 
-    return NextResponse.json({
-      success: true,
-      data: { isBookmarked: !!bookmark },
-    });
+    return NextResponse.json({ success: true, data: { isBookmarked: !!bookmark } });
   } catch (error) {
     console.error('Error checking bookmark:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao verificar artigo salvo' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erro ao verificar artigo salvo' }, { status: 500 });
   }
 }

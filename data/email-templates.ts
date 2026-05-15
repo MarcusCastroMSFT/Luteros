@@ -19,7 +19,7 @@ const brandColor = '#84cc16' // Lime-500
 const brandColorDark = '#65a30d' // Lime-600
 const textColor = '#18181b'
 const mutedColor = '#71717a'
-const backgroundColor = '#f4f4f5'
+const _backgroundColor = '#f4f4f5'
 
 export const emailTemplates: EmailTemplate[] = [
   {
@@ -31,7 +31,7 @@ export const emailTemplates: EmailTemplate[] = [
     subject: '📝 Novos artigos para você na lutteros!',
     previewText: 'Confira as últimas publicações do nosso blog...',
     ctaText: 'Ver Todos os Artigos',
-    ctaUrl: 'https://lutteros.com.br/blog',
+    ctaUrl: 'https://lutteros.com.br/articles',
     content: `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: ${textColor};">
   Olá! 👋
 </p>

@@ -48,12 +48,12 @@ export function HeroSection() {
 
             {/* CTA Button */}
             <div className="pt-4">
-              <Link href="/courses">
-                <Button 
-                  size="lg" 
+              <Link href="/articles">
+                <Button
+                  size="lg"
                   className="cursor-pointer bg-cta-highlight hover:bg-cta-highlight/90 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
                 >
-                  Conferir Cursos
+                  Confira nossos conteúdos
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>

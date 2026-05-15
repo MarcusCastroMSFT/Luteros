@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { events, eventRegistrations } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,96 +20,39 @@ export async function GET(request: NextRequest) {
     const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
 
-    // Execute all queries in parallel for performance
-    const [
-      totalEvents,
-      eventsThisMonth,
-      eventsLastMonth,
-      totalRegistrations,
-      registrationsThisMonth,
-      registrationsLastMonth,
-      paidRegistrations,
-      paidRegistrationsThisMonth,
-      totalAttendees,
-      attendedCount,
-    ] = await Promise.all([
-      // Total events
-      prisma.events.count({
-        where: { isPublished: true, isCancelled: false },
-      }),
-      
-      // Events this month
-      prisma.events.count({
-        where: {
-          isPublished: true,
-          isCancelled: false,
-          createdAt: { gte: firstDayThisMonth },
-        },
-      }),
-      
-      // Events last month
-      prisma.events.count({
-        where: {
-          isPublished: true,
-          isCancelled: false,
-          createdAt: {
-            gte: firstDayLastMonth,
-            lte: lastDayLastMonth,
-          },
-        },
-      }),
-      
-      // Total registrations
-      prisma.event_registrations.count(),
-      
-      // Registrations this month
-      prisma.event_registrations.count({
-        where: {
-          registeredAt: { gte: firstDayThisMonth },
-        },
-      }),
-      
-      // Registrations last month
-      prisma.event_registrations.count({
-        where: {
-          registeredAt: {
-            gte: firstDayLastMonth,
-            lte: lastDayLastMonth,
-          },
-        },
-      }),
-      
-      // Paid registrations (revenue calculation)
-      prisma.event_registrations.aggregate({
-        where: {
-          paymentStatus: 'COMPLETED',
-        },
-        _sum: {
-          paidAmount: true,
-        },
-      }),
-      
-      // Paid registrations this month
-      prisma.event_registrations.aggregate({
-        where: {
-          paymentStatus: 'COMPLETED',
-          registeredAt: { gte: firstDayThisMonth },
-        },
-        _sum: {
-          paidAmount: true,
-        },
-      }),
-      
-      // Total registrations for attendance calculation
-      prisma.event_registrations.count(),
-      
-      // Attended registrations
-      prisma.event_registrations.count({
-        where: { attended: true },
-      }),
-    ])
+    const [rows] = await db.select({
+      totalEvents: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false)::int`,
+      eventsThisMonth: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false AND ${events.createdAt} >= ${firstDayThisMonth})::int`,
+      eventsLastMonth: sql<number>`count(*) filter (where ${events.isPublished} = true AND ${events.isCancelled} = false AND ${events.createdAt} >= ${firstDayLastMonth} AND ${events.createdAt} <= ${lastDayLastMonth})::int`,
+    }).from(events)
 
-    // Calculate growth percentages
+    const [regRows] = await db.select({
+      totalRegistrations: sql<number>`count(*)::int`,
+      registrationsThisMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayThisMonth})::int`,
+      registrationsLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
+      totalRevenue: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
+      revenueThisMonth: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' AND ${eventRegistrations.registeredAt} >= ${firstDayThisMonth} then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
+      revenueLastMonth: sql<number>`coalesce(sum(case when ${eventRegistrations.paymentStatus} = 'COMPLETED' AND ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth} then ${eventRegistrations.paidAmount}::float else 0 end), 0)`,
+      totalAttendees: sql<number>`count(*)::int`,
+      attendedCount: sql<number>`count(*) filter (where ${eventRegistrations.attended} = true)::int`,
+      totalRegsLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
+      attendedLastMonth: sql<number>`count(*) filter (where ${eventRegistrations.attended} = true AND ${eventRegistrations.registeredAt} >= ${firstDayLastMonth} AND ${eventRegistrations.registeredAt} <= ${lastDayLastMonth})::int`,
+    }).from(eventRegistrations)
+
+    const totalEvents = Number(rows.totalEvents)
+    const eventsThisMonth = Number(rows.eventsThisMonth)
+    const eventsLastMonth = Number(rows.eventsLastMonth)
+    const totalRegistrations = Number(regRows.totalRegistrations)
+    const registrationsThisMonth = Number(regRows.registrationsThisMonth)
+    const registrationsLastMonth = Number(regRows.registrationsLastMonth)
+    const totalRevenue = Number(regRows.totalRevenue)
+    const revenueThisMonth = Number(regRows.revenueThisMonth)
+    const revenueLastMonth = Number(regRows.revenueLastMonth)
+    const totalAttendees = Number(regRows.totalAttendees)
+    const attendedCount = Number(regRows.attendedCount)
+    const totalRegsLastMonth = Number(regRows.totalRegsLastMonth)
+    const attendedLastMonth = Number(regRows.attendedLastMonth)
+
     const eventsGrowth = eventsLastMonth > 0
       ? (((eventsThisMonth - eventsLastMonth) / eventsLastMonth) * 100).toFixed(1)
       : '0.0'
@@ -116,59 +61,18 @@ export async function GET(request: NextRequest) {
       ? (((registrationsThisMonth - registrationsLastMonth) / registrationsLastMonth) * 100).toFixed(1)
       : '0.0'
 
-    // Revenue calculations
-    const totalRevenue = Number(paidRegistrations._sum.paidAmount || 0)
-    const revenueThisMonth = Number(paidRegistrationsThisMonth._sum.paidAmount || 0)
-    
-    // For last month revenue, we need a separate query
-    const paidRegistrationsLastMonth = await prisma.event_registrations.aggregate({
-      where: {
-        paymentStatus: 'COMPLETED',
-        registeredAt: {
-          gte: firstDayLastMonth,
-          lte: lastDayLastMonth,
-        },
-      },
-      _sum: {
-        paidAmount: true,
-      },
-    })
-    
-    const revenueLastMonth = Number(paidRegistrationsLastMonth._sum.paidAmount || 0)
     const revenueGrowth = revenueLastMonth > 0
       ? (((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100).toFixed(1)
       : '0.0'
 
-    // Attendance calculation
     const attendanceRate = totalAttendees > 0
       ? ((attendedCount / totalAttendees) * 100).toFixed(1)
       : '0.0'
 
-    // For attendance growth, compare with last month
-    const [totalRegsLastMonth, attendedLastMonth] = await Promise.all([
-      prisma.event_registrations.count({
-        where: {
-          registeredAt: {
-            gte: firstDayLastMonth,
-            lte: lastDayLastMonth,
-          },
-        },
-      }),
-      prisma.event_registrations.count({
-        where: {
-          attended: true,
-          registeredAt: {
-            gte: firstDayLastMonth,
-            lte: lastDayLastMonth,
-          },
-        },
-      }),
-    ])
-    
     const attendanceRateLastMonth = totalRegsLastMonth > 0
       ? ((attendedLastMonth / totalRegsLastMonth) * 100)
       : 0
-    
+
     const attendanceGrowth = attendanceRateLastMonth > 0
       ? ((parseFloat(attendanceRate) - attendanceRateLastMonth) / attendanceRateLastMonth * 100).toFixed(1)
       : '0.0'

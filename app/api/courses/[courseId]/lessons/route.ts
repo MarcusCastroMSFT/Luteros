@@ -1,127 +1,130 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
-import { requireAdminOrInstructor } from '@/lib/auth-helpers';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from '@/lib/cache'
+import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { courses, lessons } from '@/lib/db/schema'
+import { asc, eq, sql } from 'drizzle-orm'
 
-// GET all lessons for a course
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdminOrInstructor(request)
     if (authResult instanceof NextResponse) {
-      return authResult;
+      return authResult
     }
-    
-    const params = await context.params;
-    const courseId = params.courseId;
 
-    // Verify course exists
-    const course = await prisma.courses.findUnique({
-      where: { id: courseId },
-      select: { id: true },
-    });
+    const params = await context.params
+    const courseId = params.courseId
+
+    const course = await db
+      .select({ id: courses.id })
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!course) {
       return NextResponse.json(
         { success: false, error: 'Course not found' },
         { status: 404 }
-      );
+      )
     }
 
-    const lessons = await prisma.lessons.findMany({
-      where: { courseId },
-      orderBy: { order: 'asc' },
-      select: {
-        id: true,
-        title: true,
-        type: true,
-        description: true,
-        content: true,
-        videoUrl: true,
-        videoProvider: true,
-        duration: true,
-        order: true,
-        sectionTitle: true,
-        isPublished: true,
-        isFree: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const courseLessons = await db
+      .select({
+        id: lessons.id,
+        title: lessons.title,
+        type: lessons.type,
+        description: lessons.description,
+        content: lessons.content,
+        videoUrl: lessons.videoUrl,
+        videoProvider: lessons.videoProvider,
+        duration: lessons.duration,
+        order: lessons.order,
+        sectionTitle: lessons.sectionTitle,
+        isPublished: lessons.isPublished,
+        isFree: lessons.isFree,
+        createdAt: lessons.createdAt,
+        updatedAt: lessons.updatedAt,
+      })
+      .from(lessons)
+      .where(eq(lessons.courseId, courseId))
+      .orderBy(asc(lessons.order))
 
     return NextResponse.json({
       success: true,
-      data: lessons,
-    });
+      data: courseLessons,
+    })
   } catch (error) {
-    console.error('Error fetching lessons:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    console.error('Error fetching lessons:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error'
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500 }
-    );
+    )
   }
 }
 
-// POST create a new lesson
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const authResult = await requireAdminOrInstructor(request);
+    const authResult = await requireAdminOrInstructor(request)
     if (authResult instanceof NextResponse) {
-      return authResult;
+      return authResult
     }
-    
-    const params = await context.params;
-    const courseId = params.courseId;
 
-    // Verify course exists
-    const course = await prisma.courses.findUnique({
-      where: { id: courseId },
-      select: { id: true },
-    });
+    const params = await context.params
+    const courseId = params.courseId
+
+    const course = await db
+      .select({ id: courses.id, slug: courses.slug })
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!course) {
       return NextResponse.json(
         { success: false, error: 'Course not found' },
         { status: 404 }
-      );
+      )
     }
 
-    const body = await request.json();
-    const { 
-      title, 
+    const body = await request.json()
+    const {
+      title,
       type = 'video',
-      description, 
-      content, 
-      videoUrl, 
+      description,
+      content,
+      videoUrl,
       videoProvider,
-      duration, 
-      sectionTitle, 
-      isPublished = false, 
-      isFree = false 
-    } = body;
+      duration,
+      sectionTitle,
+      isPublished = false,
+      isFree = false,
+    } = body
 
     if (!title?.trim()) {
       return NextResponse.json(
         { success: false, error: 'Title is required' },
         { status: 400 }
-      );
+      )
     }
 
-    // Get the next order number
-    const maxOrder = await prisma.lessons.aggregate({
-      where: { courseId },
-      _max: { order: true },
-    });
-    const nextOrder = (maxOrder._max.order ?? -1) + 1;
+    const [{ maxOrder }] = await db
+      .select({ maxOrder: sql<number>`coalesce(max(${lessons.order}), -1)::int` })
+      .from(lessons)
+      .where(eq(lessons.courseId, courseId))
 
-    const lesson = await prisma.lessons.create({
-      data: {
+    const nextOrder = maxOrder + 1
+
+    const [lesson] = await db
+      .insert(lessons)
+      .values({
         courseId,
         title: title.trim(),
         type,
@@ -134,31 +137,25 @@ export async function POST(
         order: nextOrder,
         isPublished,
         isFree,
-      },
-    });
+      })
+      .returning()
 
-    // Get course slug to revalidate cache
-    const courseForCache = await prisma.courses.findUnique({
-      where: { id: courseId },
-      select: { slug: true },
-    });
-
-    // Revalidate course cache
-    if (courseForCache?.slug) {
-      revalidateTag(`course-${courseForCache.slug}`, {});
+    if (course.slug) {
+      revalidateTag(`course-${course.slug}`)
     }
-    revalidateTag('courses', {});
-    revalidateTag('courses-initial', {});
+    revalidateTag('courses')
+    revalidateTag('courses-initial')
 
     return NextResponse.json({
       success: true,
       data: lesson,
-    }, { status: 201 });
+    }, { status: 201 })
   } catch (error) {
-    console.error('Error creating lesson:', error);
+    console.error('Error creating lesson:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }
+

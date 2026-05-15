@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/pageHeader';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // =============================================================================
 // CONSTANTS
@@ -237,8 +238,9 @@ export function ContactPageClient() {
   const [honeypot, setHoneypot] = useState('');
   
   // Security: Track submission time to detect bot rapid submissions
-  const formLoadTime = useRef(Date.now());
-  
+  const formLoadTime = useRef<number>(0);
+  useEffect(() => { formLoadTime.current = Date.now() }, []);
+
   // Security: Rate limiting - track last submission
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
   const RATE_LIMIT_MS = 30000; // 30 seconds between submissions
@@ -343,7 +345,7 @@ export function ContactPageClient() {
 
     try {
       // Sanitize data before sending
-      const sanitizedData = {
+      const _sanitizedData = {
         name: sanitizeInput(formData.name),
         email: sanitizeInput(formData.email).toLowerCase(),
         phone: sanitizeInput(formData.phone),
@@ -698,7 +700,7 @@ export function ContactPageClient() {
                 Visite nossa Central de Ajuda para encontrar respostas para as dúvidas mais comuns.
               </p>
               <Button asChild variant="outline" className="w-full cursor-pointer">
-                <a href="/help">Acessar Central de Ajuda</a>
+                <Link href="/help">Acessar Central de Ajuda</Link>
               </Button>
             </div>
           </div>

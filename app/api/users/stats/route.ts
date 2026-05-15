@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { gte, lt, and, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { users } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,64 +21,27 @@ export async function GET(request: NextRequest) {
 
     // Execute all queries in parallel for performance
     const [
-      totalUsers,
-      newUsersLastMonth,
-      newUsersLastWeek,
-      activeUsers,
-      previousMonthTotal,
-      previousWeekNewUsers,
+      [{ total: totalUsersRaw }],
+      [{ count: newUsersLastMonthRaw }],
+      [{ count: newUsersLastWeekRaw }],
+      [{ count: activeUsersRaw }],
+      [{ count: previousMonthTotalRaw }],
+      [{ count: previousWeekNewUsersRaw }],
     ] = await Promise.all([
-      // Total users
-      prisma.user_profiles.count(),
-      
-      // New users in last month
-      prisma.user_profiles.count({
-        where: {
-          createdAt: {
-            gte: lastMonth
-          }
-        }
-      }),
-      
-      // New users in last week
-      prisma.user_profiles.count({
-        where: {
-          createdAt: {
-            gte: lastWeek
-          }
-        }
-      }),
-      
-      // Active users (logged in within last 30 days)
-      prisma.user_profiles.count({
-        where: {
-          lastLoginAt: {
-            gte: lastMonth
-          }
-        }
-      }),
-      
-      // Previous month total for trend calculation
-      prisma.user_profiles.count({
-        where: {
-          createdAt: {
-            lt: lastMonth
-          }
-        }
-      }),
-      
-      // Previous week new users for trend calculation
-      prisma.user_profiles.count({
-        where: {
-          createdAt: {
-            gte: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
-            lt: lastWeek
-          }
-        }
-      })
+      db.select({ total: sql<number>`count(*)::int` }).from(users),
+      db.select({ count: sql<number>`count(*)::int` }).from(users).where(gte(users.createdAt, lastMonth)),
+      db.select({ count: sql<number>`count(*)::int` }).from(users).where(gte(users.createdAt, lastWeek)),
+      db.select({ count: sql<number>`count(*)::int` }).from(users).where(gte(users.lastLoginAt, lastMonth)),
+      db.select({ count: sql<number>`count(*)::int` }).from(users).where(lt(users.createdAt, lastMonth)),
+      db.select({ count: sql<number>`count(*)::int` }).from(users).where(and(gte(users.createdAt, new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)), lt(users.createdAt, lastWeek))),
     ])
-    
-    // TODO: Add premium users count once Subscription model is implemented
+
+    const totalUsers = Number(totalUsersRaw)
+    const newUsersLastMonth = Number(newUsersLastMonthRaw)
+    const newUsersLastWeek = Number(newUsersLastWeekRaw)
+    const activeUsers = Number(activeUsersRaw)
+    const previousMonthTotal = Number(previousMonthTotalRaw)
+    const previousWeekNewUsers = Number(previousWeekNewUsersRaw)
     const premiumUsers = 0
 
     // Calculate growth percentages

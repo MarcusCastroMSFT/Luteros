@@ -34,6 +34,16 @@ export function ResizableImage({ src, alt, width: initialWidth, height: initialH
   const currentDimensions = useRef({ width: initialWidth || 300, height: initialHeight || 200 });
   const resizeDirection = useRef<string>('');
 
+  // Update the Lexical node with new dimensions
+  const updateNodeDimensions = useCallback((width: number, height: number) => {
+    editor.update(() => {
+      const node = $getNodeByKey(nodeKey);
+      if (node instanceof ImageNode) {
+        node.setWidthAndHeight(width, height);
+      }
+    });
+  }, [editor, nodeKey]);
+
   // Handle image load to get natural dimensions
   const handleImageLoad = useCallback(() => {
     if (imageRef.current && !initialWidth && !initialHeight) {
@@ -67,16 +77,6 @@ export function ResizableImage({ src, alt, width: initialWidth, height: initialH
   useEffect(() => {
     currentDimensions.current = dimensions;
   }, [dimensions]);
-
-  // Update the Lexical node with new dimensions
-  const updateNodeDimensions = useCallback((width: number, height: number) => {
-    editor.update(() => {
-      const node = $getNodeByKey(nodeKey);
-      if (node instanceof ImageNode) {
-        node.setWidthAndHeight(width, height);
-      }
-    });
-  }, [editor, nodeKey]);
 
   // Update the Lexical node with new caption
   const updateNodeCaption = useCallback((newCaption: string) => {
@@ -139,10 +139,7 @@ export function ResizableImage({ src, alt, width: initialWidth, height: initialH
       updateNodeDimensions(currentDimensions.current.width, currentDimensions.current.height);
     }
     
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    // eslint-disable-next-line react-hooks/exhaustive-deps  
-  }, [isResizing, updateNodeDimensions]); // handleMouseMove/handleMouseUp cause circular dependencies
+  }, [isResizing, updateNodeDimensions]);
 
   // Handle mouse down for resize handles
   const handleMouseDown = useCallback((e: React.MouseEvent, direction: string) => {

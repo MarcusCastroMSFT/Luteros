@@ -7,7 +7,7 @@ import { CourseCard } from '@/components/courses/courseCard';
 import { CourseListSkeleton } from '@/components/courses/courseSkeleton';
 import { Pagination } from '@/components/common/pagination';
 import { Button } from '@/components/ui/button';
-import { type Course, type CoursesPagination } from '@/types/course';
+import { type Course, type CoursesPagination } from '@/lib/courses';
 
 const COURSES_PER_PAGE = 12;
 
@@ -138,7 +138,7 @@ export function CoursesPageClient({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
               {courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard key={course.id} course={course as import('@/types/course').Course} />
               ))}
             </div>
           )}

@@ -34,7 +34,7 @@ export interface Product {
 }
 
 export interface ProductCategory {
-  id: string;
+  id?: string;
   name: string;
   slug: string;
   count: number;

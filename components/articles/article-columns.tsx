@@ -197,7 +197,7 @@ export const articleColumns: ColumnDef<ArticleRow>[] = [
                 <>
                   <DropdownMenuItem
                     className="cursor-pointer"
-                    onClick={() => window.open(`/blog/${article.slug}`, '_blank')}
+                    onClick={() => window.open(`/articles/${article.slug}`, '_blank')}
                   >
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Abrir artigo publicado

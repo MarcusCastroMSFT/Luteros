@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { eq, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { products } from '@/lib/db/schema'
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,75 +19,25 @@ export async function GET(request: NextRequest) {
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
     const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate())
 
-    // Execute all queries in parallel for performance
-    const [
-      totalProducts,
-      activeProducts,
-      inactiveProducts,
-      featuredProducts,
-      newProductsThisMonth,
-      newProductsLastMonth,
-      totalUsageCount,
-      membersOnlyProducts,
-      allAccessProducts,
-      categoriesCount,
-    ] = await Promise.all([
-      // Total products count
-      prisma.products.count(),
-      
-      // Active products count
-      prisma.products.count({
-        where: { isActive: true }
-      }),
-      
-      // Inactive products count
-      prisma.products.count({
-        where: { isActive: false }
-      }),
-      
-      // Featured products count
-      prisma.products.count({
-        where: { isFeatured: true, isActive: true }
-      }),
-      
-      // New products this month
-      prisma.products.count({
-        where: {
-          createdAt: { gte: lastMonth }
-        }
-      }),
-      
-      // New products last month (for comparison)
-      prisma.products.count({
-        where: {
-          createdAt: {
-            gte: twoMonthsAgo,
-            lt: lastMonth
-          }
-        }
-      }),
-      
-      // Total usage count
-      prisma.products.aggregate({
-        _sum: { usageCount: true }
-      }),
-      
-      // Members only products
-      prisma.products.count({
-        where: { availability: 'members', isActive: true }
-      }),
-      
-      // All access products
-      prisma.products.count({
-        where: { availability: 'all', isActive: true }
-      }),
-      
-      // Unique categories count
-      prisma.products.groupBy({
-        by: ['category'],
-        where: { isActive: true }
-      }),
+    const [[row], categoriesRaw] = await Promise.all([
+      db.select({
+        totalProducts: sql<number>`count(*)::int`,
+        activeProducts: sql<number>`count(*) filter (where ${products.isActive} = true)::int`,
+        inactiveProducts: sql<number>`count(*) filter (where ${products.isActive} = false)::int`,
+        featuredProducts: sql<number>`count(*) filter (where ${products.isFeatured} = true AND ${products.isActive} = true)::int`,
+        newProductsThisMonth: sql<number>`count(*) filter (where ${products.createdAt} >= ${lastMonth})::int`,
+        newProductsLastMonth: sql<number>`count(*) filter (where ${products.createdAt} >= ${twoMonthsAgo} AND ${products.createdAt} < ${lastMonth})::int`,
+        totalUsageCount: sql<number>`coalesce(sum(${products.usageCount}), 0)::int`,
+        membersOnlyProducts: sql<number>`count(*) filter (where ${products.availability} = 'members' AND ${products.isActive} = true)::int`,
+        allAccessProducts: sql<number>`count(*) filter (where ${products.availability} = 'all' AND ${products.isActive} = true)::int`,
+      }).from(products),
+      db.selectDistinct({ category: products.category }).from(products).where(eq(products.isActive, true)),
     ])
+
+    const { totalProducts, activeProducts, inactiveProducts, featuredProducts,
+      newProductsThisMonth, newProductsLastMonth, totalUsageCount, membersOnlyProducts, allAccessProducts } = row
+
+    const categoriesCount = categoriesRaw.length
 
     // Calculate growth percentages
     const productsGrowth = newProductsLastMonth > 0
@@ -104,10 +56,10 @@ export async function GET(request: NextRequest) {
       activeProductsGrowth: activeGrowth,
       inactiveProducts,
       featuredProducts,
-      totalUsageCount: totalUsageCount._sum.usageCount || 0,
+      totalUsageCount,
       membersOnlyProducts,
       allAccessProducts,
-      categoriesCount: categoriesCount.length,
+      categoriesCount: categoriesCount,
     })
 
   } catch (error) {

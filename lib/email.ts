@@ -5,8 +5,8 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Email configuration
 export const EMAIL_CONFIG = {
-  from: process.env.EMAIL_FROM || 'lutteros <noreply@lutteros.com.br>',
-  replyTo: process.env.EMAIL_REPLY_TO || 'contato@lutteros.com.br',
+  from: process.env.FROM_EMAIL || process.env.EMAIL_FROM || 'lutteros <noreply@lutteros.com.br>',
+  replyTo: process.env.EMAIL_REPLY_TO || process.env.TO_EMAIL || 'contato@lutteros.com.br',
 }
 
 // Types

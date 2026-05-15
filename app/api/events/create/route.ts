@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag, revalidatePath } from 'next/cache'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag, revalidatePath } from '@/lib/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { events, eventSpeakers } from '@/lib/db/schema'
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,70 +37,61 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!title || !slug || !description || !location || !eventDate || !eventTime || !totalSlots) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios faltando' },
+        { success: false, error: 'Campos obrigatÃ³rios faltando' },
         { status: 400 }
       )
     }
 
     // Check if slug already exists
-    const existingEvent = await prisma.events.findUnique({
-      where: { slug }
-    })
+    const existingEvent = await db.select({ id: events.id }).from(events).where(eq(events.slug, slug)).limit(1).then((r) => r[0] ?? null)
 
     if (existingEvent) {
       return NextResponse.json(
-        { success: false, error: 'Já existe um evento com esse slug' },
+        { success: false, error: 'JÃ¡ existe um evento com esse slug' },
         { status: 400 }
       )
     }
 
     // Create event
-    const event = await prisma.events.create({
-      data: {
-        title,
-        slug,
-        description,
-        fullDescription,
-        location,
-        eventDate: new Date(eventDate),
-        eventTime,
-        duration: duration ? parseInt(duration, 10) : null,
-        cost,
-        isFree,
-        totalSlots: parseInt(totalSlots, 10),
-
-        isPublished,
-        isCancelled,
-        image,
-      },
-    })
+    const [event] = await db.insert(events).values({
+      title,
+      slug,
+      description,
+      fullDescription,
+      location,
+      eventDate: new Date(eventDate),
+      eventTime,
+      duration: duration ? parseInt(duration, 10) : null,
+      cost,
+      isFree,
+      totalSlots: parseInt(totalSlots, 10),
+      isPublished,
+      isCancelled,
+      image,
+    }).returning()
 
     // Create speakers if provided
     if (speakers && speakers.length > 0) {
-      await Promise.all(
-        speakers.map((speaker: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; website?: string; order: number }, index: number) =>
-          prisma.eventSpeaker.create({
-            data: {
-              eventId: event.id,
-              name: speaker.name,
-              title: speaker.title || null,
-              bio: speaker.bio || null,
-              image: speaker.image || null,
-              linkedin: speaker.linkedin || null,
-              twitter: speaker.twitter || null,
-              website: speaker.website || null,
-              order: speaker.order || index + 1,
-            },
-          })
-        )
+      await db.insert(eventSpeakers).values(
+        speakers.map((speaker: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; website?: string; order: number }, index: number) => ({
+          eventId: event.id,
+          name: speaker.name,
+          title: speaker.title || null,
+          bio: speaker.bio || null,
+          image: speaker.image || null,
+          linkedin: speaker.linkedin || null,
+          twitter: speaker.twitter || null,
+          website: speaker.website || null,
+          order: speaker.order || index + 1,
+        }))
       )
     }
 
     // Revalidate all event-related cache tags
-    revalidateTag('events', {})
-    revalidateTag('events-initial', {})
-    revalidateTag('event-slugs', {})
-    revalidateTag('upcoming-events-count', {})
+    revalidateTag('events')
+    revalidateTag('events-initial')
+    revalidateTag('event-slugs')
+    revalidateTag('upcoming-events-count')
     revalidatePath('/events')
     revalidatePath(`/events/${slug}`)
     revalidatePath('/admin/events')

@@ -1,40 +1,20 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
+import { eq } from 'drizzle-orm'
+import { getAuthUser } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { communityLikes } from '@/lib/db/schema'
 
-// GET - Get all post IDs that the current user has liked
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     await connection()
-    
-    // Get current user from Supabase Auth
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({
-        likedPostIds: [],
-      })
-    }
 
-    const userId = user.id
+    const authUser = await getAuthUser()
+    if (!authUser) return NextResponse.json({ likedPostIds: [] })
 
-    // Get all likes for this user
-    const likes = await prisma.community_likes.findMany({
-      where: { userId },
-      select: { postId: true },
-    })
-
-    const likedPostIds = likes.map((like: { postId: string }) => like.postId)
-
-    return NextResponse.json({
-      likedPostIds,
-    })
+    const likes = await db.select({ postId: communityLikes.postId }).from(communityLikes).where(eq(communityLikes.userId, authUser.id))
+    return NextResponse.json({ likedPostIds: likes.map((l) => l.postId) })
   } catch (error) {
     console.error('Get liked posts error:', error)
-    return NextResponse.json(
-      { error: 'Failed to get liked posts' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to get liked posts' }, { status: 500 })
   }
 }

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/db'
+import { newsletterSubscribers } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth-helpers'
+import { eq } from 'drizzle-orm'
 
-// UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function PATCH(
@@ -12,7 +13,6 @@ export async function PATCH(
   try {
     await connection()
 
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult
@@ -20,7 +20,6 @@ export async function PATCH(
 
     const { id } = await params
 
-    // Validate UUID format
     if (!UUID_REGEX.test(id)) {
       return NextResponse.json(
         { error: 'Invalid subscriber ID format' },
@@ -31,7 +30,6 @@ export async function PATCH(
     const body = await request.json()
     const { status } = body
 
-    // Validate status
     const validStatuses = ['ACTIVE', 'PENDING', 'UNSUBSCRIBED']
     if (!status || !validStatuses.includes(status)) {
       return NextResponse.json(
@@ -40,10 +38,12 @@ export async function PATCH(
       )
     }
 
-    // Check if subscriber exists
-    const subscriber = await prisma.newsletter_subscribers.findUnique({
-      where: { id },
-    })
+    const subscriber = await db
+      .select({ id: newsletterSubscribers.id, status: newsletterSubscribers.status })
+      .from(newsletterSubscribers)
+      .where(eq(newsletterSubscribers.id, id))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!subscriber) {
       return NextResponse.json(
@@ -52,16 +52,16 @@ export async function PATCH(
       )
     }
 
-    // Update subscriber status
     const updateData: {
       status: 'ACTIVE' | 'PENDING' | 'UNSUBSCRIBED'
       confirmedAt?: Date | null
       unsubscribedAt?: Date | null
+      updatedAt: Date
     } = {
       status,
+      updatedAt: new Date(),
     }
 
-    // Set timestamps based on status change
     if (status === 'ACTIVE' && subscriber.status !== 'ACTIVE') {
       updateData.confirmedAt = new Date()
       updateData.unsubscribedAt = null
@@ -69,17 +69,17 @@ export async function PATCH(
       updateData.unsubscribedAt = new Date()
     }
 
-    const updatedSubscriber = await prisma.newsletter_subscribers.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        email: true,
-        status: true,
-        confirmedAt: true,
-        unsubscribedAt: true,
-      },
-    })
+    const [updatedSubscriber] = await db
+      .update(newsletterSubscribers)
+      .set(updateData)
+      .where(eq(newsletterSubscribers.id, id))
+      .returning({
+        id: newsletterSubscribers.id,
+        email: newsletterSubscribers.email,
+        status: newsletterSubscribers.status,
+        confirmedAt: newsletterSubscribers.confirmedAt,
+        unsubscribedAt: newsletterSubscribers.unsubscribedAt,
+      })
 
     return NextResponse.json({
       success: true,
@@ -101,7 +101,6 @@ export async function DELETE(
   try {
     await connection()
 
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult
@@ -109,7 +108,6 @@ export async function DELETE(
 
     const { id } = await params
 
-    // Validate UUID format
     if (!UUID_REGEX.test(id)) {
       return NextResponse.json(
         { error: 'Invalid subscriber ID format' },
@@ -117,10 +115,12 @@ export async function DELETE(
       )
     }
 
-    // Check if subscriber exists
-    const subscriber = await prisma.newsletter_subscribers.findUnique({
-      where: { id },
-    })
+    const subscriber = await db
+      .select({ id: newsletterSubscribers.id })
+      .from(newsletterSubscribers)
+      .where(eq(newsletterSubscribers.id, id))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!subscriber) {
       return NextResponse.json(
@@ -129,10 +129,7 @@ export async function DELETE(
       )
     }
 
-    // Delete subscriber
-    await prisma.newsletter_subscribers.delete({
-      where: { id },
-    })
+    await db.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, id))
 
     return NextResponse.json({
       success: true,

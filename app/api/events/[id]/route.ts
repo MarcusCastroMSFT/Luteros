@@ -1,181 +1,159 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateTag, revalidatePath } from 'next/cache'
+import { revalidateTag, revalidatePath } from '@/lib/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/db'
+import { events, eventRegistrations, eventSpeakers } from '@/lib/db/schema'
+import { and, asc, eq, sql } from 'drizzle-orm'
 
 interface RouteParams {
-  params: Promise<{
-    id: string
-  }>
+  params: Promise<{ id: string }>
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    // Require authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
     const { id } = await params
 
-    // Parallel queries for better performance
-    const [event, registrationStats] = await Promise.all([
-      // Fetch event with speakers and registration count
-      prisma.events.findUnique({
-        where: { id },
-        include: {
-          event_speakers: {
-            orderBy: { order: 'asc' }
-          },
-          _count: {
-            select: {
-              event_registrations: true
-            }
-          }
-        }
-      }),
-      // Get registration stats with aggregation (much faster than fetching all records)
-      prisma.event_registrations.aggregate({
-        where: { eventId: id },
-        _count: { id: true },
-      })
+    const [eventRow, speakers, [{ totalRegistrations }], [{ attendedCount }]] = await Promise.all([
+      db
+        .select({
+          id: events.id,
+          title: events.title,
+          slug: events.slug,
+          description: events.description,
+          fullDescription: events.fullDescription,
+          location: events.location,
+          eventDate: events.eventDate,
+          eventTime: events.eventTime,
+          duration: events.duration,
+          image: events.image,
+          totalSlots: events.totalSlots,
+          cost: events.cost,
+          isFree: events.isFree,
+          isPublished: events.isPublished,
+          isCancelled: events.isCancelled,
+          createdAt: events.createdAt,
+          updatedAt: events.updatedAt,
+        })
+        .from(events)
+        .where(eq(events.id, id))
+        .limit(1)
+        .then((r) => r[0] ?? null),
+      db
+        .select({
+          id: eventSpeakers.id,
+          name: eventSpeakers.name,
+          title: eventSpeakers.title,
+          bio: eventSpeakers.bio,
+          image: eventSpeakers.image,
+          linkedin: eventSpeakers.linkedin,
+          twitter: eventSpeakers.twitter,
+          website: eventSpeakers.website,
+        })
+        .from(eventSpeakers)
+        .where(eq(eventSpeakers.eventId, id))
+        .orderBy(asc(eventSpeakers.order)),
+      db
+        .select({ totalRegistrations: sql<number>`count(*)::int` })
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.eventId, id)),
+      db
+        .select({ attendedCount: sql<number>`count(*)::int` })
+        .from(eventRegistrations)
+        .where(and(eq(eventRegistrations.eventId, id), eq(eventRegistrations.attended, true))),
     ])
 
-    if (!event) {
-      return NextResponse.json(
-        { success: false, error: 'Evento não encontrado' },
-        { status: 404 }
-      )
+    if (!eventRow) {
+      return NextResponse.json({ success: false, error: 'Evento não encontrado' }, { status: 404 })
     }
 
-    // Get attended count separately (only if needed for stats)
-    const attendedCount = await prisma.event_registrations.count({
-      where: { 
-        eventId: id,
-        attended: true 
-      }
-    })
-
-    // Calculate registration stats
-    const totalRegistrations = registrationStats._count.id
-    const attendanceRate = totalRegistrations > 0 
-      ? ((attendedCount / totalRegistrations) * 100).toFixed(1) 
+    const attendanceRate = totalRegistrations > 0
+      ? ((attendedCount / totalRegistrations) * 100).toFixed(1)
       : '0'
-
-    // Format event data
-    const formattedEvent = {
-      id: event.id,
-      title: event.title,
-      slug: event.slug,
-      description: event.description,
-      fullDescription: event.fullDescription,
-      location: event.location,
-      eventDate: event.eventDate.toISOString(),
-      eventTime: event.eventTime,
-      duration: event.duration,
-      image: event.image,
-      totalSlots: event.totalSlots,
-      bookedSlots: event._count.event_registrations,
-      availableSlots: event.totalSlots - event._count.event_registrations,
-      cost: event.cost?.toString(),
-      isFree: event.isFree,
-      isPublished: event.isPublished,
-      isCancelled: event.isCancelled,
-      createdAt: event.createdAt.toISOString(),
-      updatedAt: event.updatedAt.toISOString(),
-      speakers: event.event_speakers.map((speaker: { id: string; name: string; title: string | null; bio: string | null; image: string | null; linkedin: string | null; twitter: string | null; website: string | null }) => ({
-        id: speaker.id,
-        name: speaker.name,
-        title: speaker.title,
-        bio: speaker.bio,
-        image: speaker.image,
-        linkedin: speaker.linkedin,
-        twitter: speaker.twitter,
-        website: speaker.website,
-      })),
-      stats: {
-        totalRegistrations,
-        attendedCount,
-        attendanceRate,
-        occupancyRate: ((event._count.registrations / event.totalSlots) * 100).toFixed(1),
-      }
-    }
 
     return NextResponse.json({
       success: true,
-      data: formattedEvent
+      data: {
+        id: eventRow.id,
+        title: eventRow.title,
+        slug: eventRow.slug,
+        description: eventRow.description,
+        fullDescription: eventRow.fullDescription,
+        location: eventRow.location,
+        eventDate: eventRow.eventDate.toISOString(),
+        eventTime: eventRow.eventTime,
+        duration: eventRow.duration,
+        image: eventRow.image,
+        totalSlots: eventRow.totalSlots,
+        bookedSlots: totalRegistrations,
+        availableSlots: eventRow.totalSlots - totalRegistrations,
+        cost: eventRow.cost?.toString(),
+        isFree: eventRow.isFree,
+        isPublished: eventRow.isPublished,
+        isCancelled: eventRow.isCancelled,
+        createdAt: eventRow.createdAt.toISOString(),
+        updatedAt: eventRow.updatedAt.toISOString(),
+        speakers,
+        stats: {
+          totalRegistrations,
+          attendedCount,
+          attendanceRate,
+          occupancyRate: eventRow.totalSlots > 0
+            ? ((totalRegistrations / eventRow.totalSlots) * 100).toFixed(1)
+            : '0',
+        },
+      },
     })
-
   } catch (error) {
     console.error('Error fetching event:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro ao buscar evento' 
-      },
+      { success: false, error: error instanceof Error ? error.message : 'Erro ao buscar evento' },
       { status: 500 }
     )
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    // Require authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
     const { id } = await params
     const body = await request.json()
 
-    // Validate required fields
     if (!body.title || !body.location || !body.eventDate || !body.eventTime || !body.totalSlots) {
-      return NextResponse.json(
-        { success: false, error: 'Campos obrigatórios faltando' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'Campos obrigatórios faltando' }, { status: 400 })
     }
 
-    // Check if event exists
-    const existingEvent = await prisma.events.findUnique({
-      where: { id }
-    })
+    const existingEvent = await db
+      .select({ id: events.id, slug: events.slug })
+      .from(events)
+      .where(eq(events.id, id))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!existingEvent) {
-      return NextResponse.json(
-        { success: false, error: 'Evento não encontrado' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Evento não encontrado' }, { status: 404 })
     }
 
-    // Check if slug is being changed and if it's already taken
     if (body.slug && body.slug !== existingEvent.slug) {
-      const slugExists = await prisma.events.findUnique({
-        where: { slug: body.slug }
-      })
-
+      const slugExists = await db
+        .select({ id: events.id })
+        .from(events)
+        .where(eq(events.slug, body.slug))
+        .limit(1)
+        .then((r) => r[0] ?? null)
       if (slugExists) {
-        return NextResponse.json(
-          { success: false, error: 'Este slug já está em uso' },
-          { status: 400 }
-        )
+        return NextResponse.json({ success: false, error: 'Este slug já está em uso' }, { status: 400 })
       }
     }
 
-    // Update event and speakers in a transaction
-    const updatedEvent = await prisma.$transaction(async (tx: Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
-      // Update event
-      const event = await tx.event.update({
-        where: { id },
-        data: {
+    const [updatedEvent] = await db.transaction(async (tx) => {
+      const [ev] = await tx
+        .update(events)
+        .set({
           title: body.title,
           slug: body.slug || existingEvent.slug,
           description: body.description,
@@ -190,44 +168,39 @@ export async function PUT(
           isFree: body.isFree,
           isPublished: body.isPublished,
           isCancelled: body.isCancelled,
-        }
-      })
-
-      // Update speakers if provided
-      if (body.speakers !== undefined) {
-        // Delete existing speakers
-        await tx.eventSpeaker.deleteMany({
-          where: { eventId: id }
+          updatedAt: new Date(),
         })
+        .where(eq(events.id, id))
+        .returning()
 
-        // Create new speakers
+      if (body.speakers !== undefined) {
+        await tx.delete(eventSpeakers).where(eq(eventSpeakers.eventId, id))
         if (body.speakers && body.speakers.length > 0) {
-          await tx.eventSpeaker.createMany({
-            data: body.speakers.map((speaker: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; website?: string; order: number }, index: number) => ({
+          await tx.insert(eventSpeakers).values(
+            body.speakers.map((s: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; website?: string; order?: number }, i: number) => ({
               eventId: id,
-              name: speaker.name,
-              title: speaker.title || null,
-              bio: speaker.bio || null,
-              image: speaker.image || null,
-              linkedin: speaker.linkedin || null,
-              twitter: speaker.twitter || null,
-              website: speaker.website || null,
-              order: speaker.order || index + 1,
+              name: s.name,
+              title: s.title || null,
+              bio: s.bio || null,
+              image: s.image || null,
+              linkedin: s.linkedin || null,
+              twitter: s.twitter || null,
+              website: s.website || null,
+              order: s.order ?? i + 1,
             }))
-          })
+          )
         }
       }
 
-      return event
+      return [ev]
     })
 
-    // Revalidate all event-related cache tags
-    revalidateTag('events', {})
-    revalidateTag('events-initial', {})
-    revalidateTag('upcoming-events-count', {})
-    revalidateTag(`event-${existingEvent.slug}`, {})
+    revalidateTag('events')
+    revalidateTag('events-initial')
+    revalidateTag('upcoming-events-count')
+    revalidateTag(`event-${existingEvent.slug}`)
     if (body.slug && body.slug !== existingEvent.slug) {
-      revalidateTag(`event-${body.slug}`, {})
+      revalidateTag(`event-${body.slug}`)
       revalidatePath(`/events/${body.slug}`)
     }
     revalidatePath('/events')
@@ -236,90 +209,54 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      data: {
-        id: updatedEvent.id,
-        title: updatedEvent.title,
-        slug: updatedEvent.slug,
-      }
+      data: { id: updatedEvent.id, title: updatedEvent.title, slug: updatedEvent.slug },
     })
-
   } catch (error) {
     console.error('Error updating event:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro ao atualizar evento' 
-      },
+      { success: false, error: error instanceof Error ? error.message : 'Erro ao atualizar evento' },
       { status: 500 }
     )
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    // Require authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
     const { id } = await params
 
-    // Check if event exists
-    const existingEvent = await prisma.events.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-      }
-    })
+    const existingEvent = await db
+      .select({ id: events.id, slug: events.slug })
+      .from(events)
+      .where(eq(events.id, id))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (!existingEvent) {
-      return NextResponse.json(
-        { success: false, error: 'Evento não encontrado' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Evento não encontrado' }, { status: 404 })
     }
 
-    // Get slug before deleting for cache invalidation
-    const eventToDelete = await prisma.events.findUnique({
-      where: { id },
-      select: { slug: true }
-    })
+    await db.delete(events).where(eq(events.id, id))
 
-    // Delete event (cascade will delete related registrations and speakers)
-    await prisma.events.delete({
-      where: { id }
-    })
-
-    // Revalidate all event-related cache tags
-    revalidateTag('events', {})
-    revalidateTag('events-initial', {})
-    revalidateTag('event-slugs', {})
-    revalidateTag('upcoming-events-count', {})
-    if (eventToDelete?.slug) {
-      revalidateTag(`event-${eventToDelete.slug}`, {})
-      revalidatePath(`/events/${eventToDelete.slug}`)
-    }
+    revalidateTag('events')
+    revalidateTag('events-initial')
+    revalidateTag('event-slugs')
+    revalidateTag('upcoming-events-count')
+    revalidateTag(`event-${existingEvent.slug}`)
+    revalidatePath(`/events/${existingEvent.slug}`)
     revalidatePath('/events')
     revalidatePath('/admin/events')
 
-    return NextResponse.json({
-      success: true,
-      message: 'Evento excluído com sucesso'
-    })
-
+    return NextResponse.json({ success: true, message: 'Evento excluído com sucesso' })
   } catch (error) {
     console.error('Error deleting event:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro ao excluir evento' 
-      },
+      { success: false, error: error instanceof Error ? error.message : 'Erro ao excluir evento' },
       { status: 500 }
     )
   }
 }
+
+

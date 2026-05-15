@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  IconBook,
   IconBookmark,
   IconCalendarEvent,
   IconLogout,
@@ -34,7 +33,7 @@ export function HeaderUserMenu() {
   }
 
   // Get display name with fallbacks
-  const displayName = userProfile?.displayName || userProfile?.fullName || user?.email?.split('@')[0] || 'User'
+  const displayName = userProfile?.displayName || userProfile?.name || user?.email?.split('@')[0] || 'User'
   const userEmail = user?.email || 'user@example.com'
   
   // Check if user is admin
@@ -49,7 +48,7 @@ export function HeaderUserMenu() {
         >
           <UserAvatar 
             name={displayName} 
-            avatar={userProfile?.avatar} 
+            avatar={userProfile?.image} 
             className="h-9 w-9"
           />
         </Button>
@@ -89,19 +88,13 @@ export function HeaderUserMenu() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer">
-            <Link href="/courses/my-courses">
-              <IconBook className="mr-2 h-4 w-4" />
-              <span>Meus Cursos</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer">
             <Link href="/events/my-events">
               <IconCalendarEvent className="mr-2 h-4 w-4" />
               <span>Meus Eventos</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer">
-            <Link href="/blog/saved">
+            <Link href="/articles/saved">
               <IconBookmark className="mr-2 h-4 w-4" />
               <span>Artigos Salvos</span>
             </Link>

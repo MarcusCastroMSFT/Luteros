@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
 import { getPostById, updatePost, deletePost } from '@/lib/community'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/auth-helpers'
 
 export async function GET(
   request: NextRequest,
@@ -47,21 +47,12 @@ export async function PATCH(
     const { postId } = await params
     
     if (!postId) {
-      return NextResponse.json(
-        { error: 'Post ID is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }
 
-    // Auth check
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
+    const user = await getAuthUser()
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -94,21 +85,12 @@ export async function DELETE(
     const { postId } = await params
     
     if (!postId) {
-      return NextResponse.json(
-        { error: 'Post ID is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }
 
-    // Auth check
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
+    const user = await getAuthUser()
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const deleted = await deletePost(postId, user.id)

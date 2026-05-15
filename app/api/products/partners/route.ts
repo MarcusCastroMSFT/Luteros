@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { asc, eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { productPartners } from '@/lib/db/schema';
 import { requireAdmin } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
@@ -10,18 +12,10 @@ export async function GET(request: NextRequest) {
       return authResult;
     }
 
-    const partners = await prisma.product_partners.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        logo: true,
-        website: true,
-        description: true,
-      },
-      orderBy: { name: 'asc' },
-    });
+    const partners = await db.select({
+      id: productPartners.id, name: productPartners.name, slug: productPartners.slug,
+      logo: productPartners.logo, website: productPartners.website, description: productPartners.description,
+    }).from(productPartners).where(eq(productPartners.isActive, true)).orderBy(asc(productPartners.name));
 
     return NextResponse.json({
       success: true,
@@ -55,9 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingPartner = await prisma.product_partners.findUnique({
-      where: { slug },
-    });
+    const existingPartner = await db.select({ id: productPartners.id }).from(productPartners).where(eq(productPartners.slug, slug)).limit(1).then((r) => r[0] ?? null);
 
     if (existingPartner) {
       return NextResponse.json(
@@ -66,8 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const partner = await prisma.product_partners.create({
-      data: {
+    const [partner] = await db.insert(productPartners).values({
         name,
         slug,
         logo,
@@ -75,8 +66,7 @@ export async function POST(request: NextRequest) {
         description,
         email,
         phone,
-      },
-    });
+      }).returning();
 
     return NextResponse.json({
       success: true,

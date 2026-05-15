@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
+import { eq } from 'drizzle-orm'
+import { requireAuth } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { systemEmailTemplates, users } from '@/lib/db/schema'
 import { sendEmail } from '@/lib/email'
 import { renderEmailTemplate } from '@/data/system-email-templates'
 
@@ -23,65 +25,23 @@ export async function POST(
 ) {
   try {
     const { id } = await params
+    if (!isValidUUID(id)) return NextResponse.json({ success: false, error: 'Invalid template ID' }, { status: 400 })
 
-    // Validate ID format to prevent injection
-    if (!isValidUUID(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid template ID' },
-        { status: 400 }
-      )
-    }
-    
-    // Get current user
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) return authUser
 
-    if (!user || !user.email) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized or no email available' },
-        { status: 401 }
-      )
-    }
+    const currentUser = await db.select({ email: users.email, name: users.name, displayName: users.displayName }).from(users).where(eq(users.id, authUser.id)).limit(1).then((r) => r[0] ?? null)
+    if (!currentUser?.email) return NextResponse.json({ success: false, error: 'Unauthorized or no email available' }, { status: 401 })
 
     const body = await request.json()
     const { email: targetEmail } = body
+    const recipientEmail = (targetEmail || currentUser.email).trim().toLowerCase()
+    if (!isValidEmail(recipientEmail)) return NextResponse.json({ success: false, error: 'Invalid email address' }, { status: 400 })
 
-    // Validate and sanitize email
-    const recipientEmail = (targetEmail || user.email).trim().toLowerCase()
-    
-    if (!isValidEmail(recipientEmail)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid email address' },
-        { status: 400 }
-      )
-    }
+    const template = await db.select({ id: systemEmailTemplates.id, code: systemEmailTemplates.code, subject: systemEmailTemplates.subject, htmlContent: systemEmailTemplates.htmlContent, textContent: systemEmailTemplates.textContent }).from(systemEmailTemplates).where(eq(systemEmailTemplates.id, id)).limit(1).then((r) => r[0] ?? null)
+    if (!template) return NextResponse.json({ success: false, error: 'Template not found' }, { status: 404 })
 
-    // Find the template
-    const template = await prisma.system_email_templates.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        code: true,
-        subject: true,
-        htmlContent: true,
-        textContent: true,
-      },
-    })
-
-    if (!template) {
-      return NextResponse.json(
-        { success: false, error: 'Template not found' },
-        { status: 404 }
-      )
-    }
-
-    // Get user profile for sample data
-    const userProfile = await prisma.user_profiles.findUnique({
-      where: { id: user.id },
-      select: { fullName: true, displayName: true },
-    })
-
-    const userName = userProfile?.displayName || userProfile?.fullName || 'Usuário'
+    const userName = currentUser.displayName || currentUser.name || 'Usuário'
 
     // Sample variables for test email
     const sampleVariables: Record<string, string> = {

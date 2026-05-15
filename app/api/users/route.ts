@@ -1,179 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { ilike, or, asc, desc, count } from 'drizzle-orm'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/db'
+import { users } from '@/lib/db/schema'
+
+const roleLabelMap: Record<string, string> = {
+  ADMIN: 'Administrador',
+  INSTRUCTOR: 'Instrutor',
+  USER: 'Usuário',
+  PROFESSIONAL: 'Profissional',
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  
-  // Extract pagination parameters
   const page = parseInt(searchParams.get('page') || '0')
   const pageSize = parseInt(searchParams.get('pageSize') || '10')
   const search = searchParams.get('search') || ''
-  
-  // Extract sorting parameters
-  const sortBy = searchParams.get('sortBy') || 'createdAt'
   const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc'
-  
-  // Extract column filters
-  const filters: Record<string, string> = {}
-  for (const [key, value] of searchParams.entries()) {
-    if (key.startsWith('filter_')) {
-      const filterKey = key.replace('filter_', '')
-      filters[filterKey] = value
-    }
-  }
-  
+
   try {
-    // Verify authentication and authorization (admin or instructor only)
     const authResult = await requireAdmin(request)
-    if (authResult instanceof NextResponse) {
-      return authResult // Return 401/403 response
-    }
+    if (authResult instanceof NextResponse) return authResult
 
-    // Build where condition for Prisma query
-    const whereCondition: Record<string, unknown> = {}
-    
-    // Apply search filter
-    if (search) {
-      whereCondition.OR = [
-        { fullName: { contains: search, mode: 'insensitive' } },
-        { displayName: { contains: search, mode: 'insensitive' } },
-      ]
-    }
-    
-    // Build orderBy condition
-    const orderByField = sortBy === 'name' ? 'fullName' : sortBy
-    const orderBy: Record<string, unknown> = { [orderByField]: sortOrder }
-    
-    // Execute database queries in parallel for performance
-    const [users, totalCount] = await Promise.all([
-      prisma.user_profiles.findMany({
-        where: whereCondition,
-        orderBy,
-        skip: page * pageSize,
-        take: pageSize,
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          avatar: true,
-          title: true,
-          company: true,
-          createdAt: true,
-          updatedAt: true,
-          lastLoginAt: true,
-        }
-      }),
-      prisma.user_profiles.count({ where: whereCondition })
+    const whereClause = search
+      ? or(
+          ilike(users.name, `%${search}%`),
+          ilike(users.displayName, `%${search}%`)
+        )
+      : undefined
+
+    const orderBy = sortOrder === 'asc' ? asc(users.createdAt) : desc(users.createdAt)
+
+    const [rows, [{ value: totalCount }]] = await Promise.all([
+      db
+        .select({
+          id: users.id,
+          name: users.name,
+          displayName: users.displayName,
+          image: users.image,
+          email: users.email,
+          title: users.title,
+          company: users.company,
+          role: users.role,
+          lastLoginAt: users.lastLoginAt,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(whereClause)
+        .orderBy(orderBy)
+        .offset(page * pageSize)
+        .limit(pageSize),
+      db.select({ value: count() }).from(users).where(whereClause),
     ])
-    
-    const pageCount = Math.ceil(totalCount / pageSize)
-    
-    // Fetch emails from Supabase Auth using Admin API
-    // Regular client cannot access auth.users table - must use admin API
-    const supabaseAdmin = createAdminClient()
-    const userIds = users.map((u: { id: string }) => u.id)
-    
-    // Helper to detect seed/test UUIDs (e.g., 00000000-0000-0000-0000-000000000001)
-    const isSeedUserId = (id: string) => /^0{8}-0{4}-0{4}-0{4}-0{11}[0-9a-f]$/.test(id)
 
-    // Use Promise.all to fetch all user emails in parallel
-    const emailPromises = userIds.map(async (userId: string) => {
-      // Skip Supabase Auth lookup for seed/test users
-      if (isSeedUserId(userId)) {
-        return [userId, 'seed@example.com']
-      }
-      
-      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
-      if (error) {
-        // Only log as warning for unexpected errors, not for seed data
-        if (error.code !== 'user_not_found') {
-          console.warn(`Warning fetching user ${userId}:`, error.message)
-        }
-        return [userId, null]
-      }
-      return [userId, data.user?.email]
-    })
-    
-    const emailResults = await Promise.all(emailPromises)
-    
-    // Create a map for quick lookup
-    const emailMap = new Map(emailResults as [string, string | null][])
-    
-    // Fetch roles for all users
-    const roleAssignments = await prisma.user_roles.findMany({
-      where: {
-        userId: {
-          in: userIds
-        }
-      },
-      select: {
-        userId: true,
-        role: true
-      }
-    })
-    
-    // Create a map for quick role lookup
-    const roleMap = new Map(roleAssignments.map((r: { userId: string; role: string }) => [r.userId, r.role]))
-    
-    // Role label mapping
-    const roleLabelMap: Record<string, string> = {
-      'ADMIN': 'Administrador',
-      'INSTRUCTOR': 'Instrutor',
-      'USER': 'Usuário',
-      'PROFESSIONAL': 'Profissional'
-    }
-    
-    // Define type for user from Prisma query
-    type UserWithProfile = {
-      id: string
-      displayName: string | null
-      fullName: string | null
-      avatar: string | null
-      lastLoginAt: Date | null
-    }
+    const pageCount = Math.ceil(Number(totalCount) / pageSize)
 
-    // Map database results to frontend format
-    const formattedUsers = users.map((user: UserWithProfile) => {
-      const userRole = (roleMap.get(user.id) || 'USER') as string
-      return {
-        id: user.id,
-        name: user.displayName || user.fullName || 'No Name',
-        username: user.displayName || user.fullName?.split(' ')[0] || 'user',
-        email: emailMap.get(user.id) || 'N/A',
-        profileImg: user.avatar || null,
-        status: user.lastLoginAt ? 'Ativo' : 'Inativo',
-        role: roleLabelMap[userRole] || 'Usuário',
-      }
-    })
-    
+    const formattedUsers = rows.map((u) => ({
+      id: u.id,
+      name: u.displayName || u.name || 'No Name',
+      username: u.displayName || u.name?.split(' ')[0] || 'user',
+      email: u.email || 'N/A',
+      profileImg: u.image || null,
+      status: u.lastLoginAt ? 'Ativo' : 'Inativo',
+      role: roleLabelMap[u.role] || 'Usuário',
+    }))
+
     return NextResponse.json({
       data: formattedUsers,
-      totalCount,
+      totalCount: Number(totalCount),
       pageCount,
       currentPage: page,
       pageSize,
     })
-    
   } catch (error) {
     console.error('Error fetching users:', error)
-    
-    // Log detailed error for debugging
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      })
-    }
-    
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch users',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
 }
+

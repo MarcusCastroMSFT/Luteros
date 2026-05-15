@@ -1,39 +1,30 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
-import { revalidateTag } from 'next/cache'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
-import { Prisma } from '@prisma/client'
+import { revalidateTag } from '@/lib/cache'
+import { and, eq, sql } from 'drizzle-orm'
+import { getAuthUser, requireAuth } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { communityLikes, communityPosts } from '@/lib/db/schema'
 
 // Rate limiting for likes (prevent spam clicking)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
-const RATE_LIMIT_MAX_LIKES = 30 // max 30 like actions per minute
+const RATE_LIMIT_WINDOW = 60 * 1000
+const RATE_LIMIT_MAX_LIKES = 30
 
 function checkRateLimit(userId: string): boolean {
   const now = Date.now()
   const userLimit = rateLimitStore.get(userId)
-  
   if (!userLimit || now > userLimit.resetTime) {
     rateLimitStore.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
     return true
   }
-  
-  if (userLimit.count >= RATE_LIMIT_MAX_LIKES) {
-    return false
-  }
-  
+  if (userLimit.count >= RATE_LIMIT_MAX_LIKES) return false
   userLimit.count++
   return true
 }
 
-// Validate UUID format (UUIDv7 or standard UUID)
 function isValidUUID(id: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(id)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 }
-
-// Define transaction client type
-type TransactionClient = Prisma.TransactionClient
 
 export async function POST(
   request: NextRequest,
@@ -41,188 +32,70 @@ export async function POST(
 ) {
   try {
     await connection()
-    
     const { postId } = await params
-
-    // Validate postId format
     if (!postId || !isValidUUID(postId)) {
-      return NextResponse.json(
-        { error: 'Invalid post ID format' },
-        { status: 400 }
-      )
-    }
-    
-    // Get current user from Supabase Auth
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Please log in to like posts' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid post ID format' }, { status: 400 })
     }
 
-    const userId = user.id
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) return authUser
+    const userId = authUser.id
 
-    // Check rate limit
     if (!checkRateLimit(userId)) {
-      return NextResponse.json(
-        { error: 'Muitas ações. Aguarde um momento.' },
-        { status: 429 }
-      )
+      return NextResponse.json({ error: 'Muitas ações. Aguarde um momento.' }, { status: 429 })
     }
 
-    // Check if post exists
-    const post = await prisma.community_posts.findUnique({
-      where: { id: postId },
-    })
+    const post = await db.select({ id: communityPosts.id, likeCount: communityPosts.likeCount }).from(communityPosts).where(eq(communityPosts.id, postId)).limit(1).then((r) => r[0] ?? null)
+    if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
 
-    if (!post) {
-      return NextResponse.json(
-        { error: 'Post not found' },
-        { status: 404 }
-      )
-    }
-
-    // Check if user already liked this post
-    const existingLike = await prisma.community_likes.findUnique({
-      where: {
-        postId_userId: {
-          postId,
-          userId,
-        },
-      },
-    })
+    const existingLike = await db
+      .select()
+      .from(communityLikes)
+      .where(and(eq(communityLikes.postId, postId), eq(communityLikes.userId, userId)))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
     if (existingLike) {
-      // Unlike - remove the like (use transaction for atomicity)
-      const updatedPost = await prisma.$transaction(async (tx: TransactionClient) => {
-        await tx.community_likes.delete({
-          where: {
-            postId_userId: {
-              postId,
-              userId,
-            },
-          },
-        })
-
-        return tx.community_posts.update({
-          where: { id: postId },
-          data: {
-            likeCount: {
-              decrement: 1,
-            },
-          },
-          select: {
-            likeCount: true,
-          },
-        })
-      })
-
-      revalidateTag('community', {})
-
-      return NextResponse.json({
-        liked: false,
-        likeCount: Math.max(0, updatedPost.likeCount), // Ensure non-negative
-        message: 'Post unliked',
-      })
+      await db.delete(communityLikes).where(and(eq(communityLikes.postId, postId), eq(communityLikes.userId, userId)))
+      const [updated] = await db.update(communityPosts).set({ likeCount: sql`GREATEST(${communityPosts.likeCount} - 1, 0)` }).where(eq(communityPosts.id, postId)).returning({ likeCount: communityPosts.likeCount })
+      revalidateTag('community')
+      return NextResponse.json({ liked: false, likeCount: updated.likeCount, message: 'Post unliked' })
     } else {
-      // Like - add the like (use transaction for atomicity)
-      const updatedPost = await prisma.$transaction(async (tx: TransactionClient) => {
-        await tx.community_likes.create({
-          data: {
-            postId,
-            userId,
-          },
-        })
-
-        return tx.community_posts.update({
-          where: { id: postId },
-          data: {
-            likeCount: {
-              increment: 1,
-            },
-          },
-          select: {
-            likeCount: true,
-          },
-        })
-      })
-
-      revalidateTag('community', {})
-
-      return NextResponse.json({
-        liked: true,
-        likeCount: updatedPost.likeCount,
-        message: 'Post liked',
-      })
+      await db.insert(communityLikes).values({ postId, userId })
+      const [updated] = await db.update(communityPosts).set({ likeCount: sql`${communityPosts.likeCount} + 1` }).where(eq(communityPosts.id, postId)).returning({ likeCount: communityPosts.likeCount })
+      revalidateTag('community')
+      return NextResponse.json({ liked: true, likeCount: updated.likeCount, message: 'Post liked' })
     }
   } catch (error) {
     console.error('Like API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to process like' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to process like' }, { status: 500 })
   }
 }
 
-// GET - Check if user has liked a post
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
     await connection()
-    
     const { postId } = await params
-
-    // Validate postId format
     if (!postId || !isValidUUID(postId)) {
-      return NextResponse.json(
-        { error: 'Invalid post ID format' },
-        { status: 400 }
-      )
-    }
-    
-    // Get current user from Supabase Auth
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({
-        liked: false,
-        likeCount: 0,
-      })
+      return NextResponse.json({ error: 'Invalid post ID format' }, { status: 400 })
     }
 
-    const userId = user.id
+    const authUser = await getAuthUser()
+    if (!authUser) {
+      return NextResponse.json({ liked: false, likeCount: 0 })
+    }
 
-    // Get post like count and check if user liked it
     const [post, existingLike] = await Promise.all([
-      prisma.community_posts.findUnique({
-        where: { id: postId },
-        select: { likeCount: true },
-      }),
-      prisma.community_likes.findUnique({
-        where: {
-          postId_userId: {
-            postId,
-            userId,
-          },
-        },
-      }),
+      db.select({ likeCount: communityPosts.likeCount }).from(communityPosts).where(eq(communityPosts.id, postId)).limit(1).then((r) => r[0] ?? null),
+      db.select().from(communityLikes).where(and(eq(communityLikes.postId, postId), eq(communityLikes.userId, authUser.id))).limit(1).then((r) => r[0] ?? null),
     ])
 
-    return NextResponse.json({
-      liked: !!existingLike,
-      likeCount: post?.likeCount ?? 0,
-    })
+    return NextResponse.json({ liked: !!existingLike, likeCount: post?.likeCount ?? 0 })
   } catch (error) {
     console.error('Get like status error:', error)
-    return NextResponse.json(
-      { error: 'Failed to get like status' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to get like status' }, { status: 500 })
   }
 }

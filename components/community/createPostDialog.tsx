@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, User, UserX } from 'lucide-react';
+import { User, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {

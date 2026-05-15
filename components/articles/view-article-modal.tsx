@@ -88,7 +88,7 @@ export function ViewArticleModal({
 
   const handleViewLive = () => {
     if (article) {
-      window.open(`/blog/${article.slug}`, '_blank');
+      window.open(`/articles/${article.slug}`, '_blank');
     }
   };
 

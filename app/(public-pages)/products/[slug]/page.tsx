@@ -1,19 +1,13 @@
 ﻿import React from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getProductBySlug, getProductMetadata, getRelatedProducts, getAllProductSlugs } from '@/lib/products'
+import { getProductBySlug, getProductMetadata, getRelatedProducts } from '@/lib/products'
 import { ProductDetailClient } from './product-detail-client'
 
 interface ProductPageProps {
   params: Promise<{
     slug: string
   }>
-}
-
-// Generate static params for all products (SSG)
-// New products are accessible immediately via cache revalidation on creation
-export async function generateStaticParams() {
-  return getAllProductSlugs()
 }
 
 // Generate metadata for SEO

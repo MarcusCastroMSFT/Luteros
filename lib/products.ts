@@ -1,250 +1,103 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import prisma from '@/lib/prisma'
+import { and, desc, eq, ne } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { products, productPartners } from '@/lib/db/schema'
 import { Product } from '@/types/product'
+
+type ProductRow = {
+  id: string; slug: string; title: string; description: string; shortDescription: string;
+  image: string | null; discountPercentage: number; discountType: string;
+  originalPrice: string | null; discountedPrice: string | null; discountAmount: string | null;
+  promoCode: string; category: string; tags: string[]; availability: string;
+  validUntil: Date | null; termsAndConditions: string | null; howToUse: string[];
+  features: string[]; isActive: boolean; isFeatured: boolean; usageCount: number;
+  maxUsages: number | null; createdAt: Date;
+  partnerId: string; partnerName: string; partnerSlug: string; partnerLogo: string | null; partnerWebsite: string | null;
+}
+
+function transformProduct(p: ProductRow): Product {
+  return {
+    id: p.id, slug: p.slug, title: p.title, description: p.description,
+    shortDescription: p.shortDescription, image: p.image || '',
+    partner: { id: p.partnerId, name: p.partnerName, logo: p.partnerLogo || '', website: p.partnerWebsite || '' },
+    discount: {
+      percentage: p.discountPercentage,
+      amount: p.discountAmount ? Number(p.discountAmount) : undefined,
+      type: p.discountType as 'percentage' | 'fixed',
+      originalPrice: p.originalPrice ? Number(p.originalPrice) : undefined,
+      discountedPrice: p.discountedPrice ? Number(p.discountedPrice) : undefined,
+    },
+    promoCode: p.promoCode, category: p.category, tags: p.tags,
+    availability: p.availability as 'all' | 'members',
+    validUntil: p.validUntil?.toISOString().split('T')[0] || '',
+    termsAndConditions: p.termsAndConditions || '',
+    howToUse: p.howToUse, features: p.features,
+    isActive: p.isActive, isFeatured: p.isFeatured,
+    createdDate: p.createdAt.toISOString().split('T')[0],
+    usageCount: p.usageCount, maxUsages: p.maxUsages || undefined,
+  }
+}
+
+const productCols = {
+  id: products.id, slug: products.slug, title: products.title, description: products.description,
+  shortDescription: products.shortDescription, image: products.image,
+  discountPercentage: products.discountPercentage, discountType: products.discountType,
+  originalPrice: products.originalPrice, discountedPrice: products.discountedPrice,
+  discountAmount: products.discountAmount, promoCode: products.promoCode,
+  category: products.category, tags: products.tags, availability: products.availability,
+  validUntil: products.validUntil, termsAndConditions: products.termsAndConditions,
+  howToUse: products.howToUse, features: products.features, isActive: products.isActive,
+  isFeatured: products.isFeatured, usageCount: products.usageCount, maxUsages: products.maxUsages,
+  createdAt: products.createdAt,
+  partnerId: productPartners.id, partnerName: productPartners.name, partnerSlug: productPartners.slug,
+  partnerLogo: productPartners.logo, partnerWebsite: productPartners.website,
+}
 
 // Fetch product by slug directly from database
 async function fetchProductBySlug(slug: string) {
-  const product = await prisma.products.findUnique({
-    where: {
-      slug,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      shortDescription: true,
-      image: true,
-      discountPercentage: true,
-      discountType: true,
-      originalPrice: true,
-      discountedPrice: true,
-      discountAmount: true,
-      promoCode: true,
-      category: true,
-      tags: true,
-      availability: true,
-      validUntil: true,
-      termsAndConditions: true,
-      howToUse: true,
-      features: true,
-      isActive: true,
-      isFeatured: true,
-      usageCount: true,
-      maxUsages: true,
-      createdAt: true,
-      product_partners: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          logo: true,
-          website: true,
-        },
-      },
-    },
-  })
-
+  const product = await db.select(productCols).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(and(eq(products.slug, slug), eq(products.isActive, true))).limit(1).then((r) => r[0] ?? null)
   if (!product) return null
-
   return transformProduct(product)
 }
 
 // Fetch related products
 async function fetchRelatedProducts(productId: string, category: string) {
-  const products = await prisma.products.findMany({
-    where: {
-      isActive: true,
-      category,
-      id: { not: productId },
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      description: true,
-      shortDescription: true,
-      image: true,
-      discountPercentage: true,
-      discountType: true,
-      originalPrice: true,
-      discountedPrice: true,
-      discountAmount: true,
-      promoCode: true,
-      category: true,
-      tags: true,
-      availability: true,
-      validUntil: true,
-      termsAndConditions: true,
-      howToUse: true,
-      features: true,
-      isActive: true,
-      isFeatured: true,
-      usageCount: true,
-      maxUsages: true,
-      createdAt: true,
-      product_partners: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          logo: true,
-          website: true,
-        },
-      },
-    },
-    orderBy: [
-      { isFeatured: 'desc' },
-      { usageCount: 'desc' },
-    ],
-    take: 4,
-  })
-
-  return products.map(transformProduct)
+  const rows = await db.select(productCols).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(and(eq(products.isActive, true), eq(products.category, category), ne(products.id, productId))).orderBy(desc(products.isFeatured), desc(products.usageCount)).limit(4)
+  return rows.map(transformProduct)
 }
 
 // Fetch metadata only (lightweight query for generateMetadata)
 async function fetchProductMetadata(slug: string) {
-  const product = await prisma.products.findUnique({
-    where: {
-      slug,
-      isActive: true,
-    },
-    select: {
-      title: true,
-      shortDescription: true,
-      description: true,
-      image: true,
-      category: true,
-      product_partners: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  })
-
-  if (!product) return null
-
-  return {
-    title: product.title,
-    description: product.shortDescription || product.description,
-    image: product.image,
-    category: product.category,
-    partnerName: product.product_partners.name,
-  }
+  const row = await db.select({ title: products.title, shortDescription: products.shortDescription, description: products.description, image: products.image, category: products.category, partnerName: productPartners.name }).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(and(eq(products.slug, slug), eq(products.isActive, true))).limit(1).then((r) => r[0] ?? null)
+  if (!row) return null
+  return { title: row.title, description: row.shortDescription || row.description, image: row.image, category: row.category, partnerName: row.partnerName }
 }
 
-// Transform database product to frontend Product interface
-type DatabaseProduct = {
-  id: string
-  slug: string
-  title: string
-  description: string
-  shortDescription: string
-  image: string | null
-  discountPercentage: number
-  discountType: string
-  originalPrice: { toNumber(): number } | null
-  discountedPrice: { toNumber(): number } | null
-  discountAmount: { toNumber(): number } | null
-  promoCode: string
-  category: string
-  tags: string[]
-  availability: string
-  validUntil: Date | null
-  termsAndConditions: string | null
-  howToUse: string[]
-  features: string[]
-  isActive: boolean
-  isFeatured: boolean
-  usageCount: number
-  maxUsages: number | null
-  createdAt: Date
-  product_partners: {
-    id: string
-    name: string
-    slug: string
-    logo: string | null
-    website: string | null
-  }
-}
-
-function transformProduct(product: DatabaseProduct): Product {
-  return {
-    id: product.id,
-    slug: product.slug,
-    title: product.title,
-    description: product.description,
-    shortDescription: product.shortDescription,
-    image: product.image || '',
-    partner: {
-      id: product.product_partners.id,
-      name: product.product_partners.name,
-      logo: product.product_partners.logo || '',
-      website: product.product_partners.website || '',
-    },
-    discount: {
-      percentage: product.discountPercentage,
-      amount: product.discountAmount ? Number(product.discountAmount) : undefined,
-      type: product.discountType as 'percentage' | 'fixed',
-      originalPrice: product.originalPrice ? Number(product.originalPrice) : undefined,
-      discountedPrice: product.discountedPrice ? Number(product.discountedPrice) : undefined,
-    },
-    promoCode: product.promoCode,
-    category: product.category,
-    tags: product.tags,
-    availability: product.availability as 'all' | 'members',
-    validUntil: product.validUntil?.toISOString().split('T')[0] || '',
-    termsAndConditions: product.termsAndConditions || '',
-    howToUse: product.howToUse,
-    features: product.features,
-    isActive: product.isActive,
-    isFeatured: product.isFeatured,
-    createdDate: product.createdAt.toISOString().split('T')[0],
-    usageCount: product.usageCount,
-    maxUsages: product.maxUsages || undefined,
-  }
-}
-
-// Get product by slug with caching using Next.js 16 Cache Components
 export async function getProductBySlug(slug: string) {
   'use cache'
-  cacheLife('minutes') // Built-in profile: stale 5min, revalidate 1min, expire 1hr
+  cacheLife('minutes')
   cacheTag('products', `product-${slug}`)
-  
   return fetchProductBySlug(slug)
 }
 
-// Get related products with caching using Next.js 16 Cache Components
 export async function getRelatedProducts(productId: string, category: string) {
   'use cache'
   cacheLife('minutes')
   cacheTag('products', `related-products-${productId}`)
-  
   return fetchRelatedProducts(productId, category)
 }
 
-// Get product metadata only (for generateMetadata) with caching
 export async function getProductMetadata(slug: string) {
   'use cache'
   cacheLife('minutes')
   cacheTag('products', `product-${slug}`)
-  
   return fetchProductMetadata(slug)
 }
 
-// Get all product slugs for generateStaticParams
 export async function getAllProductSlugs() {
   'use cache'
-  cacheLife('hours') // Cache slugs longer as they change less frequently
+  cacheLife('hours')
   cacheTag('products', 'product-slugs')
-  
-  const products = await prisma.products.findMany({
-    where: { isActive: true },
-    select: { slug: true },
-  })
-  
-  return products.map((p: { slug: string }) => ({ slug: p.slug }))
+  const rows = await db.select({ slug: products.slug }).from(products).where(eq(products.isActive, true))
+  return rows.map((p) => ({ slug: p.slug }))
 }

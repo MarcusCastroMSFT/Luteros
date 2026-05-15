@@ -68,6 +68,7 @@ export function EventsPageClient({ initialEvents, initialPagination }: EventsPag
     }, 300);
 
     return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, initialEvents, initialPagination]);
 
   const handleSearchChange = (value: string) => {

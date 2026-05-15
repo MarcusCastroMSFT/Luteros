@@ -1,28 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import prisma from '@/lib/prisma'
+import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { blogArticles, users } from '@/lib/db/schema'
 import { type Article } from '@/types/blog'
-
-// Type for article with author from Prisma
-type BlogArticleWithAuthor = {
-  id: string
-  slug: string
-  title: string
-  excerpt: string | null
-  content: string | null
-  image: string | null
-  category: string
-  readTime: number
-  commentCount: number
-  publishedAt: Date | null
-  createdAt: Date
-  relatedArticleIds: string[]
-  user_profiles: {
-    id: string
-    fullName: string | null
-    displayName: string | null
-    avatar: string | null
-  }
-}
 
 // Format date in Portuguese
 function formatDate(date: Date): string {
@@ -33,8 +13,8 @@ function formatDate(date: Date): string {
   }).format(date)
 }
 
-// Transform Prisma article to frontend Article type
-function transformArticle(article: BlogArticleWithAuthor, includeContent = false): Article {
+// Transform DB article to frontend Article type
+function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null }, includeContent = false): Article {
   const articleDate = article.publishedAt || article.createdAt
   
   return {
@@ -45,8 +25,8 @@ function transformArticle(article: BlogArticleWithAuthor, includeContent = false
     ...(includeContent && { content: article.content || '' }),
     image: article.image || '',
     category: article.category,
-    author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
-    authorAvatar: article.user_profiles.avatar || '/images/default-avatar.jpg',
+    author: article.authorDisplayName || article.authorName || 'Unknown',
+    authorAvatar: article.authorAvatar || '/images/default-avatar.jpg',
     authorSlug: '',
     date: formatDate(new Date(articleDate)),
     readTime: `${article.readTime} min`,
@@ -54,61 +34,39 @@ function transformArticle(article: BlogArticleWithAuthor, includeContent = false
   }
 }
 
-// Internal function to fetch articles from database
 async function fetchArticles(page: number, limit: number, category?: string) {
-  const whereCondition: Record<string, unknown> = {
-    isPublished: true,
-  }
-  
-  if (category && category !== 'Todos') {
-    whereCondition.category = category
-  }
-
-  const [articles, totalArticles, allCategories] = await Promise.all([
-    prisma.blog_articles.findMany({
-      where: whereCondition,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        image: true,
-        category: true,
-        readTime: true,
-        commentCount: true,
-        publishedAt: true,
-        createdAt: true,
-        relatedArticleIds: true,
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          },
-        },
-      },
-      orderBy: { publishedAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.blog_articles.count({
-      where: whereCondition,
-    }),
-    prisma.blog_articles.findMany({
-      where: { isPublished: true },
-      select: { category: true },
-      distinct: ['category'],
-      orderBy: { category: 'asc' },
-    }),
-  ])
-
-  const transformedArticles = articles.map((article: BlogArticleWithAuthor) => 
-    transformArticle(article)
+  const where = and(
+    eq(blogArticles.isPublished, true),
+    category && category !== 'Todos' ? eq(blogArticles.category, category) : undefined,
   )
 
+  const articleCols = {
+    id: blogArticles.id,
+    slug: blogArticles.slug,
+    title: blogArticles.title,
+    excerpt: blogArticles.excerpt,
+    image: blogArticles.image,
+    category: blogArticles.category,
+    readTime: blogArticles.readTime,
+    commentCount: blogArticles.commentCount,
+    publishedAt: blogArticles.publishedAt,
+    createdAt: blogArticles.createdAt,
+    relatedArticleIds: blogArticles.relatedArticleIds,
+    authorName: users.name,
+    authorDisplayName: users.displayName,
+    authorAvatar: users.image,
+  }
+
+  const [articles, [{ total }], categoriesRaw] = await Promise.all([
+    db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(where).orderBy(desc(blogArticles.publishedAt)).offset((page - 1) * limit).limit(limit),
+    db.select({ total: sql<number>`count(*)::int` }).from(blogArticles).where(where),
+    db.selectDistinct({ category: blogArticles.category }).from(blogArticles).where(eq(blogArticles.isPublished, true)).orderBy(asc(blogArticles.category)),
+  ])
+
+  const transformedArticles = articles.map((a) => transformArticle(a))
+  const totalArticles = Number(total)
   const totalPages = Math.ceil(totalArticles / limit)
-  const categories = ['Todos', ...allCategories.map((c: { category: string }) => c.category)]
+  const categories = ['Todos', ...categoriesRaw.map((c) => c.category)]
 
   return {
     articles: transformedArticles,
@@ -133,117 +91,41 @@ export async function getArticles(page: number, limit: number, category?: string
   return fetchArticles(page, limit, category)
 }
 
-// Internal function to fetch single article
 async function fetchArticleBySlug(slug: string) {
-  const article = await prisma.blog_articles.findFirst({
-    where: { 
-      slug,
-      isPublished: true,
-    },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      excerpt: true,
-      content: true,
-      image: true,
-      category: true,
-      readTime: true,
-      commentCount: true,
-      publishedAt: true,
-      createdAt: true,
-      relatedArticleIds: true,
-      user_profiles: {
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          avatar: true,
-        },
-      },
-    },
-  })
-
-  if (!article) {
-    return null
+  const articleCols = {
+    id: blogArticles.id,
+    slug: blogArticles.slug,
+    title: blogArticles.title,
+    excerpt: blogArticles.excerpt,
+    content: blogArticles.content,
+    image: blogArticles.image,
+    category: blogArticles.category,
+    readTime: blogArticles.readTime,
+    commentCount: blogArticles.commentCount,
+    publishedAt: blogArticles.publishedAt,
+    createdAt: blogArticles.createdAt,
+    relatedArticleIds: blogArticles.relatedArticleIds,
+    authorName: users.name,
+    authorDisplayName: users.displayName,
+    authorAvatar: users.image,
   }
 
-  // Get related articles
-  let relatedArticles: BlogArticleWithAuthor[] = []
-  
-  if (article.relatedArticleIds && article.relatedArticleIds.length > 0) {
-    relatedArticles = await prisma.blog_articles.findMany({
-      where: {
-        id: { in: article.relatedArticleIds },
-        isPublished: true,
-      },
-      take: 3,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        content: true,
-        image: true,
-        category: true,
-        readTime: true,
-        commentCount: true,
-        publishedAt: true,
-        createdAt: true,
-        relatedArticleIds: true,
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          },
-        },
-      },
-    })
-  }
-  
-  // Fill with same category articles if needed
+  const article = await db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(eq(blogArticles.slug, slug), eq(blogArticles.isPublished, true))).limit(1).then((r) => r[0] ?? null)
+  if (!article) return null
+
+  let relatedArticles = article.relatedArticleIds && article.relatedArticleIds.length > 0
+    ? await db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(inArray(blogArticles.id, article.relatedArticleIds), eq(blogArticles.isPublished, true))).limit(3)
+    : []
+
   if (relatedArticles.length < 3) {
-    const additionalArticles = await prisma.blog_articles.findMany({
-      where: {
-        category: article.category,
-        slug: { not: slug },
-        id: { notIn: relatedArticles.map((a) => a.id) },
-        isPublished: true,
-      },
-      take: 3 - relatedArticles.length,
-      orderBy: { publishedAt: 'desc' },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        content: true,
-        image: true,
-        category: true,
-        readTime: true,
-        commentCount: true,
-        publishedAt: true,
-        createdAt: true,
-        relatedArticleIds: true,
-        user_profiles: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-            avatar: true,
-          },
-        },
-      },
-    })
-    
-    relatedArticles = [...relatedArticles, ...additionalArticles]
+    const existing = relatedArticles.map((a) => a.id)
+    const additional = await db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(and(eq(blogArticles.category, article.category), ne(blogArticles.slug, slug), eq(blogArticles.isPublished, true), existing.length > 0 ? ne(blogArticles.id, existing[0]) : undefined)).orderBy(desc(blogArticles.publishedAt)).limit(3 - relatedArticles.length)
+    relatedArticles = [...relatedArticles, ...additional]
   }
 
   return {
-    article: transformArticle(article as BlogArticleWithAuthor, true),
-    relatedArticles: relatedArticles.map((rel) => transformArticle(rel)),
+    article: transformArticle(article, true),
+    relatedArticles: relatedArticles.map((a) => transformArticle(a)),
   }
 }
 
@@ -256,39 +138,24 @@ export async function getArticleBySlug(slug: string) {
   return fetchArticleBySlug(slug)
 }
 
-// Internal function to fetch article metadata
 async function fetchArticleMetadata(slug: string) {
-  const article = await prisma.blog_articles.findFirst({
-    where: { 
-      slug,
-      isPublished: true,
-    },
-    select: {
-      title: true,
-      excerpt: true,
-      image: true,
-      category: true,
-      publishedAt: true,
-      user_profiles: {
-        select: {
-          fullName: true,
-          displayName: true,
-        },
-      },
-    },
-  })
+  const row = await db
+    .select({ title: blogArticles.title, excerpt: blogArticles.excerpt, image: blogArticles.image, category: blogArticles.category, publishedAt: blogArticles.publishedAt, authorName: users.name, authorDisplayName: users.displayName })
+    .from(blogArticles)
+    .innerJoin(users, eq(blogArticles.authorId, users.id))
+    .where(and(eq(blogArticles.slug, slug), eq(blogArticles.isPublished, true)))
+    .limit(1)
+    .then((r) => r[0] ?? null)
 
-  if (!article) {
-    return null
-  }
+  if (!row) return null
 
   return {
-    title: article.title,
-    excerpt: article.excerpt,
-    image: article.image,
-    category: article.category,
-    date: article.publishedAt?.toISOString(),
-    author: article.user_profiles.fullName || article.user_profiles.displayName || 'Unknown',
+    title: row.title,
+    excerpt: row.excerpt,
+    image: row.image,
+    category: row.category,
+    date: row.publishedAt?.toISOString(),
+    author: row.authorDisplayName || row.authorName || 'Unknown',
   }
 }
 
@@ -304,15 +171,11 @@ export async function getArticleMetadata(slug: string) {
 // Get all article slugs for generateStaticParams
 export async function getAllArticleSlugs(): Promise<string[]> {
   'use cache'
-  cacheLife('hours') // Cache slugs longer as they change less frequently
+  cacheLife('hours')
   cacheTag('articles', 'article-slugs')
   
-  const articles = await prisma.blog_articles.findMany({
-    where: { isPublished: true },
-    select: { slug: true },
-  })
-  
-  return articles.map((a: { slug: string }) => a.slug)
+  const articles = await db.select({ slug: blogArticles.slug }).from(blogArticles).where(eq(blogArticles.isPublished, true))
+  return articles.map((a) => a.slug)
 }
 
 // Get initial articles for SSR (first page)

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { createClient } from '@/lib/supabase/server'
-import { systemEmailTemplates } from '@/data/system-email-templates'
+import { eq } from 'drizzle-orm'
+import { requireAuth } from '@/lib/auth-helpers'
+import { db } from '@/lib/db'
+import { systemEmailTemplates } from '@/lib/db/schema'
+import { systemEmailTemplates as defaultTemplates } from '@/data/system-email-templates'
 import { invalidateTemplateCache } from '@/lib/system-email'
 
 // Validate UUID format
@@ -17,85 +19,33 @@ export async function POST(
 ) {
   try {
     const { id } = await params
+    if (!isValidUUID(id)) return NextResponse.json({ success: false, error: 'Invalid template ID' }, { status: 400 })
 
-    // Validate ID format
-    if (!isValidUUID(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid template ID' },
-        { status: 400 }
-      )
-    }
+    const authUser = await requireAuth(request)
+    if (authUser instanceof NextResponse) return authUser
 
-    // Auth check
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const existing = await db.select().from(systemEmailTemplates).where(eq(systemEmailTemplates.id, id)).limit(1).then((r) => r[0] ?? null)
+    if (!existing) return NextResponse.json({ success: false, error: 'Template not found' }, { status: 404 })
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const defaultTemplate = defaultTemplates.find((t) => t.code === existing.code)
+    if (!defaultTemplate) return NextResponse.json({ success: false, error: 'No default template found for this code' }, { status: 404 })
 
-    // Find the current template
-    const existing = await prisma.system_email_templates.findUnique({
-      where: { id },
-    })
+    const [template] = await db.update(systemEmailTemplates).set({
+      name: defaultTemplate.name,
+      description: defaultTemplate.description,
+      subject: defaultTemplate.subject,
+      previewText: defaultTemplate.previewText,
+      htmlContent: defaultTemplate.htmlContent,
+      textContent: defaultTemplate.textContent,
+      variables: defaultTemplate.variables,
+      updatedById: null,
+    }).where(eq(systemEmailTemplates.id, id)).returning()
 
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: 'Template not found' },
-        { status: 404 }
-      )
-    }
-
-    // Find the default template by code
-    const defaultTemplate = systemEmailTemplates.find(t => t.code === existing.code)
-
-    if (!defaultTemplate) {
-      return NextResponse.json(
-        { success: false, error: 'No default template found for this code' },
-        { status: 404 }
-      )
-    }
-
-    // Reset to default values
-    const template = await prisma.system_email_templates.update({
-      where: { id },
-      data: {
-        name: defaultTemplate.name,
-        description: defaultTemplate.description,
-        subject: defaultTemplate.subject,
-        previewText: defaultTemplate.previewText,
-        htmlContent: defaultTemplate.htmlContent,
-        textContent: defaultTemplate.textContent,
-        variables: defaultTemplate.variables,
-        updatedById: null, // Clear the updatedBy since it's reset to default
-      },
-      include: {
-        updatedBy: {
-          select: {
-            id: true,
-            fullName: true,
-            displayName: true,
-          },
-        },
-      },
-    })
-
-    // Invalidate cache for this template
     invalidateTemplateCache(existing.code)
 
-    return NextResponse.json({
-      success: true,
-      data: template,
-      message: 'Template reset to default values',
-    })
+    return NextResponse.json({ success: true, data: template, message: 'Template reset to default values' })
   } catch (error) {
     console.error('Error resetting system email template:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to reset template' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Failed to reset template' }, { status: 500 })
   }
 }

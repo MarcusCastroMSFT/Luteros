@@ -1,125 +1,73 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { products, productPartners } from '@/lib/db/schema'
+import { and, desc, eq, ne } from 'drizzle-orm'
 
 interface RouteParams {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  // Add cache tag for manual invalidation
-  const headers = new Headers({
-    'Cache-Tag': 'products-public',
-  });
+  const headers = new Headers({ 'Cache-Tag': 'products-public' })
 
   try {
-    const { slug } = await params;
+    const { slug } = await params
 
-    // Find the product by slug
-    const product = await prisma.products.findUnique({
-      where: {
-        slug,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        shortDescription: true,
-        image: true,
-        discountPercentage: true,
-        discountType: true,
-        originalPrice: true,
-        discountedPrice: true,
-        discountAmount: true,
-        promoCode: true,
-        category: true,
-        tags: true,
-        availability: true,
-        validUntil: true,
-        termsAndConditions: true,
-        howToUse: true,
-        features: true,
-        isActive: true,
-        isFeatured: true,
-        usageCount: true,
-        maxUsages: true,
-        createdAt: true,
-        product_partners: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logo: true,
-            website: true,
-          },
-        },
-      },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Product not found',
-          data: null,
-        },
-        { status: 404, headers }
-      );
+    const productCols = {
+      id: products.id,
+      slug: products.slug,
+      title: products.title,
+      description: products.description,
+      shortDescription: products.shortDescription,
+      image: products.image,
+      discountPercentage: products.discountPercentage,
+      discountType: products.discountType,
+      originalPrice: products.originalPrice,
+      discountedPrice: products.discountedPrice,
+      discountAmount: products.discountAmount,
+      promoCode: products.promoCode,
+      category: products.category,
+      tags: products.tags,
+      availability: products.availability,
+      validUntil: products.validUntil,
+      termsAndConditions: products.termsAndConditions,
+      howToUse: products.howToUse,
+      features: products.features,
+      isActive: products.isActive,
+      isFeatured: products.isFeatured,
+      usageCount: products.usageCount,
+      maxUsages: products.maxUsages,
+      createdAt: products.createdAt,
+      partnerId: productPartners.id,
+      partnerName: productPartners.name,
+      partnerLogo: productPartners.logo,
+      partnerWebsite: productPartners.website,
     }
 
-    // Get related products (same category, excluding current product)
-    const relatedProducts = await prisma.products.findMany({
-      where: {
-        isActive: true,
-        category: product.category,
-        id: { not: product.id },
-      },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        shortDescription: true,
-        image: true,
-        discountPercentage: true,
-        discountType: true,
-        originalPrice: true,
-        discountedPrice: true,
-        discountAmount: true,
-        promoCode: true,
-        category: true,
-        tags: true,
-        availability: true,
-        validUntil: true,
-        termsAndConditions: true,
-        howToUse: true,
-        features: true,
-        isActive: true,
-        isFeatured: true,
-        usageCount: true,
-        maxUsages: true,
-        createdAt: true,
-        product_partners: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logo: true,
-            website: true,
-          },
-        },
-      },
-      orderBy: {
-        isFeatured: 'desc',
-      },
-      take: 3,
-    });
+    const row = await db
+      .select(productCols)
+      .from(products)
+      .innerJoin(productPartners, eq(products.partnerId, productPartners.id))
+      .where(and(eq(products.slug, slug), eq(products.isActive, true)))
+      .limit(1)
+      .then((r) => r[0] ?? null)
 
-    // Transform product to match frontend interface
-    const transformProduct = (p: typeof product) => ({
+    if (!row) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found', data: null },
+        { status: 404, headers }
+      )
+    }
+
+    const relatedRows = await db
+      .select(productCols)
+      .from(products)
+      .innerJoin(productPartners, eq(products.partnerId, productPartners.id))
+      .where(and(eq(products.isActive, true), eq(products.category, row.category), ne(products.id, row.id)))
+      .orderBy(desc(products.isFeatured))
+      .limit(3)
+
+    const transformProduct = (p: typeof row) => ({
       id: p.id,
       slug: p.slug,
       title: p.title,
@@ -127,10 +75,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       shortDescription: p.shortDescription,
       image: p.image || '',
       partner: {
-        id: p.product_partners.id,
-        name: p.product_partners.name,
-        logo: p.product_partners.logo || '',
-        website: p.product_partners.website || '',
+        id: p.partnerId,
+        name: p.partnerName,
+        logo: p.partnerLogo || '',
+        website: p.partnerWebsite || '',
       },
       discount: {
         percentage: p.discountPercentage,
@@ -152,25 +100,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       createdDate: p.createdAt.toISOString().split('T')[0],
       usageCount: p.usageCount,
       maxUsages: p.maxUsages || undefined,
-    });
+    })
 
     return NextResponse.json({
       success: true,
       data: {
-        product: transformProduct(product),
-        relatedProducts: relatedProducts.map(transformProduct),
+        product: transformProduct(row),
+        relatedProducts: relatedRows.map(transformProduct),
       },
-    }, { headers });
-
+    }, { headers })
   } catch (error) {
-    console.error('Error fetching product:', error);
+    console.error('Error fetching product:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch product',
-        data: null,
-      },
+      { success: false, error: 'Failed to fetch product', data: null },
       { status: 500 }
-    );
+    )
   }
 }

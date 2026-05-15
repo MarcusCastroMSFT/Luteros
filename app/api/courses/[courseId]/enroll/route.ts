@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import { revalidateTag } from 'next/cache';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
-import { Prisma } from '@prisma/client';
-
-// Transaction client type for Prisma
-type TransactionClient = Prisma.TransactionClient;
+import { revalidateTag } from '@/lib/cache';
+import { and, eq, sql } from 'drizzle-orm';
+import { getAuthUser, requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { courses, enrollments } from '@/lib/db/schema';
 
 export async function POST(
   request: NextRequest,
@@ -17,113 +15,40 @@ export async function POST(
   try {
     const { courseId } = await context.params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Você precisa estar logado para se inscrever no curso' },
-        { status: 401 }
-      );
-    }
-
-    // Check if course exists, is published, and if user is already enrolled - single optimized query
-    const [course, existingEnrollment] = await Promise.all([
-      prisma.courses.findUnique({
-        where: { id: courseId },
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          isPublished: true,
-          isFree: true,
-          price: true,
-        },
-      }),
-      prisma.enrollments.findUnique({
-        where: {
-          userId_courseId: {
-            userId: user.id,
-            courseId: courseId,
-          },
-        },
-        select: { id: true },
-      }),
+    const [course, existing] = await Promise.all([
+      db.select().from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null),
+      db.select({ id: enrollments.id }).from(enrollments).where(and(eq(enrollments.userId, authUser.id), eq(enrollments.courseId, courseId))).limit(1).then((r) => r[0] ?? null),
     ]);
 
-    if (!course) {
-      return NextResponse.json(
-        { success: false, error: 'Curso não encontrado' },
-        { status: 404 }
-      );
-    }
+    if (!course) return NextResponse.json({ success: false, error: 'Curso não encontrado' }, { status: 404 });
+    if (!course.isPublished) return NextResponse.json({ success: false, error: 'Este curso não está disponível' }, { status: 400 });
+    if (existing) return NextResponse.json({ success: false, error: 'Você já está inscrito neste curso' }, { status: 400 });
 
-    if (!course.isPublished) {
-      return NextResponse.json(
-        { success: false, error: 'Este curso não está disponível' },
-        { status: 400 }
-      );
-    }
-
-    if (existingEnrollment) {
-      return NextResponse.json(
-        { success: false, error: 'Você já está inscrito neste curso' },
-        { status: 400 }
-      );
-    }
-
-    // For paid courses, in the future we'll redirect to payment
-    // For now, we'll just create the enrollment directly
     const isPaid = !course.isFree && course.price && Number(course.price) > 0;
 
-    // Use transaction for atomicity - create enrollment and update count together
-    const enrollment = await prisma.$transaction(async (tx: TransactionClient) => {
-      const newEnrollment = await tx.enrollments.create({
-        data: {
-          userId: user.id,
-          courseId: courseId,
-          paidAmount: isPaid ? course.price : 0,
-          paymentStatus: isPaid ? 'PENDING' : 'COMPLETED',
-        },
-      });
+    const [enrollment] = await db.insert(enrollments).values({
+      userId: authUser.id,
+      courseId,
+      paidAmount: isPaid ? course.price : '0',
+      paymentStatus: isPaid ? 'PENDING' : 'COMPLETED',
+    }).returning();
 
-      await tx.courses.update({
-        where: { id: courseId },
-        data: {
-          enrollmentCount: {
-            increment: 1,
-          },
-        },
-      });
+    await db.update(courses).set({ enrollmentCount: sql`${courses.enrollmentCount} + 1` }).where(eq(courses.id, courseId));
 
-      return newEnrollment;
-    });
-
-    // Invalidate cache - Next.js 16 requires empty options object as second argument
-    revalidateTag('courses', {});
-    revalidateTag(`course-${course.slug}`, {});
+    revalidateTag('courses');
+    revalidateTag(`course-${course.slug}`);
 
     return NextResponse.json({
       success: true,
-      message: isPaid 
-        ? 'Inscrição realizada! Em breve implementaremos o pagamento.' 
-        : 'Você foi inscrito no curso com sucesso!',
-      enrollment: {
-        id: enrollment.id,
-        enrolledAt: enrollment.enrolledAt,
-        courseId: enrollment.courseId,
-        courseTitle: course.title,
-        courseSlug: course.slug,
-      },
+      message: isPaid ? 'Inscrição realizada! Em breve implementaremos o pagamento.' : 'Você foi inscrito no curso com sucesso!',
+      enrollment: { id: enrollment.id, enrolledAt: enrollment.enrolledAt, courseId: enrollment.courseId, courseTitle: course.title, courseSlug: course.slug },
     });
-
   } catch (error) {
     console.error('Error enrolling in course:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao se inscrever no curso' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erro ao se inscrever no curso' }, { status: 500 });
   }
 }
 
@@ -138,45 +63,14 @@ export async function GET(
   try {
     const { courseId } = await context.params;
 
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await getAuthUser();
+    if (!authUser) return NextResponse.json({ success: true, isEnrolled: false, enrollment: null });
 
-    if (authError || !user) {
-      return NextResponse.json({
-        success: true,
-        isEnrolled: false,
-        enrollment: null,
-      });
-    }
+    const enrollment = await db.select({ id: enrollments.id, enrolledAt: enrollments.enrolledAt, progressPercent: enrollments.progressPercent, paymentStatus: enrollments.paymentStatus }).from(enrollments).where(and(eq(enrollments.userId, authUser.id), eq(enrollments.courseId, courseId))).limit(1).then((r) => r[0] ?? null);
 
-    // Check enrollment
-    const enrollment = await prisma.enrollments.findUnique({
-      where: {
-        userId_courseId: {
-          userId: user.id,
-          courseId: courseId,
-        },
-      },
-      select: {
-        id: true,
-        enrolledAt: true,
-        progressPercent: true,
-        paymentStatus: true,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      isEnrolled: !!enrollment,
-      enrollment: enrollment,
-    });
-
+    return NextResponse.json({ success: true, isEnrolled: !!enrollment, enrollment });
   } catch (error) {
     console.error('Error checking enrollment:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro ao verificar inscrição' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erro ao verificar inscrição' }, { status: 500 });
   }
 }

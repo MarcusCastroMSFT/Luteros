@@ -32,8 +32,8 @@ export function WhyStudyWithUs({ features }: WhyStudyWithUsProps) {
           </defs>
         </svg>
       ),
-      title: "World Class Teachers",
-      description: "What should be the structure of an effective websites and designs."
+      title: "Especialistas de Renome",
+      description: "Conteúdos validados por profissionais com formação em saúde, sexologia e psicologia."
     },
     {
       icon: (
@@ -57,8 +57,8 @@ export function WhyStudyWithUs({ features }: WhyStudyWithUsProps) {
           </defs>
         </svg>
       ),
-      title: "Global Community",
-      description: "What should be the structure of an effective websites and designs."
+      title: "Comunidade Acolhedora",
+      description: "Um espaço seguro, inclusivo e livre de tabus para aprender e tirar dúvidas."
     },
     {
       icon: (
@@ -73,8 +73,8 @@ export function WhyStudyWithUs({ features }: WhyStudyWithUsProps) {
           <path d="M46.9149 26.4836C47.4204 26.4836 47.8303 26.0742 47.8303 25.5682V16.6223C47.8303 16.318 47.6387 15.9693 47.3426 15.8132L30.4277 6.86738C30.1604 6.72617 29.8404 6.72617 29.5722 6.86738L12.6573 15.8042C12.3573 15.9624 12.1696 16.2736 12.1696 16.6133C12.1696 16.9521 12.3569 17.2632 12.6569 17.4223L29.5717 26.3771C29.7054 26.4478 29.8528 26.4835 29.9999 26.4835C30.147 26.4835 30.294 26.4478 30.4277 26.3771L45.9994 18.1418V25.568C45.9994 26.0742 46.4093 26.4836 46.9149 26.4836ZM30 24.532L15.0435 16.6143L30 8.7118L43.2256 15.7068H30C29.4945 15.7068 29.0845 16.1163 29.0845 16.6223C29.0845 17.1283 29.4945 17.5378 30 17.5378H43.2253L30 24.532Z" fill="#585D69"/>
         </svg>
       ),
-      title: "Top Notch Courses",
-      description: "What should be the structure of an effective websites and designs."
+      title: "Conteúdo de Qualidade",
+      description: "Artigos e materiais didáticos cuidadosamente produzidos para o seu bem-estar."
     }
   ];
 
@@ -86,10 +86,10 @@ export function WhyStudyWithUs({ features }: WhyStudyWithUsProps) {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-2xl md:text-4xl font-bold text-text-primary mb-4">
-            <span className="text-cta-highlight">Why</span> Study With Us?
+            <span className="text-cta-highlight">Por que</span> escolher a lutteros?
           </h2>
           <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-            Become a valuable expert with UpSkill.
+            Educação em saúde sexual com confiança e acolhimento.
           </p>
         </div>
 

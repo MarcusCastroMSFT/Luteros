@@ -94,14 +94,6 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onReplyDele
   const [replyReports, setReplyReports] = useState<Map<string, ReportDetails[]>>(new Map());
   const [loadingReports, setLoadingReports] = useState(false);
 
-  // Fetch reports for admin when dialog opens
-  useEffect(() => {
-    if (isOpen && isAdmin && post) {
-      fetchReports();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, isAdmin, post?.id]);
-
   const fetchReports = async () => {
     if (!post) return;
     
@@ -154,13 +146,21 @@ export function RepliesDialog({ isOpen, onClose, post, onReplyAdded, onReplyDele
     }
   };
 
+  // Fetch reports for admin when dialog opens
+  useEffect(() => {
+    if (isOpen && isAdmin && post) {
+      fetchReports();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isAdmin, post?.id]);
+
   // Initialize post like count and state when post changes or dialog opens
   useEffect(() => {
     if (post && isOpen) {
       setPostLikeCount(post.likes);
       setIsPostLiked(isPostLikedInitial);
     }
-  }, [post?.id, post?.likes, isOpen, isPostLikedInitial]);
+  }, [post, isOpen, isPostLikedInitial]);
 
   // Scroll to bottom when new replies are added
   useEffect(() => {

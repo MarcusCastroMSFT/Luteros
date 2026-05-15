@@ -1,35 +1,8 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import prisma from '@/lib/prisma';
-import { createClient } from '@/lib/supabase/server';
-
-// Type for registration from Prisma query
-interface RegistrationWithEvent {
-  id: string;
-  eventId: string;
-  userId: string;
-  registeredAt: Date;
-  attended: boolean;
-  paidAmount: unknown;
-  paymentStatus: string | null;
-  events: {
-    id: string;
-    slug: string;
-    title: string;
-    description: string;
-    location: string;
-    eventDate: Date;
-    eventTime: string;
-    duration: number | null;
-    image: string | null;
-    totalSlots: number;
-    cost: unknown;
-    isFree: boolean;
-    isCancelled: boolean;
-    _count: {
-      event_registrations: number;
-    };
-  };
-}
+import { and, asc, count, eq, gte, lt, sql } from 'drizzle-orm';
+import { requireAuth } from '@/lib/auth-helpers';
+import { db } from '@/lib/db';
+import { eventRegistrations, events } from '@/lib/db/schema';
 
 // Type for registered event (API response)
 export interface RegisteredEvent {
@@ -75,131 +48,95 @@ function formatEventDate(date: Date): string {
 }
 
 export async function GET(request: NextRequest) {
-  // Signal that this route uses request-specific data (auth cookies)
   await connection();
 
   try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authUser = await requireAuth(request);
+    if (authUser instanceof NextResponse) return authUser;
+    const userId = authUser.id;
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Você precisa estar logado para ver seus eventos' },
-        { status: 401 }
-      );
-    }
-
-    // Parse query params for pagination and filtering
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
-    const status = searchParams.get('status'); // 'upcoming', 'past', 'all'
+    const status = searchParams.get('status');
 
     const now = new Date();
 
-    // Build where condition for events
-    type EventWhereCondition = {
-      eventDate?: { gte: Date } | { lt: Date };
-    };
+    const dateCondition =
+      status === 'upcoming'
+        ? gte(events.eventDate, now)
+        : status === 'past'
+          ? lt(events.eventDate, now)
+          : undefined;
 
-    let eventWhereCondition: EventWhereCondition = {};
+    const whereCondition = and(eq(eventRegistrations.userId, userId), dateCondition);
 
-    // Filter by event date status
-    if (status === 'upcoming') {
-      eventWhereCondition = { eventDate: { gte: now } };
-    } else if (status === 'past') {
-      eventWhereCondition = { eventDate: { lt: now } };
-    }
-
-    // Fetch registrations with event data
-    const [registrations, totalCount, upcomingCount, pastCount] = await Promise.all([
-      prisma.event_registrations.findMany({
-        where: {
-          userId: user.id,
-          events: eventWhereCondition,
-        },
-        include: {
-          events: {
-            select: {
-              id: true,
-              slug: true,
-              title: true,
-              description: true,
-              location: true,
-              eventDate: true,
-              eventTime: true,
-              duration: true,
-              image: true,
-              totalSlots: true,
-              cost: true,
-              isFree: true,
-              isCancelled: true,
-              _count: {
-                select: {
-                  event_registrations: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: { events: { eventDate: 'asc' } },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.event_registrations.count({
-        where: {
-          userId: user.id,
-          events: eventWhereCondition,
-        },
-      }),
-      prisma.event_registrations.count({
-        where: {
-          userId: user.id,
-          events: { eventDate: { gte: now } },
-        },
-      }),
-      prisma.event_registrations.count({
-        where: {
-          userId: user.id,
-          events: { eventDate: { lt: now } },
-        },
-      }),
+    const [registrations, [{ total }], [{ upcomingCount }], [{ pastCount }]] = await Promise.all([
+      db
+        .select({
+          id: eventRegistrations.id,
+          eventId: eventRegistrations.eventId,
+          registeredAt: eventRegistrations.registeredAt,
+          attended: eventRegistrations.attended,
+          eventSlug: events.slug,
+          eventTitle: events.title,
+          eventDescription: events.description,
+          eventLocation: events.location,
+          eventDate: events.eventDate,
+          eventTime: events.eventTime,
+          eventDuration: events.duration,
+          eventImage: events.image,
+          eventTotalSlots: events.totalSlots,
+          eventIsFree: events.isFree,
+          eventIsCancelled: events.isCancelled,
+          registeredCount: sql<number>`(SELECT COUNT(*)::int FROM "event_registrations" WHERE "eventId" = ${events.id})`,
+        })
+        .from(eventRegistrations)
+        .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+        .where(whereCondition)
+        .orderBy(asc(events.eventDate))
+        .limit(limit)
+        .offset((page - 1) * limit),
+      db
+        .select({ total: count() })
+        .from(eventRegistrations)
+        .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+        .where(whereCondition),
+      db
+        .select({ upcomingCount: count() })
+        .from(eventRegistrations)
+        .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+        .where(and(eq(eventRegistrations.userId, userId), gte(events.eventDate, now))),
+      db
+        .select({ pastCount: count() })
+        .from(eventRegistrations)
+        .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+        .where(and(eq(eventRegistrations.userId, userId), lt(events.eventDate, now))),
     ]);
 
-    // Transform data for response
-    const registeredEvents: RegisteredEvent[] = (registrations as RegistrationWithEvent[]).map((registration) => {
-      const event = registration.events;
+    const registeredEvents: RegisteredEvent[] = registrations.map((reg) => ({
+      id: reg.id,
+      eventId: reg.eventId,
+      registeredAt: reg.registeredAt.toISOString(),
+      attended: reg.attended,
+      event: {
+        id: reg.eventId,
+        slug: reg.eventSlug,
+        title: reg.eventTitle,
+        description: reg.eventDescription,
+        location: reg.eventLocation,
+        eventDate: formatEventDate(reg.eventDate),
+        eventTime: reg.eventTime,
+        duration: formatDuration(reg.eventDuration),
+        image: reg.eventImage || '/images/event-placeholder.jpg',
+        totalSlots: reg.eventTotalSlots,
+        registeredCount: reg.registeredCount,
+        isFree: reg.eventIsFree,
+        isCancelled: reg.eventIsCancelled,
+      },
+    }));
 
-      return {
-        id: registration.id,
-        eventId: event.id,
-        registeredAt: registration.registeredAt.toISOString(),
-        attended: registration.attended,
-        event: {
-          id: event.id,
-          slug: event.slug,
-          title: event.title,
-          description: event.description,
-          location: event.location,
-          eventDate: formatEventDate(event.eventDate),
-          eventTime: event.eventTime,
-          duration: formatDuration(event.duration),
-          image: event.image || '/images/event-placeholder.jpg',
-          totalSlots: event.totalSlots,
-          registeredCount: event._count.event_registrations,
-          isFree: event.isFree,
-          isCancelled: event.isCancelled,
-        },
-      };
-    });
-
-    // Calculate pagination
-    const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
-
-    const total = upcomingCount + pastCount;
+    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
       success: true,
@@ -208,15 +145,15 @@ export async function GET(request: NextRequest) {
         pagination: {
           currentPage: page,
           totalPages,
-          totalEvents: totalCount,
+          totalEvents: total,
           eventsPerPage: limit,
-          hasNextPage,
-          hasPrevPage,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
         },
         stats: {
-          total,
-          upcoming: upcomingCount,
-          past: pastCount,
+          total: Number(upcomingCount) + Number(pastCount),
+          upcoming: Number(upcomingCount),
+          past: Number(pastCount),
         },
       },
     });
@@ -224,7 +161,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching registered events:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao buscar seus eventos' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

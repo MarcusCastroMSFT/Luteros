@@ -15,7 +15,7 @@ export function Pagination({
   currentPage, 
   totalPages, 
   onPageChange, 
-  basePath = '/blog',
+  basePath = '/articles',
   queryParams = {}
 }: PaginationProps) {
   const getVisiblePages = () => {

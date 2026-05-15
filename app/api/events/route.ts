@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth-helpers'
-import prisma from '@/lib/prisma'
+import { asc, desc, ilike, or, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { events } from '@/lib/db/schema'
 
 export interface Event {
   id: string
@@ -57,70 +59,29 @@ export async function GET(request: NextRequest) {
       return authResult // Return 401/403 response
     }
 
-    // Build where condition
-    const whereCondition: Record<string, unknown> = {}
-    
-    // Apply search filter
-    if (search) {
-      whereCondition.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { location: { contains: search, mode: 'insensitive' } },
-      ]
-    }
+    const where = search ? or(ilike(events.title, `%${search}%`), ilike(events.description, `%${search}%`), ilike(events.location, `%${search}%`)) : undefined
 
-    // Build orderBy - map frontend fields to database fields
-    const orderByMap: Record<string, Record<string, unknown>> = {
-      header: { title: sortOrder },
-      date: { eventDate: sortOrder },
-      location: { location: sortOrder },
-      createdAt: { createdAt: sortOrder },
+    const sortColMap: Record<string, unknown> = {
+      header: events.title,
+      date: events.eventDate,
+      location: events.location,
+      createdAt: events.createdAt,
     }
-    
-    const orderBy = orderByMap[sortBy] || { eventDate: sortOrder }
+    const sortCol = (sortColMap[sortBy] ?? events.eventDate) as Parameters<typeof asc>[0]
+    const orderFn = sortOrder === 'asc' ? asc : desc
 
-    // Execute queries in parallel for performance
-    const [events, totalCount] = await Promise.all([
-      prisma.events.findMany({
-        where: whereCondition,
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          location: true,
-          eventDate: true,
-          eventTime: true,
-          totalSlots: true,
-          isFree: true,
-          cost: true,
-          isPublished: true,
-          isCancelled: true,
-          event_speakers: {
-            select: {
-              name: true,
-            },
-            orderBy: {
-              order: 'asc',
-            },
-            take: 1,
-          },
-          _count: {
-            select: {
-              event_registrations: true,
-            },
-          },
-        },
-        orderBy,
-        skip: page * pageSize,
-        take: pageSize,
-      }),
-      prisma.events.count({
-        where: whereCondition,
-      }),
+    const [eventsRows, [{ total }]] = await Promise.all([
+      db.select({
+        id: events.id, slug: events.slug, title: events.title, location: events.location,
+        eventDate: events.eventDate, eventTime: events.eventTime, totalSlots: events.totalSlots,
+        isFree: events.isFree, cost: events.cost, isPublished: events.isPublished, isCancelled: events.isCancelled,
+        firstSpeakerName: sql<string | null>`(SELECT name FROM "event_speakers" s WHERE s."eventId" = ${events.id} ORDER BY s."order" LIMIT 1)`,
+        registrationCount: sql<number>`(SELECT COUNT(*)::int FROM "event_registrations" er WHERE er."eventId" = ${events.id})`,
+      }).from(events).where(where).orderBy(orderFn(sortCol)).offset(page * pageSize).limit(pageSize),
+      db.select({ total: sql<number>`count(*)::int` }).from(events).where(where),
     ])
 
-    // Transform data to match frontend interface
-    const transformedEvents: Event[] = events.map((event: typeof events[number]) => ({
+    const transformedEvents: Event[] = eventsRows.map((event) => ({
       id: event.id,
       slug: event.slug,
       header: event.title,
@@ -131,11 +92,12 @@ export async function GET(request: NextRequest) {
       date: event.eventDate.toISOString().split('T')[0],
       time: event.eventTime,
       paid: event.isFree ? 'Gratuito' : 'Pago',
-      target: event._count.event_registrations.toString(),
+      target: event.registrationCount.toString(),
       limit: event.totalSlots.toString(),
-      reviewer: event.event_speakers[0]?.name || 'Não Atribuído',
+      reviewer: event.firstSpeakerName || 'Não Atribuído',
     }))
 
+    const totalCount = Number(total)
     const pageCount = Math.ceil(totalCount / pageSize)
 
     return NextResponse.json({

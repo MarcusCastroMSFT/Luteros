@@ -56,7 +56,7 @@ export function SavedArticleCard({ savedArticle, onRemove }: SavedArticleCardPro
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
       {/* Article Image */}
-      <Link href={`/blog/${article.slug}`} className="block relative">
+      <Link href={`/articles/${article.slug}`} className="block relative">
         <div className="relative h-48 overflow-hidden">
           <Image
             src={article.image}
@@ -87,7 +87,7 @@ export function SavedArticleCard({ savedArticle, onRemove }: SavedArticleCardPro
       {/* Article Content */}
       <div className="p-5">
         {/* Title */}
-        <Link href={`/blog/${article.slug}`}>
+        <Link href={`/articles/${article.slug}`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {article.title}
           </h3>
@@ -117,7 +117,7 @@ export function SavedArticleCard({ savedArticle, onRemove }: SavedArticleCardPro
             <span>Salvo em {formatSavedAt(savedAt)}</span>
           </div>
           <Button asChild size="sm" variant="ghost" className="text-primary">
-            <Link href={`/blog/${article.slug}`} className="flex items-center gap-1">
+            <Link href={`/articles/${article.slug}`} className="flex items-center gap-1">
               Ler
               <ArrowRight className="w-4 h-4" />
             </Link>

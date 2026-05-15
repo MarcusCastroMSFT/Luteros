@@ -71,24 +71,10 @@ export function ViewEventModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open && eventId) {
-      // Check cache first
-      const cached = eventCache.get(eventId);
-      if (cached) {
-        setEvent(cached);
-        setLoading(false);
-        return;
-      }
-      fetchEvent();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, eventId]);
-
   const fetchEvent = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/events/${eventId}`);
       const data = await response.json();
@@ -107,6 +93,20 @@ export function ViewEventModal({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (open && eventId) {
+      // Check cache first
+      const cached = eventCache.get(eventId);
+      if (cached) {
+        setEvent(cached);
+        setLoading(false);
+        return;
+      }
+      fetchEvent();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, eventId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

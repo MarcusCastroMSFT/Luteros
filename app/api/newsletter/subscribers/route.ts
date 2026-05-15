@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/db'
+import { newsletterSubscribers } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth-helpers'
+import { and, desc, eq, ilike, sql } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
   try {
     await connection()
 
-    // Verify authentication and authorization (admin only)
     const authResult = await requireAdmin(request)
     if (authResult instanceof NextResponse) {
       return authResult
@@ -18,78 +19,59 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || ''
 
-    // Build where clause
-    const where: {
-      email?: { contains: string; mode: 'insensitive' }
-      status?: 'PENDING' | 'ACTIVE' | 'UNSUBSCRIBED'
-    } = {}
-
-    if (search) {
-      where.email = { contains: search, mode: 'insensitive' }
+    const statusMap: Record<string, 'PENDING' | 'ACTIVE' | 'UNSUBSCRIBED'> = {
+      'Ativo': 'ACTIVE',
+      'Pendente': 'PENDING',
+      'Cancelado': 'UNSUBSCRIBED',
     }
+    const dbStatus = statusMap[status]
 
-    if (status) {
-      const statusMap: Record<string, 'PENDING' | 'ACTIVE' | 'UNSUBSCRIBED'> = {
-        'Ativo': 'ACTIVE',
-        'Pendente': 'PENDING',
-        'Cancelado': 'UNSUBSCRIBED',
-      }
-      if (statusMap[status]) {
-        where.status = statusMap[status]
-      }
-    }
+    const whereCondition = and(
+      search ? ilike(newsletterSubscribers.email, `%${search}%`) : undefined,
+      dbStatus ? eq(newsletterSubscribers.status, dbStatus) : undefined,
+    )
 
-    // Get total count
-    const totalCount = await prisma.newsletter_subscribers.count({ where })
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(newsletterSubscribers)
+      .where(whereCondition)
 
-    // Get subscribers with pagination
-    const subscribers = await prisma.newsletter_subscribers.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip: page * limit,
-      take: limit,
-      select: {
-        id: true,
-        email: true,
-        status: true,
-        source: true,
-        confirmedAt: true,
-        unsubscribedAt: true,
-        createdAt: true,
-      },
-    })
+    const subscribers = await db
+      .select({
+        id: newsletterSubscribers.id,
+        email: newsletterSubscribers.email,
+        status: newsletterSubscribers.status,
+        source: newsletterSubscribers.source,
+        confirmedAt: newsletterSubscribers.confirmedAt,
+        unsubscribedAt: newsletterSubscribers.unsubscribedAt,
+        createdAt: newsletterSubscribers.createdAt,
+      })
+      .from(newsletterSubscribers)
+      .where(whereCondition)
+      .orderBy(desc(newsletterSubscribers.createdAt))
+      .offset(page * limit)
+      .limit(limit)
 
-    // Map to expected format
-    const mappedSubscribers = subscribers.map((subscriber: {
-      id: string
-      email: string
-      status: string
-      source: string | null
-      confirmedAt: Date | null
-      unsubscribedAt: Date | null
-      createdAt: Date
-    }) => ({
-      id: subscriber.id,
-      email: subscriber.email,
-      status: subscriber.status === 'ACTIVE' ? 'Ativo' 
-        : subscriber.status === 'PENDING' ? 'Pendente' 
-        : 'Cancelado',
-      source: subscriber.source || 'Desconhecido',
-      confirmedAt: subscriber.confirmedAt?.toISOString() || null,
-      unsubscribedAt: subscriber.unsubscribedAt?.toISOString() || null,
-      createdAt: subscriber.createdAt.toISOString(),
+    const mappedSubscribers = subscribers.map((s) => ({
+      id: s.id,
+      email: s.email,
+      status: s.status === 'ACTIVE' ? 'Ativo' : s.status === 'PENDING' ? 'Pendente' : 'Cancelado',
+      source: s.source || 'Desconhecido',
+      confirmedAt: s.confirmedAt?.toISOString() || null,
+      unsubscribedAt: s.unsubscribedAt?.toISOString() || null,
+      createdAt: s.createdAt.toISOString(),
     }))
 
-    const totalPages = Math.ceil(totalCount / limit)
+    const totalPages = Math.ceil(total / limit)
 
     return NextResponse.json({
       data: mappedSubscribers,
-      totalCount,
+      totalCount: total,
       pageCount: totalPages,
       pagination: {
         page,
         pageSize: limit,
-        totalItems: totalCount,
+        totalItems: total,
         totalPages,
         hasNextPage: page < totalPages - 1,
         hasPreviousPage: page > 0,

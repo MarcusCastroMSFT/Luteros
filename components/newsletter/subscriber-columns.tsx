@@ -96,7 +96,7 @@ function formatDateTime(dateString: string | null): string {
   })
 }
 
-export function getSubscriberColumns(onSubscriberUpdated?: () => void): ColumnDef<Subscriber>[] {
+export function getSubscriberColumns(_onSubscriberUpdated?: () => void): ColumnDef<Subscriber>[] {
   return [
     {
       id: "select",
@@ -163,7 +163,7 @@ export function getSubscriberColumns(onSubscriberUpdated?: () => void): ColumnDe
           'footer': 'Rodapé',
           'popup': 'Pop-up',
           'landing': 'Landing Page',
-          'blog': 'Blog',
+          'blog': 'Artigos',
           'checkout': 'Checkout',
         }
         return (

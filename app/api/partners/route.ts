@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { and, asc, desc, eq, ilike, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { productPartners } from '@/lib/db/schema';
 import { requireAdmin } from '@/lib/auth-helpers';
 
 export async function GET(request: NextRequest) {
@@ -20,51 +22,32 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     const status = searchParams.get('status');
 
-    // Build where clause
-    const where: {
-      OR?: { name: { contains: string; mode: 'insensitive' }; }[];
-      isActive?: boolean;
-    } = {};
+    const searchWhere = search ? ilike(productPartners.name, `%${search}%`) : undefined
+    const statusWhere = status === 'active' ? eq(productPartners.isActive, true)
+      : status === 'inactive' ? eq(productPartners.isActive, false) : undefined
+    const where = and(searchWhere, statusWhere)
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-      ];
+    const sortColMap: Record<string, unknown> = {
+      name: productPartners.name,
+      createdAt: productPartners.createdAt,
+      email: productPartners.email,
     }
+    const sortCol = (sortColMap[sortBy] ?? productPartners.createdAt) as Parameters<typeof asc>[0]
+    const orderFn = sortOrder === 'asc' ? asc : desc
 
-    if (status === 'active') {
-      where.isActive = true;
-    } else if (status === 'inactive') {
-      where.isActive = false;
-    }
-
-    // Get total count for pagination
-    const totalCount = await prisma.product_partners.count({ where });
-
-    // Build orderBy
-    const orderBy: Record<string, string> = {};
-    const validSortFields = ['name', 'createdAt', 'email'];
-    if (validSortFields.includes(sortBy)) {
-      orderBy[sortBy] = sortOrder === 'asc' ? 'asc' : 'desc';
-    } else {
-      orderBy['createdAt'] = 'desc';
-    }
-
-    // Get partners with pagination
-    const partners = await prisma.product_partners.findMany({
-      where,
-      include: {
-        _count: {
-          select: { products: true }
-        }
-      },
-      orderBy,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    });
+    const [[{ totalCount }], partners] = await Promise.all([
+      db.select({ totalCount: sql<number>`count(*)::int` }).from(productPartners).where(where),
+      db.select({
+        id: productPartners.id, name: productPartners.name, slug: productPartners.slug,
+        logo: productPartners.logo, website: productPartners.website, email: productPartners.email,
+        phone: productPartners.phone, description: productPartners.description,
+        isActive: productPartners.isActive, createdAt: productPartners.createdAt,
+        productsCount: sql<number>`(SELECT COUNT(*)::int FROM "products" p WHERE p."partnerId" = ${productPartners.id})`,
+      }).from(productPartners).where(where).orderBy(orderFn(sortCol)).offset((page - 1) * pageSize).limit(pageSize),
+    ])
 
     // Format response for dashboard table
-    const formattedPartners = partners.map((partner: typeof partners[number]) => ({
+    const formattedPartners = partners.map((partner) => ({
       id: partner.id,
       name: partner.name,
       slug: partner.slug,
@@ -73,7 +56,7 @@ export async function GET(request: NextRequest) {
       email: partner.email,
       phone: partner.phone,
       description: partner.description,
-      productsCount: partner._count.products,
+      productsCount: partner.productsCount,
       status: partner.isActive ? 'Ativo' : 'Inativo',
       createdAt: partner.createdAt.toISOString(),
     }));
@@ -116,9 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const existingPartner = await prisma.product_partners.findUnique({
-      where: { slug },
-    });
+    const existingPartner = await db.select({ id: productPartners.id }).from(productPartners).where(eq(productPartners.slug, slug)).limit(1).then((r) => r[0] ?? null);
 
     if (existingPartner) {
       return NextResponse.json(
@@ -127,8 +108,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const partner = await prisma.product_partners.create({
-      data: {
+    const [partner] = await db.insert(productPartners).values({
         name,
         slug,
         logo,
@@ -137,8 +117,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         isActive,
-      },
-    });
+      }).returning();
 
     return NextResponse.json({
       success: true,

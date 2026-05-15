@@ -56,10 +56,10 @@ export interface Course {
   status?: 'Ativo' | 'Rascunho' | 'Inativo';
   isBestSeller?: boolean;
   tags: string[];
-  sections: CourseSection[];
+  sections?: CourseSection[];
   lastUpdated: string;
   language: string;
-  includes: string[];
+  includes?: string[];
   learningObjectives?: string[];
   requirements?: string[];
   aboutCourse?: string;

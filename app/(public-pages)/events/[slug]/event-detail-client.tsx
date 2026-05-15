@@ -30,22 +30,12 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
 
   const { event } = eventData
 
-  // Check registration status on mount and when user changes
-  useEffect(() => {
-    if (user) {
-      checkRegistrationStatus(event.id)
-    } else {
-      setIsCheckingRegistration(false)
-      setIsRegistered(false)
-    }
-  }, [user, event.id])
-
   const checkRegistrationStatus = async (eventId: string) => {
     setIsCheckingRegistration(true)
     try {
       const response = await fetch(`/api/events/${eventId}/register`)
       const data = await response.json()
-      
+
       if (data.success) {
         setIsRegistered(data.isRegistered)
       }
@@ -55,6 +45,16 @@ export function EventDetailClient({ initialData, slug }: EventDetailClientProps)
       setIsCheckingRegistration(false)
     }
   }
+
+  // Check registration status on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      checkRegistrationStatus(event.id)
+    } else {
+      setIsCheckingRegistration(false)
+      setIsRegistered(false)
+    }
+  }, [user, event.id])
 
   // Refresh event data (for slot count updates)
   const refreshEventData = async () => {

@@ -180,12 +180,12 @@ export function SiteHeader() {
               <div className="hidden sm:flex items-center space-x-2">
                 <Link href="/login">
                   <Button variant="ghost" size="sm" className="text-text-primary hover:text-cta-highlight hover:bg-transparent cursor-pointer">
-                    Log In
+                    Entrar
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-lg px-4 py-2 cursor-pointer transition-colors">
-                    Sign Up
+                    Cadastrar
                   </Button>
                 </Link>
               </div>

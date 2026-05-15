@@ -76,16 +76,6 @@ export function UserDetailsModal({ userId, open, onOpenChange, onUserUpdated }: 
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
-  useEffect(() => {
-    if (open && userId) {
-      fetchUserDetails()
-    } else {
-      setUser(null)
-      setError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, open])
-
   const fetchUserDetails = async () => {
     if (!userId) return
 
@@ -94,13 +84,13 @@ export function UserDetailsModal({ userId, open, onOpenChange, onUserUpdated }: 
     try {
       console.log('Fetching user details for ID:', userId)
       const response = await fetch(`/api/users/${userId}`)
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error('API Error:', response.status, errorData)
         throw new Error(errorData.error || 'Failed to fetch user details')
       }
-      
+
       const data = await response.json()
       console.log('User details received:', data)
       setUser(data)
@@ -111,6 +101,16 @@ export function UserDetailsModal({ userId, open, onOpenChange, onUserUpdated }: 
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (open && userId) {
+      fetchUserDetails()
+    } else {
+      setUser(null)
+      setError(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, open])
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A'

@@ -23,7 +23,6 @@ import {
   IconSend,
 } from "@tabler/icons-react"
 
-import { User } from '@supabase/supabase-js'
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavNewsletter } from "@/components/nav-newsletter"
@@ -79,8 +78,16 @@ const processDocuments = (documents: SidebarData['documents']) => {
   }))
 }
 
+interface AppSidebarUser {
+  id: string;
+  email?: string;
+  fullName?: string | null;
+  displayName?: string | null;
+  avatar?: string | null;
+}
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  user?: User | null;
+  user?: AppSidebarUser | null;
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
@@ -99,9 +106,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="p-1.5">
-              <Logo 
-                iconSize="lg" 
-                showText={false} 
+              <Logo
+                iconSize="lg"
+                showText={false}
+                asLink
                 className="flex items-center justify-center"
               />
             </div>

@@ -371,8 +371,8 @@ export function ToolbarPlugin() {
   return (
     <div className="border-b border-gray-200 bg-gray-50">
       {/* Main toolbar */}
-      <div 
-        className="sticky top-0 z-10 flex items-center gap-1 p-2"
+      <div
+        className="sticky top-0 z-10 flex flex-wrap items-center gap-1 p-2"
         ref={toolbarRef}
       >
         {/* Block Type - Simple paragraph option */}

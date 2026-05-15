@@ -92,13 +92,6 @@ export function EditEventModal({
     speakers: [],
   });
 
-  useEffect(() => {
-    if (open && eventId) {
-      fetchEvent();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, eventId]);
-
   const fetchEvent = async () => {
     setLoadingData(true);
     setError(null);
@@ -151,6 +144,13 @@ export function EditEventModal({
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    if (open && eventId) {
+      fetchEvent();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, eventId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
