@@ -75,6 +75,8 @@ export function HeroSection() {
                     width={450}
                     height={700}
                     className="w-full h-full object-cover"
+                    priority
+                    sizes="(max-width: 1024px) 50vw, 450px"
                   />
                 </div>
               </div>
@@ -90,6 +92,8 @@ export function HeroSection() {
                       width={400}
                       height={300}
                       className="w-full h-56 object-cover"
+                      sizes="(max-width: 1024px) 50vw, 400px"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -103,6 +107,8 @@ export function HeroSection() {
                       width={400}
                       height={300}
                       className="w-full h-56 object-cover"
+                      sizes="(max-width: 1024px) 50vw, 400px"
+                      loading="lazy"
                     />
                   </div>
                 </div>

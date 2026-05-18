@@ -198,7 +198,7 @@ export async function getCommunityPosts(
   isReported?: string
 ) {
   'use cache'
-  cacheLife('minutes') // Community posts change frequently
+  cacheLife('hours') // community write paths call revalidateTag('community') on every mutation; TTL is just a fallback
   cacheTag('community', `community-posts-${page}-${limit}-${category || 'all'}-${search || ''}-${status || ''}-${isReported || ''}`)
   
   return fetchCommunityPosts(page, limit, category, search, status, isReported)
@@ -264,7 +264,7 @@ async function fetchPostById(id: string) {
 // Get single post by ID with all replies using Next.js 16 Cache Components
 export async function getPostById(id: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // community write paths call revalidateTag('community') on every mutation; TTL is just a fallback
   cacheTag('community', `community-post-${id}`)
   
   return fetchPostById(id)
@@ -354,7 +354,7 @@ export async function deletePost(id: string, userId: string) {
 // Get post metadata for SEO
 export async function getPostMetadata(id: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // community write paths call revalidateTag('community') on every mutation; TTL is just a fallback
   cacheTag('community', `community-post-${id}`)
   
   const row = await db
@@ -380,7 +380,7 @@ export async function getPostMetadata(id: string) {
 // Get initial posts for SSR (first page)
 export async function getInitialCommunityPosts(category?: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // community write paths call revalidateTag('community') on every mutation; TTL is just a fallback
   cacheTag('community', `community-initial-${category || 'all'}`)
   
   return fetchCommunityPosts(0, 10, category)
@@ -409,7 +409,7 @@ export async function getCategoryStats() {
 // Get recent activity (latest replies across all posts)
 export async function getRecentActivity(limit = 5) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // community write paths call revalidateTag('community') on every mutation; TTL is just a fallback
   cacheTag('community', 'community-recent-activity')
   
   const replyAuthor = (await import('drizzle-orm/pg-core')).alias(users, 'replyAuthor')

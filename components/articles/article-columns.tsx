@@ -14,8 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ViewArticleModal } from "./view-article-modal"
-import { DeleteArticleModal } from "./delete-article-modal"
+import dynamic from "next/dynamic"
+
+// Lazy-load row-action modals — they only mount when the user opens them
+const ViewArticleModal = dynamic(() => import("./view-article-modal").then((m) => m.ViewArticleModal), { ssr: false })
+const DeleteArticleModal = dynamic(() => import("./delete-article-modal").then((m) => m.DeleteArticleModal), { ssr: false })
 
 export interface ArticleRow {
   id: string

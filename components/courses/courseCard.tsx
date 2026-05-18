@@ -11,7 +11,7 @@ const formatStudentsCount = (count: number) => {
   return count.toString()
 }
 
-export function CourseCard({ course, showInstructor = true }: CourseCardProps) {
+export function CourseCard({ course, showInstructor = true, priority = false }: CourseCardProps & { priority?: boolean }) {
   return (
     <div className="overflow-hidden">
       {/* Course Image */}
@@ -23,6 +23,9 @@ export function CourseCard({ course, showInstructor = true }: CourseCardProps) {
             width={400}
             height={240}
             className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 400px"
+            priority={priority}
+            loading={priority ? undefined : 'lazy'}
           />
         </div>
       </Link>

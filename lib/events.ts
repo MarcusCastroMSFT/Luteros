@@ -60,7 +60,7 @@ async function fetchEvents(page: number, limit: number, search?: string) {
 // Cached path (no search) — single tag so revalidateTag('events') covers all pages
 async function getEventsCached(page: number, limit: number) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // event admin handlers call revalidateTag('events') on save; TTL is just a fallback
   cacheTag('events')
 
   return fetchEvents(page, limit)
@@ -99,7 +99,7 @@ async function fetchEventBySlug(slug: string) {
 // Get single event by slug with related events using Next.js 16 Cache Components
 export async function getEventBySlug(slug: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // event admin handlers call revalidateTag('events') on save; TTL is just a fallback
   cacheTag('events', `event-${slug}`)
   
   return fetchEventBySlug(slug)
@@ -114,7 +114,7 @@ async function fetchEventMetadata(slug: string) {
 // Get event metadata only (for generateMetadata) using Next.js 16 Cache Components
 export async function getEventMetadata(slug: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // event admin handlers call revalidateTag('events') on save; TTL is just a fallback
   cacheTag('events', `event-${slug}`)
   
   return fetchEventMetadata(slug)
@@ -123,7 +123,7 @@ export async function getEventMetadata(slug: string) {
 // Get upcoming events count (useful for homepage or navigation)
 export async function getUpcomingEventsCount() {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // event admin handlers call revalidateTag('events') on save; TTL is just a fallback
   cacheTag('events', 'upcoming-events-count')
   
   const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(events).where(and(eq(events.isPublished, true), eq(events.isCancelled, false), gte(events.eventDate, new Date())))
@@ -143,7 +143,7 @@ export async function getAllEventSlugs() {
 // Get initial events for SSR (first page)
 export async function getInitialEvents() {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // event admin handlers call revalidateTag('events') on save; TTL is just a fallback
   cacheTag('events', 'events-initial')
 
   return fetchEvents(1, 9) // First page with 9 events

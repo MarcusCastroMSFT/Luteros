@@ -282,7 +282,7 @@ export async function getAllCourseSlugs(): Promise<string[]> {
 // Get initial courses for SSR (first page)
 export async function getInitialCourses() {
   'use cache'
-  cacheLife('minutes') // Shorter cache for listing - new courses appear within minutes
+  cacheLife('hours') // course admin handlers call revalidateTag('courses') on save; TTL is just a fallback
   cacheTag('courses', 'courses-initial')
   
   return fetchCourses(1, 12) // First page with 12 courses
@@ -312,7 +312,7 @@ async function fetchCourseStats() {
 // Get course stats with caching
 export async function getCourseStats() {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // course admin handlers call revalidateTag('courses') on save; TTL is just a fallback
   cacheTag('courses', 'courses-stats')
   
   return fetchCourseStats()

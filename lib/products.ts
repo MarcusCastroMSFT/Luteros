@@ -75,21 +75,21 @@ async function fetchProductMetadata(slug: string) {
 
 export async function getProductBySlug(slug: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // product admin handlers call revalidateTag('products') on save; TTL is just a fallback
   cacheTag('products', `product-${slug}`)
   return fetchProductBySlug(slug)
 }
 
 export async function getRelatedProducts(productId: string, category: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // product admin handlers call revalidateTag('products') on save; TTL is just a fallback
   cacheTag('products', `related-products-${productId}`)
   return fetchRelatedProducts(productId, category)
 }
 
 export async function getProductMetadata(slug: string) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // product admin handlers call revalidateTag('products') on save; TTL is just a fallback
   cacheTag('products', `product-${slug}`)
   return fetchProductMetadata(slug)
 }

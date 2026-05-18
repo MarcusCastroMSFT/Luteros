@@ -213,7 +213,7 @@ export async function getAllArticleSlugs(): Promise<string[]> {
 // Get initial articles for SSR (first page)
 export async function getInitialArticles() {
   'use cache'
-  cacheLife('minutes') // Shorter cache for listing - new articles appear within minutes
+  cacheLife('hours') // Admin create/edit/delete handlers call revalidateTag('articles'), so freshness is event-driven, not TTL-driven
   cacheTag('articles', 'articles-initial')
   
   return fetchArticles(1, 12) // First page with 12 articles

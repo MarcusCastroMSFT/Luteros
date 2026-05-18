@@ -55,7 +55,7 @@ const productCols = {
 
 export async function getInitialProducts() {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // product admin handlers call revalidateTag('products') on save; TTL is just a fallback
   cacheTag('products')
 
   const [rows, categoriesRaw, [{ total }]] = await Promise.all([
@@ -118,7 +118,7 @@ async function fetchProducts(page: number, limit: number, filters: ProductFilter
 // Cached path (no search) — single 'products' tag invalidates all cached pages
 async function getProductsCached(page: number, limit: number, filters: ProductFilters) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // product admin handlers call revalidateTag('products') on save; TTL is just a fallback
   cacheTag('products')
 
   return fetchProducts(page, limit, filters)
@@ -134,7 +134,7 @@ export async function getProducts(page: number, limit: number, filters: ProductF
 
 export async function getFeaturedProducts(limit: number = 4) {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours') // product admin handlers call revalidateTag('products') on save; TTL is just a fallback
   cacheTag('products', 'featured-products')
 
   const rows = await db.select(productCols).from(products).innerJoin(productPartners, eq(products.partnerId, productPartners.id)).where(and(eq(products.isActive, true), eq(products.isFeatured, true))).orderBy(desc(products.createdAt)).limit(limit)

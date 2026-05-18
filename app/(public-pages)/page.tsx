@@ -12,8 +12,8 @@ export default async function Home() {
 
   return (
     <>
-      {/* Home page background image */}
-      <div className="fixed top-0 right-0 z-0 pointer-events-none">
+      {/* Decorative background — non-critical, deferred so it doesn't compete with the hero LCP */}
+      <div className="fixed top-0 right-0 z-0 pointer-events-none" aria-hidden>
         <Image
           src="/images/home/item-9.png"
           alt=""
@@ -21,6 +21,8 @@ export default async function Home() {
           height={1100}
           className="opacity-30"
           style={{ position: 'fixed', top: 0, right: 0 }}
+          sizes="900px"
+          loading="lazy"
         />
       </div>
 
