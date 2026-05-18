@@ -50,7 +50,7 @@ export function ArticleHeader({
       </h1>
 
       {/* Excerpt */}
-      <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
+      <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed text-justify hyphens-auto">
         {excerpt}
       </p>
 
