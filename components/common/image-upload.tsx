@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Slider } from '@/components/ui/slider';
-import { Upload, Link as LinkIcon, X, ZoomIn, Move, Loader2 } from 'lucide-react';
+import { Upload, Link as LinkIcon, X, Crop, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { compressImage, formatFileSize, getCompressionRatio } from '@/lib/image-compression';
+import { ImageCropper } from './image-cropper';
 
 interface ImageUploadProps {
   value?: string;
@@ -19,13 +19,19 @@ interface ImageUploadProps {
   description?: string;
   aspectRatio?: number; // e.g., 16/9 for landscape, 1 for square
   maxSizeMB?: number;
+  /** Force a circular crop preview (for avatars). Default false = rectangular. */
+  round?: boolean;
   className?: string;
 }
 
-interface ImageAdjustment {
-  zoom: number;
-  positionX: number;
-  positionY: number;
+// Read a File or Blob into a data URL
+function readAsDataUrl(input: File | Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(input);
+  });
 }
 
 export function ImageUpload({
@@ -36,105 +42,104 @@ export function ImageUpload({
   description = 'Faça upload de uma imagem ou cole a URL',
   aspectRatio = 16 / 9,
   maxSizeMB = 5,
+  round = false,
   className = '',
 }: ImageUploadProps) {
   const [urlInput, setUrlInput] = useState('');
-  const [imageAdjustment, setImageAdjustment] = useState<ImageAdjustment>({
-    zoom: 100,
-    positionX: 50,
-    positionY: 50,
-  });
-  const [isAdjusting, setIsAdjusting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [pendingSource, setPendingSource] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Handle file selection with compression
-  const handleFileSelect = useCallback(
-    async (file: File) => {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Por favor, selecione um arquivo de imagem válido.');
-        return;
-      }
 
-      setIsCompressing(true);
-      
+  // Drop a File into the cropper (data-URL form so it's safe to load)
+  const openCropperForFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione um arquivo de imagem válido.');
+      return;
+    }
+    try {
+      const dataUrl = await readAsDataUrl(file);
+      setPendingSource(dataUrl);
+      setCropperOpen(true);
+    } catch (err) {
+      console.error(err);
+      toast.error('Não foi possível abrir a imagem.');
+    }
+  }, []);
+
+  // After the user crops, compress the resulting blob and emit a data URL
+  const handleCropComplete = useCallback(
+    async (blob: Blob) => {
+      setCropperOpen(false);
+      setIsProcessing(true);
       try {
-        // Compress the image
-        const result = await compressImage(file, {
+        const croppedFile = new File([blob], `crop-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        const result = await compressImage(croppedFile, {
           maxWidth: 1920,
-          maxHeight: 1080,
-          quality: 0.85,
-          maxSizeMB: maxSizeMB,
-          convertToFormat: file.type === 'image/png' ? 'png' : 'jpeg',
+          maxHeight: 1920,
+          quality: 0.9,
+          maxSizeMB,
+          convertToFormat: 'jpeg',
         });
-
-        // Show compression stats
-        const compressionRatio = getCompressionRatio(result.originalSize, result.compressedSize);
-        
+        const ratio = getCompressionRatio(result.originalSize, result.compressedSize);
         toast.success(
-          `Imagem otimizada! ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${compressionRatio}% menor)`
+          `Imagem otimizada! ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${ratio}% menor)`,
         );
-
-        // Update with compressed image data URL
         onChange(result.dataUrl);
-      } catch (error) {
-        console.error('Image compression error:', error);
-        toast.error(
-          error instanceof Error 
-            ? error.message 
-            : 'Erro ao comprimir a imagem. Tente novamente.'
-        );
+      } catch (err) {
+        console.error('Image processing error:', err);
+        toast.error(err instanceof Error ? err.message : 'Erro ao processar a imagem.');
       } finally {
-        setIsCompressing(false);
+        setIsProcessing(false);
+        setPendingSource(null);
       }
     },
-    [maxSizeMB, onChange]
+    [maxSizeMB, onChange],
   );
 
-  // Handle file input change
+  // Re-open the cropper using the current value (so users can re-adjust)
+  const handleReadjust = useCallback(() => {
+    if (!value) return;
+    setPendingSource(value);
+    setCropperOpen(true);
+  }, [value]);
+
+  // File input change handler
   const handleFileChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
-        handleFileSelect(file);
-      }
+      if (file) openCropperForFile(file);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     },
-    [handleFileSelect]
+    [openCropperForFile],
   );
 
-  // Handle drag and drop
+  // Drag & drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   }, []);
-
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   }, []);
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-
       const file = e.dataTransfer.files[0];
-      if (file) {
-        handleFileSelect(file);
-      }
+      if (file) openCropperForFile(file);
     },
-    [handleFileSelect]
+    [openCropperForFile],
   );
 
-  // Handle URL input
+  // URL handler — fed straight through, no cropping (we'd hit CORS)
   const handleUrlSubmit = useCallback(() => {
     if (!urlInput.trim()) {
       toast.error('Por favor, insira uma URL válida.');
       return;
     }
-
-    // Basic URL validation
     try {
       new URL(urlInput);
       onChange(urlInput.trim());
@@ -145,19 +150,12 @@ export function ImageUpload({
     }
   }, [urlInput, onChange]);
 
-  // Handle image removal
   const handleRemove = useCallback(() => {
-    if (onRemove) {
-      onRemove();
-    } else {
-      onChange('');
-    }
-    setImageAdjustment({ zoom: 100, positionX: 50, positionY: 50 });
-    setIsAdjusting(false);
+    if (onRemove) onRemove();
+    else onChange('');
     toast.success('Imagem removida.');
   }, [onChange, onRemove]);
 
-  // Calculate container aspect ratio
   const paddingBottom = `${(1 / aspectRatio) * 100}%`;
 
   return (
@@ -165,54 +163,42 @@ export function ImageUpload({
       {label && (
         <div>
           <Label className="text-sm font-medium">{label}</Label>
-          {description && (
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
-          )}
+          {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
         </div>
       )}
 
       {value ? (
         <div className="space-y-4">
-          {/* Image Preview */}
+          {/* Preview */}
           <div
-            className="relative w-full overflow-hidden rounded-lg border border-border bg-muted"
-            style={{ paddingBottom }}
+            className={`relative w-full overflow-hidden border border-border bg-muted ${
+              round ? 'rounded-full max-w-[200px]' : 'rounded-lg'
+            }`}
+            style={round ? { aspectRatio: '1 / 1' } : { paddingBottom }}
           >
             <div className="absolute inset-0">
-              <Image
-                src={value}
-                alt="Preview"
-                fill
-                className="object-cover"
-                style={{
-                  objectPosition: isAdjusting
-                    ? `${imageAdjustment.positionX}% ${imageAdjustment.positionY}%`
-                    : 'center',
-                  transform: isAdjusting
-                    ? `scale(${imageAdjustment.zoom / 100})`
-                    : 'none',
-                }}
-              />
+              <Image src={value} alt="Preview" fill className="object-cover" unoptimized />
             </div>
           </div>
 
-          {/* Image Controls */}
-          <div className="flex gap-2">
+          {/* Controls */}
+          <div className="flex flex-wrap gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsAdjusting(!isAdjusting)}
+              onClick={handleReadjust}
+              disabled={isProcessing}
               className="cursor-pointer"
             >
-              {isAdjusting ? (
+              {isProcessing ? (
                 <>
-                  <X className="h-4 w-4 mr-2" />
-                  Concluir Ajuste
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processando...
                 </>
               ) : (
                 <>
-                  <Move className="h-4 w-4 mr-2" />
+                  <Crop className="h-4 w-4 mr-2" />
                   Ajustar Imagem
                 </>
               )}
@@ -221,7 +207,19 @@ export function ImageUpload({
               type="button"
               variant="outline"
               size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className="cursor-pointer"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Substituir
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={handleRemove}
+              disabled={isProcessing}
               className="cursor-pointer"
             >
               <X className="h-4 w-4 mr-2" />
@@ -229,94 +227,13 @@ export function ImageUpload({
             </Button>
           </div>
 
-          {/* Image Adjustment Controls */}
-          {isAdjusting && (
-            <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/50">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm flex items-center gap-2">
-                    <ZoomIn className="h-4 w-4" />
-                    Zoom
-                  </Label>
-                  <span className="text-sm text-muted-foreground">
-                    {imageAdjustment.zoom}%
-                  </span>
-                </div>
-                <Slider
-                  value={[imageAdjustment.zoom]}
-                  onValueChange={(values) =>
-                    setImageAdjustment((prev) => ({ ...prev, zoom: values[0] }))
-                  }
-                  min={100}
-                  max={200}
-                  step={5}
-                  className="cursor-pointer"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm flex items-center gap-2">
-                    <Move className="h-4 w-4" />
-                    Posição Horizontal
-                  </Label>
-                  <span className="text-sm text-muted-foreground">
-                    {imageAdjustment.positionX}%
-                  </span>
-                </div>
-                <Slider
-                  value={[imageAdjustment.positionX]}
-                  onValueChange={(values) =>
-                    setImageAdjustment((prev) => ({
-                      ...prev,
-                      positionX: values[0],
-                    }))
-                  }
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="cursor-pointer"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm flex items-center gap-2">
-                    <Move className="h-4 w-4" />
-                    Posição Vertical
-                  </Label>
-                  <span className="text-sm text-muted-foreground">
-                    {imageAdjustment.positionY}%
-                  </span>
-                </div>
-                <Slider
-                  value={[imageAdjustment.positionY]}
-                  onValueChange={(values) =>
-                    setImageAdjustment((prev) => ({
-                      ...prev,
-                      positionY: values[0],
-                    }))
-                  }
-                  min={0}
-                  max={100}
-                  step={1}
-                  className="cursor-pointer"
-                />
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setImageAdjustment({ zoom: 100, positionX: 50, positionY: 50 })
-                }
-                className="w-full cursor-pointer"
-              >
-                Resetar Ajustes
-              </Button>
-            </div>
-          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
       ) : (
         <Tabs defaultValue="upload" className="w-full">
@@ -332,7 +249,6 @@ export function ImageUpload({
           </TabsList>
 
           <TabsContent value="upload" className="space-y-4">
-            {/* File Input (hidden) */}
             <input
               ref={fileInputRef}
               type="file"
@@ -341,30 +257,24 @@ export function ImageUpload({
               className="hidden"
             />
 
-            {/* Drag and Drop Area */}
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={() => !isCompressing && fileInputRef.current?.click()}
+              onClick={() => !isProcessing && fileInputRef.current?.click()}
               className={`
-                relative w-full overflow-hidden rounded-lg border-2 border-dashed
-                transition-colors
-                ${isCompressing ? 'cursor-wait' : 'cursor-pointer hover:border-primary/50 hover:bg-muted/50'}
+                relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-colors
+                ${isProcessing ? 'cursor-wait' : 'cursor-pointer hover:border-primary/50 hover:bg-muted/50'}
                 ${isDragging ? 'border-primary bg-primary/5' : 'border-border'}
               `}
               style={{ paddingBottom }}
             >
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                {isCompressing ? (
+                {isProcessing ? (
                   <>
                     <Loader2 className="h-12 w-12 mb-4 text-primary animate-spin" />
-                    <p className="text-sm font-medium mb-1">
-                      Otimizando imagem...
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Comprimindo para melhor performance
-                    </p>
+                    <p className="text-sm font-medium mb-1">Processando imagem...</p>
+                    <p className="text-xs text-muted-foreground">Cortando e comprimindo</p>
                   </>
                 ) : (
                   <>
@@ -374,12 +284,10 @@ export function ImageUpload({
                       }`}
                     />
                     <p className="text-sm font-medium mb-1">
-                      {isDragging
-                        ? 'Solte a imagem aqui'
-                        : 'Clique ou arraste uma imagem'}
+                      {isDragging ? 'Solte a imagem aqui' : 'Clique ou arraste uma imagem'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      PNG, JPG, GIF até {maxSizeMB}MB · Otimização automática
+                      PNG, JPG, GIF até {maxSizeMB}MB · Você poderá enquadrar a imagem antes de salvar
                     </p>
                   </>
                 )}
@@ -409,12 +317,23 @@ export function ImageUpload({
                   Adicionar
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Cole a URL completa de uma imagem online
-              </p>
+              <p className="text-xs text-muted-foreground">Cole a URL completa de uma imagem online</p>
             </div>
           </TabsContent>
         </Tabs>
+      )}
+
+      {pendingSource && (
+        <ImageCropper
+          open={cropperOpen}
+          onOpenChange={setCropperOpen}
+          imageSrc={pendingSource}
+          onCropComplete={handleCropComplete}
+          aspect={aspectRatio}
+          cropShape={round ? 'round' : 'rect'}
+          title="Ajustar imagem"
+          description="Arraste para reposicionar. Use o controle deslizante para zoom."
+        />
       )}
     </div>
   );
