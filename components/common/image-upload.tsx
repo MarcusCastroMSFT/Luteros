@@ -21,6 +21,8 @@ interface ImageUploadProps {
   maxSizeMB?: number;
   /** Force a circular crop preview (for avatars). Default false = rectangular. */
   round?: boolean;
+  /** Subfolder used in the blob storage key (e.g. "articles", "courses"). */
+  uploadFolder?: string;
   className?: string;
 }
 
@@ -43,6 +45,7 @@ export function ImageUpload({
   aspectRatio = 16 / 9,
   maxSizeMB = 5,
   round = false,
+  uploadFolder = 'uploads',
   className = '',
 }: ImageUploadProps) {
   const [urlInput, setUrlInput] = useState('');
@@ -68,34 +71,49 @@ export function ImageUpload({
     }
   }, []);
 
-  // After the user crops, compress the resulting blob and emit a data URL
+  // After the user crops: compress client-side to save bandwidth, upload to
+  // Vercel Blob via /api/upload, then store the returned URL (NOT a data URL).
+  // Storing URLs instead of base64 keeps DB rows ~500× smaller and avoids
+  // re-shipping image bytes with every page render.
   const handleCropComplete = useCallback(
     async (blob: Blob) => {
       setCropperOpen(false);
       setIsProcessing(true);
       try {
         const croppedFile = new File([blob], `crop-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        const result = await compressImage(croppedFile, {
+        const compressed = await compressImage(croppedFile, {
           maxWidth: 1920,
           maxHeight: 1920,
           quality: 0.9,
           maxSizeMB,
           convertToFormat: 'jpeg',
         });
-        const ratio = getCompressionRatio(result.originalSize, result.compressedSize);
+
+        const formData = new FormData();
+        formData.append('file', compressed.file);
+        formData.append('folder', uploadFolder);
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.error || `Upload falhou (${res.status})`);
+        }
+        const { url } = (await res.json()) as { url: string };
+
+        const ratio = getCompressionRatio(compressed.originalSize, compressed.compressedSize);
         toast.success(
-          `Imagem otimizada! ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${ratio}% menor)`,
+          `Imagem enviada! ${formatFileSize(compressed.originalSize)} → ${formatFileSize(compressed.compressedSize)} (${ratio}% menor)`,
         );
-        onChange(result.dataUrl);
+        onChange(url);
       } catch (err) {
-        console.error('Image processing error:', err);
-        toast.error(err instanceof Error ? err.message : 'Erro ao processar a imagem.');
+        console.error('Image upload error:', err);
+        toast.error(err instanceof Error ? err.message : 'Erro ao enviar a imagem.');
       } finally {
         setIsProcessing(false);
         setPendingSource(null);
       }
     },
-    [maxSizeMB, onChange],
+    [maxSizeMB, onChange, uploadFolder],
   );
 
   // Re-open the cropper using the current value (so users can re-adjust)

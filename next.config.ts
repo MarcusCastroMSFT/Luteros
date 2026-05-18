@@ -63,6 +63,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        // Vercel Blob storage — uploaded images live at <store>.public.blob.vercel-storage.com
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
     // Allow unoptimized images for data URLs (base64) from file uploads
     unoptimized: false,
