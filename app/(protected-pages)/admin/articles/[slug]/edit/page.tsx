@@ -72,6 +72,7 @@ export default function EditArticlePage() {
   const [slug, setSlug] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
+  const [referencesContent, setReferencesContent] = useState('');
   const [image, setImage] = useState('');
   const [category, setCategory] = useState('');
   const [readTime, setReadTime] = useState('5');
@@ -115,6 +116,7 @@ export default function EditArticlePage() {
         setTargetAudience(article.targetAudience || 'general');
         setSelectedAuthorId(article.authorId);
         setContent(article.content);
+        setReferencesContent(article.references || '');
         setRelatedArticleIds(article.relatedArticleIds || []);
         
         // Force editor to remount with new content
@@ -199,6 +201,7 @@ export default function EditArticlePage() {
           slug,
           excerpt,
           content,
+          references: referencesContent,
           image,
           category,
           readTime: parseInt(readTime),
@@ -546,6 +549,23 @@ export default function EditArticlePage() {
                       initialValue={content}
                       onChange={setContent}
                       placeholder="Escreva o conteúdo do artigo aqui..."
+                      autoFocus={false}
+                    />
+                  </div>
+                </div>
+
+                {/* References Editor */}
+                <div className="space-y-2">
+                  <Label>Referências</Label>
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    Bibliografia, links e fontes citadas no artigo. Aparecerá em uma seção colapsável após o conteúdo.
+                  </p>
+                  <div className="border rounded-lg">
+                    <RichTextEditor
+                      key={`refs-${editorKey}`}
+                      initialValue={referencesContent}
+                      onChange={setReferencesContent}
+                      placeholder="Liste aqui as referências utilizadas no artigo..."
                       autoFocus={false}
                     />
                   </div>

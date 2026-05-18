@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import nextDynamic from 'next/dynamic';
 import { ArticleHeader } from '@/components/blog/articleHeader';
 import { ArticleContent } from '@/components/blog/articleContent';
+import { ArticleReferences } from '@/components/blog/article-references';
 import { FloatingBookmarkButton } from '@/components/blog/floating-bookmark-button';
 import { Paywall } from '@/components/blog/paywall';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -132,6 +133,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
           {/* Article Content (truncated if paywalled) */}
           <ArticleContent content={displayContent} className="mb-12" />
+
+          {/* References — only when unlocked (paywalled previews don't reveal sources) */}
+          {!isGated && article.references && (
+            <ArticleReferences html={article.references} className="mb-12" />
+          )}
 
           {isGated && (
             <Paywall

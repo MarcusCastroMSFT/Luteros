@@ -14,7 +14,7 @@ function formatDate(date: Date): string {
 }
 
 // Transform DB article to frontend Article type
-function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null; accessType?: string; targetAudience?: string }, includeContent = false): Article {
+function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; references?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null; accessType?: string; targetAudience?: string }, includeContent = false): Article {
   const articleDate = article.publishedAt || article.createdAt
 
   return {
@@ -23,6 +23,7 @@ function transformArticle(article: { id: string; slug: string; title: string; ex
     title: article.title,
     excerpt: article.excerpt || '',
     ...(includeContent && { content: article.content || '' }),
+    ...(includeContent && { references: article.references || null }),
     image: article.image || '',
     category: article.category,
     author: article.authorDisplayName || article.authorName || 'Unknown',
@@ -117,6 +118,7 @@ async function fetchArticleBySlug(slug: string) {
     title: blogArticles.title,
     excerpt: blogArticles.excerpt,
     content: blogArticles.content,
+    references: blogArticles.references,
     image: blogArticles.image,
     category: blogArticles.category,
     readTime: blogArticles.readTime,

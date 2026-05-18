@@ -87,7 +87,7 @@ export async function PUT(
     const { articleId } = await context.params
     const body = await request.json()
     const {
-      title, slug, excerpt, content, image, category, readTime,
+      title, slug, excerpt, content, references, image, category, readTime,
       isPublished, authorId, relatedArticleIds = [],
       accessType = 'free', targetAudience = 'general',
     } = body
@@ -136,6 +136,7 @@ export async function PUT(
         slug,
         excerpt,
         content,
+        references: references ?? null,
         image: image || null,
         category,
         readTime: readTime || 5,

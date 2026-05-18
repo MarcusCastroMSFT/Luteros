@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const {
-      title, slug, excerpt, content, image, category, readTime,
+      title, slug, excerpt, content, references, image, category, readTime,
       isPublished, authorId, relatedArticleIds = [],
       accessType = 'free', targetAudience = 'general',
     } = body
@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
       slug,
       excerpt,
       content,
+      references: references || null,
       image: image || null,
       category,
       readTime: readTime || 5,

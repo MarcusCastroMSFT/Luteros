@@ -39,6 +39,7 @@ export async function GET(
         slug: article.slug,
         excerpt: article.excerpt,
         content: article.content,
+        references: article.references ?? '',
         image: article.image,
         category: article.category,
         readTime: article.readTime,

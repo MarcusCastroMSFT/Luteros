@@ -66,6 +66,7 @@ export default function NewArticlePage() {
   const [slug, setSlug] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
+  const [referencesContent, setReferencesContent] = useState('');
   const [image, setImage] = useState('');
   const [category, setCategory] = useState('');
   const [readTime, setReadTime] = useState('5');
@@ -183,6 +184,7 @@ export default function NewArticlePage() {
           slug,
           excerpt,
           content,
+          references: referencesContent,
           image,
           category,
           readTime: parseInt(readTime),
@@ -426,6 +428,22 @@ export default function NewArticlePage() {
                       initialValue={content}
                       onChange={setContent}
                       placeholder="Escreva o conteúdo do artigo aqui..."
+                      autoFocus={false}
+                    />
+                  </div>
+                </div>
+
+                {/* References Editor */}
+                <div className="space-y-2">
+                  <Label>Referências</Label>
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    Bibliografia, links e fontes citadas no artigo. Aparecerá em uma seção colapsável após o conteúdo.
+                  </p>
+                  <div className="border rounded-lg">
+                    <RichTextEditor
+                      initialValue={referencesContent}
+                      onChange={setReferencesContent}
+                      placeholder="Liste aqui as referências utilizadas no artigo..."
                       autoFocus={false}
                     />
                   </div>
