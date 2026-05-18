@@ -235,22 +235,27 @@ Você está recebendo este email porque se inscreveu na newsletter da lutteros.
   })
 }
 
+export interface CampaignEmailPayload {
+  subject: string
+  previewText?: string
+  content: string
+  ctaText?: string
+  ctaUrl?: string
+}
+
 /**
- * Send campaign email to a subscriber
+ * Pure renderer for a campaign email body. Returns the per-recipient subject
+ * + html + plain-text. Used by both the single-send path and the bulk batch
+ * path (so we can pre-render all recipients and ship them via Resend's
+ * batch.send endpoint).
  */
-export async function sendCampaignEmail(
+export function renderCampaignEmail(
   email: string,
-  campaign: {
-    subject: string
-    previewText?: string
-    content: string
-    ctaText?: string
-    ctaUrl?: string
-  },
-  unsubscribeToken?: string
-): Promise<EmailResult> {
+  campaign: CampaignEmailPayload,
+  unsubscribeToken?: string,
+): { to: string; subject: string; html: string; text: string } {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'
-  const unsubscribeUrl = unsubscribeToken 
+  const unsubscribeUrl = unsubscribeToken
     ? `${appUrl}/unsubscribe?token=${unsubscribeToken}`
     : `${appUrl}/unsubscribe`
     
@@ -333,11 +338,25 @@ export async function sendCampaignEmail(
     .replace(/\n\s*\n/g, '\n\n')
     .trim()
 
+  return { to: email, subject: campaign.subject, html, text }
+}
+
+/**
+ * Send campaign email to a single subscriber. Kept as a thin wrapper around
+ * renderCampaignEmail + sendEmail so the test-send endpoint and other
+ * one-off paths still work. For bulk sends use renderCampaignEmail + sendBatchEmails.
+ */
+export async function sendCampaignEmail(
+  email: string,
+  campaign: CampaignEmailPayload,
+  unsubscribeToken?: string,
+): Promise<EmailResult> {
+  const rendered = renderCampaignEmail(email, campaign, unsubscribeToken)
   return sendEmail({
-    to: email,
-    subject: campaign.subject,
-    html,
-    text,
+    to: rendered.to,
+    subject: rendered.subject,
+    html: rendered.html,
+    text: rendered.text,
     tags: [
       { name: 'type', value: 'campaign' },
       { name: 'category', value: 'newsletter' },

@@ -201,7 +201,9 @@ export function ViewProductModal({
                     src={product.image}
                     alt={product.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, 600px"
                     className="object-cover"
+                    loading="lazy"
                   />
                 </div>
               )}

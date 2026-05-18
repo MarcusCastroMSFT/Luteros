@@ -41,7 +41,9 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
             src={event.image}
             alt={event.title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
           />
           {/* Status Badge */}
           <div className="absolute top-3 right-3">
