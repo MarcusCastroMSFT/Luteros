@@ -489,7 +489,7 @@ export default function EditArticlePage() {
                   value={image}
                   onChange={setImage}
                   label="Imagem de Capa"
-                  description="Faça upload de uma imagem ou cole a URL. Recomendado: 1200x630px"
+                  description="Faça upload de uma imagem ou cole a URL. Recomendado: 1800×1200px (proporção 3:2)"
                   aspectRatio={16 / 9}
                   maxSizeMB={5}
                 />

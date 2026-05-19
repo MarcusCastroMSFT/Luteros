@@ -92,6 +92,19 @@ export function ImageCropper({
     }
   }
 
+  // Skip the crop entirely and pass the original image through. Useful when the
+  // source is already at a good size/ratio (e.g. AI-generated covers).
+  async function handleUseOriginal() {
+    setSaving(true)
+    try {
+      const response = await fetch(imageSrc)
+      const blob = await response.blob()
+      onCropComplete(blob)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
@@ -147,18 +160,30 @@ export function ImageCropper({
             <ZoomIn className="size-4" />
           </Button>
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-between gap-2">
           <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
+            type="button"
+            variant="ghost"
+            onClick={handleUseOriginal}
             disabled={saving}
-            className="cursor-pointer"
+            className="cursor-pointer text-muted-foreground"
+            title="Pular o corte e enviar a imagem original"
           >
-            Cancelar
+            Usar sem cortar
           </Button>
-          <Button onClick={handleSave} disabled={saving || !croppedArea} className="cursor-pointer">
-            {saving ? 'Salvando…' : 'Aplicar'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={saving}
+              className="cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !croppedArea} className="cursor-pointer">
+              {saving ? 'Salvando…' : 'Aplicar'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
