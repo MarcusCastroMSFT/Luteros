@@ -14,7 +14,7 @@ function formatDate(date: Date): string {
 }
 
 // Transform DB article to frontend Article type
-function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; references?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null; accessType?: string; targetAudience?: string }, includeContent = false): Article {
+function transformArticle(article: { id: string; slug: string; title: string; excerpt: string | null; content?: string | null; references?: string | null; image: string | null; category: string; readTime: number; commentCount: number; publishedAt: Date | null; createdAt: Date; updatedAt: Date; authorName: string | null; authorDisplayName: string | null; authorAvatar: string | null; accessType?: string; targetAudience?: string; metaTitle?: string | null; metaDescription?: string | null; tags?: string[] }, includeContent = false): Article {
   const articleDate = article.publishedAt || article.createdAt
 
   return {
@@ -30,10 +30,15 @@ function transformArticle(article: { id: string; slug: string; title: string; ex
     authorAvatar: article.authorAvatar || '/images/default-avatar.svg',
     authorSlug: '',
     date: formatDate(new Date(articleDate)),
+    dateISO: articleDate.toISOString(),
+    updatedAtISO: article.updatedAt.toISOString(),
     readTime: `${article.readTime} min`,
     commentCount: article.commentCount,
     accessType: (article.accessType === 'paid' ? 'paid' : 'free'),
     targetAudience: (article.targetAudience === 'doctors' ? 'doctors' : 'general'),
+    metaTitle: article.metaTitle ?? null,
+    metaDescription: article.metaDescription ?? null,
+    tags: article.tags ?? [],
   }
 }
 
@@ -60,9 +65,13 @@ async function fetchArticles(page: number, limit: number, category?: string, sea
     commentCount: blogArticles.commentCount,
     publishedAt: blogArticles.publishedAt,
     createdAt: blogArticles.createdAt,
+    updatedAt: blogArticles.updatedAt,
     relatedArticleIds: blogArticles.relatedArticleIds,
     accessType: blogArticles.accessType,
     targetAudience: blogArticles.targetAudience,
+    metaTitle: blogArticles.metaTitle,
+    metaDescription: blogArticles.metaDescription,
+    tags: blogArticles.tags,
     authorName: users.name,
     authorDisplayName: users.displayName,
     authorAvatar: users.image,
@@ -125,9 +134,13 @@ async function fetchArticleBySlug(slug: string) {
     commentCount: blogArticles.commentCount,
     publishedAt: blogArticles.publishedAt,
     createdAt: blogArticles.createdAt,
+    updatedAt: blogArticles.updatedAt,
     relatedArticleIds: blogArticles.relatedArticleIds,
     accessType: blogArticles.accessType,
     targetAudience: blogArticles.targetAudience,
+    metaTitle: blogArticles.metaTitle,
+    metaDescription: blogArticles.metaDescription,
+    tags: blogArticles.tags,
     authorName: users.name,
     authorDisplayName: users.displayName,
     authorAvatar: users.image,
@@ -172,7 +185,19 @@ export async function getArticleBySlug(slug: string) {
 
 async function fetchArticleMetadata(slug: string) {
   const row = await db
-    .select({ title: blogArticles.title, excerpt: blogArticles.excerpt, image: blogArticles.image, category: blogArticles.category, publishedAt: blogArticles.publishedAt, authorName: users.name, authorDisplayName: users.displayName })
+    .select({
+      title: blogArticles.title,
+      excerpt: blogArticles.excerpt,
+      image: blogArticles.image,
+      category: blogArticles.category,
+      publishedAt: blogArticles.publishedAt,
+      updatedAt: blogArticles.updatedAt,
+      metaTitle: blogArticles.metaTitle,
+      metaDescription: blogArticles.metaDescription,
+      tags: blogArticles.tags,
+      authorName: users.name,
+      authorDisplayName: users.displayName,
+    })
     .from(blogArticles)
     .innerJoin(users, eq(blogArticles.authorId, users.id))
     .where(and(eq(blogArticles.slug, slug), eq(blogArticles.isPublished, true)))
@@ -187,7 +212,11 @@ async function fetchArticleMetadata(slug: string) {
     image: row.image,
     category: row.category,
     date: row.publishedAt?.toISOString(),
+    updatedAt: row.updatedAt?.toISOString(),
     author: row.authorDisplayName || row.authorName || 'Unknown',
+    metaTitle: row.metaTitle ?? null,
+    metaDescription: row.metaDescription ?? null,
+    tags: row.tags ?? [],
   }
 }
 

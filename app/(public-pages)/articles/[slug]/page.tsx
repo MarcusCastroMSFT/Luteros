@@ -7,7 +7,7 @@ import { ArticleReferences } from '@/components/blog/article-references';
 import { FloatingBookmarkButton } from '@/components/blog/floating-bookmark-button';
 import { Paywall } from '@/components/blog/paywall';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getArticleBySlug, getArticleMetadata } from '@/lib/articles';
+import { getArticleBySlug, getArticleMetadata, getAllArticleSlugs } from '@/lib/articles';
 import {
   getCurrentUserAccessContext,
   hasArticleAccess,
@@ -37,6 +37,12 @@ interface ArticlePageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+// Pre-render all published article slugs at build time for optimal performance
+export async function generateStaticParams() {
+  const slugs = await getAllArticleSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
@@ -72,7 +78,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     '@type': 'Article',
     '@id': articleUrl,
     headline: article.title,
-    description: article.excerpt,
+    description: article.metaDescription || article.excerpt,
     image: article.image ? {
       '@type': 'ImageObject',
       url: article.image.startsWith('http') ? article.image : `${baseUrl}${article.image}`,
@@ -82,8 +88,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       name: article.author,
       url: article.authorSlug ? `${baseUrl}/specialists/${article.authorSlug}` : undefined,
     },
-    datePublished: article.date,
-    dateModified: article.date,
+    datePublished: article.dateISO,
+    dateModified: article.updatedAtISO ?? article.dateISO,
     publisher: {
       '@type': 'Organization',
       name: 'lutteros',
@@ -100,7 +106,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       '@id': articleUrl,
     },
     articleSection: article.category,
-    wordCount: article.content ? article.content.split(/\s+/).length : undefined,
+    keywords: article.tags?.length ? article.tags.join(', ') : undefined,
+    // Strip HTML tags before counting words for an accurate wordCount
+    wordCount: article.content
+      ? article.content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
+      : undefined,
     timeRequired: `PT${article.readTime.replace(' min', '')}M`,
     inLanguage: 'pt-BR',
   };
@@ -200,17 +210,24 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     ? article.image 
     : `${baseUrl}${article.image}`;
 
+  // Prefer per-article meta fields when set by the editor
+  const metaTitle = article.metaTitle || article.title;
+  const metaDescription = article.metaDescription || article.excerpt;
+  const keywords = article.tags?.length
+    ? article.tags
+    : [article.category, 'saúde sexual', 'educação', 'bem-estar'];
+
   return {
-    title: article.title,
-    description: article.excerpt,
-    keywords: [article.category, 'saúde sexual', 'educação', 'bem-estar'],
+    title: metaTitle,
+    description: metaDescription,
+    keywords,
     authors: [{ name: article.author }],
     alternates: {
       canonical: articleUrl,
     },
     openGraph: {
-      title: article.title,
-      description: article.excerpt,
+      title: metaTitle,
+      description: metaDescription,
       url: articleUrl,
       siteName: 'lutteros',
       images: [
@@ -218,19 +235,20 @@ export async function generateMetadata({ params }: ArticlePageProps) {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: article.title,
+          alt: metaTitle,
         },
       ],
       type: 'article',
-      publishedTime: article.date,
+      publishedTime: article.date,          // ISO string from getArticleMetadata
+      modifiedTime: article.updatedAt,      // ISO string from getArticleMetadata
       authors: [article.author],
       section: article.category,
       locale: 'pt_BR',
     },
     twitter: {
       card: 'summary_large_image',
-      title: article.title,
-      description: article.excerpt,
+      title: metaTitle,
+      description: metaDescription,
       images: [imageUrl],
     },
     robots: {

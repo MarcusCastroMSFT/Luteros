@@ -11,10 +11,17 @@ export interface Article {
   authorSlug: string;
   authorAvatar?: string;
   date: string;
+  /** ISO 8601 publish date — use for JSON-LD / OG tags */
+  dateISO?: string;
+  /** ISO 8601 last-updated date — use for JSON-LD dateModified / OG article:modified_time */
+  updatedAtISO?: string;
   readTime: string;
   commentCount?: number;
   accessType?: 'free' | 'paid';
   targetAudience?: 'general' | 'doctors';
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  tags?: string[];
 }
 
 export interface BlogPagination {
