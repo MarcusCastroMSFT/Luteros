@@ -172,6 +172,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Rewrite /favicon.ico to the dynamically-generated icon so tools that
+  // request the ICO path directly (e.g. Vercel dashboard) get our brand icon.
+  async rewrites() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/icon',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
