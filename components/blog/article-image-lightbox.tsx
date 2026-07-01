@@ -45,25 +45,22 @@ export function ArticleImageLightbox({ src, alt }: ArticleImageLightboxProps) {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit p-0 bg-black/90 border-none overflow-auto">
-          <DialogClose className="absolute right-3 top-3 z-10 rounded-full bg-black/60 text-white p-1.5 hover:bg-black/80 transition-colors">
+        {/* Use a scrollable overlay so very tall images don't overflow */}
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto p-0 bg-transparent border-none shadow-none overflow-auto flex items-center justify-center">
+          <DialogClose className="fixed right-4 top-4 z-50 rounded-full bg-black/60 text-white p-1.5 hover:bg-black/80 transition-colors">
             <X className="w-5 h-5" />
             <span className="sr-only">Fechar</span>
           </DialogClose>
-          {isDataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={alt} className="max-w-[95vw] max-h-[95vh] w-auto h-auto block" />
-          ) : (
-            <Image
-              src={src}
-              alt={alt}
-              width={0}
-              height={0}
-              sizes="95vw"
-              className="max-w-[95vw] max-h-[95vh] w-auto h-auto block"
-              quality={95}
-            />
-          )}
+          {/* Always use a plain <img> in the lightbox — the blob URL is already on
+              a CDN so no Next.js optimization is needed, and <Image width={0}/> 
+              sets inline style="width:0px" which collapses the dialog. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={alt}
+            className="block max-w-[90vw] max-h-[90vh] w-auto h-auto rounded-lg"
+            style={{ objectFit: 'contain' }}
+          />
         </DialogContent>
       </Dialog>
     </>
