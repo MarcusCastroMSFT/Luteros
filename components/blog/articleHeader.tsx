@@ -81,28 +81,29 @@ export function ArticleHeader({
 
       {/* Featured Image - Only show if image exists */}
       {hasImage && (
-        <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden bg-gray-200">
+        <div className="w-full rounded-lg overflow-hidden bg-gray-200">
           {image.startsWith('data:') ? (
             // Use regular img tag for data URLs (base64)
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={image}
               alt={title}
-              className="w-full h-full object-cover"
+              className="w-full h-auto block"
               loading="eager"
             />
           ) : (
-            // Use Next.js Image for external URLs with optimizations
+            // Use Next.js Image for external URLs — natural height so the full
+            // image is always visible (width=0/height=0 + w-full h-auto is the
+            // documented Next.js pattern for responsive natural sizing)
             <Image
               src={image}
               alt={title}
-              fill
-              className="object-cover"
-              priority
+              width={0}
+              height={0}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+              className="w-full h-auto block"
+              priority
               quality={85}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI2MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEyMDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjZjBmMGYwIi8+PC9zdmc+"
             />
           )}
         </div>
