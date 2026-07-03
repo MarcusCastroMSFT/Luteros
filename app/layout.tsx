@@ -43,20 +43,13 @@ export const metadata: Metadata = {
     siteName: "lutteros",
     title: "lutteros - Saúde Sexual e Bem-estar",
     description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
-    images: [
-      {
-        url: "/images/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "lutteros - Saúde Sexual e Bem-estar",
-      },
-    ],
+    // Image is generated automatically by app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
     title: "lutteros - Saúde Sexual e Bem-estar",
     description: "Plataforma de educação em saúde sexual e bem-estar.",
-    images: ["/images/og-image.jpg"],
+    // Image is generated automatically by app/twitter-image.tsx
   },
   robots: {
     index: true,
