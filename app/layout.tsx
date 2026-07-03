@@ -18,7 +18,18 @@ const cardo = Cardo({
   variable: "--font-cardo",
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+// Resolve the canonical origin used for absolute metadata URLs (og:image, etc.).
+// Prefer Vercel's production domain because it is always live and reachable —
+// once a custom domain (e.g. lutteros.com.br) is attached in Vercel, this env
+// var automatically points to it. NEXT_PUBLIC_BASE_URL is only used as an
+// explicit override for non-Vercel environments.
+const baseUrl =
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined) ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+  'https://lutteros.com.br';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -43,13 +54,20 @@ export const metadata: Metadata = {
     siteName: "lutteros",
     title: "lutteros - Saúde Sexual e Bem-estar",
     description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
-    // Image is generated automatically by app/opengraph-image.tsx
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "lutteros - Saúde Sexual e Bem-estar",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "lutteros - Saúde Sexual e Bem-estar",
     description: "Plataforma de educação em saúde sexual e bem-estar.",
-    // Image is generated automatically by app/twitter-image.tsx
+    images: ["/images/og-image.png"],
   },
   robots: {
     index: true,
