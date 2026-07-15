@@ -71,8 +71,13 @@ export function ArticleShare({ title, url, className = '' }: ArticleShareProps) 
             asChild
             className={`flex items-center gap-2 cursor-pointer transition-colors ${link.color} hover:text-white`}
           >
-            <a href={link.url} target="_blank" rel="noopener noreferrer">
-              <link.icon className="w-4 h-4" />
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Compartilhar no ${link.name}`}
+            >
+              <link.icon className="w-4 h-4" aria-hidden="true" />
               <span className="hidden sm:inline">{link.name}</span>
             </a>
           </Button>
@@ -81,9 +86,10 @@ export function ArticleShare({ title, url, className = '' }: ArticleShareProps) 
           variant="outline"
           size="sm"
           onClick={copyToClipboard}
+          aria-label="Copiar link do artigo"
           className="flex items-center gap-2 cursor-pointer hover:bg-[var(--cta-highlight)] hover:text-white"
         >
-          <LinkIcon className="w-4 h-4" />
+          <LinkIcon className="w-4 h-4" aria-hidden="true" />
           <span className="hidden sm:inline">Copiar Link</span>
         </Button>
       </div>

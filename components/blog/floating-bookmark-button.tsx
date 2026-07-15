@@ -116,6 +116,8 @@ export function FloatingBookmarkButton({
               size="lg"
               onClick={handleToggleBookmark}
               disabled={isLoading || isChecking}
+              aria-label={isBookmarked ? 'Remover dos salvos' : 'Salvar artigo'}
+              aria-pressed={isBookmarked}
               className={cn(
                 'h-14 w-14 rounded-full shadow-lg cursor-pointer',
                 'hover:scale-105 transition-transform',
@@ -125,6 +127,7 @@ export function FloatingBookmarkButton({
               )}
             >
               <Bookmark 
+                aria-hidden="true"
                 className={cn(
                   'h-6 w-6 transition-all',
                   isBookmarked ? 'fill-current text-white' : 'text-gray-600'
