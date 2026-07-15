@@ -100,6 +100,7 @@ const ToolbarButton = ({
   title: string;
 }) => (
   <Button
+    type="button"
     variant="ghost"
     size="sm"
     onClick={onClick}
@@ -465,6 +466,7 @@ export function ToolbarPlugin() {
         <DropdownMenu open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
           <DropdownMenuTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 cursor-pointer hover:bg-gray-100 relative"
@@ -482,6 +484,7 @@ export function ToolbarPlugin() {
               <div className="grid grid-cols-6 gap-2 mb-3">
                 {TEXT_COLORS.map((color) => (
                   <button
+                    type="button"
                     key={color.value}
                     onClick={() => formatTextColor(color.value)}
                     className={cn(
@@ -512,6 +515,7 @@ export function ToolbarPlugin() {
                     maxLength={7}
                   />
                   <Button
+                    type="button"
                     size="sm"
                     onClick={() => handleCustomHexColor(customHexColor)}
                     className="h-8 px-3 text-xs cursor-pointer"
