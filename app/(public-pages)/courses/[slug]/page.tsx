@@ -173,6 +173,54 @@ async function CourseContentWrapper({ slug }: { slug: string }) {
 
   const schemas = [jsonLd, videoJsonLd].filter(Boolean) as Record<string, unknown>[];
 
+  // Lesson-level VideoObjects for free/preview lessons that have a video URL,
+  // so individual lessons become eligible for Google Video results.
+  const toIsoDuration = (d?: number | string | null): string | undefined => {
+    if (d == null) return undefined;
+    // Numeric duration is stored in minutes
+    if (typeof d === 'number') return d > 0 ? `PT${Math.round(d)}M` : undefined;
+    const parts = d.split(':').map((n) => parseInt(n, 10));
+    if (parts.some(Number.isNaN)) return undefined;
+    let h = 0, m = 0, s = 0;
+    if (parts.length === 3) [h, m, s] = parts;
+    else if (parts.length === 2) [m, s] = parts;
+    else return undefined;
+    return `PT${h ? `${h}H` : ''}${m ? `${m}M` : ''}${s ? `${s}S` : ''}` || 'PT0S';
+  };
+  const videoLocation = (url: string, provider?: string | null) => {
+    const isYouTube = provider === 'youtube' || /youtu\.?be/.test(url);
+    const isVimeo = provider === 'vimeo' || /vimeo\.com/.test(url);
+    if (isYouTube) {
+      const id = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/)?.[1];
+      return id ? { embedUrl: `https://www.youtube.com/embed/${id}` } : { contentUrl: url };
+    }
+    if (isVimeo) {
+      const id = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1];
+      return id ? { embedUrl: `https://player.vimeo.com/video/${id}` } : { contentUrl: url };
+    }
+    return { contentUrl: url };
+  };
+  const lessonThumb = videoThumb
+    ? videoThumb.startsWith('http') ? videoThumb : `${baseUrl}${videoThumb}`
+    : `${baseUrl}/images/og-image.png`;
+
+  for (const lesson of courseData.lessons) {
+    if (lesson.type !== 'video' || !lesson.isFree || !lesson.videoUrl || !c.publishedAt) continue;
+    const location = videoLocation(lesson.videoUrl, lesson.videoProvider);
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      name: lesson.title,
+      description: lesson.description || lesson.title,
+      thumbnailUrl: [lessonThumb],
+      uploadDate: c.publishedAt,
+      ...(toIsoDuration(lesson.duration) ? { duration: toIsoDuration(lesson.duration) } : {}),
+      ...location,
+      isFamilyFriendly: true,
+      inLanguage: c.language || 'pt-BR',
+    });
+  }
+
   return (
     <>
       {/* JSON-LD Structured Data (Course + optional VideoObject) */}

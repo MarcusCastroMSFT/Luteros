@@ -9,6 +9,8 @@ interface FAQItem {
   id: string;
   question: string;
   answer: string | React.ReactNode;
+  /** Plain-text answer for FAQPage structured data (required when `answer` is JSX). */
+  schemaAnswer?: string;
   category: string;
 }
 
@@ -24,6 +26,7 @@ const faqData: FAQItem[] = [
     id: 'platform-2',
     category: 'Sobre a Plataforma',
     question: 'A plataforma é confiável e segura?',
+    schemaAnswer: 'Sim. A lutteros segue altos padrões de segurança e privacidade: todos os especialistas são credenciados e verificados, o conteúdo é revisado por profissionais de saúde, os dados são criptografados e em conformidade com a LGPD, e o ambiente é moderado 24/7 para garantir respeito e segurança.',
     answer: (
       <div className="space-y-2">
         <p>Sim, a lutteros segue os mais altos padrões de segurança e privacidade:</p>
@@ -54,6 +57,7 @@ const faqData: FAQItem[] = [
     id: 'account-2',
     category: 'Conta e Acesso',
     question: 'Preciso ter mais de 18 anos para usar a plataforma?',
+    schemaAnswer: 'Sim. O acesso completo a todos os recursos é permitido apenas para maiores de 18 anos. O acesso não é permitido para menores de 18 anos.',
     answer: (
       <div className="space-y-2">
         <p>Nossa política de idade é flexível mas responsável:</p>
@@ -76,6 +80,7 @@ const faqData: FAQItem[] = [
     id: 'consultations-1',
     category: 'Consultas e Especialistas',
     question: 'Como funciona uma consulta online?',
+    schemaAnswer: 'As consultas na lutteros são educacionais e informativas. Você agenda através da plataforma com especialistas disponíveis, as sessões acontecem por videochamada, chat ou telefone, com duração típica de 30 a 60 minutos, focadas em educação, esclarecimento de dúvidas e orientação. Elas não substituem consultas médicas presenciais quando necessárias.',
     answer: (
       <div className="space-y-2">
         <p>As consultas na lutteros são educacionais e informativas:</p>
@@ -113,6 +118,7 @@ const faqData: FAQItem[] = [
     id: 'privacy-1',
     category: 'Privacidade e Segurança',
     question: 'Minhas informações ficam realmente seguras?',
+    schemaAnswer: 'Sim. Implementamos múltiplas camadas de proteção: criptografia end-to-end em todas as comunicações, servidores seguros com backups criptografados, acesso restrito apenas a pessoal autorizado, conformidade total com a LGPD e nunca compartilhamos dados para fins comerciais.',
     answer: (
       <div className="space-y-2">
         <p>Sim! Implementamos múltiplas camadas de proteção:</p>
@@ -150,6 +156,7 @@ const faqData: FAQItem[] = [
     id: 'content-2',
     category: 'Conteúdo e Comunidade',
     question: 'Como a comunidade é moderada?',
+    schemaAnswer: 'Temos moderação ativa e inteligente: moderadores treinados em saúde sexual disponíveis 24/7, filtros automáticos para conteúdo inadequado, um sistema de denúncias rápido e eficiente, diretrizes claras de comportamento respeitoso e tolerância zero para assédio ou discriminação.',
     answer: (
       <div className="space-y-2">
         <p>Temos moderação ativa e inteligente:</p>
@@ -175,6 +182,7 @@ const faqData: FAQItem[] = [
     id: 'payment-1',
     category: 'Pagamentos e Planos',
     question: 'Quais são os planos disponíveis?',
+    schemaAnswer: 'Oferecemos opções para diferentes necessidades: plano Gratuito com acesso a artigos básicos e comunidade; plano Premium com cursos completos, webinars e conteúdo exclusivo; Consultas individuais com pagamento por sessão; e plano Empresarial com programas de bem-estar para empresas.',
     answer: (
       <div className="space-y-2">
         <p>Oferecemos opções para diferentes necessidades:</p>
@@ -205,6 +213,7 @@ const faqData: FAQItem[] = [
     id: 'support-1',
     category: 'Suporte Técnico',
     question: 'Como entrar em contato com o suporte?',
+    schemaAnswer: 'Oferecemos várias formas de suporte: chat online disponível 24/7 na plataforma, e-mail em suporte@lutteros.com.br com resposta em até 24h, WhatsApp em horário comercial e uma Central de Ajuda com base de conhecimento completa.',
     answer: (
       <div className="space-y-2">
         <p>Oferecemos várias formas de suporte:</p>
@@ -278,6 +287,23 @@ export default function FAQPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // FAQPage structured data — uses schemaAnswer for JSX answers, otherwise the
+  // plain-string answer. Rendered server-side (Next SSRs client components).
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqData
+      .map((item) => ({
+        '@type': 'Question' as const,
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer' as const,
+          text: item.schemaAnswer ?? (typeof item.answer === 'string' ? item.answer : ''),
+        },
+      }))
+      .filter((q) => q.acceptedAnswer.text),
+  };
+
   const filteredFAQs = faqData.filter(item => {
     const matchesCategory = !selectedCategory || item.category === selectedCategory;
     const matchesSearch = !searchTerm || 
@@ -288,6 +314,10 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <PageHeader
         title="Perguntas Frequentes"
         description="Encontre respostas para suas dúvidas sobre a lutteros"

@@ -204,9 +204,17 @@ async function fetchCourseBySlug(slug: string) {
   if (!course) return null
 
   const [courseLessons, related] = await Promise.all([
-    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, type: lessons.type }).from(lessons).where(and(eq(lessons.courseId, course.id), eq(lessons.isPublished, true))).orderBy(asc(lessons.order)),
+    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, type: lessons.type, videoUrl: lessons.videoUrl, videoProvider: lessons.videoProvider }).from(lessons).where(and(eq(lessons.courseId, course.id), eq(lessons.isPublished, true))).orderBy(asc(lessons.order)),
     db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.category, course.category), ne(courses.slug, slug), eq(courses.isPublished, true))).orderBy(desc(courses.enrollmentCount)).limit(3),
   ])
+
+  // Only expose video URLs for free/preview lessons — paid lesson videos must
+  // never leak into the public payload (or into structured data).
+  const safeLessons = courseLessons.map((l) => ({
+    ...l,
+    videoUrl: l.isFree ? l.videoUrl : null,
+    videoProvider: l.isFree ? l.videoProvider : null,
+  }))
 
   // Batch lesson counts for related courses; main course's count is courseLessons.length
   const relatedIds = related.map((r) => r.id)
@@ -221,7 +229,7 @@ async function fetchCourseBySlug(slug: string) {
 
   return {
     course: transformCourse({ ...course, lessonsCount: courseLessons.length }),
-    lessons: courseLessons,
+    lessons: safeLessons,
     relatedCourses: related.map((r) => transformCourse({ ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0 })),
   }
 }
