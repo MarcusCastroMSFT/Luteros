@@ -42,6 +42,7 @@ async function ArticlesContent({ page, category }: { page: number; category: str
   return (
     <>
       {/* Category Filter — URL-based, fully server-rendered (no client JS) */}
+      <h2 className="sr-only">Lista de artigos</h2>
       <div className="mb-6 md:mb-8">
         <CategoryFilter categories={categories} activeCategory={category} basePath="/articles" />
       </div>

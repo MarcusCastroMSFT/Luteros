@@ -40,7 +40,8 @@ export function Logo({
     return (
       <Link
         href="/"
-        className="flex items-center"
+        aria-label="lutteros — Página inicial"
+        className="flex min-h-[44px] items-center"
         {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
         {content}
