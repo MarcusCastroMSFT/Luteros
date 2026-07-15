@@ -25,6 +25,7 @@ export function ImageDialog({ open, onOpenChange, onConfirm }: ImageDialogProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (url.trim()) {
       onConfirm(url.trim(), altText.trim() || undefined);
       setUrl('');

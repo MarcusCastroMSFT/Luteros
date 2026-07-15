@@ -26,6 +26,7 @@ export function LinkDialog({ open, onOpenChange, onConfirm, selectedText }: Link
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (url.trim()) {
       onConfirm(url.trim(), text.trim() || undefined);
       setUrl('');

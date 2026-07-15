@@ -24,6 +24,7 @@ export function VideoDialog({ open, onOpenChange, onConfirm }: VideoDialogProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (url.trim()) {
       onConfirm(url.trim());
       setUrl('');
