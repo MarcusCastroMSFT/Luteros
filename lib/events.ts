@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { and, asc, eq, gte, ilike, ne, or, sql } from 'drizzle-orm'
+import { and, asc, eq, gte, ilike, inArray, ne, or, sql } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
 import { events, eventRegistrations, eventSpeakers } from '@/lib/db/schema'
@@ -39,7 +39,6 @@ async function fetchEvents(page: number, limit: number, search?: string) {
     fullDescription: events.fullDescription, location: events.location, eventDate: events.eventDate,
     eventTime: events.eventTime, duration: events.duration, image: events.image,
     totalSlots: events.totalSlots, cost: events.cost, isFree: events.isFree, createdAt: events.createdAt,
-    bookedSlots: sql<number>`(SELECT COUNT(*)::int FROM "event_registrations" er WHERE er."eventId" = ${events.id})`,
   }
 
   const [rows, [{ total }]] = await Promise.all([
@@ -47,11 +46,23 @@ async function fetchEvents(page: number, limit: number, search?: string) {
     db.select({ total: sql<number>`count(*)::int` }).from(events).where(where),
   ])
 
+  // Batch the booked-slot counts for all events on this page in a single
+  // GROUP BY query instead of a correlated subquery per row (avoids N+1).
+  const eventIds = rows.map((r) => r.id)
+  const bookedCounts = eventIds.length > 0
+    ? await db
+        .select({ eventId: eventRegistrations.eventId, count: sql<number>`count(*)::int` })
+        .from(eventRegistrations)
+        .where(inArray(eventRegistrations.eventId, eventIds))
+        .groupBy(eventRegistrations.eventId)
+    : []
+  const bookedMap = new Map(bookedCounts.map((b) => [b.eventId, Number(b.count)]))
+
   const totalEvents = Number(total)
   const totalPages = Math.ceil(totalEvents / limit)
 
   return {
-    events: rows.map((e) => transformEvent(e)),
+    events: rows.map((e) => transformEvent({ ...e, bookedSlots: bookedMap.get(e.id) ?? 0 })),
     pagination: { currentPage: page, totalPages, totalEvents, eventsPerPage: limit, hasNextPage: page < totalPages, hasPrevPage: page > 1 } as EventsPagination,
   }
 }

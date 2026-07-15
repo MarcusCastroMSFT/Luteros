@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
-import { asc, eq, inArray } from 'drizzle-orm'
+import { asc, eq, inArray, sql } from 'drizzle-orm'
 
 // PUT reorder lessons
 export async function PUT(
@@ -34,14 +34,24 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Some lessons were not found or do not belong to this course' }, { status: 400 })
     }
 
-    // Step 1: Set negative temps, Step 2: Set final to avoid unique constraint conflicts
+    // Two-phase reorder to avoid the (courseId, order) unique-index conflict,
+    // but each phase is a single batched CASE WHEN update instead of N queries.
     await db.transaction(async (tx) => {
-      for (let i = 0; i < lessonIds.length; i++) {
-        await tx.update(lessons).set({ order: -(i + 1) }).where(eq(lessons.id, lessonIds[i]))
-      }
-      for (let i = 0; i < lessonIds.length; i++) {
-        await tx.update(lessons).set({ order: i }).where(eq(lessons.id, lessonIds[i]))
-      }
+      const tempCases = sql.join(
+        lessonIds.map((id: string, i: number) => sql`WHEN ${id}::uuid THEN ${-(i + 1)}`),
+        sql` `,
+      )
+      await tx.update(lessons)
+        .set({ order: sql`CASE ${lessons.id} ${tempCases} END` })
+        .where(inArray(lessons.id, lessonIds))
+
+      const finalCases = sql.join(
+        lessonIds.map((id: string, i: number) => sql`WHEN ${id}::uuid THEN ${i}`),
+        sql` `,
+      )
+      await tx.update(lessons)
+        .set({ order: sql`CASE ${lessons.id} ${finalCases} END` })
+        .where(inArray(lessons.id, lessonIds))
     })
 
     const updatedLessons = await db

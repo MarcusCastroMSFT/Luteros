@@ -3,7 +3,7 @@ import { revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, inArray, sql } from 'drizzle-orm'
 
 // GET a single lesson
 export async function GET(
@@ -104,15 +104,31 @@ export async function DELETE(
 
     await db.delete(lessons).where(eq(lessons.id, lessonId))
 
-    // Reorder remaining lessons
+    // Reorder remaining lessons to close the gap. Two-phase batched update to
+    // avoid the (courseId, order) unique-index conflict without N round-trips.
     const remaining = await db.select({ id: lessons.id }).from(lessons)
       .where(eq(lessons.courseId, courseId)).orderBy(asc(lessons.order))
 
-    await db.transaction(async (tx) => {
-      for (let i = 0; i < remaining.length; i++) {
-        await tx.update(lessons).set({ order: i }).where(eq(lessons.id, remaining[i].id))
-      }
-    })
+    if (remaining.length > 0) {
+      const remainingIds = remaining.map((r) => r.id)
+      await db.transaction(async (tx) => {
+        const tempCases = sql.join(
+          remainingIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${-(i + 1)}`),
+          sql` `,
+        )
+        await tx.update(lessons)
+          .set({ order: sql`CASE ${lessons.id} ${tempCases} END` })
+          .where(inArray(lessons.id, remainingIds))
+
+        const finalCases = sql.join(
+          remainingIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
+          sql` `,
+        )
+        await tx.update(lessons)
+          .set({ order: sql`CASE ${lessons.id} ${finalCases} END` })
+          .where(inArray(lessons.id, remainingIds))
+      })
+    }
 
     const course = await db.select({ slug: courses.slug }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
     if (course?.slug) revalidateTag(`course-${course.slug}`)

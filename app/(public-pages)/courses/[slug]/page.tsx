@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { getCourseBySlug, getCourseMetadata } from '@/lib/courses';
 import { CourseDetailClient } from './course-detail-client';
 import { CourseDetailSkeleton } from '@/components/courses/courseDetailSkeleton';
+import { JsonLd } from '@/components/seo/json-ld';
 
 interface CoursePageProps {
   params: Promise<{
@@ -149,16 +150,33 @@ async function CourseContentWrapper({ slug }: { slug: string }) {
 
   // Generate JSON-LD for SEO
   const jsonLd = generateCourseJsonLd(courseData, slug);
-  
+
+  // VideoObject for the course preview so it can appear in Google Video results.
+  // Only emitted when we have both a video URL and a valid upload date.
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+  const c = courseData.course;
+  const videoThumb = c.image || c.coverImage;
+  const videoJsonLd = c.previewVideo && c.publishedAt
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'VideoObject',
+        name: `${c.title} — Prévia`,
+        description: c.description,
+        thumbnailUrl: videoThumb
+          ? [videoThumb.startsWith('http') ? videoThumb : `${baseUrl}${videoThumb}`]
+          : [`${baseUrl}/images/og-image.png`],
+        uploadDate: c.publishedAt,
+        embedUrl: c.previewVideo,
+        contentUrl: c.previewVideo,
+      }
+    : null;
+
+  const schemas = [jsonLd, videoJsonLd].filter(Boolean) as Record<string, unknown>[];
+
   return (
     <>
-      {/* JSON-LD Structured Data */}
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      )}
+      {/* JSON-LD Structured Data (Course + optional VideoObject) */}
+      {schemas.length > 0 && <JsonLd data={schemas} />}
       <CourseDetailClient course={courseData.course} lessons={courseData.lessons} slug={slug} />
     </>
   );

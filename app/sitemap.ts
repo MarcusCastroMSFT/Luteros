@@ -9,6 +9,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
 
+  // Turn a stored image path (absolute URL or site-relative) into an absolute
+  // URL so search engines can index it via the sitemap's <image:image> entries.
+  const absoluteImage = (img?: string | null): string[] =>
+    img ? [img.startsWith('http') ? img : `${baseUrl}${img}`] : []
+
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -94,13 +99,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published blog articles
   let articlePages: MetadataRoute.Sitemap = []
   try {
-    const articles = await db.select({ slug: blogArticles.slug, updatedAt: blogArticles.updatedAt, publishedAt: blogArticles.publishedAt }).from(blogArticles).where(eq(blogArticles.isPublished, true))
+    const articles = await db.select({ slug: blogArticles.slug, updatedAt: blogArticles.updatedAt, publishedAt: blogArticles.publishedAt, image: blogArticles.image, coverImage: blogArticles.coverImage }).from(blogArticles).where(eq(blogArticles.isPublished, true))
 
     articlePages = articles.map((article) => ({
       url: `${baseUrl}/articles/${article.slug}`,
       lastModified: article.updatedAt || article.publishedAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
+      images: absoluteImage(article.coverImage || article.image),
     }))
   } catch (error) {
     console.error('Error fetching articles for sitemap:', error)
@@ -109,13 +115,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published courses
   let coursePages: MetadataRoute.Sitemap = []
   try {
-    const coursesRows = await db.select({ slug: courses.slug, updatedAt: courses.updatedAt }).from(courses).where(eq(courses.isPublished, true))
+    const coursesRows = await db.select({ slug: courses.slug, updatedAt: courses.updatedAt, thumbnail: courses.thumbnail, coverImage: courses.coverImage }).from(courses).where(eq(courses.isPublished, true))
 
     coursePages = coursesRows.map((course) => ({
       url: `${baseUrl}/courses/${course.slug}`,
       lastModified: course.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
+      images: absoluteImage(course.coverImage || course.thumbnail),
     }))
   } catch (error) {
     console.error('Error fetching courses for sitemap:', error)
@@ -124,13 +131,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all published events
   let eventPages: MetadataRoute.Sitemap = []
   try {
-    const eventsRows = await db.select({ slug: events.slug, updatedAt: events.updatedAt }).from(events).where(eq(events.isPublished, true))
+    const eventsRows = await db.select({ slug: events.slug, updatedAt: events.updatedAt, image: events.image }).from(events).where(eq(events.isPublished, true))
 
     eventPages = eventsRows.map((event) => ({
       url: `${baseUrl}/events/${event.slug}`,
       lastModified: event.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
+      images: absoluteImage(event.image),
     }))
   } catch (error) {
     console.error('Error fetching events for sitemap:', error)
@@ -139,13 +147,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all active products
   let productPages: MetadataRoute.Sitemap = []
   try {
-    const productsRows = await db.select({ slug: products.slug, updatedAt: products.updatedAt, isFeatured: products.isFeatured }).from(products).where(eq(products.isActive, true))
+    const productsRows = await db.select({ slug: products.slug, updatedAt: products.updatedAt, isFeatured: products.isFeatured, image: products.image }).from(products).where(eq(products.isActive, true))
 
     productPages = productsRows.map((product) => ({
       url: `${baseUrl}/products/${product.slug}`,
       lastModified: product.updatedAt || new Date(),
       changeFrequency: 'weekly' as const,
       priority: product.isFeatured ? 0.8 : 0.6,
+      images: absoluteImage(product.image),
     }))
   } catch (error) {
     console.error('Error fetching products for sitemap:', error)
