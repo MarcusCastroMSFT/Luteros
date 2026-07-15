@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { getArticles } from '@/lib/articles'
 import ArticleCard from '@/components/blog/articleCard'
@@ -6,8 +5,6 @@ import { CategoryFilter } from '@/components/blog/categoryFilter'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState } from '@/components/common/empty-state'
 import { PageHeader } from '@/components/common/pageHeader'
-import { ArticleListSkeleton } from '@/components/blog/articleSkeleton'
-import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
 
 const ARTICLES_PER_PAGE = 12
 
@@ -93,17 +90,6 @@ async function ArticlesContent({ page, category }: { page: number; category: str
   )
 }
 
-function ArticlesPageFallback() {
-  return (
-    <div className="container mx-auto px-4 max-w-[1428px] py-16">
-      <div className="flex justify-center mb-12">
-        <CategoryFilterSkeleton />
-      </div>
-      <ArticleListSkeleton count={12} />
-    </div>
-  )
-}
-
 export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
   const sp = await searchParams
   const page = Math.max(1, parseInt(sp.page ?? '1'))
@@ -121,9 +107,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
       />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1428px] py-8 md:py-16">
-        <Suspense key={`${page}-${category}`} fallback={<ArticlesPageFallback />}>
-          <ArticlesContent page={page} category={category} />
-        </Suspense>
+        {/* Rendered directly (not streamed) so the LCP article image is present
+            in the initial HTML with its high-priority preload. */}
+        <ArticlesContent page={page} category={category} />
       </div>
     </div>
   )
