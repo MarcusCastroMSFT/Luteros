@@ -6,6 +6,7 @@ import { SpecialistFilter } from '@/components/specialists/specialistFilter';
 import { SpecialistCard } from '@/components/specialists/specialistCard';
 import { SpecialistListSkeleton } from '@/components/specialists/specialistSkeleton';
 import { Pagination } from '@/components/common/pagination';
+import { EmptyState } from '@/components/common/empty-state';
 import { type Specialist, type SpecialistApiResponse, type SpecialistPagination } from '@/types/specialist';
 
 const SPECIALISTS_PER_PAGE = 12;
@@ -170,27 +171,20 @@ export default function SpecialistsPage() {
 
             {/* Empty State */}
             {!loading && !error && specialists.length === 0 && (
-              <div className="text-center py-12">
-                <div className="bg-gray-50 rounded-lg p-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Nenhum especialista encontrado
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Tente ajustar seus filtros ou termos de busca.
-                  </p>
-                  <button 
-                    onClick={() => {
-                      setActiveSpecialty('all');
-                      setSearchTerm('');
-                      setCurrentPage(1);
-                      fetchSpecialists(1, 'all', '');
-                    }}
-                    className="px-4 py-2 bg-cta-highlight text-white rounded-md hover:bg-cta-highlight/90 transition-colors cursor-pointer"
-                  >
-                    Limpar Filtros
-                  </button>
-                </div>
-              </div>
+              <EmptyState
+                variant={activeSpecialty !== 'all' || searchTerm ? 'search' : 'specialists'}
+                title="Nenhum especialista encontrado"
+                description="Tente ajustar seus filtros ou termos de busca para encontrar o profissional ideal."
+                action={{
+                  label: 'Limpar filtros',
+                  onClick: () => {
+                    setActiveSpecialty('all');
+                    setSearchTerm('');
+                    setCurrentPage(1);
+                    fetchSpecialists(1, 'all', '');
+                  },
+                }}
+              />
             )}
 
             {/* Pagination */}

@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import Link from 'next/link'
 import { getArticles } from '@/lib/articles'
 import ArticleCard from '@/components/blog/articleCard'
 import { CategoryFilter } from '@/components/blog/categoryFilter'
 import { Pagination } from '@/components/common/pagination'
+import { EmptyState } from '@/components/common/empty-state'
 import { PageHeader } from '@/components/common/pageHeader'
 import { ArticleListSkeleton } from '@/components/blog/articleSkeleton'
 import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
@@ -77,18 +77,16 @@ async function ArticlesContent({ page, category }: { page: number; category: str
           )}
         </>
       ) : (
-        <div className="text-center py-16">
-          <p className="text-gray-500 mb-4">
-            {category !== 'Todos'
-              ? 'Nenhum artigo encontrado nesta categoria.'
-              : 'Nenhum artigo disponível no momento.'}
-          </p>
-          {category !== 'Todos' && (
-            <Link href="/articles" className="text-[var(--cta-highlight)] hover:underline">
-              Ver todos os artigos
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          variant={category !== 'Todos' ? 'search' : 'articles'}
+          title={category !== 'Todos' ? 'Nenhum artigo encontrado' : 'Nenhum artigo disponível'}
+          description={
+            category !== 'Todos'
+              ? `Não encontramos artigos na categoria “${category}”. Explore outras categorias ou veja todos os conteúdos.`
+              : 'Novos conteúdos sobre saúde sexual e bem-estar chegam em breve. Volte logo!'
+          }
+          action={category !== 'Todos' ? { label: 'Ver todos os artigos', href: '/articles' } : undefined}
+        />
       )}
     </>
   )

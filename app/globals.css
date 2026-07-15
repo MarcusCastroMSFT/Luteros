@@ -215,6 +215,21 @@
   animation-play-state: paused;
 }
 
+/* Empty-state illustration gentle float */
+@keyframes es-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.es-float {
+  animation: es-float 4s ease-in-out infinite;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .es-float {
+    animation: none;
+  }
+}
+
 /* Article Content Prose Styles */
 .prose {
   color: #374151;

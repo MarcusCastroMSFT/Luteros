@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/products/productCard';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/common/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -417,18 +418,16 @@ export function ProductsPageClient({
           )}
         </>
       ) : (
-        <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">
-            <Filter size={48} className="mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">Nenhum produto encontrado</h3>
-            <p>Tente ajustar os filtros ou fazer uma busca diferente.</p>
-          </div>
-          {hasActiveFilters && (
-            <Button onClick={clearFilters} className="mt-4 cursor-pointer">
-              Limpar todos os filtros
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          variant={hasActiveFilters ? 'search' : 'products'}
+          title="Nenhum produto encontrado"
+          description={
+            hasActiveFilters
+              ? 'Tente ajustar os filtros ou fazer uma busca diferente.'
+              : 'Ainda não há produtos ou ofertas disponíveis. Volte em breve para conferir as novidades!'
+          }
+          action={hasActiveFilters ? { label: 'Limpar todos os filtros', onClick: clearFilters } : undefined}
+        />
       )}
     </div>
   );

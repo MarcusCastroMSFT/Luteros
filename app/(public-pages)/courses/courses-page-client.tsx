@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CategoryFilter } from '@/components/blog/categoryFilter';
 import { CourseCard } from '@/components/courses/courseCard';
 import { Pagination } from '@/components/common/pagination';
+import { EmptyState } from '@/components/common/empty-state';
 import { Button } from '@/components/ui/button';
 import { type Course, type CoursesPagination } from '@/lib/courses';
 
@@ -53,22 +54,16 @@ export function CoursesPageClient({
 
       {/* Courses Grid */}
       {courses.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Nenhum curso encontrado
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {activeCategory !== 'Todos'
-              ? `Não encontramos cursos na categoria "${activeCategory}".`
-              : 'Não há cursos disponíveis no momento.'
-            }
-          </p>
-          {activeCategory !== 'Todos' && (
-            <Button onClick={() => handleCategoryChange('Todos')} className="cursor-pointer">
-              Ver todos os cursos
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          variant={activeCategory !== 'Todos' ? 'search' : 'courses'}
+          title="Nenhum curso encontrado"
+          description={
+            activeCategory !== 'Todos'
+              ? `Não encontramos cursos na categoria “${activeCategory}”. Explore outras categorias.`
+              : 'Novos cursos sobre saúde sexual e bem-estar chegam em breve. Volte logo!'
+          }
+          action={activeCategory !== 'Todos' ? { label: 'Ver todos os cursos', onClick: () => handleCategoryChange('Todos') } : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
           {courses.map((course, i) => (

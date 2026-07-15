@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { EventList } from '@/components/events/eventList';
 import { Pagination } from '@/components/common/pagination';
+import { EmptyState } from '@/components/common/empty-state';
 import { Input } from '@/components/ui/input';
 import { type Event, type EventsPagination } from '@/types/event';
 
@@ -84,19 +85,16 @@ export function EventsPageClient({ events, pagination, activeSearch }: EventsPag
           )}
         </>
       ) : (
-        <div className="text-center py-16">
-          <p className="text-gray-500 mb-4">
-            {activeSearch ? 'Nenhum evento encontrado com os termos de busca.' : 'Nenhum evento disponível no momento.'}
-          </p>
-          {activeSearch && (
-            <button
-              onClick={() => setSearchInput('')}
-              className="text-[var(--cta-highlight)] hover:underline"
-            >
-              Limpar busca
-            </button>
-          )}
-        </div>
+        <EmptyState
+          variant={activeSearch ? 'search' : 'events'}
+          title={activeSearch ? 'Nenhum evento encontrado' : 'Nenhum evento disponível'}
+          description={
+            activeSearch
+              ? 'Não encontramos eventos com esses termos de busca. Tente palavras diferentes.'
+              : 'Ainda não há eventos agendados. Fique de olho — novidades chegam em breve!'
+          }
+          action={activeSearch ? { label: 'Limpar busca', onClick: () => setSearchInput('') } : undefined}
+        />
       )}
     </div>
   );
