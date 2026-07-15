@@ -1,7 +1,10 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { getArticles } from '@/lib/articles'
-import { ArticlesPageClient } from './articles-page-client'
+import ArticleCard from '@/components/blog/articleCard'
+import { CategoryFilter } from '@/components/blog/categoryFilter'
+import { Pagination } from '@/components/common/pagination'
 import { PageHeader } from '@/components/common/pageHeader'
 import { ArticleListSkeleton } from '@/components/blog/articleSkeleton'
 import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
@@ -33,14 +36,61 @@ interface ArticlesPageProps {
 
 async function ArticlesContent({ page, category }: { page: number; category: string }) {
   const data = await getArticles(page, ARTICLES_PER_PAGE, category === 'Todos' ? undefined : category)
+  const { articles, pagination, categories } = data
+  const categoryParam = category !== 'Todos' ? category : undefined
 
   return (
-    <ArticlesPageClient
-      articles={data.articles}
-      pagination={data.pagination}
-      categories={data.categories}
-      activeCategory={category}
-    />
+    <>
+      {/* Category Filter — URL-based, fully server-rendered (no client JS) */}
+      <div className="mb-6 md:mb-8">
+        <CategoryFilter categories={categories} activeCategory={category} basePath="/articles" />
+      </div>
+
+      {/* Results Count */}
+      <div className="mb-4 md:mb-6">
+        <p className="text-sm md:text-base text-gray-600">
+          {pagination.totalArticles === 0
+            ? 'Nenhum artigo encontrado'
+            : `${pagination.totalArticles} artigo${pagination.totalArticles !== 1 ? 's' : ''} encontrado${pagination.totalArticles !== 1 ? 's' : ''}`}
+          {category !== 'Todos' && ` em "${category}"`}
+        </p>
+      </div>
+
+      {/* Articles Grid */}
+      {articles.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {articles.map((article, i) => (
+              <ArticleCard key={article.id} article={article} priority={i < 3} />
+            ))}
+          </div>
+
+          {pagination.totalPages > 1 && (
+            <div className="mt-12">
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                basePath="/articles"
+                queryParams={{ category: categoryParam }}
+              />
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-16">
+          <p className="text-gray-500 mb-4">
+            {category !== 'Todos'
+              ? 'Nenhum artigo encontrado nesta categoria.'
+              : 'Nenhum artigo disponível no momento.'}
+          </p>
+          {category !== 'Todos' && (
+            <Link href="/articles" className="text-[var(--cta-highlight)] hover:underline">
+              Ver todos os artigos
+            </Link>
+          )}
+        </div>
+      )}
+    </>
   )
 }
 
