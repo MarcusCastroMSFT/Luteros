@@ -23,7 +23,7 @@ export function ArticleAccessBadge({ accessType, showFree = false, className }: 
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1 rounded-full bg-amber-500/95 px-2.5 py-1 text-xs font-medium text-white shadow-sm',
+          'inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900 shadow-sm',
           className,
         )}
       >
@@ -64,7 +64,7 @@ export function ArticleAudienceBadge({ audience, showGeneral = false, className 
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1 rounded-full bg-blue-600/95 px-2.5 py-1 text-xs font-medium text-white shadow-sm',
+          'inline-flex items-center gap-1 rounded-full bg-blue-700 px-2.5 py-1 text-xs font-medium text-white shadow-sm',
           className,
         )}
       >

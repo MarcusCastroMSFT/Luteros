@@ -90,6 +90,30 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Baseline security headers applied to every route
+        source: '/:path*',
+        headers: [
+          // Clickjacking protection
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          // Prevent MIME sniffing
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // Limit referrer leakage
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // Cross-origin isolation (allow OAuth/payment popups to keep working)
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+          // Force HTTPS for 2 years, including subdomains
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          // Lock down powerful features not used by the app
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+          },
+        ],
+      },
+      {
         source: '/articles/:slug*',
         headers: [
           {

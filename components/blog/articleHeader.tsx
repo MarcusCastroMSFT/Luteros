@@ -37,7 +37,7 @@ export function ArticleHeader({
     <div className="mb-12">
       {/* Category + access badges */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
+        <span className="inline-block px-4 py-2 bg-primary/10 text-brand-700 rounded-full text-sm font-medium">
           {category}
         </span>
         <ArticleAccessBadge accessType={accessType} />
