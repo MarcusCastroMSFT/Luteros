@@ -40,7 +40,7 @@ export function SiteHeader() {
       <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex items-center justify-between h-16">
       {/* Logo */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 pr-4">
         <Logo iconSize="lg" textSize="lg" showText asLink />
       </div>          {/* Navigation - Desktop */}
           <NavigationMenu viewport={false} className="hidden lg:flex">
