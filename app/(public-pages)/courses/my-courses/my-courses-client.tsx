@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { BookOpen, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/common/empty-state';
 import { EnrolledCourseCard } from '@/components/courses/enrolled-course-card';
 import { type EnrolledCourse } from '@/app/api/users/enrolled-courses/route';
 import { useAuth } from '@/contexts/auth-context';
@@ -186,28 +186,24 @@ export function MyCoursesClient() {
           ))}
         </div>
       ) : courses.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            {status === 'all' 
-              ? 'Você ainda não está inscrito em nenhum curso' 
+        <EmptyState
+          variant="courses"
+          title={
+            status === 'all'
+              ? 'Você ainda não está inscrito em nenhum curso'
               : status === 'in-progress'
               ? 'Nenhum curso em andamento'
-              : 'Nenhum curso concluído ainda'}
-          </h3>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            {status === 'all'
+              : 'Nenhum curso concluído ainda'
+          }
+          description={
+            status === 'all'
               ? 'Explore nossos cursos e comece sua jornada de aprendizado hoje mesmo!'
               : status === 'in-progress'
               ? 'Continue seus cursos para vê-los aqui.'
-              : 'Complete seus cursos para vê-los aqui.'}
-          </p>
-          {status === 'all' && (
-            <Button asChild>
-              <Link href="/courses">Explorar Cursos</Link>
-            </Button>
-          )}
-        </div>
+              : 'Complete seus cursos para vê-los aqui.'
+          }
+          action={status === 'all' ? { label: 'Explorar Cursos', href: '/courses' } : undefined}
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

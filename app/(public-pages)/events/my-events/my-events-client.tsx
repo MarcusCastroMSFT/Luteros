@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Calendar, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/common/empty-state';
 import { RegisteredEventCard } from '@/components/events/registered-event-card';
 import { type RegisteredEvent } from '@/app/api/users/registered-events/route';
 import { useAuth } from '@/contexts/auth-context';
@@ -186,28 +186,24 @@ export function MyEventsClient() {
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            {status === 'all' 
-              ? 'Você ainda não está inscrito em nenhum evento' 
+        <EmptyState
+          variant="events"
+          title={
+            status === 'all'
+              ? 'Você ainda não está inscrito em nenhum evento'
               : status === 'upcoming'
               ? 'Nenhum evento próximo'
-              : 'Nenhum evento participado ainda'}
-          </h3>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            {status === 'all'
+              : 'Nenhum evento participado ainda'
+          }
+          description={
+            status === 'all'
               ? 'Explore nossos eventos e participe de experiências incríveis!'
               : status === 'upcoming'
               ? 'Inscreva-se em eventos para vê-los aqui.'
-              : 'Participe de eventos para vê-los aqui.'}
-          </p>
-          {status === 'all' && (
-            <Button asChild>
-              <Link href="/events">Explorar Eventos</Link>
-            </Button>
-          )}
-        </div>
+              : 'Participe de eventos para vê-los aqui.'
+          }
+          action={status === 'all' ? { label: 'Explorar Eventos', href: '/events' } : undefined}
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

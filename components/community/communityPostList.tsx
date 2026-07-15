@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/common/empty-state';
 import { CommunityPost, CommunityReply } from '@/types/community';
 import { ReportDialog } from './reportDialog';
 import { RepliesDialog } from './repliesDialog';
@@ -368,14 +369,12 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
       {/* Posts List */}
       <div className="space-y-3 md:space-y-4 p-2 md:p-0">
         {filteredPosts.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <div className="text-gray-500 mb-2">
-              Nenhum post encontrado
-            </div>
-            <p className="text-sm text-gray-400">
-              Tente ajustar os filtros ou criar um novo post
-            </p>
-          </div>
+          <EmptyState
+            variant="search"
+            title="Nenhum post encontrado"
+            description="Tente ajustar os filtros ou seja o primeiro a iniciar uma conversa."
+            action={{ label: 'Criar post', onClick: () => setCreatePostDialog(true) }}
+          />
         ) : (
           filteredPosts.map((post) => (
             <PostCard

@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Bookmark, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/common/empty-state';
 import { SavedArticleCard } from '@/components/blog/saved-article-card';
 import { type SavedArticle } from '@/app/api/users/saved-articles/route';
 import { useAuth } from '@/contexts/auth-context';
@@ -162,18 +162,12 @@ export function SavedArticlesClient() {
           ))}
         </div>
       ) : articles.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Você ainda não salvou nenhum artigo
-          </h3>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Explore nossos artigos e salve os que mais interessam para ler depois!
-          </p>
-          <Button asChild>
-            <Link href="/articles">Explorar Artigos</Link>
-          </Button>
-        </div>
+        <EmptyState
+          variant="articles"
+          title="Você ainda não salvou nenhum artigo"
+          description="Explore nossos artigos e salve os que mais interessam para ler depois!"
+          action={{ label: 'Explorar Artigos', href: '/articles' }}
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
