@@ -51,11 +51,6 @@ export const navigationMenu: NavigationMenuItem[] = [
         title: "FAQ",
         href: "/faq",
         description: "Perguntas frequentes e suporte."
-      },
-      {
-        title: "Parcerias",
-        href: "/partnerships",
-        description: "Treinamento corporativo e parcerias educacionais."
       }
     ]
   },
