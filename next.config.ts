@@ -75,6 +75,15 @@ const nextConfig: NextConfig = {
     unoptimized: false,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
+    // Serve modern formats to cut bytes
+    formats: ['image/avif', 'image/webp'],
+    // Cache optimized images for 31 days — blob/article images rarely change
+    minimumCacheTTL: 2678400,
+    // Fewer candidate widths → fewer distinct transformations to bill/cache
+    deviceSizes: [640, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 96, 256],
+    // Single quality level keeps the number of variants down
+    qualities: [75, 85],
   },
   // Enable Cache Components (PPR) for Next.js 16
   cacheComponents: true,

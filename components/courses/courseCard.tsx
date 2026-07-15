@@ -24,6 +24,7 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
             height={240}
             className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 400px"
+            quality={85}
             priority={priority}
             loading={priority ? undefined : 'lazy'}
           />

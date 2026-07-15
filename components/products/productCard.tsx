@@ -38,6 +38,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 33vw"
+            quality={85}
             priority={priority}
             loading={priority ? undefined : 'lazy'}
           />
