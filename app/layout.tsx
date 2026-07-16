@@ -19,18 +19,17 @@ const cardo = Cardo({
   variable: "--font-cardo",
 });
 
-// Resolve the canonical origin used for absolute metadata URLs (og:image, etc.).
-// Prefer Vercel's production domain because it is always live and reachable —
-// once a custom domain (e.g. lutteros.com.br) is attached in Vercel, this env
-// var automatically points to it. NEXT_PUBLIC_BASE_URL is only used as an
-// explicit override for non-Vercel environments.
+// Resolve the canonical origin used for absolute metadata URLs (og:image,
+// canonical links, etc.). NEXT_PUBLIC_BASE_URL is the explicit canonical host
+// (set it to the primary domain, e.g. https://www.lutteros.com.br). Vercel's
+// env vars are used as fallbacks for preview deployments.
 const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : undefined) ||
-  process.env.NEXT_PUBLIC_BASE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
-  'https://lutteros.com.br';
+  'https://www.lutteros.com.br';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

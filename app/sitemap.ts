@@ -7,7 +7,7 @@ import { blogArticles, courses, events, products } from '@/lib/db/schema'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection()
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
 
   // Turn a stored image path (absolute URL or site-relative) into an absolute
   // URL so search engines can index it via the sitemap's <image:image> entries.

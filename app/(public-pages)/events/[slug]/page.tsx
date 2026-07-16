@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
       })
     : ''
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
   const eventUrl = `${baseUrl}/events/${slug}`
   const description = metadata.description || `Participe do evento ${metadata.title}${eventDate ? ` em ${eventDate}` : ''}`
   const imageUrl = metadata.image
@@ -80,7 +80,7 @@ export default async function EventPage({ params }: EventPageProps) {
   // a follow-up fetch on mount.
   const initialIsRegistered = await isCurrentUserRegisteredForEvent(eventData.event.id)
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
   const ev = eventData.event
   const eventUrl = `${baseUrl}/events/${slug}`
   const imageUrl = ev.image

@@ -63,7 +63,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   // Fetch related products
   const relatedProducts = await getRelatedProducts(product.id, product.category)
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
   const productUrl = `${baseUrl}/products/${product.slug}`
 
   const productJsonLd = {

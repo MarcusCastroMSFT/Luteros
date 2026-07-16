@@ -3,7 +3,7 @@
 // See https://llmstxt.org for the emerging convention.
 
 export function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
 
   const body = `# lutteros
 

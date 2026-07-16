@@ -16,7 +16,7 @@ interface CoursePageProps {
 function generateCourseJsonLd(course: Awaited<ReturnType<typeof getCourseBySlug>>, slug: string) {
   if (!course) return null;
   
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const courseUrl = `${baseUrl}/courses/${slug}`;
   const imageUrl = course.course.image?.startsWith('http') 
     ? course.course.image 
@@ -97,7 +97,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const courseUrl = `${baseUrl}/courses/${slug}`;
   const imageUrl = metadata.image?.startsWith('http') 
     ? metadata.image 
@@ -153,7 +153,7 @@ async function CourseContentWrapper({ slug }: { slug: string }) {
 
   // VideoObject for the course preview so it can appear in Google Video results.
   // Only emitted when we have both a video URL and a valid upload date.
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const c = courseData.course;
   const videoThumb = c.image || c.coverImage;
   const videoJsonLd = c.previewVideo && c.publishedAt

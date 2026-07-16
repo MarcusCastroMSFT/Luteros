@@ -69,7 +69,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     : article.content;
 
   // Generate full URL for sharing
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const articleUrl = `${baseUrl}/articles/${article.slug}`;
 
   // JSON-LD structured data for SEO (following schema.org best practices)
@@ -204,7 +204,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lutteros.com.br';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const articleUrl = `${baseUrl}/articles/${slug}`;
   const imageUrl = article.image?.startsWith('http') 
     ? article.image 
