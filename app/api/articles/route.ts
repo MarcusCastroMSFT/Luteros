@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
+import { submitToIndexNow } from '@/lib/indexnow'
 import { db } from '@/lib/db'
 import { blogArticles, users } from '@/lib/db/schema'
 import { asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
@@ -154,6 +155,12 @@ export async function POST(request: NextRequest) {
     revalidatePath('/')               // home renders latest 4
     revalidatePath('/articles')       // list page
     revalidatePath(`/articles/${slug}`) // detail page
+
+    // Notify IndexNow (Bing, Yandex, …) so the new article is crawled fast
+    if (isPublished) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      await submitToIndexNow(`${baseUrl}/articles/${slug}`)
+    }
 
     return NextResponse.json({ success: true, data: article })
   } catch (error) {

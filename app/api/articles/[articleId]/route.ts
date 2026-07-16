@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
+import { submitToIndexNow } from '@/lib/indexnow'
 import { db } from '@/lib/db'
 import { blogArticles, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -162,6 +163,12 @@ export async function PUT(
       // Slug changed — also bust the old URL so search-engine-cached references die
       revalidateTag(`article-${existing.slug}`)
       revalidatePath(`/articles/${existing.slug}`)
+    }
+
+    // Notify IndexNow (Bing, Yandex, …) whenever the article is published
+    if (isPublished) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      await submitToIndexNow(`${baseUrl}/articles/${slug}`)
     }
 
     return NextResponse.json({ success: true, data: updated })
