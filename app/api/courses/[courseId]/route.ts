@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { courses, users } from '@/lib/db/schema'
+import { submitToIndexNow } from '@/lib/indexnow'
 import { alias } from 'drizzle-orm/pg-core'
 import { eq, sql } from 'drizzle-orm'
 
@@ -157,6 +158,12 @@ export async function PUT(
     revalidateTag('course-slugs')
     revalidateTag(`course-${slug}`)
     revalidateTag('courses-stats')
+
+    // Notify IndexNow when the course is published
+    if (isPublished) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      await submitToIndexNow([`${baseUrl}/courses/${slug}`, `${baseUrl}/courses`])
+    }
 
     return NextResponse.json({ success: true, data: updatedCourse })
   } catch (error) {

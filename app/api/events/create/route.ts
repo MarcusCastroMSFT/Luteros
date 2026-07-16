@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth-helpers'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { events, eventSpeakers } from '@/lib/db/schema'
+import { submitToIndexNow } from '@/lib/indexnow'
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +96,12 @@ export async function POST(request: NextRequest) {
     revalidatePath('/events')
     revalidatePath(`/events/${slug}`)
     revalidatePath('/admin/events')
+
+    // Notify IndexNow when the event is published
+    if (isPublished) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      await submitToIndexNow([`${baseUrl}/events/${slug}`, `${baseUrl}/events`])
+    }
 
     return NextResponse.json({
       success: true,

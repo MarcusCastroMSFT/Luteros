@@ -5,6 +5,7 @@ import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
 import { courses, lessons, users } from '@/lib/db/schema'
+import { submitToIndexNow } from '@/lib/indexnow'
 
 export async function GET(request: NextRequest) {
   await connection()
@@ -243,6 +244,12 @@ export async function POST(request: NextRequest) {
     revalidateTag('course-slugs')
     revalidateTag(`course-${slug}`)
     revalidateTag('courses-stats')
+
+    // Notify IndexNow when the course is published
+    if (isPublished) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      await submitToIndexNow([`${baseUrl}/courses/${slug}`, `${baseUrl}/courses`])
+    }
 
     return NextResponse.json({
       success: true,

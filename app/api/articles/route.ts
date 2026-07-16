@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     // Notify IndexNow (Bing, Yandex, …) so the new article is crawled fast
     if (isPublished) {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
-      await submitToIndexNow(`${baseUrl}/articles/${slug}`)
+      await submitToIndexNow([`${baseUrl}/articles/${slug}`, `${baseUrl}/articles`, `${baseUrl}/`])
     }
 
     return NextResponse.json({ success: true, data: article })

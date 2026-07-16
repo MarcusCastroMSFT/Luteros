@@ -168,7 +168,7 @@ export async function PUT(
     // Notify IndexNow (Bing, Yandex, …) whenever the article is published
     if (isPublished) {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
-      await submitToIndexNow(`${baseUrl}/articles/${slug}`)
+      await submitToIndexNow([`${baseUrl}/articles/${slug}`, `${baseUrl}/articles`, `${baseUrl}/`])
     }
 
     return NextResponse.json({ success: true, data: updated })

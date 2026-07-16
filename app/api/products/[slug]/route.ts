@@ -4,6 +4,7 @@ import { products, productPartners } from '@/lib/db/schema'
 import { ProductApiResponse } from '@/types/product'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { revalidatePath, revalidateTag } from '@/lib/cache'
+import { submitToIndexNow } from '@/lib/indexnow'
 import { and, desc, eq, ne, or } from 'drizzle-orm'
 
 interface Props {
@@ -172,6 +173,12 @@ export async function PUT(request: NextRequest, { params }: Props) {
     revalidatePath('/products')
     revalidatePath(`/products/${slug}`)
     revalidatePath('/admin/products')
+
+    // Notify IndexNow when the product is active/visible
+    if (isActive ?? true) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      await submitToIndexNow([`${baseUrl}/products/${slug}`, `${baseUrl}/products`])
+    }
 
     return NextResponse.json({ success: true, data: product })
   } catch (error) {

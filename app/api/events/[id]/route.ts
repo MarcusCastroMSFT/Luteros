@@ -3,6 +3,7 @@ import { revalidateTag, revalidatePath } from '@/lib/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { events, eventRegistrations, eventSpeakers } from '@/lib/db/schema'
+import { submitToIndexNow } from '@/lib/indexnow'
 import { and, asc, eq, sql } from 'drizzle-orm'
 
 interface RouteParams {
@@ -206,6 +207,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     revalidatePath('/events')
     revalidatePath(`/events/${existingEvent.slug}`)
     revalidatePath('/admin/events')
+
+    // Notify IndexNow when the event is published
+    if (body.isPublished) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+      const eventSlug = body.slug || existingEvent.slug
+      await submitToIndexNow([`${baseUrl}/events/${eventSlug}`, `${baseUrl}/events`])
+    }
 
     return NextResponse.json({
       success: true,
