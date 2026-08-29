@@ -37,6 +37,8 @@ interface RawLesson {
   sectionTitle: string | null;
   isFree: boolean;
   type: 'video' | 'article' | 'audio';
+  videoUrl: string | null;
+  videoProvider: string | null;
 }
 
 interface CourseDetailClientProps {
@@ -94,6 +96,8 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         duration: lesson.duration ? `${Math.floor(lesson.duration / 60)}:${String(lesson.duration % 60).padStart(2, '0')}` : '0:00',
         isPreview: lesson.isFree,
         order: lesson.order,
+        videoUrl: lesson.videoUrl || undefined,
+        videoProvider: lesson.videoProvider || undefined,
       });
     });
     
@@ -168,7 +172,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
   const courseForInfo = useMemo(() => ({
     ...course,
     video: course.previewVideo,
-    image: course.image || course.coverImage,
+    image: course.coverImage || course.image,
     originalPrice: course.originalPrice ?? undefined,
     sections: sections,
     includes: [

@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { getCourseBySlug, getCourseMetadata } from '@/lib/courses';
+import { redirect } from 'next/navigation';
+import { getCourseMetadata, getEnrolledCourseBySlug } from '@/lib/courses';
+import { getAuthUser } from '@/lib/auth-helpers';
 import { CourseLessonsClient } from './course-lessons-client';
 import { CourseLessonsSkeleton } from '@/components/lessons/courseLessonsSkeleton';
 
@@ -48,10 +49,16 @@ export async function generateMetadata({ params }: LessonsPageProps): Promise<Me
 
 // Server component to fetch course data
 async function LessonsContent({ slug, initialLessonId }: { slug: string; initialLessonId?: string }) {
-  const courseData = await getCourseBySlug(slug);
+  const authUser = await getAuthUser();
+
+  if (!authUser) {
+    redirect(`/login?redirect=${encodeURIComponent(`/courses/${slug}/lessons`)}`);
+  }
+
+  const courseData = await getEnrolledCourseBySlug(slug, authUser.id);
   
   if (!courseData) {
-    notFound();
+    redirect(`/courses/${slug}`);
   }
   
   return (

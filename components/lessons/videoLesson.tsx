@@ -1,62 +1,19 @@
-'use client';
-
-import { useState } from 'react';
 import { Lesson } from '@/types/course';
-import { Play, Pause, Volume2, Maximize, Settings } from 'lucide-react';
+import { VideoPlayer } from '@/components/common/video-player';
 
 interface VideoLessonProps {
   lesson: Lesson;
 }
 
 export function VideoLesson({ lesson }: VideoLessonProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // For demo purposes, we'll use a placeholder video
-  // In a real app, you'd have actual video URLs in your lesson data
-  const getVideoUrl = () => {
-    // This would typically come from lesson.videoUrl or similar
-    return 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-  };
-
   return (
     <div className="space-y-4">
-      {/* Video Player */}
-      <div className="relative bg-black rounded-lg overflow-hidden">
-        <video
-          className="w-full h-auto max-h-96"
-          controls
+      <div className="overflow-hidden rounded-lg bg-black">
+        <VideoPlayer
+          src={lesson.videoUrl}
+          title={lesson.title}
           poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=450&fit=crop&crop=center"
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        >
-          <source src={getVideoUrl()} type="video/mp4" />
-          Seu navegador não suporta a tag de vídeo.
-        </video>
-        
-        {/* Custom overlay for styling (optional) */}
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white opacity-80">
-          <div className="flex items-center gap-3">
-            <button 
-              className="p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors"
-              onClick={() => setIsPlaying(!isPlaying)}
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-            </button>
-            <span className="text-sm">00:00 / {lesson.duration}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button className="p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors">
-              <Volume2 size={16} />
-            </button>
-            <button className="p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors">
-              <Settings size={16} />
-            </button>
-            <button className="p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors">
-              <Maximize size={16} />
-            </button>
-          </div>
-        </div>
+        />
       </div>
 
       {/* Video Description */}

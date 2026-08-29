@@ -22,6 +22,8 @@ interface RawLesson {
   sectionTitle: string | null;
   isFree: boolean;
   type: 'video' | 'article' | 'audio';
+  videoUrl: string | null;
+  videoProvider: string | null;
 }
 
 interface CourseLessonsClientProps {
@@ -49,6 +51,8 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         duration: lesson.duration ? `${Math.floor(lesson.duration / 60)}:${String(lesson.duration % 60).padStart(2, '0')}` : '0:00',
         isPreview: lesson.isFree,
         order: lesson.order,
+        videoUrl: lesson.videoUrl || undefined,
+        videoProvider: lesson.videoProvider || undefined,
       });
     });
     

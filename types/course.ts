@@ -26,6 +26,7 @@ export interface Lesson {
   isPreview?: boolean;
   order: number;
   videoUrl?: string; // Optional video URL for video lessons
+  videoProvider?: string;
 }
 
 export interface CourseSection {

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
 import { Lesson } from '@/types/course';
+import { VideoPlayer } from '@/components/common/video-player';
 
 interface PreviewDialogProps {
   lesson?: Lesson | null;
@@ -18,11 +19,6 @@ interface PreviewDialogProps {
 export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialogProps) {
   if (!lesson && !course) return null;
 
-  const getVideoUrl = (videoUrl?: string) => {
-    // Use the provided video URL or fallback to sample video
-    return videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-  };
-
   // Course video preview
   if (course && course.video && course.video.trim() !== '') {
     return (
@@ -36,14 +32,11 @@ export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialog
           
           <div className="px-6 bg-white">
             <div className="bg-black rounded-lg overflow-hidden mb-6 shadow-lg">
-              <video
-                className="w-full h-auto max-h-96"
-                controls
+              <VideoPlayer
+                src={course.video}
+                title={`Preview: ${course.title}`}
                 poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=450&fit=crop&crop=center"
-              >
-                <source src={getVideoUrl(course.video)} type="video/mp4" />
-                <span className="text-white">Seu navegador não suporta a tag de vídeo.</span>
-              </video>
+              />
             </div>
             
             <div className="border-t border-gray-200 pt-4 pb-6 bg-gray-50">
@@ -86,14 +79,11 @@ export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialog
         <div className="px-6 bg-white">
           {lesson.type === 'video' ? (
             <div className="bg-black rounded-lg overflow-hidden mb-6 shadow-lg">
-              <video
-                className="w-full h-auto max-h-96"
-                controls
+              <VideoPlayer
+                src={lesson.videoUrl}
+                title={`Preview: ${lesson.title}`}
                 poster="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=450&fit=crop&crop=center"
-              >
-                <source src={getVideoUrl(lesson.videoUrl)} type="video/mp4" />
-                <span className="text-white">Seu navegador não suporta a tag de vídeo.</span>
-              </video>
+              />
             </div>
           ) : lesson.type === 'article' ? (
             <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">

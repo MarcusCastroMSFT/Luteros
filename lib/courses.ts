@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from 'next/cache'
 import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
-import { courses, lessons, users } from '@/lib/db/schema'
+import { courses, enrollments, lessons, users } from '@/lib/db/schema'
 
 // Frontend Course type
 export type Course = {
@@ -241,6 +241,47 @@ export async function getCourseBySlug(slug: string) {
   cacheTag('courses', `course-${slug}`)
   
   return fetchCourseBySlug(slug)
+}
+
+// Keep lesson media out of the cached public payload and only return it to
+// users who can access the classroom.
+export async function getEnrolledCourseBySlug(slug: string, userId: string) {
+  const courseData = await getCourseBySlug(slug)
+  if (!courseData) return null
+
+  const enrollment = await db
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(and(
+      eq(enrollments.userId, userId),
+      eq(enrollments.courseId, courseData.course.id),
+    ))
+    .limit(1)
+    .then((rows) => rows[0] ?? null)
+
+  if (!enrollment) return null
+
+  const enrolledLessons = await db
+    .select({
+      id: lessons.id,
+      title: lessons.title,
+      description: lessons.description,
+      duration: lessons.duration,
+      order: lessons.order,
+      sectionTitle: lessons.sectionTitle,
+      isFree: lessons.isFree,
+      type: lessons.type,
+      videoUrl: lessons.videoUrl,
+      videoProvider: lessons.videoProvider,
+    })
+    .from(lessons)
+    .where(and(
+      eq(lessons.courseId, courseData.course.id),
+      eq(lessons.isPublished, true),
+    ))
+    .orderBy(asc(lessons.order))
+
+  return { ...courseData, lessons: enrolledLessons }
 }
 
 async function fetchCourseMetadata(slug: string) {
