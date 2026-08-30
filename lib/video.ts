@@ -66,3 +66,18 @@ export function resolveVideoSource(value?: string | null): VideoSource | null {
 
   return null;
 }
+
+export function resolveVideoPoster(
+  value: string | null | undefined,
+  fallbackImage: string,
+): string {
+  if (!value) return fallbackImage;
+
+  const url = parseHttpUrl(value);
+  if (!url) return fallbackImage;
+
+  const youtubeId = getYouTubeId(url);
+  return youtubeId && VIDEO_ID_PATTERN.test(youtubeId)
+    ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
+    : fallbackImage;
+}

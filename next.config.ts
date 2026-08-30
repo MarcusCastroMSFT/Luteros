@@ -59,6 +59,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'i.ytimg.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'placehold.co',
         port: '',
         pathname: '/**',

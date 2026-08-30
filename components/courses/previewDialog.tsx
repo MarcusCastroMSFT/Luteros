@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
 import { Lesson } from '@/types/course';
 import { VideoPlayer } from '@/components/common/video-player';
+import { shouldRestoreDialogFocus } from '@/lib/dialog-focus';
 
 interface PreviewDialogProps {
   lesson?: Lesson | null;
@@ -17,13 +19,38 @@ interface PreviewDialogProps {
 }
 
 export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let focusTimer: number | undefined;
+    const restoreFocusFromEmbed = () => {
+      focusTimer = window.setTimeout(() => {
+        if (shouldRestoreDialogFocus(document.activeElement)) {
+          contentRef.current?.focus({ preventScroll: true });
+        }
+      });
+    };
+
+    window.addEventListener('blur', restoreFocusFromEmbed);
+    return () => {
+      window.removeEventListener('blur', restoreFocusFromEmbed);
+      if (focusTimer !== undefined) window.clearTimeout(focusTimer);
+    };
+  }, [isOpen]);
+
   if (!lesson && !course) return null;
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) onClose();
+  };
 
   // Course video preview
   if (course && course.video && course.video.trim() !== '') {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-white border-gray-200">
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogContent ref={contentRef} className="max-w-4xl max-h-[90vh] p-0 bg-white border-gray-200">
           <DialogHeader className="p-6 pb-0 border-b border-gray-100">
             <DialogTitle className="text-xl font-semibold text-gray-900">
               Preview: {course.title}
@@ -68,8 +95,8 @@ export function PreviewDialog({ lesson, course, isOpen, onClose }: PreviewDialog
   if (!lesson) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-white border-gray-200">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent ref={contentRef} className="max-w-4xl max-h-[90vh] p-0 bg-white border-gray-200">
         <DialogHeader className="p-6 pb-0 border-b border-gray-100">
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Preview: {lesson.title}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Course } from '@/types/course';
+import { resolveVideoPoster } from '@/lib/video';
 import { PreviewDialog } from './previewDialog';
 
 // Custom X (Twitter) Logo Component
@@ -40,6 +41,7 @@ interface CourseInfoProps {
 
 export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false }: CourseInfoProps) {
   const [showVideo, setShowVideo] = useState(false);
+  const videoPoster = resolveVideoPoster(course.video, course.image);
 
   const formatPrice = (price: number) => {
     if (price === 0) return 'Grátis';
@@ -94,11 +96,12 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
                 onClick={handleImageClick}
               >
                 <Image
-                  src={course.image}
+                  src={videoPoster}
                   alt={course.title}
                   width={400}
                   height={192}
                   className="w-full h-full object-cover"
+                  sizes="(max-width: 1023px) 100vw, 400px"
                 />
                 {course.video && (
                   <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-40 transition-colors">

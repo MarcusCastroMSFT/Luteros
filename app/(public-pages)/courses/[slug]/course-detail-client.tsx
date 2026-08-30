@@ -201,7 +201,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
           {/* Sidebar - First on mobile, right side on desktop */}
           <div className="lg:col-span-1 order-first lg:order-last">
-            <div className="lg:-mt-52 relative z-10">
+            <div className="relative z-10 lg:sticky lg:top-24 lg:-mt-52">
               <CourseInfo
                 course={courseForInfo}
                 onEnroll={handleEnroll}
