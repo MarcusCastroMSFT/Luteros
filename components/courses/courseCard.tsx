@@ -28,7 +28,7 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
       {/* Course Content */}
       <div className="pt-6">
         {/* Course Meta Info */}
-        <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <BookOpen className="w-4 h-4" />
             <span>{formatLessonCount(course.lessonsCount)}</span>
@@ -37,13 +37,11 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
             <Clock className="w-4 h-4" />
             <span>{course.duration}</span>
           </div>
-        </div>
-
-        {/* Rating */}
-        <div className="mb-2 flex items-center gap-1 text-sm text-gray-600">
-          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-          <span className="font-medium text-gray-900">{course.rating}</span>
-          <span className="text-gray-500">({course.reviewsCount})</span>
+          <div className="flex items-center gap-1">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <span className="font-medium text-gray-900">{course.rating}</span>
+            <span>({course.reviewsCount} {course.reviewsCount === 1 ? 'avaliação' : 'avaliações'})</span>
+          </div>
         </div>
 
         {/* Course Title */}
