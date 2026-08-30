@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { 
   IconUser, 
   IconMail, 
@@ -32,6 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/auth-context';
+import { synchronizeProfileAvatar } from '@/lib/profile-avatar-sync';
 import Link from 'next/link';
 import { type UserProfileData } from '@/app/api/users/profile/route';
 
@@ -46,10 +48,20 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
-  const handleAvatarChange = (avatar: string) => {
-    setProfile((currentProfile) => ({ ...currentProfile, avatar }));
-    setAvatarDialogOpen(false);
-    void refreshProfile();
+  const handleAvatarChange = async (avatar: string) => {
+    try {
+      await synchronizeProfileAvatar({
+        avatar,
+        updateLocalAvatar: (nextAvatar) => {
+          setProfile((currentProfile) => ({ ...currentProfile, avatar: nextAvatar }));
+        },
+        refreshProfile,
+        closeDialog: () => setAvatarDialogOpen(false),
+      });
+    } catch (error) {
+      console.error('Failed to refresh profile session:', error);
+      toast.error('A foto foi salva, mas o cabeçalho não pôde ser atualizado. Tente recarregar a página.');
+    }
   };
 
   const fetchProfile = async () => {

@@ -3,6 +3,7 @@
 import { createContext, useContext, useCallback } from 'react'
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { refreshStoredProfile } from '@/lib/auth-session'
 
 interface UserProfile {
   id: string
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     : null
 
   const refreshProfile = useCallback(async () => {
-    await update()
+    await refreshStoredProfile(update)
   }, [update])
 
   const signIn = async (email: string, password: string) => {
