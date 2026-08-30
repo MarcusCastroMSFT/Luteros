@@ -16,12 +16,22 @@ import {
   IconBookmark,
   IconSettings,
   IconEdit,
+  IconCamera,
 } from '@tabler/icons-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { ImageUpload } from '@/components/common/image-upload';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { type UserProfileData } from '@/app/api/users/profile/route';
 
@@ -30,9 +40,17 @@ interface ProfileClientProps {
 }
 
 export function ProfileClient({ initialProfile }: ProfileClientProps) {
+  const { refreshProfile } = useAuth();
   const [profile, setProfile] = useState<UserProfileData>(initialProfile);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+
+  const handleAvatarChange = (avatar: string) => {
+    setProfile((currentProfile) => ({ ...currentProfile, avatar }));
+    setAvatarDialogOpen(false);
+    void refreshProfile();
+  };
 
   const fetchProfile = async () => {
     try {
@@ -97,11 +115,21 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <UserAvatar
-              name={displayName}
-              avatar={profile.avatar}
-              className="h-24 w-24 text-2xl"
-            />
+            <button
+              type="button"
+              onClick={() => setAvatarDialogOpen(true)}
+              aria-label="Alterar foto do perfil"
+              className="group relative shrink-0 cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <UserAvatar
+                name={displayName}
+                avatar={profile.avatar}
+                className="h-24 w-24 text-2xl"
+              />
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                <IconCamera className="h-6 w-6" aria-hidden="true" />
+              </span>
+            </button>
             
             <div className="flex-1">
               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
@@ -144,6 +172,29 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Foto do perfil</DialogTitle>
+            <DialogDescription>
+              Escolha e enquadre uma imagem quadrada para o seu perfil.
+            </DialogDescription>
+          </DialogHeader>
+          <ImageUpload
+            value={profile.avatar || undefined}
+            onChange={handleAvatarChange}
+            label=""
+            aspectRatio={1}
+            maxSizeMB={5}
+            round
+            uploadUrl="/api/users/profile/avatar"
+            uploadFolder="avatars"
+            allowUrl={false}
+            allowRemove={false}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

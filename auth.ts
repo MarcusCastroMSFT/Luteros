@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { users, accounts, sessions, verificationTokens } from '@/lib/db/schema'
+import { applyStoredSessionImage } from '@/lib/auth-session'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -62,12 +63,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.role = (user as typeof users.$inferSelect).role
         token.displayName = (user as typeof users.$inferSelect).displayName
         token.image = user.image
+      }
+      if (trigger === 'update' && token.id) {
+        const storedUser = await db
+          .select({ image: users.image })
+          .from(users)
+          .where(sql`${users.id} = ${token.id as string}`)
+          .limit(1)
+          .then((rows) => rows[0])
+
+        return applyStoredSessionImage(token, storedUser?.image)
       }
       return token
     },

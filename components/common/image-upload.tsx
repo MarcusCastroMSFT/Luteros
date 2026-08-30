@@ -23,6 +23,10 @@ interface ImageUploadProps {
   round?: boolean;
   /** Subfolder used in the blob storage key (e.g. "articles", "courses"). */
   uploadFolder?: string;
+  /** API endpoint that receives the cropped image. */
+  uploadUrl?: string;
+  allowUrl?: boolean;
+  allowRemove?: boolean;
   className?: string;
 }
 
@@ -46,6 +50,9 @@ export function ImageUpload({
   maxSizeMB = 5,
   round = false,
   uploadFolder = 'uploads',
+  uploadUrl = '/api/upload',
+  allowUrl = true,
+  allowRemove = true,
   className = '',
 }: ImageUploadProps) {
   const [urlInput, setUrlInput] = useState('');
@@ -93,7 +100,7 @@ export function ImageUpload({
         formData.append('file', compressed.file);
         formData.append('folder', uploadFolder);
 
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const res = await fetch(uploadUrl, { method: 'POST', body: formData });
         if (!res.ok) {
           const errBody = await res.json().catch(() => ({}));
           throw new Error(errBody.error || `Upload falhou (${res.status})`);
@@ -113,7 +120,7 @@ export function ImageUpload({
         setPendingSource(null);
       }
     },
-    [maxSizeMB, onChange, uploadFolder],
+    [maxSizeMB, onChange, uploadFolder, uploadUrl],
   );
 
   // Re-open the cropper using the current value (so users can re-adjust)
@@ -232,17 +239,19 @@ export function ImageUpload({
               <Upload className="h-4 w-4 mr-2" />
               Substituir
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRemove}
-              disabled={isProcessing}
-              className="cursor-pointer"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Remover
-            </Button>
+            {allowRemove && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRemove}
+                disabled={isProcessing}
+                className="cursor-pointer"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Remover
+              </Button>
+            )}
           </div>
 
           <input
@@ -255,16 +264,18 @@ export function ImageUpload({
         </div>
       ) : (
         <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upload" className="cursor-pointer">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload
-            </TabsTrigger>
-            <TabsTrigger value="url" className="cursor-pointer">
-              <LinkIcon className="h-4 w-4 mr-2" />
-              URL
-            </TabsTrigger>
-          </TabsList>
+          {allowUrl && (
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload" className="cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </TabsTrigger>
+              <TabsTrigger value="url" className="cursor-pointer">
+                <LinkIcon className="h-4 w-4 mr-2" />
+                URL
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           <TabsContent value="upload" className="space-y-4">
             <input
@@ -313,31 +324,33 @@ export function ImageUpload({
             </div>
           </TabsContent>
 
-          <TabsContent value="url" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-url">URL da Imagem</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="image-url"
-                  type="url"
-                  placeholder="https://exemplo.com/imagem.jpg"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  onClick={handleUrlSubmit}
-                  disabled={!urlInput.trim()}
-                  className="cursor-pointer"
-                >
-                  Adicionar
-                </Button>
+          {allowUrl && (
+            <TabsContent value="url" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="image-url">URL da Imagem</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="image-url"
+                    type="url"
+                    placeholder="https://exemplo.com/imagem.jpg"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleUrlSubmit}
+                    disabled={!urlInput.trim()}
+                    className="cursor-pointer"
+                  >
+                    Adicionar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Cole a URL completa de uma imagem online</p>
               </div>
-              <p className="text-xs text-muted-foreground">Cole a URL completa de uma imagem online</p>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          )}
         </Tabs>
       )}
 
