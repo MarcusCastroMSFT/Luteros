@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/common/pageHeader';
 import { CourseInfo } from '@/components/courses/courseInfo';
 import { Star, Clock, BookOpen, Globe } from 'lucide-react';
 import { type Course as CourseType } from '@/lib/courses';
+import { summarizeCourseContent } from '@/lib/course-content-summary';
 import { formatLessonCount } from '@/lib/course-labels';
 import { CourseSection, Lesson } from '@/types/course';
 
@@ -169,13 +170,8 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     image: course.image,
     originalPrice: course.originalPrice ?? undefined,
     sections: sections,
-    includes: [
-      formatLessonCount(course.lessonsCount),
-      course.duration,
-      'Acesso vitalício',
-      'Certificado de conclusão',
-    ],
   }), [course, sections]);
+  const contentSummary = useMemo(() => summarizeCourseContent(lessons), [lessons]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -201,6 +197,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                 onEnroll={handleEnroll}
                 isEnrolling={isEnrolling}
                 isEnrolled={isEnrolled}
+                contentSummary={contentSummary}
               />
             </div>
           </div>

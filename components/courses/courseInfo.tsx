@@ -5,18 +5,17 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Play, 
-  Clock, 
   FileText, 
-  Download, 
-  Smartphone, 
-  Infinity, 
-  Award, 
+  CirclePlay,
+  Headphones,
+  ListTree,
   Facebook, 
   Linkedin, 
   Link
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Course } from '@/types/course';
+import { type CourseContentSummaryItem } from '@/lib/course-content-summary';
 import { resolveVideoPosters } from '@/lib/video';
 import { PreviewDialog } from './previewDialog';
 
@@ -58,9 +57,17 @@ interface CourseInfoProps {
   onEnroll?: () => void;
   isEnrolling?: boolean;
   isEnrolled?: boolean;
+  contentSummary: CourseContentSummaryItem[];
 }
 
-export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false }: CourseInfoProps) {
+const contentSummaryIcons = {
+  video: CirclePlay,
+  article: FileText,
+  audio: Headphones,
+  section: ListTree,
+};
+
+export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false, contentSummary }: CourseInfoProps) {
   const [showVideo, setShowVideo] = useState(false);
   const videoPosters = resolveVideoPosters(course.video, course.coverImage, course.image);
 
@@ -199,41 +206,16 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
           </h3>
 
           <div className="space-y-3">
-            {/* Video Hours */}
-            <div className="flex items-center gap-3 text-gray-600">
-              <Clock className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">{course.duration} de video</span>
-            </div>
+            {contentSummary.map((item) => {
+              const Icon = contentSummaryIcons[item.type];
 
-            {/* Articles (if available) */}
-            <div className="flex items-center gap-3 text-gray-600">
-              <FileText className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">3 artigos</span>
-            </div>
-
-            {/* Downloadable Resources */}
-            <div className="flex items-center gap-3 text-gray-600">
-              <Download className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">{course.lessonsCount * 10 + 49} recursos para download</span>
-            </div>
-
-            {/* Mobile and TV Access */}
-            <div className="flex items-center gap-3 text-gray-600">
-              <Smartphone className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">Acesso em dispositivos móveis e TV</span>
-            </div>
-
-            {/* Full Lifetime Access */}
-            <div className="flex items-center gap-3 text-gray-600">
-              <Infinity className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">Acesso incluso com assinatura mensal</span>
-            </div>
-
-            {/* Certificate of Completion */}
-            <div className="flex items-center gap-3 text-gray-600">
-              <Award className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm">Certificado de conclusão</span>
-            </div>
+              return (
+                <div key={item.type} className="flex items-center gap-3 text-gray-600">
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm">{item.label}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
