@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveVideoPoster, resolveVideoSource } from './video';
+import { resolveVideoPosters, resolveVideoSource } from './video';
 
 test('resolves a short YouTube URL as a privacy-enhanced embed', () => {
   assert.deepEqual(resolveVideoSource('https://youtu.be/IlE5BHl5yc4'), {
@@ -28,16 +28,24 @@ test('rejects unsupported and unsafe URLs', () => {
   assert.equal(resolveVideoSource('https://example.com/watch/123'), null);
 });
 
-test('uses the YouTube thumbnail as the video poster', () => {
-  assert.equal(
-    resolveVideoPoster('https://youtu.be/IlE5BHl5yc4', '/course-cover.jpg'),
-    'https://i.ytimg.com/vi/IlE5BHl5yc4/hqdefault.jpg',
+test('orders YouTube, cover, and thumbnail poster fallbacks', () => {
+  assert.deepEqual(
+    resolveVideoPosters(
+      'https://youtu.be/IlE5BHl5yc4',
+      '/course-cover.jpg',
+      '/course-thumbnail.jpg',
+    ),
+    [
+      'https://i.ytimg.com/vi/IlE5BHl5yc4/hqdefault.jpg',
+      '/course-cover.jpg',
+      '/course-thumbnail.jpg',
+    ],
   );
 });
 
-test('keeps the configured image when the provider has no derived poster', () => {
-  assert.equal(
-    resolveVideoPoster('https://vimeo.com/76979871', '/course-cover.jpg'),
-    '/course-cover.jpg',
+test('removes empty and duplicate poster fallbacks', () => {
+  assert.deepEqual(
+    resolveVideoPosters('https://vimeo.com/76979871', '/course.jpg', '/course.jpg'),
+    ['/course.jpg'],
   );
 });

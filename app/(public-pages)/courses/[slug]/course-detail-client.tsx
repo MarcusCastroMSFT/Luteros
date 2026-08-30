@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/pageHeader';
 import { CourseInfo } from '@/components/courses/courseInfo';
-import { Star, Clock, BookOpen, Users, Globe } from 'lucide-react';
+import { Star, Clock, BookOpen, Globe } from 'lucide-react';
 import { type Course as CourseType } from '@/lib/courses';
+import { formatLessonCount } from '@/lib/course-labels';
 import { CourseSection, Lesson } from '@/types/course';
 
 // Dynamic imports for non-critical components (below the fold)
@@ -161,22 +162,15 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     }
   }, [isEnrolled, isEnrolling, course.id, slug, router]);
 
-  const formatStudentsCount = (count: number) => {
-    if (count >= 1000) {
-      return `${Math.floor(count / 1000)}k`;
-    }
-    return count.toString();
-  };
-
   // Create a course-like object for CourseInfo component - memoized to prevent re-renders
   const courseForInfo = useMemo(() => ({
     ...course,
     video: course.previewVideo,
-    image: course.coverImage || course.image,
+    image: course.image,
     originalPrice: course.originalPrice ?? undefined,
     sections: sections,
     includes: [
-      `${course.lessonsCount} aulas`,
+      formatLessonCount(course.lessonsCount),
       course.duration,
       'Acesso vitalício',
       'Certificado de conclusão',
@@ -221,16 +215,12 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                 <span>({course.reviewsCount} avaliações)</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{formatStudentsCount(course.studentsCount)} estudantes</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
                 <span>{course.duration}</span>
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{course.lessonsCount} aulas</span>
+                <span>{formatLessonCount(course.lessonsCount)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
@@ -258,7 +248,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                   Conteúdo do Curso
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  {sections.length} seções • {lessons.length} aulas • {course.duration}
+                  {sections.length} seções • {formatLessonCount(lessons.length)} • {course.duration}
                 </p>
                 <CourseContent 
                   sections={sections} 

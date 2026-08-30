@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Course } from '@/types/course';
-import { resolveVideoPoster } from '@/lib/video';
+import { resolveVideoPosters } from '@/lib/video';
 import { PreviewDialog } from './previewDialog';
 
 // Custom X (Twitter) Logo Component
@@ -32,6 +32,27 @@ const XLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+function CoursePreviewImage({ images, title }: { images: string[]; title: string }) {
+  const [imageIndex, setImageIndex] = useState(0);
+  const image = images[imageIndex];
+
+  if (!image) {
+    return <div className="h-full w-full bg-gray-900" aria-hidden="true" />;
+  }
+
+  return (
+    <Image
+      src={image}
+      alt={title}
+      width={400}
+      height={192}
+      className="h-full w-full object-cover"
+      sizes="(max-width: 1023px) 100vw, 400px"
+      onError={() => setImageIndex((currentIndex) => currentIndex + 1)}
+    />
+  );
+}
+
 interface CourseInfoProps {
   course: Course;
   onEnroll?: () => void;
@@ -41,7 +62,7 @@ interface CourseInfoProps {
 
 export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false }: CourseInfoProps) {
   const [showVideo, setShowVideo] = useState(false);
-  const videoPoster = resolveVideoPoster(course.video, course.image);
+  const videoPosters = resolveVideoPosters(course.video, course.coverImage, course.image);
 
   const formatPrice = (price: number) => {
     if (price === 0) return 'Grátis';
@@ -95,13 +116,10 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
                 className="relative w-full h-full cursor-pointer group"
                 onClick={handleImageClick}
               >
-                <Image
-                  src={videoPoster}
-                  alt={course.title}
-                  width={400}
-                  height={192}
-                  className="w-full h-full object-cover"
-                  sizes="(max-width: 1023px) 100vw, 400px"
+                <CoursePreviewImage
+                  key={videoPosters.join('|')}
+                  images={videoPosters}
+                  title={course.title}
                 />
                 {course.video && (
                   <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-40 transition-colors">

@@ -7,10 +7,11 @@ import { CourseContent } from '@/components/courses/courseContent';
 import { LessonViewer } from '@/components/lessons/lessonViewer';
 import { CourseSection, Lesson } from '@/types/course';
 import { type Course as CourseType } from '@/lib/courses';
+import { formatLessonCount } from '@/lib/course-labels';
+import { getCoursePath } from '@/lib/course-paths';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 // Type for raw lessons from the API
 interface RawLesson {
@@ -248,12 +249,13 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8">
           <div className="py-3 md:py-4 flex items-center gap-3">
             {/* Back button - Mobile */}
-            <Link 
-              href={`/courses/${slug}`}
+            <a
+              href={getCoursePath(course.slug)}
+              aria-label={`Voltar para ${course.title}`}
               className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors shrink-0"
             >
               <IconChevronLeft size={20} className="text-gray-600" />
-            </Link>
+            </a>
             
             {/* Title and Progress */}
             <div className="flex-1 min-w-0">
@@ -281,7 +283,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
             <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{progressPercent}% completo</p>
-                <p className="text-xs text-gray-500">{completedLessons.size} de {allLessons.length} aulas</p>
+                <p className="text-xs text-gray-500">{completedLessons.size} de {formatLessonCount(allLessons.length)}</p>
               </div>
               <div className="w-12 h-12 relative">
                 <svg className="w-12 h-12 transform -rotate-90">
@@ -332,7 +334,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                 <SheetHeader className="p-4 border-b bg-gray-50">
                   <SheetTitle className="text-left">Conteúdo do Curso</SheetTitle>
                   <p className="text-sm text-gray-600">
-                    {sections.length} seções • {allLessons.length} aulas
+                    {sections.length} seções • {formatLessonCount(allLessons.length)}
                   </p>
                 </SheetHeader>
                 <div className="overflow-y-auto h-[calc(100vh-100px)]">
@@ -362,7 +364,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                   Conteúdo do Curso
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  {sections.length} seções • {allLessons.length} aulas
+                  {sections.length} seções • {formatLessonCount(allLessons.length)}
                 </p>
               </div>
               <CourseContent 

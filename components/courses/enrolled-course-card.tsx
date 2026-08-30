@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { type EnrolledCourse } from '@/app/api/users/enrolled-courses/route';
+import { formatLessonCount } from '@/lib/course-labels';
 
 interface EnrolledCourseCardProps {
   enrollment: EnrolledCourse;
@@ -87,7 +88,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
         <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
           <div className="flex items-center gap-1">
             <BookOpen className="w-4 h-4" />
-            <span>{course.lessonsCount} aulas</span>
+            <span>{formatLessonCount(course.lessonsCount)}</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
@@ -103,7 +104,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
           </div>
           <Progress value={progressPercent} className="h-2" />
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>{completedLessons} de {totalLessons} aulas</span>
+            <span>{completedLessons} de {formatLessonCount(totalLessons)}</span>
             <span>{formatLastAccessed(lastAccessedAt)}</span>
           </div>
         </div>

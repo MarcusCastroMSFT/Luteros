@@ -42,6 +42,7 @@ export interface Course {
   title: string;
   description: string;
   image: string;
+  coverImage?: string;
   video?: string; // YouTube video URL or ID
   instructor: Instructor;
   price: number;

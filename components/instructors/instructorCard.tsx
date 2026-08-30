@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { Star, Users, BookOpen, Facebook, Instagram, Linkedin, Globe } from 'lucide-react'
+import { Star, BookOpen, Facebook, Instagram, Linkedin, Globe } from 'lucide-react'
 import { Instructor } from '@/types/course'
 
 interface InstructorCardProps {
@@ -34,7 +34,6 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
     image,
     rating,
     reviewsCount,
-    studentsCount,
     coursesCount,
     socialLinks
   } = instructor
@@ -78,12 +77,6 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-gray-400" />
                 <span>{formatNumber(reviewsCount)} Avaliações</span>
-              </div>
-              
-              {/* Students */}
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-400" />
-                <span>{formatNumber(studentsCount)} Estudantes</span>
               </div>
               
               {/* Courses */}

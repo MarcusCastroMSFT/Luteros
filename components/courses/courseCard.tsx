@@ -1,15 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Clock, BookOpen, Users, ArrowRight } from 'lucide-react';
+import { Star, Clock, BookOpen, ArrowRight } from 'lucide-react';
 import { type CourseCardProps } from '@/types/course';
-
-const formatStudentsCount = (count: number) => {
-  if (count >= 1000) {
-    return `${Math.floor(count / 1000)}k`
-  }
-  return count.toString()
-}
+import { formatLessonCount } from '@/lib/course-labels';
 
 export function CourseCard({ course, showInstructor = true, priority = false }: CourseCardProps & { priority?: boolean }) {
   return (
@@ -37,16 +31,19 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
         <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <BookOpen className="w-4 h-4" />
-            <span>{course.lessonsCount} Aulas</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{formatStudentsCount(course.studentsCount)} Alunos</span>
+            <span>{formatLessonCount(course.lessonsCount)}</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
             <span>{course.duration}</span>
           </div>
+        </div>
+
+        {/* Rating */}
+        <div className="mb-2 flex items-center gap-1 text-sm text-gray-600">
+          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          <span className="font-medium text-gray-900">{course.rating}</span>
+          <span className="text-gray-500">({course.reviewsCount})</span>
         </div>
 
         {/* Course Title */}
@@ -57,20 +54,11 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
           </h3>
         </Link>
 
-        {/* Rating and Instructor */}
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-medium text-gray-900">{course.rating}</span>
-            <span className="text-gray-500">({course.reviewsCount})</span>
-          </div>
-          
-          {showInstructor && (
-            <span className="hover:text-primary transition-colors cursor-pointer">
-              Por {course.instructor.name}
-            </span>
-          )}
-        </div>
+        {showInstructor && (
+          <span className="text-sm text-gray-600 hover:text-primary transition-colors cursor-pointer">
+            Por {course.instructor.name}
+          </span>
+        )}
       </div>
     </div>
   );

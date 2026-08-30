@@ -14,23 +14,22 @@ export function CourseCardSkeleton() {
         {/* Meta info skeleton */}
         <div className="flex items-center gap-4 mb-3">
           <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-20" />
           <Skeleton className="h-4 w-14" />
+        </div>
+
+        {/* Rating skeleton */}
+        <div className="flex items-center gap-2 mb-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-8" />
+          <Skeleton className="h-4 w-12" />
         </div>
 
         {/* Title skeleton */}
         <Skeleton className="h-6 w-full mb-2" />
         <Skeleton className="h-6 w-3/4 mb-3" />
 
-        {/* Rating and instructor skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-4 w-4 rounded" />
-            <Skeleton className="h-4 w-8" />
-            <Skeleton className="h-4 w-12" />
-          </div>
-          <Skeleton className="h-4 w-20" />
-        </div>
+        {/* Instructor skeleton */}
+        <Skeleton className="h-4 w-20" />
       </div>
     </div>
   );

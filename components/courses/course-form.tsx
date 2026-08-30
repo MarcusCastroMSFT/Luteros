@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/common/image-upload';
 import { LessonsPanel } from '@/components/courses/lessons-panel';
+import { calculateCourseCompletion } from '@/lib/course-completion';
 import { cn } from '@/lib/utils';
 
 interface Instructor {
@@ -173,34 +174,21 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
   const [isPublished, setIsPublished] = useState(initialData?.isPublished || false);
 
-  // Calculate form completion percentage
-  const calculateCompletion = useCallback(() => {
-    const requiredFields = [
-      { filled: !!title.trim(), weight: 20 },
-      { filled: !!slug.trim(), weight: 10 },
-      { filled: !!description.trim(), weight: 20 },
-      { filled: !!category, weight: 15 },
-      { filled: !!level, weight: 15 },
-      { filled: !!selectedInstructorId, weight: 20 },
-    ];
-    
-    const optionalFields = [
-      { filled: !!shortDescription.trim(), weight: 5 },
-      { filled: !!thumbnail, weight: 10 },
-      { filled: !!coverImage, weight: 5 },
-      { filled: !!previewVideo, weight: 5 },
-      { filled: !!duration, weight: 5 },
-      { filled: isFree || !!price, weight: 5 },
-    ];
-
-    const requiredScore = requiredFields.reduce((acc, f) => acc + (f.filled ? f.weight : 0), 0);
-    const optionalScore = optionalFields.reduce((acc, f) => acc + (f.filled ? f.weight : 0), 0);
-    
-    // Required fields count for 70%, optional for 30%
-    return Math.min(100, Math.round((requiredScore * 0.7) + (optionalScore * 0.3)));
-  }, [title, slug, description, category, level, selectedInstructorId, shortDescription, thumbnail, coverImage, previewVideo, duration, isFree, price]);
-
-  const completion = calculateCompletion();
+  const { percentage: completion, missingFields } = calculateCourseCompletion({
+    title,
+    slug,
+    description,
+    category,
+    level,
+    instructorId: selectedInstructorId,
+    shortDescription,
+    thumbnail,
+    coverImage,
+    previewVideo,
+    duration,
+    isFree,
+    price,
+  });
 
   // Fetch instructors on component mount
   useEffect(() => {
@@ -464,8 +452,9 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
       {/* Sticky Progress Bar */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="px-4 lg:px-6 py-3">
-          <div className="flex items-center justify-between max-w-4xl">
-            <div className="flex items-center gap-3">
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="icon"
@@ -474,66 +463,89 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
               >
                 <IconArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight">{pageTitle}</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                  {completion < 70 ? 'Preencha os campos obrigatórios' : 'Pronto para publicar'}
-                </p>
+                <div>
+                  <h1 className="text-lg font-semibold tracking-tight">{pageTitle}</h1>
+                  <p className="text-xs text-muted-foreground hidden sm:block">
+                    {completion < 70 ? 'Preencha os campos obrigatórios' : 'Pronto para publicar'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Completion Progress */}
+              <div className="flex items-center gap-3">
+                {/* Linear progress bar for mobile */}
+                <div className="flex sm:hidden items-center gap-2">
+                  <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full transition-all duration-500 rounded-full",
+                        completion >= 70 ? "bg-green-500" : "bg-primary"
+                      )}
+                      style={{ width: `${completion}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium">{completion}%</span>
+                </div>
+
+                {/* Circular progress for desktop */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{completion}% completo</p>
+                  </div>
+                  <div className="w-12 h-12 relative">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        fill="none"
+                        className="text-muted"
+                      />
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        fill="none"
+                        strokeDasharray={125.66}
+                        strokeDashoffset={125.66 - (completion / 100) * 125.66}
+                        className={cn(
+                          "transition-all duration-500",
+                          completion >= 70 ? "text-green-500" : "text-primary"
+                        )}
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+                      {completion >= 100 ? <IconCheck className="h-4 w-4 text-green-500" /> : `${completion}%`}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Completion Progress */}
-            <div className="flex items-center gap-3">
-              {/* Linear progress bar for mobile */}
-              <div className="flex sm:hidden items-center gap-2">
-                <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full transition-all duration-500 rounded-full",
-                      completion >= 70 ? "bg-green-500" : "bg-primary"
-                    )}
-                    style={{ width: `${completion}%` }}
-                  />
-                </div>
-                <span className="text-xs font-medium">{completion}%</span>
-              </div>
-              
-              {/* Circular progress for desktop */}
-              <div className="hidden sm:flex items-center gap-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{completion}% completo</p>
-                </div>
-                <div className="w-12 h-12 relative">
-                  <svg className="w-12 h-12 transform -rotate-90">
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r="20"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      fill="none"
-                      className="text-muted"
-                    />
-                    <circle
-                      cx="24"
-                      cy="24"
-                      r="20"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      fill="none"
-                      strokeDasharray={125.66}
-                      strokeDashoffset={125.66 - (completion / 100) * 125.66}
-                      className={cn(
-                        "transition-all duration-500",
-                        completion >= 70 ? "text-green-500" : "text-primary"
-                      )}
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
-                    {completion >= 100 ? <IconCheck className="h-4 w-4 text-green-500" /> : `${completion}%`}
+
+            <div
+              className={cn(
+                "mt-2 flex items-start gap-2 border-t pt-2 text-xs",
+                missingFields.length === 0 ? "text-green-700" : "text-muted-foreground"
+              )}
+            >
+              {missingFields.length === 0 ? (
+                <>
+                  <IconCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>Todos os campos de completude estão preenchidos.</span>
+                </>
+              ) : (
+                <>
+                  <IconInfoCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    <strong className="font-medium text-foreground">Faltam para 100%:</strong>{' '}
+                    {missingFields.join(', ')}.
                   </span>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </div>
         </div>
