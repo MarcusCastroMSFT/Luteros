@@ -60,6 +60,8 @@ For course thumbnails and covers, the existing course image fields store the sta
 
 Blob names are generated server-side from trusted course IDs, media roles, random UUIDs, and an extension derived from an allowed MIME type. Original filenames are display-only and never become path components.
 
+The create-course form can upload an image before a course ID exists. Those uploads use a staging prefix containing a server-generated fingerprint of the authenticated user rather than the raw user ID. The course creation endpoint accepts only draft references owned by that fingerprint and promotes them to the new course prefix before persisting the final public URL.
+
 ## Authorization
 
 Every media API performs server-side authentication and object-level authorization.
@@ -76,13 +78,13 @@ SAS tokens are user-delegation SAS tokens signed through Microsoft Entra credent
 
 ### Initiate
 
-`POST /api/courses/:courseId/media/uploads`
+`POST /api/courses/:courseId/media/uploads` for an existing course, or `POST /api/courses/media/uploads` for a create-course draft.
 
 The body declares `kind` (`thumbnail`, `cover`, or `lesson-video`), MIME type, byte size, and optional lesson ID. The endpoint:
 
-1. Authenticates the admin/instructor and verifies course ownership.
+1. Authenticates the admin/instructor and verifies course ownership, or binds a create-course draft to a server-generated fingerprint of the authenticated user.
 2. Validates media kind, MIME type, declared size, and lesson ownership.
-3. Generates a random staging blob name under the trusted course prefix.
+3. Generates a random staging blob name under the trusted course prefix for existing courses or the authenticated owner-fingerprint prefix for create-course drafts.
 4. Returns the blob URL, a 15-minute write-only SAS, upload ID/blob reference, and block-upload settings.
 
 Allowed course images are JPEG, PNG, WebP, and GIF up to 8 MB. Allowed videos are MP4, WebM, and MOV up to 2 GB. SVG is excluded from the new public course-media path.
