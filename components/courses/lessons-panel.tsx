@@ -90,6 +90,11 @@ import {
 } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  LessonSaveError,
+  saveLessonWithDeferredVideo,
+  type LessonSavePayload,
+} from '@/lib/lesson-save-flow';
 
 interface Lesson {
   id: string;
@@ -153,6 +158,8 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
   const [formData, setFormData] = useState<LessonFormData>(emptyFormData);
+  const [pendingVideoFile, setPendingVideoFile] = useState<File | null>(null);
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [editingSectionName, setEditingSectionName] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
@@ -260,6 +267,8 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
   // Open dialog for new lesson
   const handleNewLesson = (sectionTitle?: string | null) => {
     setEditingLesson(null);
+    setPendingVideoFile(null);
+    setIsVideoUploading(false);
     setIsCreatingNewSection(false);
     setFormData({
       ...emptyFormData,
@@ -271,6 +280,8 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
   // Open dialog to edit lesson
   const handleEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson);
+    setPendingVideoFile(null);
+    setIsVideoUploading(false);
     setIsCreatingNewSection(false);
     setFormData({
       title: lesson.title,
@@ -391,36 +402,27 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
 
     setSaving(true);
     try {
-      const url = editingLesson
-        ? `/api/courses/${courseId}/lessons/${editingLesson.id}`
-        : `/api/courses/${courseId}/lessons`;
-      
-      const method = editingLesson ? 'PUT' : 'POST';
+      const payload: LessonSavePayload = {
+        title: formData.title.trim(),
+        type: formData.type,
+        description: formData.description.trim() || null,
+        content: formData.type === 'article' ? formData.content : null,
+        videoUrl: formData.type === 'video' ? (formData.videoUrl.trim() || null) : null,
+        videoProvider: formData.type === 'video'
+          ? (formData.videoProvider === 'upload' ? 'azure' : formData.videoProvider)
+          : null,
+        duration: formData.duration ? parseInt(formData.duration) : null,
+        sectionTitle: formData.sectionTitle.trim() || null,
+        isPublished: formData.isPublished,
+        isFree: formData.isFree,
+      };
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          type: formData.type,
-          description: formData.description.trim() || null,
-          content: formData.type === 'article' ? formData.content : null,
-          videoUrl: formData.type === 'video' ? (formData.videoUrl.trim() || null) : null,
-          videoProvider: formData.type === 'video'
-            ? (formData.videoProvider === 'upload' ? 'azure' : formData.videoProvider)
-            : null,
-          duration: formData.duration ? parseInt(formData.duration) : null,
-          sectionTitle: formData.sectionTitle.trim() || null,
-          isPublished: formData.isPublished,
-          isFree: formData.isFree,
-        }),
+      await saveLessonWithDeferredVideo({
+        courseId,
+        lessonId: editingLesson?.id,
+        payload,
+        videoFile: pendingVideoFile,
       });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to save lesson');
-      }
 
       // Remove from empty sections if this lesson was added to one
       const sectionName = formData.sectionTitle.trim();
@@ -429,11 +431,19 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       }
 
       toast.success(editingLesson ? 'Aula atualizada!' : 'Aula criada!');
+      setPendingVideoFile(null);
       setDialogOpen(false);
       fetchLessons();
     } catch (error) {
       console.error('Error saving lesson:', error);
-      toast.error(editingLesson ? 'Erro ao atualizar aula' : 'Erro ao criar aula');
+      if (error instanceof LessonSaveError && error.lessonId) {
+        setPendingVideoFile(null);
+        setDialogOpen(false);
+        fetchLessons();
+        toast.error('A aula foi criada, mas o upload do vídeo falhou. Abra a aula para tentar novamente.');
+      } else {
+        toast.error(editingLesson ? 'Erro ao atualizar aula' : 'Erro ao criar aula');
+      }
     } finally {
       setSaving(false);
     }
@@ -938,7 +948,12 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       </Dialog>
 
       {/* Create/Edit Lesson Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (open || !isVideoUploading) setDialogOpen(open);
+        }}
+      >
         <DialogContent className={cn(
           "max-h-[90vh] overflow-y-auto",
           formData.type === 'article' ? "max-w-4xl" : "max-w-2xl"
@@ -961,22 +976,35 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
               <Label>Tipo de Aula</Label>
               <Tabs
                 value={formData.type}
-                onValueChange={(value) => setFormData(prev => ({ 
-                  ...prev, 
-                  type: value as 'video' | 'article' | 'audio' 
-                }))}
+                onValueChange={(value) => {
+                  const type = value as 'video' | 'article' | 'audio';
+                  if (type !== 'video') setPendingVideoFile(null);
+                  setFormData(prev => ({ ...prev, type }));
+                }}
                 className="w-full"
               >
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="video" className="flex items-center gap-2 cursor-pointer">
+                  <TabsTrigger
+                    value="video"
+                    disabled={isVideoUploading}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <IconVideo className="h-4 w-4" />
                     Vídeo
                   </TabsTrigger>
-                  <TabsTrigger value="article" className="flex items-center gap-2 cursor-pointer">
+                  <TabsTrigger
+                    value="article"
+                    disabled={isVideoUploading}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <IconArticle className="h-4 w-4" />
                     Artigo
                   </TabsTrigger>
-                  <TabsTrigger value="audio" className="flex items-center gap-2 cursor-pointer">
+                  <TabsTrigger
+                    value="audio"
+                    disabled={isVideoUploading}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <IconHeadphones className="h-4 w-4" />
                     Áudio
                   </TabsTrigger>
@@ -1080,7 +1108,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       type="button"
                       variant={formData.videoProvider === 'youtube' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData(prev => ({ ...prev, videoProvider: 'youtube' }))}
+                      onClick={() => {
+                        setPendingVideoFile(null);
+                        setFormData(prev => ({ ...prev, videoProvider: 'youtube' }));
+                      }}
+                      disabled={isVideoUploading}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <IconBrandYoutube className="h-4 w-4" />
@@ -1090,7 +1122,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       type="button"
                       variant={formData.videoProvider === 'vimeo' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData(prev => ({ ...prev, videoProvider: 'vimeo' }))}
+                      onClick={() => {
+                        setPendingVideoFile(null);
+                        setFormData(prev => ({ ...prev, videoProvider: 'vimeo' }));
+                      }}
+                      disabled={isVideoUploading}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <IconPlayerPlay className="h-4 w-4" />
@@ -1100,7 +1136,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       type="button"
                       variant={formData.videoProvider === 'url' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData(prev => ({ ...prev, videoProvider: 'url' }))}
+                      onClick={() => {
+                        setPendingVideoFile(null);
+                        setFormData(prev => ({ ...prev, videoProvider: 'url' }));
+                      }}
+                      disabled={isVideoUploading}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <IconLink className="h-4 w-4" />
@@ -1110,10 +1150,13 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       type="button"
                       variant={formData.videoProvider === 'upload' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData(prev => ({ ...prev, videoProvider: 'upload' }))}
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        videoUrl: prev.videoProvider === 'upload' ? prev.videoUrl : '',
+                        videoProvider: 'upload',
+                      }))}
                       className="flex items-center gap-2 cursor-pointer"
-                      disabled={!editingLesson?.id}
-                      title={!editingLesson?.id ? "Salve a aula primeiro para habilitar o upload" : undefined}
+                      disabled={isVideoUploading}
                     >
                       <IconUpload className="h-4 w-4" />
                       Upload
@@ -1152,8 +1195,14 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                     courseId={courseId}
                     lessonId={editingLesson?.id}
                     value={formData.videoUrl || ''}
+                    pendingFile={pendingVideoFile}
                     onChange={(blobName) => setFormData(prev => ({ ...prev, videoUrl: blobName }))}
-                    onRemove={() => setFormData(prev => ({ ...prev, videoUrl: '' }))}
+                    onFileSelected={setPendingVideoFile}
+                    onUploadingChange={setIsVideoUploading}
+                    onRemove={() => {
+                      setPendingVideoFile(null);
+                      setFormData(prev => ({ ...prev, videoUrl: '' }));
+                    }}
                   />
                 )}
 
@@ -1275,14 +1324,14 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
             <Button 
               variant="outline" 
               onClick={() => setDialogOpen(false)}
-              disabled={saving}
+              disabled={saving || isVideoUploading}
               className="cursor-pointer"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleSaveLesson} 
-              disabled={saving || !formData.title.trim()}
+              disabled={saving || isVideoUploading || !formData.title.trim()}
               className="cursor-pointer"
             >
               {saving ? (

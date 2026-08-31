@@ -4,6 +4,7 @@ import {
   DefaultAzureCredential,
   type TokenCredential,
 } from '@azure/identity';
+import { createVercelOidcAssertion } from './vercel-oidc-assertion.server';
 
 function requiredEnv(name: string): string {
   const value = process.env[name];
@@ -22,7 +23,7 @@ export function getAzureCredential(): TokenCredential {
     return new ClientAssertionCredential(
       tenantId,
       requiredEnv('AZURE_CLIENT_ID'),
-      async () => requiredEnv('VERCEL_OIDC_TOKEN'),
+      createVercelOidcAssertion(),
     );
   }
 

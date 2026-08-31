@@ -15,7 +15,10 @@ interface VideoUploadProps {
   courseId: string;
   lessonId?: string;
   value?: string; // blobName
+  pendingFile?: File | null;
   onChange: (blobName: string) => void;
+  onFileSelected?: (file: File | null) => void;
+  onUploadingChange?: (isUploading: boolean) => void;
   onRemove?: () => void;
   label?: string;
   description?: string;
@@ -47,7 +50,10 @@ export function VideoUpload({
   courseId,
   lessonId,
   value,
+  pendingFile,
   onChange,
+  onFileSelected,
+  onUploadingChange,
   onRemove,
   label = 'Vídeo',
   description = 'Faça upload de um arquivo de vídeo (.mp4, .webm, .mov)',
@@ -74,13 +80,15 @@ export function VideoUpload({
       }
 
       if (!lessonId) {
-        toast.error('A aula deve ser salva antes de fazer upload de vídeo.');
+        onFileSelected?.(file);
+        setUploadError(null);
         return;
       }
 
       const controller = new AbortController();
       setAbortController(controller);
       setIsUploading(true);
+      onUploadingChange?.(true);
       setUploadProgress(0);
       setUploadError(null);
 
@@ -111,11 +119,12 @@ export function VideoUpload({
         }
       } finally {
         setIsUploading(false);
+        onUploadingChange?.(false);
         setUploadProgress(0);
         setAbortController(null);
       }
     },
-    [courseId, lessonId, onChange]
+    [courseId, lessonId, onChange, onFileSelected, onUploadingChange]
   );
 
   const handleFileChange = useCallback(
@@ -163,12 +172,15 @@ export function VideoUpload({
   }, [abortController]);
 
   const handleRemove = useCallback(() => {
+    if (pendingFile) {
+      onFileSelected?.(null);
+    }
     if (onRemove) {
       onRemove();
     }
-  }, [onRemove]);
+  }, [onFileSelected, onRemove, pendingFile]);
 
-  if (!lessonId) {
+  if (!lessonId && !onFileSelected) {
     return (
       <div className={className}>
         <Label>{label}</Label>
@@ -186,10 +198,12 @@ export function VideoUpload({
       <Label>{label}</Label>
       <div className="mt-2 space-y-4">
         {/* Current video indicator */}
-        {value && !isUploading && (
+        {(value || pendingFile) && !isUploading && (
           <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
             <Video className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm flex-1 truncate">Vídeo carregado</span>
+            <span className="text-sm flex-1 truncate">
+              {pendingFile ? `${pendingFile.name} (será enviado ao criar a aula)` : 'Vídeo carregado'}
+            </span>
             {allowRemove && (
               <Button
                 type="button"
@@ -204,7 +218,7 @@ export function VideoUpload({
         )}
 
         {/* Upload area */}
-        {!value && !isUploading && (
+        {!value && !pendingFile && !isUploading && (
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               isDragging
