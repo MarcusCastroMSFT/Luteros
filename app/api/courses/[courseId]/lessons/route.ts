@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
 import { asc, eq, sql } from 'drizzle-orm'
@@ -81,7 +82,11 @@ export async function POST(
     const courseId = params.courseId
 
     const course = await db
-      .select({ id: courses.id, slug: courses.slug })
+      .select({
+        id: courses.id,
+        slug: courses.slug,
+        instructorId: courses.instructorId,
+      })
       .from(courses)
       .where(eq(courses.id, courseId))
       .limit(1)
@@ -93,6 +98,10 @@ export async function POST(
         { status: 404 }
       )
     }
+
+
+    const forbidden = requireCourseManager(authResult.user, course.instructorId)
+    if (forbidden) return forbidden
 
     const body = await request.json()
     const {

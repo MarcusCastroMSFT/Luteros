@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
@@ -99,6 +100,14 @@ export async function PUT(
     if (authResult instanceof NextResponse) return authResult
 
     const { courseId } = await context.params
+    const existing = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Curso não encontrado' }, { status: 404 })
+    }
+
+    const forbidden = requireCourseManager(authResult.user, existing.instructorId)
+    if (forbidden) return forbidden
+
     const body = await request.json()
     const {
       title, slug, description, shortDescription, level, category, language,
@@ -120,11 +129,6 @@ export async function PUT(
     }
     const dbLevel = levelMap[level] || level
 
-    const existing = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
-    if (!existing) {
-      return NextResponse.json({ success: false, error: 'Curso não encontrado' }, { status: 404 })
-    }
-
     if (slug !== existing.slug) {
       const conflict = await db.select({ id: courses.id }).from(courses).where(eq(courses.slug, slug)).limit(1).then((r) => r[0] ?? null)
       if (conflict) {
@@ -144,7 +148,9 @@ export async function PUT(
       isFree: isFree !== undefined ? isFree : existing.isFree,
       isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
       publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
-      instructorId: instructorId || existing.instructorId,
+      instructorId: authResult.role === 'ADMIN'
+        ? instructorId || existing.instructorId
+        : existing.instructorId,
     }).where(eq(courses.id, courseId)).returning()
 
     revalidatePath('/courses')
@@ -182,10 +188,17 @@ export async function DELETE(
 
     const { courseId } = await context.params
 
-    const existing = await db.select({ id: courses.id, slug: courses.slug }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
+    const existing = await db.select({
+      id: courses.id,
+      slug: courses.slug,
+      instructorId: courses.instructorId,
+    }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
     }
+
+    const forbidden = requireCourseManager(authResult.user, existing.instructorId)
+    if (forbidden) return forbidden
 
     await db.delete(courses).where(eq(courses.id, courseId))
 

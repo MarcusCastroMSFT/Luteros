@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
 import { and, asc, eq, inArray, sql } from 'drizzle-orm'
@@ -49,6 +50,14 @@ export async function PUT(
     if (!existingLesson) {
       return NextResponse.json({ success: false, error: 'Lesson not found' }, { status: 404 })
     }
+
+    const courseOwner = await db.select({ instructorId: courses.instructorId })
+      .from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
+    if (!courseOwner) {
+      return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
+    }
+    const forbidden = requireCourseManager(authResult.user, courseOwner.instructorId)
+    if (forbidden) return forbidden
 
     const body = await request.json()
     const { title, type, description, content, videoUrl, videoProvider, duration, sectionTitle, isPublished, isFree } = body
@@ -101,6 +110,14 @@ export async function DELETE(
     if (!existingLesson) {
       return NextResponse.json({ success: false, error: 'Lesson not found' }, { status: 404 })
     }
+
+    const courseOwner = await db.select({ instructorId: courses.instructorId })
+      .from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
+    if (!courseOwner) {
+      return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
+    }
+    const forbidden = requireCourseManager(authResult.user, courseOwner.instructorId)
+    if (forbidden) return forbidden
 
     await db.delete(lessons).where(eq(lessons.id, lessonId))
 
