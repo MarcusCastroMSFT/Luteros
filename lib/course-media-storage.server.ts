@@ -6,6 +6,7 @@ import {
 } from '@azure/storage-blob';
 import { createUploadSasPolicy, createReadSasPolicy } from './course-media-sas';
 import type { ParsedCourseMediaReference } from './course-media-paths.server';
+import { getBlobServiceClient } from './azure-credential.server';
 
 const COURSE_MEDIA_CONTAINERS = new Set(['course-images', 'course-videos']);
 
@@ -216,3 +217,23 @@ export function createCourseMediaStorage(
     },
   };
 }
+
+// ─── Lazy Singleton ───────────────────────────────────────────────────────────
+
+let _cachedStorage: CourseMediaStorage | null = null;
+
+function getConfiguredStorage(): CourseMediaStorage {
+  if (_cachedStorage) return _cachedStorage;
+  const endpoint = process.env.AZURE_STORAGE_BLOB_ENDPOINT;
+  if (!endpoint) throw new Error('AZURE_STORAGE_BLOB_ENDPOINT is required');
+  _cachedStorage = createCourseMediaStorage(getBlobServiceClient(), endpoint);
+  return _cachedStorage;
+}
+
+export const courseMediaStorage: CourseMediaStorage = {
+  createUploadGrant(...args) { return getConfiguredStorage().createUploadGrant(...args); },
+  inspect(...args) { return getConfiguredStorage().inspect(...args); },
+  promote(...args) { return getConfiguredStorage().promote(...args); },
+  deleteIfOwned(...args) { return getConfiguredStorage().deleteIfOwned(...args); },
+  createReadUrl(...args) { return getConfiguredStorage().createReadUrl(...args); },
+};
