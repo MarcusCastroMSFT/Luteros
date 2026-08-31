@@ -5,11 +5,14 @@ This Bicep deployment creates the Azure resources used for direct course image a
 - Standard ZRS StorageV2 account in Brazil South
 - Public `course-images` container and private `course-videos` container
 - Blob CORS for the production sites and local development
+- Public network endpoint for browser-direct transfers; writes and private video reads still require scoped SAS authorization
 - Blob and container soft delete for 7 days, plus Blob versioning
 - User-assigned managed identity with Storage Blob Data Contributor at Storage Account scope
 - Federated identity credential for the Vercel production OIDC subject
 
 No account keys, client secrets, OIDC tokens, or SAS values are stored in this repository.
+
+The Storage network ACL intentionally allows public endpoint traffic because browsers upload directly to Blob Storage. CORS limits participating web origins, while Azure RBAC and short-lived SAS permissions provide authorization. Only `course-images` permits anonymous Blob reads; `course-videos` remains private.
 
 ## Prerequisites
 

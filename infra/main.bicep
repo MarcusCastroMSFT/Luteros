@@ -44,6 +44,9 @@ module storage 'br/public:avm/res/storage/storage-account:0.33.0' = {
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
     publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      defaultAction: 'Allow'
+    }
     blobServices: {
       isVersioningEnabled: true
       deleteRetentionPolicyEnabled: true
