@@ -25,6 +25,8 @@ interface ImageUploadProps {
   uploadFolder?: string;
   /** API endpoint that receives the cropped image. */
   uploadUrl?: string;
+  /** Optional direct uploader; other callers keep using the multipart endpoint. */
+  uploadFile?: (file: File) => Promise<string>;
   allowUrl?: boolean;
   allowRemove?: boolean;
   className?: string;
@@ -51,6 +53,7 @@ export function ImageUpload({
   round = false,
   uploadFolder = 'uploads',
   uploadUrl = '/api/upload',
+  uploadFile,
   allowUrl = true,
   allowRemove = true,
   className = '',
@@ -96,16 +99,21 @@ export function ImageUpload({
           convertToFormat: 'jpeg',
         });
 
-        const formData = new FormData();
-        formData.append('file', compressed.file);
-        formData.append('folder', uploadFolder);
+        let url: string;
+        if (uploadFile) {
+          url = await uploadFile(compressed.file);
+        } else {
+          const formData = new FormData();
+          formData.append('file', compressed.file);
+          formData.append('folder', uploadFolder);
 
-        const res = await fetch(uploadUrl, { method: 'POST', body: formData });
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.error || `Upload falhou (${res.status})`);
+          const res = await fetch(uploadUrl, { method: 'POST', body: formData });
+          if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(errBody.error || `Upload falhou (${res.status})`);
+          }
+          ({ url } = (await res.json()) as { url: string });
         }
-        const { url } = (await res.json()) as { url: string };
 
         const ratio = getCompressionRatio(compressed.originalSize, compressed.compressedSize);
         toast.success(
@@ -120,7 +128,7 @@ export function ImageUpload({
         setPendingSource(null);
       }
     },
-    [maxSizeMB, onChange, uploadFolder, uploadUrl],
+    [maxSizeMB, onChange, uploadFile, uploadFolder, uploadUrl],
   );
 
   // Re-open the cropper using the current value (so users can re-adjust)

@@ -76,6 +76,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        // Azure Blob Storage — course images live at *.blob.core.windows.net/course-images
+        protocol: 'https',
+        hostname: '*.blob.core.windows.net',
+        port: '',
+        pathname: '/**',
+      },
     ],
     // Allow unoptimized images for data URLs (base64) from file uploads
     unoptimized: false,

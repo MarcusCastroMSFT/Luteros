@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,8 @@ import { toast } from 'sonner';
 import { ImageUpload } from '@/components/common/image-upload';
 import { LessonsPanel } from '@/components/courses/lessons-panel';
 import { calculateCourseCompletion } from '@/lib/course-completion';
+import { uploadCourseMedia } from '@/lib/course-media-upload';
+import type { CourseMediaKind } from '@/lib/course-media';
 import { cn } from '@/lib/utils';
 
 interface Instructor {
@@ -173,6 +175,17 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
   const [discountPrice, setDiscountPrice] = useState(initialData?.discountPrice || '');
   const [isFree, setIsFree] = useState(initialData?.isFree || false);
   const [isPublished, setIsPublished] = useState(initialData?.isPublished || false);
+
+  const uploadCourseImage = useCallback(async (file: File, kind: CourseMediaKind) => {
+    const result = await uploadCourseMedia(file, {
+      kind,
+      ...(mode === 'edit' && courseId ? { courseId } : {}),
+    });
+    if (result.kind === 'lesson-video') {
+      throw new Error('Resposta inválida ao enviar imagem');
+    }
+    return result.url;
+  }, [courseId, mode]);
 
   const { percentage: completion, missingFields } = calculateCourseCompletion({
     title,
@@ -903,6 +916,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
                         <ImageUpload
                           value={thumbnail}
                           onChange={setThumbnail}
+                          uploadFile={(file) => uploadCourseImage(file, 'thumbnail')}
                         />
                       </div>
 
@@ -915,6 +929,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
                         <ImageUpload
                           value={coverImage}
                           onChange={setCoverImage}
+                          uploadFile={(file) => uploadCourseImage(file, 'cover')}
                         />
                       </div>
                     </div>

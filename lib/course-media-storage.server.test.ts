@@ -459,6 +459,109 @@ describe('courseMediaStorage.promote', () => {
       { ok: true },
     );
   });
+
+  test('successfully promotes staging-draft with valid owner fingerprint', async () => {
+    const copyCalls: Array<{ from: string; to: string }> = [];
+    const deleteCalls: string[] = [];
+    const fakeClient = createFakeClient({
+      blobProperties: {
+        contentLength: 1024,
+        contentType: 'image/jpeg',
+      },
+      onCopy: (from, to) => copyCalls.push({ from, to }),
+      onDelete: (name) => deleteCalls.push(name),
+    });
+    const storage = createCourseMediaStorage(
+      fakeClient as unknown as BlobServiceClient,
+      'https://test.blob.core.windows.net',
+    );
+
+    const staging: ParsedCourseMediaReference = {
+      scope: 'staging-draft',
+      blobName: 'staging/drafts/abc123456789012345678901/thumbnail/def.jpg',
+      ownerFingerprint: 'abc123456789012345678901',
+      kind: 'thumbnail',
+      extension: 'jpg',
+    };
+    const final: ParsedCourseMediaReference = {
+      scope: 'final',
+      blobName: 'courses/456/thumbnail/xyz.jpg',
+      courseId: '456',
+      kind: 'thumbnail',
+      extension: 'jpg',
+    };
+
+    const result = await storage.promote('course-images', staging, final, {
+      expectedContentLength: 1024,
+      expectedContentType: 'image/jpeg',
+      expectedOwnerFingerprint: 'abc123456789012345678901',
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(copyCalls.length, 1);
+    assert.equal(deleteCalls.length, 1);
+  });
+
+  test('rejects staging-draft when expectedOwnerFingerprint not provided', async () => {
+    const storage = createCourseMediaStorage(
+      createFakeClient() as unknown as BlobServiceClient,
+      'https://test.blob.core.windows.net',
+    );
+
+    const staging: ParsedCourseMediaReference = {
+      scope: 'staging-draft',
+      blobName: 'staging/drafts/abc123456789012345678901/thumbnail/def.jpg',
+      ownerFingerprint: 'abc123456789012345678901',
+      kind: 'thumbnail',
+      extension: 'jpg',
+    };
+    const final: ParsedCourseMediaReference = {
+      scope: 'final',
+      blobName: 'courses/456/thumbnail/xyz.jpg',
+      courseId: '456',
+      kind: 'thumbnail',
+      extension: 'jpg',
+    };
+
+    await assert.rejects(
+      storage.promote('course-images', staging, final, {
+        expectedContentLength: 1024,
+        expectedContentType: 'image/jpeg',
+      }),
+      /expectedOwnerFingerprint required/i,
+    );
+  });
+
+  test('rejects staging-draft with mismatched owner fingerprint', async () => {
+    const storage = createCourseMediaStorage(
+      createFakeClient() as unknown as BlobServiceClient,
+      'https://test.blob.core.windows.net',
+    );
+
+    const staging: ParsedCourseMediaReference = {
+      scope: 'staging-draft',
+      blobName: 'staging/drafts/abc123456789012345678901/thumbnail/def.jpg',
+      ownerFingerprint: 'abc123456789012345678901',
+      kind: 'thumbnail',
+      extension: 'jpg',
+    };
+    const final: ParsedCourseMediaReference = {
+      scope: 'final',
+      blobName: 'courses/456/thumbnail/xyz.jpg',
+      courseId: '456',
+      kind: 'thumbnail',
+      extension: 'jpg',
+    };
+
+    await assert.rejects(
+      storage.promote('course-images', staging, final, {
+        expectedContentLength: 1024,
+        expectedContentType: 'image/jpeg',
+        expectedOwnerFingerprint: 'different000000000000000',
+      }),
+      /fingerprint mismatch/i,
+    );
+  });
 });
 
 test('rejects containers outside the course media allowlist', async () => {

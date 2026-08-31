@@ -22,17 +22,18 @@ interface UploadGrant {
   expiresAt: Date;
 }
 
-interface BlobInspection {
+export interface BlobInspection {
   contentLength: number;
   contentType: string;
 }
 
-interface PromoteOptions {
+export interface PromoteOptions {
   expectedContentLength: number;
   expectedContentType: string;
+  expectedOwnerFingerprint?: string;
 }
 
-type PromoteResult =
+export type PromoteResult =
   | { ok: true }
   | { ok: false; error: string };
 
@@ -128,15 +129,29 @@ export function createCourseMediaStorage(
       options: PromoteOptions,
     ): Promise<PromoteResult> {
       requireCourseMediaContainer(containerName);
-      if (
-        staging.scope !== 'staging-course'
-        || final.scope !== 'final'
-      ) {
+      
+      if (final.scope !== 'final') {
+        throw new Error('Invalid final scope');
+      }
+
+      // Validate staging scope and ownership
+      if (staging.scope === 'staging-course') {
+        // Existing staging-course path
+        if (staging.courseId !== final.courseId) {
+          throw new Error('Promotion course mismatch');
+        }
+      } else if (staging.scope === 'staging-draft') {
+        // New staging-draft path (requires owner fingerprint)
+        if (!options.expectedOwnerFingerprint) {
+          throw new Error('expectedOwnerFingerprint required for draft promotion');
+        }
+        if (staging.ownerFingerprint !== options.expectedOwnerFingerprint) {
+          throw new Error('Draft owner fingerprint mismatch');
+        }
+      } else {
         throw new Error('Invalid promotion scope');
       }
-      if (staging.courseId !== final.courseId) {
-        throw new Error('Promotion course mismatch');
-      }
+
       if (staging.kind !== final.kind) {
         throw new Error('Promotion kind mismatch');
       }
@@ -237,3 +252,7 @@ export const courseMediaStorage: CourseMediaStorage = {
   deleteIfOwned(...args) { return getConfiguredStorage().deleteIfOwned(...args); },
   createReadUrl(...args) { return getConfiguredStorage().createReadUrl(...args); },
 };
+
+export function getCourseMediaStorage(): CourseMediaStorage {
+  return courseMediaStorage;
+}

@@ -3,9 +3,13 @@ import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
+import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
 import { courses, lessons, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
+import { promoteOwnedDraftImage } from '@/lib/course-media-promotion.server'
+import { createOwnerFingerprint } from '@/lib/course-media-paths.server'
+import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 
 export async function GET(request: NextRequest) {
   await connection()
@@ -178,16 +182,16 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!title || !slug || !description || !level || !category) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatÃ³rios faltando' },
+        { success: false, error: 'Campos obrigatórios faltando' },
         { status: 400 }
       )
     }
 
     // Valid levels
-    const validLevels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'Iniciante', 'IntermediÃ¡rio', 'AvanÃ§ado']
+    const validLevels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'Iniciante', 'Intermediário', 'Avançado']
     if (!validLevels.includes(level)) {
       return NextResponse.json(
-        { success: false, error: 'NÃ­vel invÃ¡lido' },
+        { success: false, error: 'Nível inválido' },
         { status: 400 }
       )
     }
@@ -195,8 +199,8 @@ export async function POST(request: NextRequest) {
     // Map Portuguese levels to database format
     const levelMap: Record<string, string> = {
       'Iniciante': 'BEGINNER',
-      'IntermediÃ¡rio': 'INTERMEDIATE', 
-      'AvanÃ§ado': 'ADVANCED',
+      'Intermediário': 'INTERMEDIATE', 
+      'Avançado': 'ADVANCED',
     }
     const dbLevel = levelMap[level] || level
 
@@ -208,13 +212,69 @@ export async function POST(request: NextRequest) {
 
     if (existingCourse) {
       return NextResponse.json(
-        { success: false, error: 'JÃ¡ existe um curso com esse slug' },
+        { success: false, error: 'Já existe um curso com esse slug' },
         { status: 400 }
       )
     }
 
-    // Create course
+    // Generate course ID before insert (for draft promotion)
+    const courseId = randomUUID()
+
+    // Get Azure storage configuration
+    const blobEndpoint = process.env.AZURE_STORAGE_BLOB_ENDPOINT || ''
+
+    const storage = getCourseMediaStorage()
+    const ownerFingerprint = createOwnerFingerprint(authResult.user.id)
+
+    // Promote draft thumbnail if provided
+    let finalThumbnail = thumbnail || null
+    if (thumbnail) {
+      const thumbnailResult = await promoteOwnedDraftImage(
+        {
+          url: thumbnail,
+          courseId,
+          kind: 'thumbnail',
+          expectedOwnerFingerprint: ownerFingerprint,
+          containerName: 'course-images',
+          blobEndpoint,
+        },
+        storage,
+      )
+      if (!thumbnailResult.ok) {
+        return NextResponse.json(
+          { success: false, error: `Thumbnail inválido: ${thumbnailResult.error}` },
+          { status: 400 }
+        )
+      }
+      finalThumbnail = thumbnailResult.finalUrl
+    }
+
+    // Promote draft cover if provided
+    let finalCoverImage = coverImage || null
+    if (coverImage) {
+      const coverResult = await promoteOwnedDraftImage(
+        {
+          url: coverImage,
+          courseId,
+          kind: 'cover',
+          expectedOwnerFingerprint: ownerFingerprint,
+          containerName: 'course-images',
+          blobEndpoint,
+        },
+        storage,
+      )
+      if (!coverResult.ok) {
+        return NextResponse.json(
+          { success: false, error: `Cover inválido: ${coverResult.error}` },
+          { status: 400 }
+        )
+      }
+      finalCoverImage = coverResult.finalUrl
+    }
+
+    // Create course with generated ID and promoted URLs
     const [course] = await db.insert(courses).values({
+        id: courseId,
         title,
         slug,
         description,
@@ -223,8 +283,8 @@ export async function POST(request: NextRequest) {
         category,
         language,
         duration: duration ? parseInt(duration) : null,
-        thumbnail: thumbnail || null,
-        coverImage: coverImage || null,
+        thumbnail: finalThumbnail,
+        coverImage: finalCoverImage,
         previewVideo: previewVideo || null,
         price: price ? String(parseFloat(price)) : null,
         discountPrice: discountPrice ? String(parseFloat(discountPrice)) : null,

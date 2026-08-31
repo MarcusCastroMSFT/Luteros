@@ -7,6 +7,8 @@ import { courses, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
 import { alias } from 'drizzle-orm/pg-core'
 import { eq, sql } from 'drizzle-orm'
+import { validateFinalImageUrl, selectReplacedAzureImages } from '@/lib/course-media-promotion.server'
+import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 
 // Format duration from minutes to readable string
 const formatDuration = (minutes: number | null): string => {
@@ -136,6 +138,31 @@ export async function PUT(
       }
     }
 
+    // Get Azure storage configuration for validation
+    const blobEndpoint = process.env.AZURE_STORAGE_BLOB_ENDPOINT || ''
+
+    // Validate thumbnail URL (accepts external, rejects drafts, validates course/kind binding)
+    if (thumbnail !== undefined) {
+      const thumbnailValidation = validateFinalImageUrl(thumbnail, courseId, 'thumbnail', blobEndpoint)
+      if (!thumbnailValidation.ok) {
+        return NextResponse.json(
+          { success: false, error: `Thumbnail inválido: ${thumbnailValidation.error}` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate cover URL
+    if (coverImage !== undefined) {
+      const coverValidation = validateFinalImageUrl(coverImage, courseId, 'cover', blobEndpoint)
+      if (!coverValidation.ok) {
+        return NextResponse.json(
+          { success: false, error: `Cover inválido: ${coverValidation.error}` },
+          { status: 400 }
+        )
+      }
+    }
+
     const [updatedCourse] = await db.update(courses).set({
       title, slug, description,
       shortDescription: shortDescription || null,
@@ -152,6 +179,42 @@ export async function PUT(
         ? instructorId || existing.instructorId
         : existing.instructorId,
     }).where(eq(courses.id, courseId)).returning()
+
+    // Best-effort cleanup of replaced Azure images (after successful DB update)
+    try {
+      const storage = getCourseMediaStorage()
+
+      // Cleanup replaced thumbnail
+      if (thumbnail !== undefined) {
+        const thumbnailCleanup = selectReplacedAzureImages(
+          existing.thumbnail, thumbnail, courseId, 'thumbnail', blobEndpoint
+        )
+        for (const blob of thumbnailCleanup.blobsToDelete) {
+          try {
+            await storage.deleteIfOwned(blob.containerName, blob.ref, courseId)
+          } catch (deleteErr) {
+            console.warn('Failed to delete replaced thumbnail blob:', deleteErr)
+          }
+        }
+      }
+
+      // Cleanup replaced cover
+      if (coverImage !== undefined) {
+        const coverCleanup = selectReplacedAzureImages(
+          existing.coverImage, coverImage, courseId, 'cover', blobEndpoint
+        )
+        for (const blob of coverCleanup.blobsToDelete) {
+          try {
+            await storage.deleteIfOwned(blob.containerName, blob.ref, courseId)
+          } catch (deleteErr) {
+            console.warn('Failed to delete replaced cover blob:', deleteErr)
+          }
+        }
+      }
+    } catch (cleanupErr) {
+      // Cleanup failure must not fail the successful update
+      console.warn('Best-effort cleanup failed:', cleanupErr)
+    }
 
     revalidatePath('/courses')
     revalidatePath(`/courses/${slug}`)
