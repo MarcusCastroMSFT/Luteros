@@ -44,6 +44,12 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
       if (!sectionsMap.has(sectionTitle)) {
         sectionsMap.set(sectionTitle, []);
       }
+
+      // Map Azure video to playback endpoint
+      const videoUrl = lesson.videoProvider === 'azure' && lesson.videoUrl
+        ? `/api/courses/${course.id}/lessons/${lesson.id}/media`
+        : lesson.videoUrl || undefined;
+
       sectionsMap.get(sectionTitle)!.push({
         id: lesson.id,
         title: lesson.title,
@@ -52,7 +58,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         duration: lesson.duration ? `${Math.floor(lesson.duration / 60)}:${String(lesson.duration % 60).padStart(2, '0')}` : '0:00',
         isPreview: lesson.isFree,
         order: lesson.order,
-        videoUrl: lesson.videoUrl || undefined,
+        videoUrl,
         videoProvider: lesson.videoProvider || undefined,
       });
     });
@@ -72,7 +78,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     });
     
     return result;
-  }, [lessons]);
+  }, [lessons, course.id]);
 
   // Find initial lesson
   const initialLesson = useMemo(() => {

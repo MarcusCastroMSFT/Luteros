@@ -210,11 +210,15 @@ async function fetchCourseBySlug(slug: string) {
 
   // Only expose video URLs for free/preview lessons — paid lesson videos must
   // never leak into the public payload (or into structured data).
-  const safeLessons = courseLessons.map((l) => ({
-    ...l,
-    videoUrl: l.isFree ? l.videoUrl : null,
-    videoProvider: l.isFree ? l.videoProvider : null,
-  }))
+  // Azure-hosted videos remain private even for free previews.
+  const safeLessons = courseLessons.map((l) => {
+    const isAzure = l.videoProvider === 'azure'
+    return {
+      ...l,
+      videoUrl: l.isFree && !isAzure ? l.videoUrl : null,
+      videoProvider: l.isFree && !isAzure ? l.videoProvider : null,
+    }
+  })
 
   // Batch lesson counts for related courses; main course's count is courseLessons.length
   const relatedIds = related.map((r) => r.id)

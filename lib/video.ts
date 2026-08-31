@@ -4,6 +4,11 @@ export type VideoSource =
 
 const VIDEO_FILE_PATTERN = /\.(?:m4v|mov|mp4|og[gv]|webm)$/i;
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{6,}$/;
+const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const SAFE_MEDIA_ENDPOINT_PATTERN = new RegExp(
+  `^/api/courses/${UUID_PATTERN}/lessons/${UUID_PATTERN}/media$`,
+  'i',
+);
 
 function parseHttpUrl(value: string): URL | null {
   const trimmedValue = value.trim();
@@ -41,7 +46,28 @@ function getYouTubeId(url: URL): string | null {
 export function resolveVideoSource(value?: string | null): VideoSource | null {
   if (!value) return null;
 
-  const url = parseHttpUrl(value);
+  const trimmed = value.trim();
+
+  // Accept safe same-origin relative media endpoint BEFORE HTTP URL parsing
+  if (SAFE_MEDIA_ENDPOINT_PATTERN.test(trimmed)) {
+    // Reject if contains traversal, query, or hash
+    if (trimmed.includes('..') || trimmed.includes('?') || trimmed.includes('#')) {
+      return null;
+    }
+    return { kind: 'file', src: trimmed };
+  }
+
+  // Reject protocol-relative URLs before parsing
+  if (trimmed.startsWith('//')) {
+    return null;
+  }
+
+  // Reject other relative paths that don't match the safe endpoint pattern
+  if (trimmed.startsWith('/') || trimmed.startsWith('.')) {
+    return null;
+  }
+
+  const url = parseHttpUrl(trimmed);
   if (!url) return null;
 
   const youtubeId = getYouTubeId(url);

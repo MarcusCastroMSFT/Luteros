@@ -61,6 +61,10 @@ const RichTextEditor = dynamic(
   () => import('@/components/editor').then(mod => mod.RichTextEditor),
   { ssr: false, loading: () => <div className="h-64 bg-muted animate-pulse rounded-md" /> }
 );
+const VideoUpload = dynamic(
+  () => import('./video-upload').then(mod => mod.VideoUpload),
+  { ssr: false }
+);
 import { 
   IconPlus, 
   IconGripVertical,
@@ -274,7 +278,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       description: lesson.description || '',
       content: lesson.content || '',
       videoUrl: lesson.videoUrl || '',
-      videoProvider: lesson.videoProvider || 'youtube',
+      videoProvider: lesson.videoProvider === 'azure' ? 'upload' : (lesson.videoProvider || 'youtube'),
       duration: lesson.duration?.toString() || '',
       sectionTitle: lesson.sectionTitle || '',
       isPublished: lesson.isPublished,
@@ -402,7 +406,9 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
           description: formData.description.trim() || null,
           content: formData.type === 'article' ? formData.content : null,
           videoUrl: formData.type === 'video' ? (formData.videoUrl.trim() || null) : null,
-          videoProvider: formData.type === 'video' ? formData.videoProvider : null,
+          videoProvider: formData.type === 'video'
+            ? (formData.videoProvider === 'upload' ? 'azure' : formData.videoProvider)
+            : null,
           duration: formData.duration ? parseInt(formData.duration) : null,
           sectionTitle: formData.sectionTitle.trim() || null,
           isPublished: formData.isPublished,
@@ -1106,8 +1112,8 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       size="sm"
                       onClick={() => setFormData(prev => ({ ...prev, videoProvider: 'upload' }))}
                       className="flex items-center gap-2 cursor-pointer"
-                      disabled
-                      title="Em breve"
+                      disabled={!editingLesson?.id}
+                      title={!editingLesson?.id ? "Salve a aula primeiro para habilitar o upload" : undefined}
                     >
                       <IconUpload className="h-4 w-4" />
                       Upload
@@ -1115,33 +1121,41 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                   </div>
                 </div>
 
-                {/* Video URL */}
-                <div className="space-y-2">
-                  <Label htmlFor="lesson-video">
-                    {formData.videoProvider === 'youtube' && 'URL do YouTube'}
-                    {formData.videoProvider === 'vimeo' && 'URL do Vimeo'}
-                    {formData.videoProvider === 'url' && 'URL do Vídeo'}
-                    {formData.videoProvider === 'upload' && 'Upload de Vídeo'}
-                  </Label>
-                  <Input
-                    id="lesson-video"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                    placeholder={
-                      formData.videoProvider === 'youtube' 
-                        ? 'https://www.youtube.com/watch?v=...' 
-                        : formData.videoProvider === 'vimeo'
-                        ? 'https://vimeo.com/...'
-                        : 'https://...'
-                    }
+                {/* Video URL or Upload */}
+                {formData.videoProvider !== 'upload' ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="lesson-video">
+                      {formData.videoProvider === 'youtube' && 'URL do YouTube'}
+                      {formData.videoProvider === 'vimeo' && 'URL do Vimeo'}
+                      {formData.videoProvider === 'url' && 'URL do Vídeo'}
+                    </Label>
+                    <Input
+                      id="lesson-video"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                      placeholder={
+                        formData.videoProvider === 'youtube'
+                          ? 'https://www.youtube.com/watch?v=...'
+                          : formData.videoProvider === 'vimeo'
+                          ? 'https://vimeo.com/...'
+                          : 'https://...'
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {formData.videoProvider === 'youtube' && 'Cole a URL completa do vídeo do YouTube'}
+                      {formData.videoProvider === 'vimeo' && 'Cole a URL completa do vídeo do Vimeo'}
+                      {formData.videoProvider === 'url' && 'Cole a URL direta do arquivo de vídeo'}
+                    </p>
+                  </div>
+                ) : (
+                  <VideoUpload
+                    courseId={courseId}
+                    lessonId={editingLesson?.id}
+                    value={formData.videoUrl || ''}
+                    onChange={(blobName) => setFormData(prev => ({ ...prev, videoUrl: blobName }))}
+                    onRemove={() => setFormData(prev => ({ ...prev, videoUrl: '' }))}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {formData.videoProvider === 'youtube' && 'Cole a URL completa do vídeo do YouTube'}
-                    {formData.videoProvider === 'vimeo' && 'Cole a URL completa do vídeo do Vimeo'}
-                    {formData.videoProvider === 'url' && 'Cole a URL direta do arquivo de vídeo'}
-                    {formData.videoProvider === 'upload' && 'Funcionalidade em desenvolvimento'}
-                  </p>
-                </div>
+                )}
 
                 {/* Duration */}
                 <div className="space-y-2">
