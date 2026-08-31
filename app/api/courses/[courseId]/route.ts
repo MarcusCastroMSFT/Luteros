@@ -3,12 +3,13 @@ import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
-import { courses, users } from '@/lib/db/schema'
+import { courses, lessons, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
 import { alias } from 'drizzle-orm/pg-core'
 import { eq, sql } from 'drizzle-orm'
-import { validateFinalImageUrl, selectReplacedAzureImages } from '@/lib/course-media-promotion.server'
+import { validateFinalImageUrl } from '@/lib/course-media-promotion.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
+import { collectCourseMediaReferences, deleteCourseMediaReferences } from '@/lib/course-media-cleanup.server'
 
 // Format duration from minutes to readable string
 const formatDuration = (minutes: number | null): string => {
@@ -163,58 +164,33 @@ export async function PUT(
       }
     }
 
-    const [updatedCourse] = await db.update(courses).set({
-      title, slug, description,
-      shortDescription: shortDescription || null,
-      level: dbLevel, category,
-      language: language || existing.language,
-      duration: duration !== undefined ? duration : existing.duration,
-      thumbnail: thumbnail || null, coverImage: coverImage || null, previewVideo: previewVideo || null,
-      price: price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price,
-      discountPrice: discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice,
-      isFree: isFree !== undefined ? isFree : existing.isFree,
-      isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
-      publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
-      instructorId: authResult.role === 'ADMIN'
-        ? instructorId || existing.instructorId
-        : existing.instructorId,
-    }).where(eq(courses.id, courseId)).returning()
-
-    // Best-effort cleanup of replaced Azure images (after successful DB update)
-    try {
-      const storage = getCourseMediaStorage()
-
-      // Cleanup replaced thumbnail
-      if (thumbnail !== undefined) {
-        const thumbnailCleanup = selectReplacedAzureImages(
-          existing.thumbnail, thumbnail, courseId, 'thumbnail', blobEndpoint
-        )
-        for (const blob of thumbnailCleanup.blobsToDelete) {
-          try {
-            await storage.deleteIfOwned(blob.containerName, blob.ref, courseId)
-          } catch (deleteErr) {
-            console.warn('Failed to delete replaced thumbnail blob:', deleteErr)
-          }
-        }
-      }
-
-      // Cleanup replaced cover
-      if (coverImage !== undefined) {
-        const coverCleanup = selectReplacedAzureImages(
-          existing.coverImage, coverImage, courseId, 'cover', blobEndpoint
-        )
-        for (const blob of coverCleanup.blobsToDelete) {
-          try {
-            await storage.deleteIfOwned(blob.containerName, blob.ref, courseId)
-          } catch (deleteErr) {
-            console.warn('Failed to delete replaced cover blob:', deleteErr)
-          }
-        }
-      }
-    } catch (cleanupErr) {
-      // Cleanup failure must not fail the successful update
-      console.warn('Best-effort cleanup failed:', cleanupErr)
-    }
+    const replacedMedia = collectCourseMediaReferences({
+      courseId,
+      blobEndpoint,
+      thumbnail: thumbnail !== undefined && thumbnail !== existing.thumbnail ? existing.thumbnail : null,
+      coverImage: coverImage !== undefined && coverImage !== existing.coverImage ? existing.coverImage : null,
+    })
+    const [updatedCourse] = await deleteCourseMediaReferences({
+      courseId,
+      references: replacedMedia,
+      getStorage: getCourseMediaStorage,
+      mutate: () => db.update(courses).set({
+        title, slug, description,
+        shortDescription: shortDescription || null,
+        level: dbLevel, category,
+        language: language || existing.language,
+        duration: duration !== undefined ? duration : existing.duration,
+        thumbnail: thumbnail || null, coverImage: coverImage || null, previewVideo: previewVideo || null,
+        price: price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price,
+        discountPrice: discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice,
+        isFree: isFree !== undefined ? isFree : existing.isFree,
+        isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
+        publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
+        instructorId: authResult.role === 'ADMIN'
+          ? instructorId || existing.instructorId
+          : existing.instructorId,
+      }).where(eq(courses.id, courseId)).returning(),
+    })
 
     revalidatePath('/courses')
     revalidatePath(`/courses/${slug}`)
@@ -255,6 +231,8 @@ export async function DELETE(
       id: courses.id,
       slug: courses.slug,
       instructorId: courses.instructorId,
+      thumbnail: courses.thumbnail,
+      coverImage: courses.coverImage,
     }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
     if (!existing) {
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
@@ -263,7 +241,24 @@ export async function DELETE(
     const forbidden = requireCourseManager(authResult.user, existing.instructorId)
     if (forbidden) return forbidden
 
-    await db.delete(courses).where(eq(courses.id, courseId))
+    const lessonMedia = await db.select({
+      videoUrl: lessons.videoUrl,
+      videoProvider: lessons.videoProvider,
+    }).from(lessons).where(eq(lessons.courseId, courseId))
+    const mediaToDelete = collectCourseMediaReferences({
+      courseId,
+      blobEndpoint: process.env.AZURE_STORAGE_BLOB_ENDPOINT || '',
+      thumbnail: existing.thumbnail,
+      coverImage: existing.coverImage,
+      lessons: lessonMedia,
+    })
+
+    await deleteCourseMediaReferences({
+      courseId,
+      references: mediaToDelete,
+      getStorage: getCourseMediaStorage,
+      mutate: () => db.delete(courses).where(eq(courses.id, courseId)),
+    })
 
     revalidatePath('/courses')
     revalidatePath(`/courses/${existing.slug}`)
