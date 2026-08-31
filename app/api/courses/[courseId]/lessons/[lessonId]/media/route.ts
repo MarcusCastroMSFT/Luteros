@@ -6,9 +6,6 @@ import { getAuthUser } from '@/lib/auth-helpers';
 import { createCourseMediaPlaybackService, type EnrollmentData } from '@/lib/course-media-playback.server';
 import { courseMediaStorage } from '@/lib/course-media-storage.server';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 interface RouteParams {
   courseId: string;
   lessonId: string;

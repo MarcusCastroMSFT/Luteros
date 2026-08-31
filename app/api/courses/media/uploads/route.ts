@@ -9,8 +9,6 @@ import {
 } from '@/lib/course-media-upload-service.server';
 import { courseMediaStorage } from '@/lib/course-media-storage.server';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
