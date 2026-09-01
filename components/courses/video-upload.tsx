@@ -28,6 +28,13 @@ interface VideoUploadProps {
 
 const ACCEPTED_VIDEO_TYPES = '.mp4,.webm,.mov';
 const MAX_VIDEO_SIZE_LABEL = '2 GB';
+type UploadPhase = 'preparing' | 'uploading' | 'finalizing';
+
+const UPLOAD_PHASE_LABELS: Record<UploadPhase, string> = {
+  preparing: 'Preparando upload...',
+  uploading: 'Enviando vídeo...',
+  finalizing: 'Finalizando vídeo...',
+};
 
 function _formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -63,6 +70,9 @@ export function VideoUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedBytes, setUploadedBytes] = useState(0);
+  const [uploadTotalBytes, setUploadTotalBytes] = useState(0);
+  const [uploadPhase, setUploadPhase] = useState<UploadPhase>('preparing');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -90,6 +100,9 @@ export function VideoUpload({
       setIsUploading(true);
       onUploadingChange?.(true);
       setUploadProgress(0);
+      setUploadedBytes(0);
+      setUploadTotalBytes(file.size);
+      setUploadPhase('preparing');
       setUploadError(null);
 
       try {
@@ -99,7 +112,10 @@ export function VideoUpload({
           lessonId,
           signal: controller.signal,
           onProgress: (loaded, total) => {
+            setUploadedBytes(loaded);
+            setUploadTotalBytes(total);
             setUploadProgress(Math.round((loaded / total) * 100));
+            setUploadPhase(loaded >= total ? 'finalizing' : 'uploading');
           },
         });
 
@@ -258,7 +274,9 @@ export function VideoUpload({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Enviando vídeo...</span>
+                <span className="text-sm" aria-live="polite">
+                  {UPLOAD_PHASE_LABELS[uploadPhase]}
+                </span>
               </div>
               <Button
                 type="button"
@@ -269,10 +287,24 @@ export function VideoUpload({
                 Cancelar
               </Button>
             </div>
-            <Progress value={uploadProgress} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">
-              {uploadProgress}%
-            </p>
+            <div className="relative overflow-hidden rounded-full">
+              <Progress
+                value={uploadProgress}
+                className="h-2"
+                aria-label="Progresso do upload do vídeo"
+                aria-valuetext={`${uploadProgress}% enviado`}
+              />
+              <div
+                className="upload-progress-activity pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary/70 to-transparent"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground tabular-nums">
+              <span>
+                {_formatFileSize(uploadedBytes)} de {_formatFileSize(uploadTotalBytes)}
+              </span>
+              <span>{uploadProgress}%</span>
+            </div>
           </div>
         )}
 

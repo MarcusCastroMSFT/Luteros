@@ -188,6 +188,7 @@ export function createCourseMediaStorage(
         if ('syncUploadFromURL' in finalClient && typeof finalClient.syncUploadFromURL === 'function') {
           await finalClient.syncUploadFromURL(sourceUrl, {
             copySourceBlobProperties: false,
+            blobHTTPHeaders: { blobContentType: options.expectedContentType },
           });
         } else {
           const poller = await finalClient.beginCopyFromURL(sourceUrl);

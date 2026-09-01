@@ -65,11 +65,11 @@ describe('createReadSasPolicy', () => {
     assert.equal(policy.startsOn?.toISOString(), expectedStart.toISOString());
   });
 
-  test('sets expiry 5 minutes after now', () => {
+  test('sets expiry 2 hours after now', () => {
     const now = new Date('2026-08-31T12:00:00Z');
     const policy = createReadSasPolicy('test-container', 'test/blob.mp4', now);
     
-    const expectedExpiry = new Date('2026-08-31T12:05:00Z');
+    const expectedExpiry = new Date('2026-08-31T14:00:00Z');
     assert.equal(policy.expiresOn.toISOString(), expectedExpiry.toISOString());
   });
 

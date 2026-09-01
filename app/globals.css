@@ -230,6 +230,22 @@
   }
 }
 
+@keyframes upload-progress-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(400%); }
+}
+
+.upload-progress-activity {
+  animation: upload-progress-sweep 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-progress-activity {
+    animation: none;
+    display: none;
+  }
+}
+
 /* Article Content Prose Styles */
 .prose {
   color: #374151;

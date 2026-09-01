@@ -114,17 +114,25 @@ export async function uploadCourseMedia(
   const initiationJson = await readJson(initiationResponse);
   if (!initiationResponse.ok) throw readError(initiationJson, initiationResponse.status);
   const initiation = parseInitiation(initiationJson);
+  let reportedBytes = -1;
+  const reportProgress = (loadedBytes: number) => {
+    if (loadedBytes === reportedBytes) return;
+    reportedBytes = loadedBytes;
+    options.onProgress?.(loadedBytes, file.size);
+  };
 
   const blobClient = clientFactory(initiation.sasUrl);
+  reportProgress(0);
   await blobClient.uploadData(file, {
     abortSignal: options.signal,
     blockSize: initiation.blockSize,
     concurrency: initiation.concurrency,
     blobHTTPHeaders: { blobContentType: file.type },
     onProgress: options.onProgress
-      ? ({ loadedBytes }) => options.onProgress?.(loadedBytes, file.size)
+      ? ({ loadedBytes }) => reportProgress(loadedBytes)
       : undefined,
   });
+  reportProgress(file.size);
 
   const completionResponse = await fetchImpl(
     `${baseUrl}/${encodeURIComponent(initiation.uploadId)}/complete`,

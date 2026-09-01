@@ -31,7 +31,7 @@ export function createReadSasPolicy(
   now: Date,
 ): BlobSasPolicy {
   const startsOn = new Date(now.getTime() - 5 * 60 * 1000);
-  const expiresOn = new Date(now.getTime() + 5 * 60 * 1000);
+  const expiresOn = new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
   return {
     containerName,

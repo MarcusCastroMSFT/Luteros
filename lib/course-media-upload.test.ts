@@ -63,7 +63,7 @@ describe('uploadCourseMedia', () => {
     });
 
     assert.deepEqual(events, ['initiate', 'upload', 'complete']);
-    assert.deepEqual(progress, [6]);
+    assert.deepEqual(progress, [0, 6, 12]);
     assert.deepEqual(result, {
       kind: 'cover',
       url: 'https://account.blob.core.windows.net/course-images/courses/final.jpg',
@@ -99,6 +99,32 @@ describe('uploadCourseMedia', () => {
       '/api/courses/course-1/media/uploads',
       '/api/courses/course-1/media/uploads/upload-id/complete',
     ]);
+  });
+
+  test('reports completed progress only once when Azure emits the total', async () => {
+    const progress: number[] = [];
+    const fetchImpl: typeof fetch = async (input) => {
+      if (!String(input).endsWith('/complete')) {
+        return jsonResponse({
+          uploadId: 'upload-id', blobUrl: 'https://blob/file', sasUrl: 'https://blob/file?sig=x',
+          blockSize: 8, concurrency: 2, expiresAt: '2026-01-01T00:15:00.000Z',
+        });
+      }
+      return jsonResponse({ kind: 'thumbnail', url: 'https://blob/final.jpg' });
+    };
+    const clientFactory: CourseBlockBlobClientFactory = () => ({
+      async uploadData(_file, options) {
+        options?.onProgress?.({ loadedBytes: 12 });
+        return {} as never;
+      },
+    });
+
+    await uploadCourseMedia(createFile(), {
+      kind: 'thumbnail', fetchImpl, clientFactory,
+      onProgress: (loadedBytes) => progress.push(loadedBytes),
+    });
+
+    assert.deepEqual(progress, [0, 12]);
   });
 
   test('forwards the abort signal to Azure upload', async () => {

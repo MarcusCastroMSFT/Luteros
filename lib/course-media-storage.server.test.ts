@@ -13,7 +13,10 @@ interface FakeBlobServiceClient {
 interface FakeBlockBlobClient {
   url: string;
   getProperties: () => Promise<{ contentLength?: number; contentType?: string }>;
-  syncUploadFromURL?: (url: string, options?: { copySourceBlobProperties?: boolean }) => Promise<void>;
+  syncUploadFromURL?: (url: string, options?: {
+    copySourceBlobProperties?: boolean;
+    blobHTTPHeaders?: { blobContentType?: string };
+  }) => Promise<void>;
   beginCopyFromURL?: (url: string) => {
     pollUntilDone: () => Promise<{ copyStatus: string }>;
   };
@@ -195,6 +198,10 @@ describe('courseMediaStorage.promote', () => {
 
   test('uses syncUploadFromURL for server-side copy when available', async () => {
     const copyCalls: Array<{ from: string; to: string }> = [];
+    const syncOptions: Array<{
+      copySourceBlobProperties?: boolean;
+      blobHTTPHeaders?: { blobContentType?: string };
+    } | undefined> = [];
     const deleteCalls: string[] = [];
     const fakeClient = createFakeClient({
       blobProperties: {
@@ -202,6 +209,7 @@ describe('courseMediaStorage.promote', () => {
         contentType: 'image/png',
       },
       onCopy: (from, to) => copyCalls.push({ from, to }),
+      onSyncUploadOptions: (options) => syncOptions.push(options),
       onDelete: (name) => deleteCalls.push(name),
       supportsSyncUpload: true,
     });
@@ -235,6 +243,10 @@ describe('courseMediaStorage.promote', () => {
     assert.ok(copyCalls[0].from.includes('staging/courses/123/thumbnail/abc.png'));
     assert.equal(new URL(copyCalls[0].from).searchParams.get('sp'), 'r');
     assert.equal(copyCalls[0].to, 'courses/123/thumbnail/xyz.png');
+    assert.deepEqual(syncOptions, [{
+      copySourceBlobProperties: false,
+      blobHTTPHeaders: { blobContentType: 'image/png' },
+    }]);
     assert.deepEqual(deleteCalls, ['staging/courses/123/thumbnail/abc.png']);
   });
 
@@ -650,6 +662,7 @@ describe('courseMediaStorage.createReadUrl', () => {
 function createFakeClient(options: {
   blobProperties?: { contentLength?: number; contentType?: string };
   onCopy?: (from: string, to: string) => void;
+  onSyncUploadOptions?: (options: Parameters<NonNullable<FakeBlockBlobClient['syncUploadFromURL']>>[1]) => void;
   onDelete?: (name: string) => void;
   supportsSyncUpload?: boolean;
   copyError?: Error;
@@ -658,6 +671,7 @@ function createFakeClient(options: {
   const {
     blobProperties = {},
     onCopy = () => {},
+    onSyncUploadOptions = () => {},
     onDelete = () => {},
     supportsSyncUpload = true,
     copyError,
@@ -688,9 +702,10 @@ function createFakeClient(options: {
         };
 
         if (supportsSyncUpload) {
-          fakeBlob.syncUploadFromURL = async (sourceUrl: string) => {
+          fakeBlob.syncUploadFromURL = async (sourceUrl, syncUploadOptions) => {
             if (copyError) throw copyError;
             onCopy(sourceUrl, blobName);
+            onSyncUploadOptions(syncUploadOptions);
           };
         } else {
           fakeBlob.beginCopyFromURL = (sourceUrl: string) => ({
