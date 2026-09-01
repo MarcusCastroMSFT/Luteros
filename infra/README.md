@@ -4,7 +4,7 @@ This Bicep deployment creates the Azure resources used for direct course image a
 
 - Standard ZRS StorageV2 account in Brazil South
 - Public `course-images` container and private `course-videos` container
-- Blob CORS for the production sites and local development
+- Blob CORS for the custom production domains, stable Vercel production alias, and local development
 - Public network endpoint for browser-direct transfers; writes and private video reads still require scoped SAS authorization
 - Blob and container soft delete for 7 days, plus Blob versioning
 - User-assigned managed identity with Storage Blob Data Contributor at Storage Account scope

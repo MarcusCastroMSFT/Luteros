@@ -16,6 +16,7 @@ param vercelProjectName string
 param allowedOrigins array = [
   'https://www.lutteros.com.br'
   'https://lutteros.com.br'
+  'https://lutteros.vercel.app'
   'http://localhost:3000'
 ]
 
@@ -58,6 +59,7 @@ module storage 'br/public:avm/res/storage/storage-account:0.33.0' = {
           allowedHeaders: [
             'content-length'
             'content-type'
+            'x-ms-blob-content-type'
             'range'
             'x-ms-blob-type'
             'x-ms-client-request-id'
