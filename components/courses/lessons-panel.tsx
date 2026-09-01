@@ -472,7 +472,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       fetchLessons();
     } catch (error) {
       console.error('Error deleting lesson:', error);
-      toast.error('Erro ao excluir aula');
+      toast.error(error instanceof Error ? error.message : 'Erro ao excluir aula');
     } finally {
       setSaving(false);
     }
@@ -1355,6 +1355,9 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
             <AlertDialogDescription>
               Tem certeza que deseja excluir a aula &quot;{lessonToDelete?.title}&quot;?
               Esta ação não pode ser desfeita.
+              {lessonToDelete?.videoProvider === 'azure' && (
+                <> O vídeo enviado também será excluído permanentemente.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

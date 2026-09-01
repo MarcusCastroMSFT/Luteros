@@ -30,6 +30,10 @@ interface DeleteCourseMediaReferencesOptions<T> {
   warn?: (...args: unknown[]) => void;
 }
 
+export class CourseMediaDeletionError extends Error {
+  override name = 'CourseMediaDeletionError';
+}
+
 export function collectCourseMediaReferences(
   options: CollectCourseMediaReferencesOptions,
 ): CourseMediaReference[] {
@@ -109,4 +113,40 @@ export async function deleteCourseMediaReferences<T>(
   }
 
   return result;
+}
+
+export async function deleteCourseMediaReferencesStrict<T>(
+  options: DeleteCourseMediaReferencesOptions<T>,
+): Promise<T> {
+  if (options.references.length === 0) return options.mutate();
+
+  let storage: CourseMediaStorage;
+  try {
+    storage = options.getStorage();
+  } catch {
+    throw new CourseMediaDeletionError('Course media deletion unavailable');
+  }
+
+  for (const candidate of options.references) {
+    const expectedKind = candidate.containerName === 'course-videos'
+      ? 'lesson-video'
+      : candidate.ref.kind;
+    const ref = parseCourseMediaReference(candidate.ref.blobName, {
+      expectedCourseId: options.courseId,
+      expectedKind,
+    });
+    const containerMatchesKind = candidate.containerName === 'course-videos'
+      ? ref?.kind === 'lesson-video'
+      : ref?.kind === 'thumbnail' || ref?.kind === 'cover';
+
+    if (ref?.scope !== 'final' || !containerMatchesKind) continue;
+
+    try {
+      await storage.deleteIfOwned(candidate.containerName, ref, options.courseId);
+    } catch {
+      throw new CourseMediaDeletionError('Course media deletion failed');
+    }
+  }
+
+  return options.mutate();
 }

@@ -5,7 +5,12 @@ import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
 import { and, asc, eq, inArray, sql } from 'drizzle-orm'
-import { collectCourseMediaReferences, deleteCourseMediaReferences } from '@/lib/course-media-cleanup.server'
+import {
+  collectCourseMediaReferences,
+  CourseMediaDeletionError,
+  deleteCourseMediaReferences,
+  deleteCourseMediaReferencesStrict,
+} from '@/lib/course-media-cleanup.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 
 // GET a single lesson
@@ -146,7 +151,7 @@ export async function DELETE(
       lessons: [existingLesson],
     })
 
-    await deleteCourseMediaReferences({
+    await deleteCourseMediaReferencesStrict({
       courseId,
       references: mediaToDelete,
       getStorage: getCourseMediaStorage,
@@ -188,6 +193,13 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Lesson deleted successfully' })
   } catch (error) {
+    if (error instanceof CourseMediaDeletionError) {
+      console.warn('Lesson video deletion failed; lesson was preserved')
+      return NextResponse.json({
+        success: false,
+        error: 'Não foi possível excluir o vídeo. A aula foi mantida; tente novamente.',
+      }, { status: 503 })
+    }
     console.error('Error deleting lesson:', error)
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }

@@ -3,7 +3,9 @@ import test from 'node:test';
 import {
   collectCourseMediaReferences,
   deleteCourseMediaReferences,
+  deleteCourseMediaReferencesStrict,
 } from './course-media-cleanup.server';
+import * as courseMediaCleanup from './course-media-cleanup.server';
 import { parseCourseMediaReference } from './course-media-paths.server';
 import type { CourseMediaStorage } from './course-media-storage.server';
 
@@ -85,6 +87,61 @@ test('runs the database mutation before initializing storage or deleting blobs',
 
   assert.equal(result, 'updated');
   assert.deepEqual(events, ['mutate', 'storage', 'delete']);
+});
+
+test('strict deletion removes blobs before running the database mutation', async () => {
+  const strictDelete = (courseMediaCleanup as {
+    deleteCourseMediaReferencesStrict?: typeof deleteCourseMediaReferences;
+  }).deleteCourseMediaReferencesStrict;
+  assert.equal(typeof strictDelete, 'function');
+  if (!strictDelete) return;
+
+  const events: string[] = [];
+  const result = await strictDelete({
+    courseId: COURSE_ID,
+    references: collectCourseMediaReferences({
+      courseId: COURSE_ID,
+      blobEndpoint: BLOB_ENDPOINT,
+      lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+    }),
+    getStorage: () => {
+      events.push('storage');
+      return createStorage(async () => { events.push('delete'); });
+    },
+    mutate: async () => {
+      events.push('mutate');
+      return 'deleted';
+    },
+  });
+
+  assert.equal(result, 'deleted');
+  assert.deepEqual(events, ['storage', 'delete', 'mutate']);
+});
+
+test('strict deletion preserves the database record when Blob deletion fails', async () => {
+  let mutationCalls = 0;
+  const operation = deleteCourseMediaReferencesStrict({
+    courseId: COURSE_ID,
+    references: collectCourseMediaReferences({
+      courseId: COURSE_ID,
+      blobEndpoint: BLOB_ENDPOINT,
+      lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+    }),
+    getStorage: () => createStorage(async () => {
+      throw new Error('https://account.blob.core.windows.net/file?sig=secret');
+    }),
+    mutate: async () => {
+      mutationCalls += 1;
+    },
+  });
+
+  await assert.rejects(operation, (error: Error) => {
+    assert.equal(error.name, 'CourseMediaDeletionError');
+    assert.equal(error.message, 'Course media deletion failed');
+    assert.equal(error.message.includes('sig=secret'), false);
+    return true;
+  });
+  assert.equal(mutationCalls, 0);
 });
 
 test('does not initialize storage or delete when the database mutation fails', async () => {
