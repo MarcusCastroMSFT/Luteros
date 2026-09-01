@@ -43,8 +43,8 @@ az deployment group what-if `
   --template-file infra/main.bicep `
   --parameters `
     vercelTeamSlug='<team-slug>' `
-    vercelTeamId='<team-id>' `
-    vercelProjectId='<project-id>'
+    vercelTeamSubject='<team-slug>' `
+    vercelProjectName='<project-name>'
 ```
 
 Do not commit real Vercel identifiers in parameter files unless the repository's access policy explicitly permits it. Never capture or persist generated SAS URLs or the runtime `VERCEL_OIDC_TOKEN`.

@@ -6,11 +6,11 @@ param location string = 'brazilsouth'
 @description('Vercel team slug used in the OIDC issuer URL.')
 param vercelTeamSlug string
 
-@description('Vercel team ID used in the production OIDC subject.')
-param vercelTeamId string
+@description('Vercel team slug used in the production OIDC subject.')
+param vercelTeamSubject string
 
-@description('Vercel project ID used in the production OIDC subject.')
-param vercelProjectId string
+@description('Vercel project name used in the production OIDC subject.')
+param vercelProjectName string
 
 @description('Origins allowed to upload course media directly to Blob Storage.')
 param allowedOrigins array = [
@@ -108,7 +108,7 @@ module federation 'br/public:avm/res/managed-identity/user-assigned-identity/fed
     name: 'vercel-production'
     userAssignedIdentityName: identity.outputs.name
     issuer: 'https://oidc.vercel.com/${vercelTeamSlug}'
-    subject: 'owner:${vercelTeamId}:project:${vercelProjectId}:environment:production'
+    subject: 'owner:${vercelTeamSubject}:project:${vercelProjectName}:environment:production'
     audiences: [
       'api://AzureADTokenExchange'
     ]
