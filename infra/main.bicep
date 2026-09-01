@@ -63,6 +63,7 @@ module storage 'br/public:avm/res/storage/storage-account:0.33.0' = {
             'range'
             'x-ms-blob-type'
             'x-ms-client-request-id'
+            'x-ms-useragent'
             'x-ms-version'
           ]
           allowedMethods: [
