@@ -76,8 +76,8 @@ export function LoginForm({
         <CardContent className="p-6">
           <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Logo and Header */}
-            <div className="text-center">
-              <div className="flex justify-center -my-10">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="flex justify-center">
                 <Logo iconSize="lg" />
               </div>
               <div>
