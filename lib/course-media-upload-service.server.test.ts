@@ -185,6 +185,24 @@ describe('upload grant diagnostics', () => {
     });
     assert.doesNotMatch(JSON.stringify(details), /private-value|exchange token/i);
   });
+
+  test('retains only the AADSTS code from Azure authentication messages', () => {
+    const details = sanitizeUploadGrantError(
+      Object.assign(
+        new Error(
+          "AADSTS700213: No matching federated identity record found for presented assertion subject 'private-subject'. Trace ID: private-trace",
+        ),
+        { name: 'AuthenticationRequiredError' },
+      ),
+    );
+
+    assert.deepEqual(details, {
+      category: 'azure_authentication_failed',
+      name: 'AuthenticationRequiredError',
+      code: 'AADSTS700213',
+    });
+    assert.doesNotMatch(JSON.stringify(details), /private|subject|trace/i);
+  });
 });
 
 // ─── Initiation: validation ───────────────────────────────────────────────────

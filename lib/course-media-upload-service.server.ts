@@ -163,7 +163,7 @@ export function sanitizeUploadGrantError(error: unknown): SafeUploadGrantError {
     ? error as Record<string, unknown>
     : {};
   const name = safeIdentifier(value.name);
-  const code = safeIdentifier(value.code);
+  let code = safeIdentifier(value.code);
   const statusCode = typeof value.statusCode === 'number'
     && Number.isInteger(value.statusCode)
     && value.statusCode >= 100
@@ -188,6 +188,9 @@ export function sanitizeUploadGrantError(error: unknown): SafeUploadGrantError {
     || code === 'AuthenticationFailed'
   ) {
     category = 'azure_authentication_failed';
+    if (!code && typeof value.message === 'string') {
+      code = value.message.match(/\bAADSTS\d{5,9}\b/)?.[0];
+    }
   }
 
   return {
