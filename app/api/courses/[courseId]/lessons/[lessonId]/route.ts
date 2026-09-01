@@ -4,7 +4,7 @@ import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import {
   collectCourseMediaReferences,
   CourseMediaDeletionError,
@@ -157,32 +157,6 @@ export async function DELETE(
       getStorage: getCourseMediaStorage,
       mutate: async () => {
         await db.delete(lessons).where(eq(lessons.id, lessonId))
-
-        // Reorder remaining lessons to close the gap. Two-phase batched update
-        // avoids the (courseId, order) unique-index conflict without N round-trips.
-        const remaining = await db.select({ id: lessons.id }).from(lessons)
-          .where(eq(lessons.courseId, courseId)).orderBy(asc(lessons.order))
-
-        if (remaining.length > 0) {
-          const remainingIds = remaining.map((r) => r.id)
-          await db.transaction(async (tx) => {
-            const tempCases = sql.join(
-              remainingIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${-(i + 1)}`),
-              sql` `,
-            )
-            await tx.update(lessons)
-              .set({ order: sql`CASE ${lessons.id} ${tempCases} END` })
-              .where(inArray(lessons.id, remainingIds))
-
-            const finalCases = sql.join(
-              remainingIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
-              sql` `,
-            )
-            await tx.update(lessons)
-              .set({ order: sql`CASE ${lessons.id} ${finalCases} END` })
-              .where(inArray(lessons.id, remainingIds))
-          })
-        }
       },
     })
 
