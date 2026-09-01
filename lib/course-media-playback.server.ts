@@ -7,6 +7,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 export interface EnrollmentData {
   courseId: string;
   lessonId: string;
+  lessonType: 'video' | 'article' | 'audio';
   videoUrl: string | null;
   videoProvider: string | null;
   enrollmentId?: string | null;
@@ -74,9 +75,18 @@ export function createCourseMediaPlaybackService(deps: CourseMediaPlaybackDeps):
         return { status: 404, error: 'Invalid media reference' };
       }
 
+      const expectedKind = enrollment.lessonType === 'video'
+        ? 'lesson-video'
+        : enrollment.lessonType === 'audio'
+          ? 'lesson-audio'
+          : null;
+      if (!expectedKind) {
+        return { status: 404, error: 'Media not found' };
+      }
+
       const parsed = parseCourseMediaReference(enrollment.videoUrl, {
         expectedCourseId: courseId,
-        expectedKind: 'lesson-video',
+        expectedKind,
       });
 
       if (!parsed || parsed.scope !== 'final') {

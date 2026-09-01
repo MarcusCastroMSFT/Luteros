@@ -242,6 +242,7 @@ export async function DELETE(
     if (forbidden) return forbidden
 
     const lessonMedia = await db.select({
+      type: lessons.type,
       videoUrl: lessons.videoUrl,
       videoProvider: lessons.videoProvider,
     }).from(lessons).where(eq(lessons.courseId, courseId))

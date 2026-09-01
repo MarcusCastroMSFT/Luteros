@@ -38,7 +38,11 @@ export async function POST(
       return c;
     },
     findLesson: async (id) => {
-      const [l] = await db.select().from(lessons).where(eq(lessons.id, id)).limit(1);
+      const [l] = await db.select({
+        id: lessons.id,
+        courseId: lessons.courseId,
+        type: lessons.type,
+      }).from(lessons).where(eq(lessons.id, id)).limit(1);
       return l;
     },
     getNow: () => new Date(),

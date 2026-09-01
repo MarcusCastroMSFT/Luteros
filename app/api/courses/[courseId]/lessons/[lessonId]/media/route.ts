@@ -29,6 +29,7 @@ export async function GET(
       .select({
         courseId: lessons.courseId,
         lessonId: lessons.id,
+        lessonType: lessons.type,
         videoUrl: lessons.videoUrl,
         videoProvider: lessons.videoProvider,
         enrollmentId: enrollments.id,

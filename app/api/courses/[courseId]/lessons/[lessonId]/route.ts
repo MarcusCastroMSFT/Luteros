@@ -127,6 +127,7 @@ export async function DELETE(
     const existingLesson = await db.select({
       id: lessons.id,
       order: lessons.order,
+      type: lessons.type,
       videoUrl: lessons.videoUrl,
       videoProvider: lessons.videoProvider,
     }).from(lessons)
@@ -168,10 +169,10 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: 'Lesson deleted successfully' })
   } catch (error) {
     if (error instanceof CourseMediaDeletionError) {
-      console.warn('Lesson video deletion failed; lesson was preserved')
+      console.warn('Lesson media deletion failed; lesson was preserved')
       return NextResponse.json({
         success: false,
-        error: 'Não foi possível excluir o vídeo. A aula foi mantida; tente novamente.',
+        error: 'Não foi possível excluir a mídia. A aula foi mantida; tente novamente.',
       }, { status: 503 })
     }
     console.error('Error deleting lesson:', error)

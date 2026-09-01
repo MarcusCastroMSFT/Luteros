@@ -17,6 +17,12 @@ const allowedTypes: Array<[CourseMediaKind, string, string]> = [
   ['lesson-video', 'video/mp4', 'mp4'],
   ['lesson-video', 'video/webm', 'webm'],
   ['lesson-video', 'video/quicktime', 'mov'],
+  ['lesson-audio', 'audio/mpeg', 'mp3'],
+  ['lesson-audio', 'audio/mp4', 'm4a'],
+  ['lesson-audio', 'audio/x-m4a', 'm4a'],
+  ['lesson-audio', 'audio/wav', 'wav'],
+  ['lesson-audio', 'audio/x-wav', 'wav'],
+  ['lesson-audio', 'audio/ogg', 'ogg'],
 ];
 
 for (const [kind, contentType, extension] of allowedTypes) {
@@ -103,5 +109,24 @@ test('accepts the exact video limit and rejects one byte over it', () => {
       size: 2 * GIBIBYTE + 1,
     }),
     { ok: false, error: 'Arquivo muito grande (máximo 2GB)' },
+  );
+});
+
+test('accepts the exact audio limit and rejects one byte over it', () => {
+  assert.deepEqual(
+    validateCourseMediaDeclaration({
+      kind: 'lesson-audio',
+      contentType: 'audio/mpeg',
+      size: 500 * MEBIBYTE,
+    }),
+    { ok: true },
+  );
+  assert.deepEqual(
+    validateCourseMediaDeclaration({
+      kind: 'lesson-audio',
+      contentType: 'audio/mpeg',
+      size: 500 * MEBIBYTE + 1,
+    }),
+    { ok: false, error: 'Arquivo muito grande (máximo 500MB)' },
   );
 });

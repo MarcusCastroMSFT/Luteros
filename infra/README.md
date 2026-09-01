@@ -61,3 +61,11 @@ AZURE_STORAGE_BLOB_ENDPOINT <- blobEndpoint
 ```
 
 Vercel injects `VERCEL_OIDC_TOKEN` at runtime when OIDC federation is enabled. It must not be configured as a static environment variable.
+
+Automatic lesson duration lookup for YouTube videos also requires this server-only Vercel environment variable:
+
+```text
+YOUTUBE_API_KEY
+```
+
+Restrict the key in Google Cloud to the YouTube Data API v3. Never expose it with a `NEXT_PUBLIC_` prefix.

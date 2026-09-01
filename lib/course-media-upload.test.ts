@@ -101,6 +101,63 @@ describe('uploadCourseMedia', () => {
     ]);
   });
 
+  test('uploads lesson audio and accepts only a matching completion result', async () => {
+    const fetchImpl: typeof fetch = async (input, init) => {
+      if (!String(input).endsWith('/complete')) {
+        assert.deepEqual(JSON.parse(String(init?.body)), {
+          kind: 'lesson-audio',
+          contentType: 'audio/mpeg',
+          size: 12,
+          lessonId: 'lesson-1',
+        });
+        return jsonResponse({
+          uploadId: 'audio-upload', sasUrl: 'https://blob/audio?sig=x',
+          blockSize: 8, concurrency: 2,
+        });
+      }
+      return jsonResponse({
+        kind: 'lesson-audio',
+        blobName: 'courses/course-1/lesson-audio/audio.mp3',
+        videoProvider: 'azure',
+      });
+    };
+    const clientFactory: CourseBlockBlobClientFactory = () => ({ async uploadData() { return {} as never; } });
+
+    const result = await uploadCourseMedia(createFile('audio/mpeg', 'lesson.mp3'), {
+      kind: 'lesson-audio', courseId: 'course-1', lessonId: 'lesson-1', fetchImpl, clientFactory,
+    });
+
+    assert.deepEqual(result, {
+      kind: 'lesson-audio',
+      blobName: 'courses/course-1/lesson-audio/audio.mp3',
+      videoProvider: 'azure',
+    });
+  });
+
+  test('rejects a cross-kind lesson media completion result', async () => {
+    const fetchImpl: typeof fetch = async (input) => {
+      if (!String(input).endsWith('/complete')) {
+        return jsonResponse({
+          uploadId: 'audio-upload', sasUrl: 'https://blob/audio?sig=x',
+          blockSize: 8, concurrency: 2,
+        });
+      }
+      return jsonResponse({
+        kind: 'lesson-video',
+        blobName: 'courses/course-1/lesson-video/video.mp4',
+        videoProvider: 'azure',
+      });
+    };
+    const clientFactory: CourseBlockBlobClientFactory = () => ({ async uploadData() { return {} as never; } });
+
+    await assert.rejects(
+      uploadCourseMedia(createFile('audio/mpeg', 'lesson.mp3'), {
+        kind: 'lesson-audio', courseId: 'course-1', lessonId: 'lesson-1', fetchImpl, clientFactory,
+      }),
+      /Invalid completion response/,
+    );
+  });
+
   test('reports completed progress only once when Azure emits the total', async () => {
     const progress: number[] = [];
     const fetchImpl: typeof fetch = async (input) => {

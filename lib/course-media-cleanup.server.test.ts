@@ -15,6 +15,7 @@ const BLOB_ENDPOINT = 'https://lutterosmedia.blob.core.windows.net';
 const THUMBNAIL = `courses/${COURSE_ID}/thumbnail/123e4567-e89b-42d3-a456-426614174000.webp`;
 const COVER = `courses/${COURSE_ID}/cover/223e4567-e89b-42d3-a456-426614174000.jpg`;
 const VIDEO = `courses/${COURSE_ID}/lesson-video/323e4567-e89b-42d3-a456-426614174000.mp4`;
+const AUDIO = `courses/${COURSE_ID}/lesson-audio/423e4567-e89b-42d3-a456-426614174000.mp3`;
 
 function createStorage(onDelete: (container: string, blobName: string) => Promise<void>): CourseMediaStorage {
   return {
@@ -33,8 +34,9 @@ test('collects deduplicated final media owned by the exact course', () => {
     thumbnail: `${BLOB_ENDPOINT}/course-images/${THUMBNAIL}`,
     coverImage: `${BLOB_ENDPOINT}/course-images/${COVER}`,
     lessons: [
-      { videoProvider: 'azure', videoUrl: VIDEO },
-      { videoProvider: 'azure', videoUrl: VIDEO },
+      { type: 'video', videoProvider: 'azure', videoUrl: VIDEO },
+      { type: 'video', videoProvider: 'azure', videoUrl: VIDEO },
+      { type: 'audio', videoProvider: 'azure', videoUrl: AUDIO },
     ],
   });
 
@@ -44,8 +46,22 @@ test('collects deduplicated final media owned by the exact course', () => {
       ['course-images', THUMBNAIL],
       ['course-images', COVER],
       ['course-videos', VIDEO],
+      ['course-videos', AUDIO],
     ],
   );
+});
+
+test('binds each private Blob prefix to the persisted lesson type', () => {
+  const references = collectCourseMediaReferences({
+    courseId: COURSE_ID,
+    blobEndpoint: BLOB_ENDPOINT,
+    lessons: [
+      { type: 'audio', videoProvider: 'azure', videoUrl: VIDEO },
+      { type: 'video', videoProvider: 'azure', videoUrl: AUDIO },
+    ],
+  });
+
+  assert.deepEqual(references, []);
 });
 
 test('ignores external, staging, non-Azure, and foreign-course media', () => {
@@ -55,9 +71,9 @@ test('ignores external, staging, non-Azure, and foreign-course media', () => {
     thumbnail: 'https://example.com/image.jpg',
     coverImage: `${BLOB_ENDPOINT}/course-images/staging/courses/${COURSE_ID}/cover/223e4567-e89b-42d3-a456-426614174000.jpg`,
     lessons: [
-      { videoProvider: 'youtube', videoUrl: 'https://youtu.be/abcdef' },
-      { videoProvider: 'azure', videoUrl: `courses/${FOREIGN_COURSE_ID}/lesson-video/323e4567-e89b-42d3-a456-426614174000.mp4` },
-      { videoProvider: 'azure', videoUrl: `staging/courses/${COURSE_ID}/lesson-video/323e4567-e89b-42d3-a456-426614174000.mp4` },
+      { type: 'video', videoProvider: 'youtube', videoUrl: 'https://youtu.be/abcdef' },
+      { type: 'video', videoProvider: 'azure', videoUrl: `courses/${FOREIGN_COURSE_ID}/lesson-video/323e4567-e89b-42d3-a456-426614174000.mp4` },
+      { type: 'video', videoProvider: 'azure', videoUrl: `staging/courses/${COURSE_ID}/lesson-video/323e4567-e89b-42d3-a456-426614174000.mp4` },
     ],
   });
 
@@ -68,7 +84,7 @@ test('runs the database mutation before initializing storage or deleting blobs',
   const references = collectCourseMediaReferences({
     courseId: COURSE_ID,
     blobEndpoint: BLOB_ENDPOINT,
-    lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+    lessons: [{ type: 'video', videoProvider: 'azure', videoUrl: VIDEO }],
   });
   const events: string[] = [];
 
@@ -102,7 +118,7 @@ test('strict deletion removes blobs before running the database mutation', async
     references: collectCourseMediaReferences({
       courseId: COURSE_ID,
       blobEndpoint: BLOB_ENDPOINT,
-      lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+      lessons: [{ type: 'video', videoProvider: 'azure', videoUrl: VIDEO }],
     }),
     getStorage: () => {
       events.push('storage');
@@ -125,7 +141,7 @@ test('strict deletion preserves the database record when Blob deletion fails', a
     references: collectCourseMediaReferences({
       courseId: COURSE_ID,
       blobEndpoint: BLOB_ENDPOINT,
-      lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+      lessons: [{ type: 'audio', videoProvider: 'azure', videoUrl: AUDIO }],
     }),
     getStorage: () => createStorage(async () => {
       throw new Error('https://account.blob.core.windows.net/file?sig=secret');
@@ -153,7 +169,7 @@ test('does not initialize storage or delete when the database mutation fails', a
       references: collectCourseMediaReferences({
         courseId: COURSE_ID,
         blobEndpoint: BLOB_ENDPOINT,
-        lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+        lessons: [{ type: 'video', videoProvider: 'azure', videoUrl: VIDEO }],
       }),
       mutate: async () => { throw new Error('database failed'); },
       getStorage: () => {
@@ -191,7 +207,7 @@ test('keeps a successful mutation successful when cleanup fails and logs no SAS 
     references: collectCourseMediaReferences({
       courseId: COURSE_ID,
       blobEndpoint: BLOB_ENDPOINT,
-      lessons: [{ videoProvider: 'azure', videoUrl: VIDEO }],
+      lessons: [{ type: 'video', videoProvider: 'azure', videoUrl: VIDEO }],
     }),
     mutate: async () => ({ id: 'lesson-1' }),
     getStorage: () => createStorage(async () => {

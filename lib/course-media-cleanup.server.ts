@@ -10,6 +10,7 @@ export interface CourseMediaReference {
 }
 
 interface LessonMediaReference {
+  type: 'video' | 'article' | 'audio';
   videoUrl: string | null | undefined;
   videoProvider: string | null | undefined;
 }
@@ -60,9 +61,15 @@ export function collectCourseMediaReferences(
 
   for (const lesson of options.lessons ?? []) {
     if (lesson.videoProvider !== 'azure' || !lesson.videoUrl) continue;
+    const expectedKind = lesson.type === 'video'
+      ? 'lesson-video'
+      : lesson.type === 'audio'
+        ? 'lesson-audio'
+        : null;
+    if (!expectedKind) continue;
     const ref = parseCourseMediaReference(lesson.videoUrl, {
       expectedCourseId: options.courseId,
-      expectedKind: 'lesson-video',
+      expectedKind,
     });
     if (ref?.scope === 'final') {
       addReference('course-videos', { ...ref, scope: 'final' });
@@ -88,15 +95,12 @@ export async function deleteCourseMediaReferences<T>(
   }
 
   for (const candidate of options.references) {
-    const expectedKind = candidate.containerName === 'course-videos'
-      ? 'lesson-video'
-      : candidate.ref.kind;
     const ref = parseCourseMediaReference(candidate.ref.blobName, {
       expectedCourseId: options.courseId,
-      expectedKind,
+      expectedKind: candidate.ref.kind,
     });
     const containerMatchesKind = candidate.containerName === 'course-videos'
-      ? ref?.kind === 'lesson-video'
+      ? ref?.kind === 'lesson-video' || ref?.kind === 'lesson-audio'
       : ref?.kind === 'thumbnail' || ref?.kind === 'cover';
 
     if (ref?.scope !== 'final' || !containerMatchesKind) continue;
@@ -128,15 +132,12 @@ export async function deleteCourseMediaReferencesStrict<T>(
   }
 
   for (const candidate of options.references) {
-    const expectedKind = candidate.containerName === 'course-videos'
-      ? 'lesson-video'
-      : candidate.ref.kind;
     const ref = parseCourseMediaReference(candidate.ref.blobName, {
       expectedCourseId: options.courseId,
-      expectedKind,
+      expectedKind: candidate.ref.kind,
     });
     const containerMatchesKind = candidate.containerName === 'course-videos'
-      ? ref?.kind === 'lesson-video'
+      ? ref?.kind === 'lesson-video' || ref?.kind === 'lesson-audio'
       : ref?.kind === 'thumbnail' || ref?.kind === 'cover';
 
     if (ref?.scope !== 'final' || !containerMatchesKind) continue;

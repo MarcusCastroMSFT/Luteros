@@ -82,6 +82,32 @@ test('creates final names using only trusted segments and MIME-derived extension
   );
 });
 
+test('creates and parses trusted final audio references', () => {
+  const blobName = createFinalBlobName({
+    courseId: COURSE_ID,
+    kind: 'lesson-audio',
+    contentType: 'audio/mpeg',
+  });
+
+  assert.match(
+    blobName,
+    new RegExp(`^courses/${COURSE_ID}/lesson-audio/${UUID_PATTERN}\\.mp3$`),
+  );
+  assert.deepEqual(
+    parseCourseMediaReference(blobName, {
+      expectedCourseId: COURSE_ID,
+      expectedKind: 'lesson-audio',
+    }),
+    {
+      scope: 'final',
+      blobName,
+      courseId: COURSE_ID,
+      kind: 'lesson-audio',
+      extension: 'mp3',
+    },
+  );
+});
+
 test('rejects MIME types that do not match the requested media kind', () => {
   assert.throws(
     () =>
@@ -200,6 +226,13 @@ test('builds public URLs only for final course images', () => {
     getPublicCourseImageUrl(
       'https://media.blob.core.windows.net',
       `courses/${COURSE_ID}/lesson-video/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.mp4`,
+    ),
+    null,
+  );
+  assert.equal(
+    getPublicCourseImageUrl(
+      'https://media.blob.core.windows.net',
+      `courses/${COURSE_ID}/lesson-audio/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.mp3`,
     ),
     null,
   );

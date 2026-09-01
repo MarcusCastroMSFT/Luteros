@@ -11,7 +11,8 @@ const ASSET_PATTERN = /^([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-
 
 const IMAGE_EXTENSIONS = new Set<CourseMediaExtension>(['jpg', 'png', 'webp', 'gif']);
 const VIDEO_EXTENSIONS = new Set<CourseMediaExtension>(['mp4', 'webm', 'mov']);
-const MEDIA_KINDS = new Set<CourseMediaKind>(['thumbnail', 'cover', 'lesson-video']);
+const AUDIO_EXTENSIONS = new Set<CourseMediaExtension>(['mp3', 'm4a', 'wav', 'ogg']);
+const MEDIA_KINDS = new Set<CourseMediaKind>(['thumbnail', 'cover', 'lesson-video', 'lesson-audio']);
 
 interface BlobNameInput {
   kind: CourseMediaKind;
@@ -101,9 +102,13 @@ function extensionMatchesKind(
   kind: CourseMediaKind,
   extension: string,
 ): extension is CourseMediaExtension {
-  return kind === 'lesson-video'
-    ? VIDEO_EXTENSIONS.has(extension as CourseMediaExtension)
-    : IMAGE_EXTENSIONS.has(extension as CourseMediaExtension);
+  if (kind === 'lesson-video') {
+    return VIDEO_EXTENSIONS.has(extension as CourseMediaExtension);
+  }
+  if (kind === 'lesson-audio') {
+    return AUDIO_EXTENSIONS.has(extension as CourseMediaExtension);
+  }
+  return IMAGE_EXTENSIONS.has(extension as CourseMediaExtension);
 }
 
 export function parseCourseMediaReference(
@@ -185,6 +190,7 @@ export function getPublicCourseImageUrl(blobEndpoint: string, blobName: string):
     !parsed
     || parsed.scope !== 'final'
     || parsed.kind === 'lesson-video'
+    || parsed.kind === 'lesson-audio'
   ) {
     return null;
   }

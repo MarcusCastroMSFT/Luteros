@@ -2,8 +2,10 @@ import { BlockBlobClient } from '@azure/storage-blob';
 import type { CourseMediaKind } from './course-media';
 
 export type CourseMediaUploadResult =
-  | { kind: 'thumbnail' | 'cover'; url: string }
-  | { kind: 'lesson-video'; blobName: string; videoProvider: 'azure' };
+  | { kind: 'thumbnail'; url: string }
+  | { kind: 'cover'; url: string }
+  | { kind: 'lesson-video'; blobName: string; videoProvider: 'azure' }
+  | { kind: 'lesson-audio'; blobName: string; videoProvider: 'azure' };
 
 export type CourseBlockBlobClientFactory = (
   sasUrl: string,
@@ -79,12 +81,12 @@ function parseCompletion(body: unknown, kind: CourseMediaKind): CourseMediaUploa
     return { kind, url: value.url };
   }
   if (
-    kind === 'lesson-video'
-    && value.kind === 'lesson-video'
+    (kind === 'lesson-video' || kind === 'lesson-audio')
+    && value.kind === kind
     && typeof value.blobName === 'string'
     && value.videoProvider === 'azure'
   ) {
-    return { kind: 'lesson-video', blobName: value.blobName, videoProvider: 'azure' };
+    return { kind, blobName: value.blobName, videoProvider: 'azure' };
   }
   throw new Error('Invalid completion response');
 }

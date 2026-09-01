@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
 import { courses, enrollments, lessons, users } from '@/lib/db/schema'
+import { sanitizeArticleContent } from '@/lib/article-content.server'
 
 // Frontend Course type
 export type Course = {
@@ -275,6 +276,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
       sectionTitle: lessons.sectionTitle,
       isFree: lessons.isFree,
       type: lessons.type,
+      content: lessons.content,
       videoUrl: lessons.videoUrl,
       videoProvider: lessons.videoProvider,
     })
@@ -285,7 +287,13 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
     ))
     .orderBy(asc(lessons.order))
 
-  return { ...courseData, lessons: enrolledLessons }
+  return {
+    ...courseData,
+    lessons: enrolledLessons.map((lesson) => ({
+      ...lesson,
+      content: sanitizeArticleContent(lesson.content),
+    })),
+  }
 }
 
 async function fetchCourseMetadata(slug: string) {

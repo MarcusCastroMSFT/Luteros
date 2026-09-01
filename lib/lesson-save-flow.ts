@@ -16,8 +16,8 @@ export interface LessonSavePayload {
   isFree: boolean;
 }
 
-interface DeferredVideoUploadOptions {
-  kind: 'lesson-video';
+interface DeferredMediaUploadOptions {
+  kind: 'lesson-video' | 'lesson-audio';
   courseId: string;
   lessonId: string;
 }
@@ -26,11 +26,11 @@ interface SaveLessonOptions {
   courseId: string;
   lessonId?: string;
   payload: LessonSavePayload;
-  videoFile?: File | null;
+  mediaFile?: File | null;
   fetchImpl?: typeof fetch;
   uploadImpl?: (
     file: File,
-    options: DeferredVideoUploadOptions,
+    options: DeferredMediaUploadOptions,
   ) => Promise<CourseMediaUploadResult>;
 }
 
@@ -65,23 +65,28 @@ async function mutateLesson(
   return result;
 }
 
-export async function saveLessonWithDeferredVideo({
+export async function saveLessonWithDeferredMedia({
   courseId,
   lessonId,
   payload,
-  videoFile,
+  mediaFile,
   fetchImpl = fetch,
   uploadImpl = uploadCourseMedia,
-}: SaveLessonOptions): Promise<{ lessonId: string; videoUploaded: boolean }> {
+}: SaveLessonOptions): Promise<{ lessonId: string; mediaUploaded: boolean }> {
   const baseUrl = `/api/courses/${encodeURIComponent(courseId)}/lessons`;
-  const deferredVideoFile = payload.type === 'video' ? videoFile : null;
+  const deferredKind = payload.type === 'video'
+    ? 'lesson-video'
+    : payload.type === 'audio'
+      ? 'lesson-audio'
+      : null;
+  const deferredFile = deferredKind ? mediaFile : null;
 
   if (lessonId) {
     await mutateLesson(fetchImpl, `${baseUrl}/${encodeURIComponent(lessonId)}`, 'PUT', payload);
-    return { lessonId, videoUploaded: false };
+    return { lessonId, mediaUploaded: false };
   }
 
-  const createPayload = deferredVideoFile
+  const createPayload = deferredFile
     ? { ...payload, videoUrl: null, isPublished: false }
     : payload;
   const created = await mutateLesson(fetchImpl, baseUrl, 'POST', createPayload);
@@ -90,18 +95,18 @@ export async function saveLessonWithDeferredVideo({
     throw new LessonSaveError('Invalid lesson creation response');
   }
 
-  if (!deferredVideoFile) {
-    return { lessonId: createdLessonId, videoUploaded: false };
+  if (!deferredFile || !deferredKind) {
+    return { lessonId: createdLessonId, mediaUploaded: false };
   }
 
   try {
-    const uploaded = await uploadImpl(deferredVideoFile, {
-      kind: 'lesson-video',
+    const uploaded = await uploadImpl(deferredFile, {
+      kind: deferredKind,
       courseId,
       lessonId: createdLessonId,
     });
-    if (uploaded.kind !== 'lesson-video') {
-      throw new Error('Invalid video upload response');
+    if (uploaded.kind !== deferredKind) {
+      throw new Error('Invalid media upload response');
     }
 
     await mutateLesson(
@@ -114,9 +119,9 @@ export async function saveLessonWithDeferredVideo({
         videoProvider: uploaded.videoProvider,
       },
     );
-    return { lessonId: createdLessonId, videoUploaded: true };
+    return { lessonId: createdLessonId, mediaUploaded: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to upload lesson video';
+    const message = error instanceof Error ? error.message : 'Failed to upload lesson media';
     throw new LessonSaveError(message, createdLessonId);
   }
 }

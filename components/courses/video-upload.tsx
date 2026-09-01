@@ -10,6 +10,7 @@ import { Upload, X, Loader2, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { uploadCourseMedia, type CourseMediaUploadResult } from '@/lib/course-media-upload';
 import { validateCourseMediaDeclaration } from '@/lib/course-media';
+import { readVideoFileDuration } from '@/lib/video-duration';
 
 interface VideoUploadProps {
   courseId: string;
@@ -18,6 +19,7 @@ interface VideoUploadProps {
   pendingFile?: File | null;
   onChange: (blobName: string) => void;
   onFileSelected?: (file: File | null) => void;
+  onDurationChange?: (duration: number) => void;
   onUploadingChange?: (isUploading: boolean) => void;
   onRemove?: () => void;
   label?: string;
@@ -60,6 +62,7 @@ export function VideoUpload({
   pendingFile,
   onChange,
   onFileSelected,
+  onDurationChange,
   onUploadingChange,
   onRemove,
   label = 'Vídeo',
@@ -87,6 +90,12 @@ export function VideoUpload({
       if (!validation.ok) {
         toast.error(validation.error);
         return;
+      }
+
+      try {
+        onDurationChange?.(await readVideoFileDuration(file));
+      } catch {
+        // Duration remains editable when the browser cannot read the metadata.
       }
 
       if (!lessonId) {
@@ -140,7 +149,7 @@ export function VideoUpload({
         setAbortController(null);
       }
     },
-    [courseId, lessonId, onChange, onFileSelected, onUploadingChange]
+    [courseId, lessonId, onChange, onDurationChange, onFileSelected, onUploadingChange]
   );
 
   const handleFileChange = useCallback(

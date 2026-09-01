@@ -13,49 +13,6 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
   const [fontSize, setFontSize] = useState('base');
   const [isBookmarked, setIsBookmarked] = useState(false);
 
-  // Sample article content - in a real app, this would come from your lesson data
-  const articleContent = `
-    <h2>Introduction to the Topic</h2>
-    <p>This comprehensive lesson will guide you through the fundamental concepts and practical applications. Understanding these principles is crucial for mastering the subject matter.</p>
-    
-    <h3>Key Concepts</h3>
-    <p>Before diving into the practical aspects, let's establish a solid foundation by exploring the core concepts:</p>
-    
-    <ul>
-      <li><strong>Concept 1:</strong> Fundamental principle that forms the basis of understanding</li>
-      <li><strong>Concept 2:</strong> Advanced technique that builds upon the foundation</li>
-      <li><strong>Concept 3:</strong> Practical application in real-world scenarios</li>
-    </ul>
-    
-    <h3>Practical Examples</h3>
-    <p>Now that we've covered the theoretical foundation, let's explore some practical examples that demonstrate these concepts in action.</p>
-    
-    <blockquote>
-      <p>"The best way to learn is through practice and real-world application of theoretical knowledge."</p>
-    </blockquote>
-    
-    <h3>Step-by-Step Process</h3>
-    <ol>
-      <li>Begin by analyzing the problem or challenge</li>
-      <li>Apply the theoretical concepts we've discussed</li>
-      <li>Implement the solution using best practices</li>
-      <li>Test and validate the results</li>
-      <li>Iterate and improve based on feedback</li>
-    </ol>
-    
-    <h3>Common Pitfalls to Avoid</h3>
-    <p>As you progress through this material, be aware of these common mistakes:</p>
-    
-    <ul>
-      <li>Rushing through the fundamentals without proper understanding</li>
-      <li>Skipping the practice exercises</li>
-      <li>Not reviewing previous lessons when needed</li>
-    </ul>
-    
-    <h3>Conclusion</h3>
-    <p>By the end of this lesson, you should have a solid understanding of the concepts and be ready to apply them in practical scenarios. Remember to practice regularly and don't hesitate to review this material as needed.</p>
-  `;
-
   const fontSizeClasses = {
     sm: 'text-sm',
     base: 'text-base',
@@ -105,12 +62,16 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
       </div>
 
       {/* Article Content */}
-      <div className={`prose prose-gray max-w-none ${fontSizeClasses[fontSize as keyof typeof fontSizeClasses]}`}>
-        <div 
-          className="article-content"
-          dangerouslySetInnerHTML={{ __html: articleContent }}
-        />
-      </div>
+      {lesson.content ? (
+        <div className={`prose prose-gray max-w-none ${fontSizeClasses[fontSize as keyof typeof fontSizeClasses]}`}>
+          <div
+            className="article-content"
+            dangerouslySetInnerHTML={{ __html: lesson.content }}
+          />
+        </div>
+      ) : (
+        <p className="py-8 text-center text-sm text-gray-500">Conteúdo indisponível.</p>
+      )}
 
       {/* Article Notes Section */}
       <div className="bg-gray-50 rounded-lg p-4">
@@ -123,18 +84,6 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
         />
       </div>
 
-      {/* Article Summary */}
-      <div className="bg-brand-50 rounded-lg p-4 border border-brand-200">
-        <h3 className="font-semibold text-brand-800 mb-2">
-          Pontos Principais
-        </h3>
-        <ul className="text-brand-700 text-sm space-y-1">
-          <li>• Domine os conceitos fundamentais antes de avançar para tópicos mais complexos</li>
-          <li>• Pratique regularmente com exemplos do mundo real</li>
-          <li>• Evite armadilhas comuns seguindo as melhores práticas</li>
-          <li>• Revise e repita para melhorar o entendimento</li>
-        </ul>
-      </div>
     </div>
   );
 }

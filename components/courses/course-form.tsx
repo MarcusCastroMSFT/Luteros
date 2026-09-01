@@ -181,7 +181,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
       kind,
       ...(mode === 'edit' && courseId ? { courseId } : {}),
     });
-    if (result.kind === 'lesson-video') {
+    if (result.kind === 'lesson-video' || result.kind === 'lesson-audio') {
       throw new Error('Resposta inválida ao enviar imagem');
     }
     return result.url;

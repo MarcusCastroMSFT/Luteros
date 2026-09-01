@@ -33,7 +33,7 @@ function createMockStorage(): CourseMediaStorage {
   return {
     async createUploadGrant(containerName: string, blobName: string) {
       const ext = blobName.split('.').pop() ?? '';
-      const ct: Record<string, string> = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime' };
+      const ct: Record<string, string> = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav', ogg: 'audio/ogg' };
       uploads.set(blobName, { contentType: ct[ext] ?? 'application/octet-stream', contentLength: 1024 });
       return {
         blobUrl: `${BLOB_ENDPOINT}/${containerName}/${blobName}`,
@@ -56,7 +56,7 @@ function createDeps(overrides?: Partial<ServiceDependencies>): ServiceDependenci
   return {
     storage: createMockStorage(),
     findCourse: async () => ({ id: MOCK_COURSE_ID, instructorId: instructor.id }),
-    findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: MOCK_COURSE_ID }),
+    findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: MOCK_COURSE_ID, type: 'video' }),
     getNow: () => FIXED_NOW,
     getSecret: () => TEST_SECRET,
     getBlobEndpoint: () => BLOB_ENDPOINT,
@@ -76,6 +76,14 @@ describe('parseInitiationBody', () => {
     const r = parseInitiationBody({ kind: 'lesson-video', contentType: 'video/mp4', size: 1024, lessonId: 'l1' }, 'existing-course');
     assert.equal(r.ok, true);
     if (r.ok) assert.equal(r.parsed.lessonId, 'l1');
+  });
+
+  test('accepts lesson-audio only in an existing-course context with lessonId', () => {
+    const valid = parseInitiationBody({ kind: 'lesson-audio', contentType: 'audio/mpeg', size: 1024, lessonId: 'l1' }, 'existing-course');
+    const draft = parseInitiationBody({ kind: 'lesson-audio', contentType: 'audio/mpeg', size: 1024 }, 'draft');
+
+    assert.equal(valid.ok, true);
+    assert.equal(draft.ok, false);
   });
 
   test('rejects extra fields', () => {
@@ -283,7 +291,7 @@ describe('lesson-video initiation', () => {
   });
 
   test('lesson belongs to different course → 404', async () => {
-    const deps = createDeps({ findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: DIFFERENT_COURSE_ID }) });
+    const deps = createDeps({ findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: DIFFERENT_COURSE_ID, type: 'video' }) });
     const r = await initiateCourseMediaUpload(instructor, { kind: 'lesson-video', contentType: 'video/mp4', size: 1024, courseId: MOCK_COURSE_ID, lessonId: MOCK_LESSON_ID }, deps);
     assert.equal(r.ok, false);
     if (!r.ok) assert.equal(r.status, 404);
@@ -298,6 +306,37 @@ describe('lesson-video initiation', () => {
   test('admin can upload for any course', async () => {
     const r = await initiateCourseMediaUpload(admin, { kind: 'lesson-video', contentType: 'video/mp4', size: 1024, courseId: MOCK_COURSE_ID, lessonId: MOCK_LESSON_ID }, createDeps());
     assert.equal(r.ok, true);
+  });
+});
+
+describe('lesson-audio initiation', () => {
+  test('accepts audio only for an audio lesson', async () => {
+    const deps = createDeps({
+      findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: MOCK_COURSE_ID, type: 'audio' }),
+    });
+
+    const result = await initiateCourseMediaUpload(instructor, {
+      kind: 'lesson-audio',
+      contentType: 'audio/mpeg',
+      size: 1024,
+      courseId: MOCK_COURSE_ID,
+      lessonId: MOCK_LESSON_ID,
+    }, deps);
+
+    assert.equal(result.ok, true);
+  });
+
+  test('rejects audio for a video lesson', async () => {
+    const result = await initiateCourseMediaUpload(instructor, {
+      kind: 'lesson-audio',
+      contentType: 'audio/mpeg',
+      size: 1024,
+      courseId: MOCK_COURSE_ID,
+      lessonId: MOCK_LESSON_ID,
+    }, createDeps());
+
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.status, 404);
   });
 });
 
@@ -507,7 +546,7 @@ describe('completion re-authorization', () => {
 
     const laterDeps = createDeps({
       storage: sharedStorage,
-      findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: DIFFERENT_COURSE_ID }),
+      findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: DIFFERENT_COURSE_ID, type: 'video' }),
     });
     const r = await completeCourseMediaUpload(instructor, { uploadId: init.response.uploadId, courseId: MOCK_COURSE_ID }, laterDeps);
     assert.equal(r.ok, false);
@@ -566,6 +605,42 @@ describe('completion result shapes', () => {
       assert.match(result.blobName, /^courses\//);
       assert.equal(result.videoProvider, 'azure');
       assert.ok(!('url' in r.result));
+    }
+  });
+
+  test('lesson-audio returns an opaque blob and rechecks lesson type', async () => {
+    const storage = createMockStorage();
+    const audioDeps = createDeps({
+      storage,
+      findLesson: async () => ({ id: MOCK_LESSON_ID, courseId: MOCK_COURSE_ID, type: 'audio' }),
+    });
+    const init = await initiateCourseMediaUpload(instructor, {
+      kind: 'lesson-audio',
+      contentType: 'audio/mpeg',
+      size: 1024,
+      courseId: MOCK_COURSE_ID,
+      lessonId: MOCK_LESSON_ID,
+    }, audioDeps);
+    assert.equal(init.ok, true);
+    if (!init.ok) return;
+
+    const rejected = await completeCourseMediaUpload(instructor, {
+      uploadId: init.response.uploadId,
+      courseId: MOCK_COURSE_ID,
+    }, createDeps({ storage }));
+    assert.equal(rejected.ok, false);
+    if (!rejected.ok) assert.equal(rejected.status, 404);
+
+    const result = await completeCourseMediaUpload(instructor, {
+      uploadId: init.response.uploadId,
+      courseId: MOCK_COURSE_ID,
+    }, audioDeps);
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.equal(result.result.kind, 'lesson-audio');
+      assert.match('blobName' in result.result ? result.result.blobName : '', /\/lesson-audio\/.*\.mp3$/);
+      assert.equal('videoProvider' in result.result ? result.result.videoProvider : null, 'azure');
+      assert.equal('url' in result.result, false);
     }
   });
 });

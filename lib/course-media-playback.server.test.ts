@@ -67,6 +67,7 @@ test('returns 403 when no enrollment exists', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: null,
       videoProvider: null,
       enrollmentId: null,
@@ -100,6 +101,7 @@ test('returns 403 when enrollment is expired (expiresAt < now)', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: pastDate,
@@ -121,6 +123,7 @@ test('authorizes when enrollment expiresAt equals now (active)', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: exactTime,
@@ -140,6 +143,7 @@ test('returns 404 when lesson does not belong to course', async () => {
     queryEnrollment: async () => ({
       courseId: '770e8400-e29b-41d4-a716-446655440002', // Different course
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'courses/770e8400-e29b-41d4-a716-446655440002/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: null,
@@ -158,6 +162,7 @@ test('returns 404 when video provider is not azure', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'https://youtube.com/watch?v=abc123',
       videoProvider: 'youtube',
       expiresAt: null,
@@ -176,6 +181,7 @@ test('returns 404 when blob reference has foreign prefix', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'courses/770e8400-e29b-41d4-a716-446655440002/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: null,
@@ -194,6 +200,7 @@ test('returns 404 when blob reference is invalid', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: '../../../etc/passwd',
       videoProvider: 'azure',
       expiresAt: null,
@@ -212,6 +219,7 @@ test('returns 404 when blob reference is staging (non-final)', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'staging/courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: null,
@@ -230,6 +238,7 @@ test('returns 404 when videoUrl is null', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: null,
       videoProvider: 'azure',
       expiresAt: null,
@@ -255,6 +264,7 @@ test('returns redirect URL with 5-minute SAS for authorized request', async () =
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: null,
@@ -271,6 +281,67 @@ test('returns redirect URL with 5-minute SAS for authorized request', async () =
   assert.equal(createReadUrlCalls[0]!.blob, 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4');
 });
 
+test('authorizes an enrolled audio lesson with an audio Blob reference', async () => {
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser(),
+    queryEnrollment: async () => ({
+      courseId: '550e8400-e29b-41d4-a716-446655440000',
+      lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'audio',
+      videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-audio/123e4567-e89b-42d3-a456-426614174000.mp3',
+      videoProvider: 'azure',
+      expiresAt: null,
+    }),
+    storage: createMockStorage(),
+  });
+
+  const result = await service.authorizePlayback('550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440001');
+  assert.equal(result.status, 200);
+});
+
+test('rejects a video Blob reference for an audio lesson', async () => {
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser(),
+    queryEnrollment: async () => ({
+      courseId: '550e8400-e29b-41d4-a716-446655440000',
+      lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'audio',
+      videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
+      videoProvider: 'azure',
+      expiresAt: null,
+    }),
+    storage: createMockStorage(),
+  });
+
+  const result = await service.authorizePlayback('550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440001');
+  assert.equal(result.status, 404);
+});
+
+test('never creates a media URL for an article lesson', async () => {
+  let readUrlCalls = 0;
+  const storage = createMockStorage();
+  storage.createReadUrl = async () => {
+    readUrlCalls += 1;
+    return '';
+  };
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser(),
+    queryEnrollment: async () => ({
+      courseId: '550e8400-e29b-41d4-a716-446655440000',
+      lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'article',
+      videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
+      videoProvider: 'azure',
+      expiresAt: null,
+    }),
+    storage,
+  });
+
+  const result = await service.authorizePlayback('550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440001');
+  assert.equal(result.status, 404);
+  assert.equal(readUrlCalls, 0);
+});
+
 test('never logs SAS URL on success', async () => {
   const logs: string[] = [];
   const originalLog = console.log;
@@ -283,6 +354,7 @@ test('never logs SAS URL on success', async () => {
     queryEnrollment: async () => ({
       courseId: '550e8400-e29b-41d4-a716-446655440000',
       lessonId: '660e8400-e29b-41d4-a716-446655440001',
+      lessonType: 'video',
       videoUrl: 'courses/550e8400-e29b-41d4-a716-446655440000/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4',
       videoProvider: 'azure',
       expiresAt: null,

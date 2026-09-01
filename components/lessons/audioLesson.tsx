@@ -28,28 +28,22 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // For demo purposes, we'll use a placeholder audio file
-  // In a real app, you'd have actual audio URLs in your lesson data
-  const getAudioUrl = () => {
-    // This would typically come from lesson.audioUrl or similar
-    return 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
-  };
-
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
+    const handleEnded = () => setIsPlaying(false);
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
-    audio.addEventListener('ended', () => setIsPlaying(false));
+    audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
-      audio.removeEventListener('ended', () => setIsPlaying(false));
+      audio.removeEventListener('ended', handleEnded);
     };
   }, []);
 
@@ -119,11 +113,19 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  if (!lesson.videoUrl) {
+    return (
+      <div className="rounded-lg border bg-muted/50 p-6 text-center text-sm text-muted-foreground">
+        Áudio indisponível.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Audio Player */}
       <div className="bg-gradient-to-r from-brand-50 to-brand-100 rounded-lg p-6 border border-brand-200">
-        <audio ref={audioRef} src={getAudioUrl()} preload="metadata" />
+        <audio ref={audioRef} src={lesson.videoUrl} preload="metadata" />
         
         {/* Audio Info */}
         <div className="flex items-center gap-4 mb-6">
@@ -240,27 +242,6 @@ export function AudioLesson({ lesson }: AudioLessonProps) {
               </Button>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Audio Transcript */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 mb-3">
-          Transcrição do Áudio
-        </h3>
-        <div className="text-gray-600 text-sm leading-relaxed space-y-2">
-          <p>
-            <span className="text-gray-400">[00:00]</span> Welcome to this audio lesson. 
-            In this session, we&apos;ll be covering the key concepts and practical applications...
-          </p>
-          <p>
-            <span className="text-gray-400">[00:30]</span> Let&apos;s start by understanding 
-            the fundamental principles that will guide our learning journey...
-          </p>
-          <p>
-            <span className="text-gray-400">[01:15]</span> As we progress through 
-            this material, you&apos;ll notice how these concepts build upon each other...
-          </p>
         </div>
       </div>
 

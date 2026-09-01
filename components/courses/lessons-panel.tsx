@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +65,10 @@ const VideoUpload = dynamic(
   () => import('./video-upload').then(mod => mod.VideoUpload),
   { ssr: false }
 );
+const AudioUpload = dynamic(
+  () => import('./audio-upload').then(mod => mod.AudioUpload),
+  { ssr: false }
+);
 import { 
   IconPlus, 
   IconGripVertical,
@@ -90,9 +94,11 @@ import {
 } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getYouTubeVideoId } from '@/lib/video-duration';
+import { requestYouTubeVideoDuration } from '@/lib/video-duration.client';
 import {
   LessonSaveError,
-  saveLessonWithDeferredVideo,
+  saveLessonWithDeferredMedia,
   type LessonSavePayload,
 } from '@/lib/lesson-save-flow';
 
@@ -158,8 +164,10 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
   const [formData, setFormData] = useState<LessonFormData>(emptyFormData);
-  const [pendingVideoFile, setPendingVideoFile] = useState<File | null>(null);
-  const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [pendingMediaFile, setPendingMediaFile] = useState<File | null>(null);
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
+  const [isDurationLoading, setIsDurationLoading] = useState(false);
+  const [durationLookupError, setDurationLookupError] = useState<string | null>(null);
   const [newSectionName, setNewSectionName] = useState('');
   const [editingSectionName, setEditingSectionName] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
@@ -167,6 +175,53 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
   const [dragOverLessonId, setDragOverLessonId] = useState<string | null>(null);
   const [isCreatingNewSection, setIsCreatingNewSection] = useState(false);
   const [emptySections, setEmptySections] = useState<string[]>([]);
+  const durationLookupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const durationLookupAbortRef = useRef<AbortController | null>(null);
+
+  const cancelDurationLookup = useCallback(() => {
+    if (durationLookupTimerRef.current) {
+      clearTimeout(durationLookupTimerRef.current);
+      durationLookupTimerRef.current = null;
+    }
+    durationLookupAbortRef.current?.abort();
+    durationLookupAbortRef.current = null;
+    setIsDurationLoading(false);
+    setDurationLookupError(null);
+  }, []);
+
+  const scheduleDurationLookup = useCallback((videoUrl: string) => {
+    cancelDurationLookup();
+    if (!getYouTubeVideoId(videoUrl)) return;
+
+    durationLookupTimerRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      durationLookupAbortRef.current = controller;
+      setIsDurationLoading(true);
+
+      try {
+        const duration = await requestYouTubeVideoDuration(videoUrl, { signal: controller.signal });
+        setFormData((previous) => previous.videoProvider === 'youtube'
+          && previous.videoUrl.trim() === videoUrl.trim()
+          ? { ...previous, duration: duration.toString() }
+          : previous);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setDurationLookupError(
+          error instanceof Error ? error.message : 'Não foi possível detectar a duração.',
+        );
+      } finally {
+        if (durationLookupAbortRef.current === controller) {
+          durationLookupAbortRef.current = null;
+          setIsDurationLoading(false);
+        }
+      }
+    }, 600);
+  }, [cancelDurationLookup]);
+
+  useEffect(() => () => {
+    if (durationLookupTimerRef.current) clearTimeout(durationLookupTimerRef.current);
+    durationLookupAbortRef.current?.abort();
+  }, []);
 
   // Group lessons by section
   const sections = useMemo(() => {
@@ -266,9 +321,10 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
 
   // Open dialog for new lesson
   const handleNewLesson = (sectionTitle?: string | null) => {
+    cancelDurationLookup();
     setEditingLesson(null);
-    setPendingVideoFile(null);
-    setIsVideoUploading(false);
+    setPendingMediaFile(null);
+    setIsMediaUploading(false);
     setIsCreatingNewSection(false);
     setFormData({
       ...emptyFormData,
@@ -279,9 +335,10 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
 
   // Open dialog to edit lesson
   const handleEditLesson = (lesson: Lesson) => {
+    cancelDurationLookup();
     setEditingLesson(lesson);
-    setPendingVideoFile(null);
-    setIsVideoUploading(false);
+    setPendingMediaFile(null);
+    setIsMediaUploading(false);
     setIsCreatingNewSection(false);
     setFormData({
       title: lesson.title,
@@ -407,8 +464,10 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
         type: formData.type,
         description: formData.description.trim() || null,
         content: formData.type === 'article' ? formData.content : null,
-        videoUrl: formData.type === 'video' ? (formData.videoUrl.trim() || null) : null,
-        videoProvider: formData.type === 'video'
+        videoUrl: formData.type === 'video' || formData.type === 'audio'
+          ? (formData.videoUrl.trim() || null)
+          : null,
+        videoProvider: formData.type === 'video' || formData.type === 'audio'
           ? (formData.videoProvider === 'upload' ? 'azure' : formData.videoProvider)
           : null,
         duration: formData.duration ? parseInt(formData.duration) : null,
@@ -417,11 +476,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
         isFree: formData.isFree,
       };
 
-      await saveLessonWithDeferredVideo({
+      await saveLessonWithDeferredMedia({
         courseId,
         lessonId: editingLesson?.id,
         payload,
-        videoFile: pendingVideoFile,
+        mediaFile: pendingMediaFile,
       });
 
       // Remove from empty sections if this lesson was added to one
@@ -431,16 +490,16 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       }
 
       toast.success(editingLesson ? 'Aula atualizada!' : 'Aula criada!');
-      setPendingVideoFile(null);
+      setPendingMediaFile(null);
       setDialogOpen(false);
       fetchLessons();
     } catch (error) {
       console.error('Error saving lesson:', error);
       if (error instanceof LessonSaveError && error.lessonId) {
-        setPendingVideoFile(null);
+        setPendingMediaFile(null);
         setDialogOpen(false);
         fetchLessons();
-        toast.error('A aula foi criada, mas o upload do vídeo falhou. Abra a aula para tentar novamente.');
+        toast.error('A aula foi criada, mas o upload da mídia falhou. Abra a aula para tentar novamente.');
       } else {
         toast.error(editingLesson ? 'Erro ao atualizar aula' : 'Erro ao criar aula');
       }
@@ -951,7 +1010,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       <Dialog
         open={dialogOpen}
         onOpenChange={(open) => {
-          if (open || !isVideoUploading) setDialogOpen(open);
+          if (open || !isMediaUploading) setDialogOpen(open);
         }}
       >
         <DialogContent className={cn(
@@ -978,15 +1037,20 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                 value={formData.type}
                 onValueChange={(value) => {
                   const type = value as 'video' | 'article' | 'audio';
-                  if (type !== 'video') setPendingVideoFile(null);
-                  setFormData(prev => ({ ...prev, type }));
+                  setPendingMediaFile(null);
+                  setFormData(prev => ({
+                    ...prev,
+                    type,
+                    videoUrl: '',
+                    videoProvider: type === 'video' ? 'youtube' : type === 'audio' ? 'url' : '',
+                  }));
                 }}
                 className="w-full"
               >
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger
                     value="video"
-                    disabled={isVideoUploading}
+                    disabled={isMediaUploading}
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <IconVideo className="h-4 w-4" />
@@ -994,7 +1058,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                   </TabsTrigger>
                   <TabsTrigger
                     value="article"
-                    disabled={isVideoUploading}
+                    disabled={isMediaUploading}
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <IconArticle className="h-4 w-4" />
@@ -1002,7 +1066,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                   </TabsTrigger>
                   <TabsTrigger
                     value="audio"
-                    disabled={isVideoUploading}
+                    disabled={isMediaUploading}
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <IconHeadphones className="h-4 w-4" />
@@ -1109,10 +1173,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       variant={formData.videoProvider === 'youtube' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
-                        setPendingVideoFile(null);
+                        setPendingMediaFile(null);
                         setFormData(prev => ({ ...prev, videoProvider: 'youtube' }));
+                        scheduleDurationLookup(formData.videoUrl);
                       }}
-                      disabled={isVideoUploading}
+                      disabled={isMediaUploading}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <IconBrandYoutube className="h-4 w-4" />
@@ -1123,10 +1188,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       variant={formData.videoProvider === 'vimeo' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
-                        setPendingVideoFile(null);
+                        cancelDurationLookup();
+                        setPendingMediaFile(null);
                         setFormData(prev => ({ ...prev, videoProvider: 'vimeo' }));
                       }}
-                      disabled={isVideoUploading}
+                      disabled={isMediaUploading}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <IconPlayerPlay className="h-4 w-4" />
@@ -1137,10 +1203,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       variant={formData.videoProvider === 'url' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
-                        setPendingVideoFile(null);
+                        cancelDurationLookup();
+                        setPendingMediaFile(null);
                         setFormData(prev => ({ ...prev, videoProvider: 'url' }));
                       }}
-                      disabled={isVideoUploading}
+                      disabled={isMediaUploading}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <IconLink className="h-4 w-4" />
@@ -1150,13 +1217,16 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                       type="button"
                       variant={formData.videoProvider === 'upload' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setFormData(prev => ({
-                        ...prev,
-                        videoUrl: prev.videoProvider === 'upload' ? prev.videoUrl : '',
-                        videoProvider: 'upload',
-                      }))}
+                      onClick={() => {
+                        cancelDurationLookup();
+                        setFormData(prev => ({
+                          ...prev,
+                          videoUrl: prev.videoProvider === 'upload' ? prev.videoUrl : '',
+                          videoProvider: 'upload',
+                        }));
+                      }}
                       className="flex items-center gap-2 cursor-pointer"
-                      disabled={isVideoUploading}
+                      disabled={isMediaUploading}
                     >
                       <IconUpload className="h-4 w-4" />
                       Upload
@@ -1175,7 +1245,13 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                     <Input
                       id="lesson-video"
                       value={formData.videoUrl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                      onChange={(e) => {
+                        const videoUrl = e.target.value;
+                        setFormData(prev => ({ ...prev, videoUrl }));
+                        if (formData.videoProvider === 'youtube') {
+                          scheduleDurationLookup(videoUrl);
+                        }
+                      }}
                       placeholder={
                         formData.videoProvider === 'youtube'
                           ? 'https://www.youtube.com/watch?v=...'
@@ -1195,12 +1271,16 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                     courseId={courseId}
                     lessonId={editingLesson?.id}
                     value={formData.videoUrl || ''}
-                    pendingFile={pendingVideoFile}
+                    pendingFile={pendingMediaFile}
                     onChange={(blobName) => setFormData(prev => ({ ...prev, videoUrl: blobName }))}
-                    onFileSelected={setPendingVideoFile}
-                    onUploadingChange={setIsVideoUploading}
+                    onFileSelected={setPendingMediaFile}
+                    onDurationChange={(duration) => setFormData(prev => ({
+                      ...prev,
+                      duration: duration.toString(),
+                    }))}
+                    onUploadingChange={setIsMediaUploading}
                     onRemove={() => {
-                      setPendingVideoFile(null);
+                      setPendingMediaFile(null);
                       setFormData(prev => ({ ...prev, videoUrl: '' }));
                     }}
                   />
@@ -1208,7 +1288,15 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
 
                 {/* Duration */}
                 <div className="space-y-2">
-                  <Label htmlFor="lesson-duration">Duração (segundos)</Label>
+                  <div className="flex min-h-5 items-center justify-between gap-3">
+                    <Label htmlFor="lesson-duration">Duração (segundos)</Label>
+                    {isDurationLoading && (
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+                        <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                        Buscando duração...
+                      </span>
+                    )}
+                  </div>
                   <Input
                     id="lesson-duration"
                     type="number"
@@ -1220,6 +1308,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                   {formData.duration && parseInt(formData.duration) > 0 && (
                     <p className="text-xs text-muted-foreground">
                       ≈ {Math.floor(parseInt(formData.duration) / 60)}min {parseInt(formData.duration) % 60}s
+                    </p>
+                  )}
+                  {durationLookupError && formData.videoProvider === 'youtube' && (
+                    <p className="text-xs text-muted-foreground">
+                      {durationLookupError} Informe a duração manualmente.
                     </p>
                   )}
                 </div>
@@ -1244,17 +1337,72 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
             {formData.type === 'audio' && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="lesson-audio-url">URL do Áudio</Label>
-                  <Input
-                    id="lesson-audio-url"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                    placeholder="https://..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Cole a URL direta do arquivo de áudio (MP3, WAV, etc.)
-                  </p>
+                  <Label>Fonte do Áudio</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={formData.videoProvider === 'url' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setPendingMediaFile(null);
+                        setFormData(prev => ({ ...prev, videoUrl: '', videoProvider: 'url' }));
+                      }}
+                      disabled={isMediaUploading}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <IconLink className="h-4 w-4" />
+                      URL Externa
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={formData.videoProvider === 'upload' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        videoUrl: prev.videoProvider === 'upload' ? prev.videoUrl : '',
+                        videoProvider: 'upload',
+                      }))}
+                      disabled={isMediaUploading}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <IconUpload className="h-4 w-4" />
+                      Upload
+                    </Button>
+                  </div>
                 </div>
+
+                {formData.videoProvider === 'upload' ? (
+                  <AudioUpload
+                    courseId={courseId}
+                    lessonId={editingLesson?.id}
+                    value={formData.videoUrl}
+                    pendingFile={pendingMediaFile}
+                    onChange={(blobName) => setFormData(prev => ({ ...prev, videoUrl: blobName }))}
+                    onFileSelected={setPendingMediaFile}
+                    onDurationChange={(duration) => setFormData(prev => ({
+                      ...prev,
+                      duration: duration.toString(),
+                    }))}
+                    onUploadingChange={setIsMediaUploading}
+                    onRemove={() => {
+                      setPendingMediaFile(null);
+                      setFormData(prev => ({ ...prev, videoUrl: '' }));
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="lesson-audio-url">URL do Áudio</Label>
+                    <Input
+                      id="lesson-audio-url"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                      placeholder="https://..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Cole a URL direta do arquivo de áudio
+                    </p>
+                  </div>
+                )}
 
                 {/* Duration */}
                 <div className="space-y-2">
@@ -1324,14 +1472,14 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
             <Button 
               variant="outline" 
               onClick={() => setDialogOpen(false)}
-              disabled={saving || isVideoUploading}
+              disabled={saving || isMediaUploading}
               className="cursor-pointer"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleSaveLesson} 
-              disabled={saving || isVideoUploading || !formData.title.trim()}
+              disabled={saving || isMediaUploading || !formData.title.trim()}
               className="cursor-pointer"
             >
               {saving ? (

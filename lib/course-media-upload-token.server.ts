@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { validateCourseMediaDeclaration } from './course-media';
+import type { CourseMediaKind } from './course-media';
 import {
   createOwnerFingerprint,
   parseCourseMediaReference,
@@ -14,7 +15,7 @@ export interface UploadTokenPayload {
   v: 1;
   userId: string;
   declaration: {
-    kind: 'thumbnail' | 'cover' | 'lesson-video';
+    kind: CourseMediaKind;
     contentType: string;
     size: number;
   };
@@ -154,21 +155,22 @@ function isValidPayload(value: unknown, deps: TokenDependencies): value is Uploa
   if (typeof decl.kind !== 'string' || typeof decl.contentType !== 'string' || typeof decl.size !== 'number') return false;
 
   const validation = validateCourseMediaDeclaration({
-    kind: decl.kind as 'thumbnail' | 'cover' | 'lesson-video',
+    kind: decl.kind as CourseMediaKind,
     contentType: decl.contentType,
     size: decl.size,
   });
   if (!validation.ok) return false;
 
   // Container ↔ kind consistency
-  if (decl.kind === 'lesson-video' && obj.container !== 'course-videos') return false;
-  if (decl.kind !== 'lesson-video' && obj.container !== 'course-images') return false;
+  const isLessonMedia = decl.kind === 'lesson-video' || decl.kind === 'lesson-audio';
+  if (isLessonMedia && obj.container !== 'course-videos') return false;
+  if (!isLessonMedia && obj.container !== 'course-images') return false;
 
   // Optional string fields
   if ('courseId' in obj && (typeof obj.courseId !== 'string' || !obj.courseId)) return false;
   if ('lessonId' in obj && (typeof obj.lessonId !== 'string' || !obj.lessonId)) return false;
-  if (decl.kind === 'lesson-video' && (!obj.courseId || !obj.lessonId)) return false;
-  if (decl.kind !== 'lesson-video' && obj.lessonId) return false;
+  if (isLessonMedia && (!obj.courseId || !obj.lessonId)) return false;
+  if (!isLessonMedia && obj.lessonId) return false;
 
   // expiresAt: valid date, finite, max ~15 min ahead
   const expiresAt = new Date(obj.expiresAt);

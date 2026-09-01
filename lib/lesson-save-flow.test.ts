@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { saveLessonWithDeferredVideo } from './lesson-save-flow';
+import { saveLessonWithDeferredMedia } from './lesson-save-flow';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -32,7 +32,7 @@ test('creates an unpublished lesson before uploading and then persists the Azure
     return jsonResponse({ success: true, data: { id: 'lesson-1' } });
   };
 
-  const result = await saveLessonWithDeferredVideo({
+  const result = await saveLessonWithDeferredMedia({
     courseId: 'course-1',
     payload: {
       title: 'Lesson',
@@ -46,7 +46,7 @@ test('creates an unpublished lesson before uploading and then persists the Azure
       isPublished: true,
       isFree: false,
     },
-    videoFile: video,
+    mediaFile: video,
     fetchImpl,
     uploadImpl: async (_file, options) => {
       events.push('upload');
@@ -62,7 +62,7 @@ test('creates an unpublished lesson before uploading and then persists the Azure
 
   assert.deepEqual(events, ['create', 'upload', 'update']);
   assert.equal(result.lessonId, 'lesson-1');
-  assert.equal(result.videoUploaded, true);
+  assert.equal(result.mediaUploaded, true);
 });
 
 test('reports the created lesson when its deferred video upload fails', async () => {
@@ -72,7 +72,7 @@ test('reports the created lesson when its deferred video upload fails', async ()
   }, 201);
 
   await assert.rejects(
-    saveLessonWithDeferredVideo({
+    saveLessonWithDeferredMedia({
       courseId: 'course-1',
       payload: {
         title: 'Lesson',
@@ -86,7 +86,7 @@ test('reports the created lesson when its deferred video upload fails', async ()
         isPublished: false,
         isFree: false,
       },
-      videoFile: new File([new Uint8Array(12)], 'lesson.mp4', { type: 'video/mp4' }),
+      mediaFile: new File([new Uint8Array(12)], 'lesson.mp4', { type: 'video/mp4' }),
       fetchImpl,
       uploadImpl: async () => {
         throw new Error('Failed to create upload grant');
@@ -101,7 +101,7 @@ test('reports the created lesson when its deferred video upload fails', async ()
   );
 });
 
-test('does not upload a pending video file for a non-video lesson', async () => {
+test('does not upload a stale media file for an article lesson', async () => {
   let uploadCalled = false;
   const fetchImpl: typeof fetch = async (_input, init) => {
     const body = JSON.parse(String(init?.body));
@@ -109,7 +109,7 @@ test('does not upload a pending video file for a non-video lesson', async () => 
     return jsonResponse({ success: true, data: { id: 'article-1' } }, 201);
   };
 
-  const result = await saveLessonWithDeferredVideo({
+  const result = await saveLessonWithDeferredMedia({
     courseId: 'course-1',
     payload: {
       title: 'Article',
@@ -123,7 +123,7 @@ test('does not upload a pending video file for a non-video lesson', async () => 
       isPublished: true,
       isFree: false,
     },
-    videoFile: new File([new Uint8Array(12)], 'stale.mp4', { type: 'video/mp4' }),
+    mediaFile: new File([new Uint8Array(12)], 'stale.mp4', { type: 'video/mp4' }),
     fetchImpl,
     uploadImpl: async () => {
       uploadCalled = true;
@@ -132,7 +132,46 @@ test('does not upload a pending video file for a non-video lesson', async () => 
   });
 
   assert.equal(uploadCalled, false);
-  assert.equal(result.videoUploaded, false);
+  assert.equal(result.mediaUploaded, false);
+});
+
+test('creates an unpublished lesson before uploading and persists Azure audio', async () => {
+  const events: string[] = [];
+  const requestBodies: Record<string, unknown>[] = [];
+  const fetchImpl: typeof fetch = async (_input, init) => {
+    const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    requestBodies.push(body);
+    events.push(init?.method === 'POST' ? 'create' : 'update');
+    return init?.method === 'POST'
+      ? jsonResponse({ success: true, data: { id: 'audio-1' } }, 201)
+      : jsonResponse({ success: true, data: { id: 'audio-1' } });
+  };
+
+  const result = await saveLessonWithDeferredMedia({
+    courseId: 'course-1',
+    payload: {
+      title: 'Audio', type: 'audio', description: null, content: null,
+      videoUrl: null, videoProvider: 'azure', duration: 125,
+      sectionTitle: null, isPublished: true, isFree: false,
+    },
+    mediaFile: new File([new Uint8Array(12)], 'lesson.mp3', { type: 'audio/mpeg' }),
+    fetchImpl,
+    uploadImpl: async (_file, options) => {
+      events.push(`upload:${options.kind}`);
+      return {
+        kind: 'lesson-audio',
+        blobName: 'courses/course-1/lesson-audio/audio.mp3',
+        videoProvider: 'azure',
+      };
+    },
+  });
+
+  assert.deepEqual(events, ['create', 'upload:lesson-audio', 'update']);
+  assert.equal(requestBodies[0].isPublished, false);
+  assert.equal(requestBodies[0].videoUrl, null);
+  assert.equal(requestBodies[1].videoProvider, 'azure');
+  assert.match(String(requestBodies[1].videoUrl), /\/lesson-audio\//);
+  assert.deepEqual(result, { lessonId: 'audio-1', mediaUploaded: true });
 });
 
 test('updates an existing lesson with one PUT and no deferred upload', async () => {
@@ -144,7 +183,7 @@ test('updates an existing lesson with one PUT and no deferred upload', async () 
     return jsonResponse({ success: true, data: { id: 'lesson-existing' } });
   };
 
-  const result = await saveLessonWithDeferredVideo({
+  const result = await saveLessonWithDeferredMedia({
     courseId: 'course-1',
     lessonId: 'lesson-existing',
     payload: {
@@ -156,7 +195,7 @@ test('updates an existing lesson with one PUT and no deferred upload', async () 
   });
 
   assert.equal(requestCount, 1);
-  assert.deepEqual(result, { lessonId: 'lesson-existing', videoUploaded: false });
+  assert.deepEqual(result, { lessonId: 'lesson-existing', mediaUploaded: false });
 });
 
 test('reports the created lesson when persisting the uploaded blob fails', async () => {
@@ -170,14 +209,14 @@ test('reports the created lesson when persisting the uploaded blob fails', async
   };
 
   await assert.rejects(
-    saveLessonWithDeferredVideo({
+    saveLessonWithDeferredMedia({
       courseId: 'course-1',
       payload: {
         title: 'Lesson', type: 'video', description: null, content: null,
         videoUrl: null, videoProvider: 'azure', duration: null,
         sectionTitle: null, isPublished: false, isFree: false,
       },
-      videoFile: new File([new Uint8Array(12)], 'lesson.mp4', { type: 'video/mp4' }),
+      mediaFile: new File([new Uint8Array(12)], 'lesson.mp4', { type: 'video/mp4' }),
       fetchImpl,
       uploadImpl: async () => ({
         kind: 'lesson-video', blobName: 'uploaded.mp4', videoProvider: 'azure',

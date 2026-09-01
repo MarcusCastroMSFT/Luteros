@@ -25,6 +25,7 @@ export interface Lesson {
   duration: string; // e.g., "15:30" for 15 minutes 30 seconds
   isPreview?: boolean;
   order: number;
+  content?: string;
   videoUrl?: string; // Optional video URL for video lessons
   videoProvider?: string;
 }

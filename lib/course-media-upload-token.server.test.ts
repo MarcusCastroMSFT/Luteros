@@ -213,6 +213,40 @@ describe('payload structure', () => {
     assert.equal(verifyUploadToken(token, deps).ok, false);
   });
 
+  test('accepts a lesson-audio token for the private media container', () => {
+    const deps = makeDeps();
+    const courseId = '12345678-1234-4234-9234-123456789000';
+    const blobName = `staging/courses/${courseId}/lesson-audio/11111111-1111-4111-a111-111111111111.mp3`;
+    const payload = makePayload({
+      declaration: { kind: 'lesson-audio', contentType: 'audio/mpeg', size: 1024 },
+      container: 'course-videos',
+      courseId,
+      lessonId: 'lesson-1',
+      stagingBlobName: blobName,
+      blobUrl: `https://account.blob.core.windows.net/course-videos/${blobName}`,
+    });
+    const token = createUploadToken(payload, deps);
+
+    assert.equal(verifyUploadToken(token, deps).ok, true);
+  });
+
+  test('rejects a lesson-audio token for the public image container', () => {
+    const deps = makeDeps();
+    const courseId = '12345678-1234-4234-9234-123456789000';
+    const blobName = `staging/courses/${courseId}/lesson-audio/11111111-1111-4111-a111-111111111111.mp3`;
+    const payload = makePayload({
+      declaration: { kind: 'lesson-audio', contentType: 'audio/mpeg', size: 1024 },
+      container: 'course-images',
+      courseId,
+      lessonId: 'lesson-1',
+      stagingBlobName: blobName,
+      blobUrl: `https://account.blob.core.windows.net/course-images/${blobName}`,
+    });
+    const token = createUploadToken(payload, deps);
+
+    assert.equal(verifyUploadToken(token, deps).ok, false);
+  });
+
   test('validates declaration through validateCourseMediaDeclaration', () => {
     const deps = makeDeps();
     // image/jpeg is not valid for lesson-video

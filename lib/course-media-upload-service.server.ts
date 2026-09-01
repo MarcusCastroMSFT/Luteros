@@ -46,7 +46,7 @@ export interface CourseUploadCompletionRequest {
 
 export type CourseMediaUploadResult =
   | { kind: 'thumbnail' | 'cover'; url: string }
-  | { kind: 'lesson-video'; blobName: string; videoProvider: 'azure' };
+  | { kind: 'lesson-video' | 'lesson-audio'; blobName: string; videoProvider: 'azure' };
 
 export type InitiationResult =
   | { ok: true; response: CourseUploadInitiationResponse }
@@ -63,6 +63,14 @@ export interface ParsedInitiationBody {
   contentType: string;
   size: number;
   lessonId?: string;
+}
+
+function isLessonMediaKind(kind: CourseMediaKind): kind is 'lesson-video' | 'lesson-audio' {
+  return kind === 'lesson-video' || kind === 'lesson-audio';
+}
+
+function expectedLessonType(kind: 'lesson-video' | 'lesson-audio'): 'video' | 'audio' {
+  return kind === 'lesson-video' ? 'video' : 'audio';
 }
 
 export function parseInitiationBody(
@@ -97,22 +105,22 @@ export function parseInitiationBody(
   }
 
   const kind = obj.kind;
-  if (kind !== 'thumbnail' && kind !== 'cover' && kind !== 'lesson-video') {
+  if (kind !== 'thumbnail' && kind !== 'cover' && kind !== 'lesson-video' && kind !== 'lesson-audio') {
     return { ok: false, error: 'Invalid media kind' };
   }
 
-  if (kind === 'lesson-video') {
+  if (isLessonMediaKind(kind)) {
     if (context !== 'existing-course') {
-      return { ok: false, error: 'lesson-video requires course context' };
+      return { ok: false, error: `${kind} requires course context` };
     }
     if (typeof obj.lessonId !== 'string' || !obj.lessonId) {
-      return { ok: false, error: 'lessonId is required for lesson-video' };
+      return { ok: false, error: `lessonId is required for ${kind}` };
     }
     return { ok: true, parsed: { kind, contentType: obj.contentType, size: obj.size, lessonId: obj.lessonId } };
   }
 
   if ('lessonId' in obj && obj.lessonId !== undefined) {
-    return { ok: false, error: 'lessonId is only valid for lesson-video' };
+    return { ok: false, error: 'lessonId is only valid for lesson media' };
   }
 
   return { ok: true, parsed: { kind, contentType: obj.contentType, size: obj.size } };
@@ -128,6 +136,7 @@ interface Course {
 interface Lesson {
   id: string;
   courseId: string;
+  type: 'video' | 'article' | 'audio';
 }
 
 export interface ServiceDependencies {
@@ -217,7 +226,7 @@ export async function initiateCourseMediaUpload(
     return { ok: false, status: 403, error: 'Not allowed to upload course media' };
   }
 
-  const validKinds: CourseMediaKind[] = ['thumbnail', 'cover', 'lesson-video'];
+  const validKinds: CourseMediaKind[] = ['thumbnail', 'cover', 'lesson-video', 'lesson-audio'];
   if (!validKinds.includes(request.kind)) {
     return { ok: false, status: 400, error: `Invalid media kind: ${request.kind}` };
   }
@@ -230,7 +239,7 @@ export async function initiateCourseMediaUpload(
   const validation = validateCourseMediaDeclaration(declaration);
   if (!validation.ok) return { ok: false, status: 400, error: validation.error };
 
-  const containerName = request.kind === 'lesson-video' ? 'course-videos' : 'course-images';
+  const containerName = isLessonMediaKind(request.kind) ? 'course-videos' : 'course-images';
 
   if (request.courseId) {
     // ── EXISTING COURSE PATH ──────────────────────────────────────────────
@@ -240,13 +249,13 @@ export async function initiateCourseMediaUpload(
       return { ok: false, status: 403, error: 'Cannot manage this course' };
     }
 
-    if (request.kind === 'lesson-video') {
+    if (isLessonMediaKind(request.kind)) {
       if (!request.lessonId) {
-        return { ok: false, status: 400, error: 'Lesson video requires lessonId' };
+        return { ok: false, status: 400, error: 'Lesson media requires lessonId' };
       }
       const lesson = await deps.findLesson(request.lessonId);
       if (!lesson) return { ok: false, status: 404, error: 'Lesson not found' };
-      if (lesson.courseId !== request.courseId) {
+      if (lesson.courseId !== request.courseId || lesson.type !== expectedLessonType(request.kind)) {
         return { ok: false, status: 404, error: 'Lesson not found' };
       }
     }
@@ -292,8 +301,8 @@ export async function initiateCourseMediaUpload(
   }
 
   // ── DRAFT PATH ────────────────────────────────────────────────────────
-  if (request.kind === 'lesson-video') {
-    return { ok: false, status: 400, error: 'Lesson video requires courseId and lessonId' };
+  if (isLessonMediaKind(request.kind)) {
+    return { ok: false, status: 400, error: 'Lesson media requires courseId and lessonId' };
   }
 
   const ownerFingerprint = createOwnerFingerprint(user.id);
@@ -378,13 +387,16 @@ export async function completeCourseMediaUpload(
       return { ok: false, status: 403, error: 'Cannot manage this course' };
     }
 
-    if (token.declaration.kind === 'lesson-video') {
+    if (isLessonMediaKind(token.declaration.kind)) {
       if (!token.lessonId) {
-        return { ok: false, status: 400, error: 'Invalid lesson video upload token' };
+        return { ok: false, status: 400, error: 'Invalid lesson media upload token' };
       }
       const lesson = await deps.findLesson(token.lessonId);
       if (!lesson) return { ok: false, status: 404, error: 'Lesson not found' };
-      if (lesson.courseId !== request.courseId) {
+      if (
+        lesson.courseId !== request.courseId
+        || lesson.type !== expectedLessonType(token.declaration.kind)
+      ) {
         return { ok: false, status: 404, error: 'Lesson not found' };
       }
     }
@@ -447,8 +459,8 @@ export async function completeCourseMediaUpload(
       return { ok: false, status: 400, error: 'Upload promotion failed' };
     }
 
-    if (token.declaration.kind === 'lesson-video') {
-      return { ok: true, result: { kind: 'lesson-video', blobName: finalBlobName, videoProvider: 'azure' } };
+    if (isLessonMediaKind(token.declaration.kind)) {
+      return { ok: true, result: { kind: token.declaration.kind, blobName: finalBlobName, videoProvider: 'azure' } };
     }
 
     const blobEndpoint = deps.getBlobEndpoint();
