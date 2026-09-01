@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getLogoLayout, type LogoSize } from "@/lib/logo-layout";
 
 interface LogoProps {
   className?: string;
-  iconSize?: "sm" | "md" | "lg" | "xl";
+  iconSize?: LogoSize;
   textSize?: "sm" | "md" | "lg" | "xl";
   showText?: boolean;
   asLink?: boolean;
@@ -11,27 +12,28 @@ interface LogoProps {
   newTab?: boolean;
 }
 
-const iconSizes = {
-  sm: { width: 80, height: 80 },
-  md: { width: 120, height: 120 },
-  lg: { width: 160, height: 160 },
-  xl: { width: 200, height: 200 }
-};
-
 export function Logo({
   className = "",
   iconSize = "md",
   asLink = false,
   newTab = false,
 }: LogoProps) {
+  const layout = getLogoLayout(iconSize);
   const content = (
-    <div className={`flex items-center ${className}`}>
+    <div
+      className={`relative shrink-0 overflow-hidden ${className}`}
+      style={{
+        width: layout.viewportWidth,
+        height: layout.viewportHeight,
+      }}
+    >
       <Image
         src="/images/logo/lutteros-logo.svg"
         alt="lutteros"
-        width={iconSizes[iconSize].width}
-        height={iconSizes[iconSize].height}
-        className="object-contain"
+        width={layout.canvasSize}
+        height={layout.canvasSize}
+        className="absolute left-0 max-w-none object-contain"
+        style={{ top: layout.offsetTop }}
       />
     </div>
   );
@@ -41,7 +43,11 @@ export function Logo({
       <Link
         href="/"
         aria-label="lutteros — Página inicial"
-        className="flex min-h-[48px] items-center"
+        className="inline-flex shrink-0 items-center"
+        style={{
+          width: layout.viewportWidth,
+          height: layout.viewportHeight,
+        }}
         {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       >
         {content}
