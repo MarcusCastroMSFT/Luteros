@@ -139,6 +139,69 @@ export interface ServiceDependencies {
   getBlobEndpoint: () => string;
 }
 
+type UploadGrantErrorCategory =
+  | 'vercel_oidc_failed'
+  | 'azure_authentication_failed'
+  | 'azure_authorization_failed'
+  | 'upload_grant_failed';
+
+export interface SafeUploadGrantError {
+  category: UploadGrantErrorCategory;
+  name?: string;
+  code?: string;
+  statusCode?: number;
+}
+
+function safeIdentifier(value: unknown): string | undefined {
+  return typeof value === 'string' && /^[A-Za-z][A-Za-z0-9_.-]{0,79}$/.test(value)
+    ? value
+    : undefined;
+}
+
+export function sanitizeUploadGrantError(error: unknown): SafeUploadGrantError {
+  const value = error && typeof error === 'object'
+    ? error as Record<string, unknown>
+    : {};
+  const name = safeIdentifier(value.name);
+  const code = safeIdentifier(value.code);
+  const statusCode = typeof value.statusCode === 'number'
+    && Number.isInteger(value.statusCode)
+    && value.statusCode >= 100
+    && value.statusCode <= 599
+    ? value.statusCode
+    : undefined;
+
+  let category: UploadGrantErrorCategory = 'upload_grant_failed';
+  if (name === 'VercelOidcTokenError') {
+    category = 'vercel_oidc_failed';
+  } else if (
+    statusCode === 401
+    || statusCode === 403
+    || code === 'AuthorizationPermissionMismatch'
+    || code === 'AuthorizationFailure'
+  ) {
+    category = 'azure_authorization_failed';
+  } else if (
+    name === 'AuthenticationRequiredError'
+    || name === 'CredentialUnavailableError'
+    || name === 'AggregateAuthenticationError'
+    || code === 'AuthenticationFailed'
+  ) {
+    category = 'azure_authentication_failed';
+  }
+
+  return {
+    category,
+    ...(name ? { name } : {}),
+    ...(code ? { code } : {}),
+    ...(statusCode ? { statusCode } : {}),
+  };
+}
+
+function reportUploadGrantError(error: unknown): void {
+  console.error('Course media upload grant failed', sanitizeUploadGrantError(error));
+}
+
 // ─── Service Functions ────────────────────────────────────────────────────────
 
 export async function initiateCourseMediaUpload(
@@ -194,7 +257,8 @@ export async function initiateCourseMediaUpload(
     let uploadGrant;
     try {
       uploadGrant = await deps.storage.createUploadGrant(containerName, stagingBlobName);
-    } catch {
+    } catch (error) {
+      reportUploadGrantError(error);
       return { ok: false, status: 400, error: 'Failed to create upload grant' };
     }
 
@@ -239,7 +303,8 @@ export async function initiateCourseMediaUpload(
   let uploadGrant;
   try {
     uploadGrant = await deps.storage.createUploadGrant(containerName, stagingBlobName);
-  } catch {
+  } catch (error) {
+    reportUploadGrantError(error);
     return { ok: false, status: 400, error: 'Failed to create upload grant' };
   }
 

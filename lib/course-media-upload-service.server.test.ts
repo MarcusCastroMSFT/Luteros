@@ -6,6 +6,7 @@ import {
   initiateCourseMediaUpload,
   completeCourseMediaUpload,
   parseInitiationBody,
+  sanitizeUploadGrantError,
   type ServiceDependencies,
 } from './course-media-upload-service.server';
 
@@ -146,6 +147,43 @@ describe('initiation auth', () => {
     });
     await initiateCourseMediaUpload(student, { kind: 'thumbnail', contentType: 'image/jpeg', size: 1024 }, deps);
     assert.equal(storageCalled, false);
+  });
+});
+
+describe('upload grant diagnostics', () => {
+  test('categorizes Azure authorization failures without retaining sensitive text', () => {
+    const error = Object.assign(
+      new Error('Authorization failed https://blob.example/video?sig=secret assertion=jwt-secret'),
+      {
+        name: 'RestError',
+        code: 'AuthorizationPermissionMismatch',
+        statusCode: 403,
+      },
+    );
+
+    const details = sanitizeUploadGrantError(error);
+
+    assert.deepEqual(details, {
+      category: 'azure_authorization_failed',
+      name: 'RestError',
+      code: 'AuthorizationPermissionMismatch',
+      statusCode: 403,
+    });
+    assert.doesNotMatch(JSON.stringify(details), /secret|sig=|assertion|https:/i);
+  });
+
+  test('categorizes Vercel token exchange failures without retaining their message', () => {
+    const details = sanitizeUploadGrantError(
+      Object.assign(new Error('Failed to exchange token: private-value'), {
+        name: 'VercelOidcTokenError',
+      }),
+    );
+
+    assert.deepEqual(details, {
+      category: 'vercel_oidc_failed',
+      name: 'VercelOidcTokenError',
+    });
+    assert.doesNotMatch(JSON.stringify(details), /private-value|exchange token/i);
   });
 });
 
