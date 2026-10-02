@@ -35,6 +35,10 @@ export const navigationMenu: NavigationMenuItem[] = [
     href: "/"
   },
   {
+    title: "Cursos",
+    href: "/courses"
+  },
+  {
     title: "Páginas",
     items: [
       {

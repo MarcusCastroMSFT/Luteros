@@ -1,7 +1,15 @@
 import { Resend } from 'resend'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazily initialize the Resend client: the constructor throws when RESEND_API_KEY
+// is missing, which would otherwise crash every route importing this module.
+let resendClient: Resend | null = null
+
+function getResend(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendClient
+}
 
 // Email configuration
 export const EMAIL_CONFIG = {
@@ -48,7 +56,7 @@ export interface BatchEmailResult {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: EMAIL_CONFIG.from,
       to: options.to,
       subject: options.subject,
@@ -94,7 +102,7 @@ export async function sendBatchEmails(options: SendBatchEmailOptions): Promise<B
 
   for (const batch of batches) {
     try {
-      const { data, error } = await resend.batch.send(
+      const { data, error } = await getResend().batch.send(
         batch.map(email => ({
           from: EMAIL_CONFIG.from,
           to: email.to,
