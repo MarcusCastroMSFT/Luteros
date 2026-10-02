@@ -7,11 +7,13 @@ function formatArticleCount(count: number): string {
 }
 
 // Articles are counted apart from lessons (video/audio).
-export function formatCourseItemCount(items: ReadonlyArray<{ type: string }>): string {
-  const articles = items.filter((item) => item.type === 'article').length;
-  const lessons = items.length - articles;
-
+export function formatCourseCounts(lessons: number, articles: number): string {
   if (articles === 0) return formatLessonCount(lessons);
   if (lessons === 0) return formatArticleCount(articles);
   return `${formatLessonCount(lessons)} e ${formatArticleCount(articles)}`;
+}
+
+export function formatCourseItemCount(items: ReadonlyArray<{ type: string }>): string {
+  const articles = items.filter((item) => item.type === 'article').length;
+  return formatCourseCounts(items.length - articles, articles);
 }

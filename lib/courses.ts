@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { courses, enrollments, lessons, users } from '@/lib/db/schema'
 import { sanitizeArticleContent } from '@/lib/article-content.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
+import { resolveCourseImage } from '@/lib/course-image'
 import {
   getCourseInstructorProfiles,
   type CourseInstructorProfile,
@@ -39,6 +40,7 @@ export type Course = {
   originalPrice: number | null
   isFree: boolean
   lessonsCount: number
+  articlesCount: number
   sectionsCount: number
   duration: string
   rating: number
@@ -83,7 +85,7 @@ function formatDate(date: Date): string {
 }
 
 // Transform DB course row to frontend Course type
-function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number }, assignedProfiles: CourseInstructorProfile[] = []): Course {
+function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number; articlesCount?: number }, assignedProfiles: CourseInstructorProfile[] = []): Course {
   const price = course.price ? parseFloat(course.price.toString()) : 0
   const discountPrice = course.discountPrice ? parseFloat(course.discountPrice.toString()) : null
   const rating = course.averageRating ? parseFloat(course.averageRating.toString()) : 0
@@ -125,7 +127,7 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
     title: course.title,
     description: course.description,
     shortDescription: course.shortDescription || '',
-    image: course.thumbnail || '',
+    image: resolveCourseImage(course.thumbnail, course.coverImage),
     coverImage: course.coverImage || '',
     previewVideo: course.previewVideo || '',
     instructor: instructors[0] || primaryInstructor,
@@ -134,6 +136,7 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
     originalPrice: discountPrice !== null ? price : null,
     isFree: course.isFree,
     lessonsCount: course.lessonsCount,
+    articlesCount: course.articlesCount ?? 0,
     sectionsCount: 0,
     duration: formatDuration(course.duration),
     rating,
@@ -182,7 +185,7 @@ async function fetchCourses(page: number, limit: number, category?: string) {
   const [lessonCounts, instructorProfiles] = await Promise.all([
     courseIds.length > 0
       ? db
-          .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
+          .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int`, articles: sql<number>`(count(*) filter (where ${lessons.type} = 'article'))::int` })
           .from(lessons)
           .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
           .groupBy(lessons.courseId)
@@ -190,6 +193,7 @@ async function fetchCourses(page: number, limit: number, category?: string) {
     getCourseInstructorProfiles(courseIds),
   ])
   const lessonCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.count]))
+  const articleCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.articles]))
   const instructorsByCourse = new Map<string, CourseInstructorProfile[]>()
   for (const profile of instructorProfiles) {
     const profiles = instructorsByCourse.get(profile.courseId) || []
@@ -198,7 +202,7 @@ async function fetchCourses(page: number, limit: number, category?: string) {
   }
 
   const transformedCourses = rows.map((r) => transformCourse(
-    { ...r, lessonsCount: lessonCountMap.get(r.id) ?? 0 },
+    { ...r, lessonsCount: lessonCountMap.get(r.id) ?? 0, articlesCount: articleCountMap.get(r.id) ?? 0 },
     instructorsByCourse.get(r.id),
   ))
   const totalCourses = Number(total)
@@ -262,12 +266,13 @@ async function fetchCourseBySlug(slug: string) {
   const relatedIds = related.map((r) => r.id)
   const relatedLessonCounts = relatedIds.length > 0
     ? await db
-        .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
+        .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int`, articles: sql<number>`(count(*) filter (where ${lessons.type} = 'article'))::int` })
         .from(lessons)
         .where(and(inArray(lessons.courseId, relatedIds), eq(lessons.isPublished, true)))
         .groupBy(lessons.courseId)
     : []
   const relatedLessonCountMap = new Map(relatedLessonCounts.map((c) => [c.courseId, c.count]))
+  const relatedArticleCountMap = new Map(relatedLessonCounts.map((c) => [c.courseId, c.articles]))
   const allCourseIds = [course.id, ...relatedIds]
   const instructorProfiles = await getCourseInstructorProfiles(allCourseIds)
   const instructorsByCourse = new Map<string, CourseInstructorProfile[]>()
@@ -279,12 +284,12 @@ async function fetchCourseBySlug(slug: string) {
 
   return {
     course: transformCourse(
-      { ...course, lessonsCount: courseLessons.length },
+      { ...course, lessonsCount: courseLessons.length, articlesCount: courseLessons.filter((l) => l.type === 'article').length },
       instructorsByCourse.get(course.id),
     ),
     lessons: safeLessons,
     relatedCourses: related.map((r) => transformCourse(
-      { ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0 },
+      { ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0, articlesCount: relatedArticleCountMap.get(r.id) ?? 0 },
       instructorsByCourse.get(r.id),
     )),
   }

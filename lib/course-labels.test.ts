@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { formatCourseItemCount, formatLessonCount } from './course-labels';
+import { formatCourseCounts, formatCourseItemCount, formatLessonCount } from './course-labels';
 
 test('uses the singular lesson label for one lesson', () => {
   assert.equal(formatLessonCount(1), '1 Aula');
@@ -30,4 +30,10 @@ test('omits the lesson part when there are only articles', () => {
 
 test('shows zero lessons for an empty course', () => {
   assert.equal(formatCourseItemCount([]), '0 Aulas');
+});
+test('formats lesson and article totals when only counts are known', () => {
+  assert.equal(formatCourseCounts(2, 2), '2 Aulas e 2 Artigos');
+  assert.equal(formatCourseCounts(3, 0), '3 Aulas');
+  assert.equal(formatCourseCounts(0, 1), '1 Artigo');
+  assert.equal(formatCourseCounts(0, 0), '0 Aulas');
 });

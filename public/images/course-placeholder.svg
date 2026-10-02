@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" role="img" aria-label="Curso sem imagem">
+  <rect width="800" height="480" fill="#e6f2f2"/>
+  <g fill="none" stroke="#2a7b7b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.6">
+    <path d="M400 190c-34-24-82-30-130-18v150c48-12 96-6 130 18 34-24 82-30 130-18V172c-48-12-96-6-130 18z"/>
+    <path d="M400 190v150"/>
+  </g>
+</svg>

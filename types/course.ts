@@ -50,6 +50,7 @@ export interface Course {
   price: number;
   originalPrice?: number;
   lessonsCount: number;
+  articlesCount?: number;
   sectionsCount: number;
   duration: string; // e.g., "16 hours"
   rating: number;
