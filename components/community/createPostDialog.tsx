@@ -197,7 +197,7 @@ export function CreatePostDialog({ isOpen, onClose, onPostCreated, selectedCateg
           </div>
 
           {/* Category */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 Categoria *

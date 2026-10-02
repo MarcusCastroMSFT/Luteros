@@ -5,6 +5,8 @@ import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
 import { asc, eq, sql } from 'drizzle-orm'
+import { getCourseInstructorIds } from '@/lib/course-instructors.server'
+import { resolveLessonDuration } from '@/lib/reading-time'
 
 export async function GET(
   request: NextRequest,
@@ -100,7 +102,8 @@ export async function POST(
     }
 
 
-    const forbidden = requireCourseManager(authResult.user, course.instructorId)
+    const instructorIds = await getCourseInstructorIds(courseId, course.instructorId)
+    const forbidden = requireCourseManager(authResult.user, instructorIds)
     if (forbidden) return forbidden
 
     const body = await request.json()
@@ -141,7 +144,11 @@ export async function POST(
         content: content || null,
         videoUrl: videoUrl?.trim() || null,
         videoProvider: videoProvider || null,
-        duration: duration ? parseInt(duration) : null,
+        duration: resolveLessonDuration({
+          type,
+          duration: duration ? parseInt(duration) : null,
+          content,
+        }) || null,
         sectionTitle: sectionTitle?.trim() || null,
         order: nextOrder,
         isPublished,

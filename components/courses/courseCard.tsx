@@ -54,7 +54,7 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
 
         {showInstructor && (
           <span className="text-sm text-gray-600 hover:text-primary transition-colors cursor-pointer">
-            Por {course.instructor.name}
+            Por {(course.instructors || [course.instructor]).map((instructor) => instructor.name).join(', ')}
           </span>
         )}
       </div>

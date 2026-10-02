@@ -3,6 +3,7 @@ import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { courses, lessons, users } from '@/lib/db/schema'
 import { asc, eq } from 'drizzle-orm'
+import { getCourseInstructorProfiles } from '@/lib/course-instructors.server'
 
 export async function GET(
   request: NextRequest,
@@ -38,6 +39,8 @@ export async function GET(
       .limit(1)
       .then((r) => r[0] ?? null)
 
+    const assignedInstructors = await getCourseInstructorProfiles([courseId])
+
     const courseLessons = await db
       .select({
         id: lessons.id,
@@ -59,6 +62,14 @@ export async function GET(
       discountPrice: course.discountPrice ? parseFloat(course.discountPrice.toString()) : null,
       averageRating: course.averageRating ? parseFloat(course.averageRating.toString()) : null,
       user_profiles: instructor,
+      instructorIds: assignedInstructors.length > 0
+        ? assignedInstructors.map((assignedInstructor) => assignedInstructor.id)
+        : [course.instructorId],
+      instructors: assignedInstructors.map((assignedInstructor) => ({
+        id: assignedInstructor.id,
+        name: assignedInstructor.displayName || assignedInstructor.name,
+        image: assignedInstructor.image,
+      })),
       lessons: courseLessons,
     }
 

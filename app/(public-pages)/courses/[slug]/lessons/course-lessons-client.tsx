@@ -7,7 +7,8 @@ import { CourseContent } from '@/components/courses/courseContent';
 import { LessonViewer } from '@/components/lessons/lessonViewer';
 import { CourseSection, Lesson } from '@/types/course';
 import { type Course as CourseType } from '@/lib/courses';
-import { formatLessonCount } from '@/lib/course-labels';
+import { formatCourseItemCount } from '@/lib/course-labels';
+import { formatLessonDuration, formatSectionDuration } from '@/lib/reading-time';
 import { getCoursePath } from '@/lib/course-paths';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -56,7 +57,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         title: lesson.title,
         description: lesson.description || '',
         type: lesson.type || 'video',
-        duration: lesson.duration ? `${Math.floor(lesson.duration / 60)}:${String(lesson.duration % 60).padStart(2, '0')}` : '0:00',
+        duration: formatLessonDuration(lesson.type || 'video', lesson.duration || 0),
         isPreview: lesson.isFree,
         order: lesson.order,
         content: lesson.content || undefined,
@@ -68,14 +69,12 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     const result: CourseSection[] = [];
     let sectionIndex = 0;
     sectionsMap.forEach((sectionLessons, title) => {
-      const totalSeconds = lessons
-        .filter((l) => (l.sectionTitle || 'Lições') === title)
-        .reduce((acc, l) => acc + (l.duration || 0), 0);
+      const sectionItems = lessons.filter((l) => (l.sectionTitle || 'Lições') === title);
       result.push({
         id: `section-${sectionIndex++}`,
         title,
         lessons: sectionLessons.sort((a, b) => a.order - b.order),
-        totalDuration: `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`,
+        totalDuration: formatSectionDuration(sectionItems),
       });
     });
     
@@ -291,7 +290,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
             <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{progressPercent}% completo</p>
-                <p className="text-xs text-gray-500">{completedLessons.size} de {formatLessonCount(allLessons.length)}</p>
+                <p className="text-xs text-gray-500">{completedLessons.size} de {allLessons.length} itens</p>
               </div>
               <div className="w-12 h-12 relative">
                 <svg className="w-12 h-12 transform -rotate-90">
@@ -342,7 +341,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                 <SheetHeader className="p-4 border-b bg-gray-50">
                   <SheetTitle className="text-left">Conteúdo do Curso</SheetTitle>
                   <p className="text-sm text-gray-600">
-                    {sections.length} seções • {formatLessonCount(allLessons.length)}
+                    {sections.length} seções • {formatCourseItemCount(allLessons)}
                   </p>
                 </SheetHeader>
                 <div className="overflow-y-auto h-[calc(100vh-100px)]">
@@ -372,7 +371,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                   Conteúdo do Curso
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  {sections.length} seções • {formatLessonCount(allLessons.length)}
+                  {sections.length} seções • {formatCourseItemCount(allLessons)}
                 </p>
               </div>
               <CourseContent 

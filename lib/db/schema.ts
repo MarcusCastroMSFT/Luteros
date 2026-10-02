@@ -348,6 +348,16 @@ export const courses = pgTable('courses', {
   index('courses_isFree_idx').on(t.isFree),
 ])
 
+export const courseInstructors = pgTable('course_instructors', {
+  courseId: uuid('courseId').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  instructorId: text('instructorId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  order: integer('order').notNull(),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.courseId, t.instructorId] }),
+  index('course_instructors_instructorId_idx').on(t.instructorId),
+])
+
 // ─── Lessons ──────────────────────────────────────────────────────────────────
 
 export const lessons = pgTable('lessons', {

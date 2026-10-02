@@ -113,7 +113,7 @@ export function ImageCropper({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div
-          className="relative w-full overflow-hidden rounded-lg bg-muted"
+          className="relative w-full max-h-[40dvh] overflow-hidden rounded-lg bg-muted sm:max-h-[60dvh]"
           style={{ aspectRatio: `${aspect} / 1` }}
         >
           <Cropper
@@ -160,7 +160,7 @@ export function ImageCropper({
             <ZoomIn className="size-4" />
           </Button>
         </div>
-        <DialogFooter className="sm:justify-between gap-2">
+        <DialogFooter className="gap-2 sm:items-center sm:justify-between">
           <Button
             type="button"
             variant="ghost"
@@ -176,11 +176,11 @@ export function ImageCropper({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={saving}
-              className="cursor-pointer"
+              className="flex-1 cursor-pointer sm:flex-none"
             >
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving || !croppedArea} className="cursor-pointer">
+            <Button onClick={handleSave} disabled={saving || !croppedArea} className="flex-1 cursor-pointer sm:flex-none">
               {saving ? 'Salvando…' : 'Aplicar'}
             </Button>
           </div>

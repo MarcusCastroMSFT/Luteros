@@ -31,6 +31,7 @@ export default function EditCoursePage() {
     isFree: boolean;
     isPublished: boolean;
     instructorId: string;
+    instructorIds: string[];
   } | null>(null);
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function EditCoursePage() {
           isFree: course.isFree,
           isPublished: course.isPublished,
           instructorId: course.instructorId,
+          instructorIds: course.instructorIds || [course.instructorId],
         });
       } catch (err) {
         console.error('Error fetching course:', err);

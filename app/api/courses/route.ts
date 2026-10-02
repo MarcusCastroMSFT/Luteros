@@ -5,11 +5,16 @@ import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
-import { courses, lessons, users } from '@/lib/db/schema'
+import { courseInstructors, courses, lessons, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
 import { promoteOwnedDraftImage } from '@/lib/course-media-promotion.server'
 import { createOwnerFingerprint } from '@/lib/course-media-paths.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
+import { resolveCourseInstructorIdsForActor } from '@/lib/course-instructors'
+import {
+  areValidCourseInstructorIds,
+  getCourseInstructorProfiles,
+} from '@/lib/course-instructors.server'
 
 export async function GET(request: NextRequest) {
   await connection()
@@ -87,6 +92,13 @@ export async function GET(request: NextRequest) {
           .groupBy(lessons.courseId)
       : []
     const lessonCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.count]))
+    const instructorProfiles = await getCourseInstructorProfiles(courseIds)
+    const instructorsByCourse = new Map<string, typeof instructorProfiles>()
+    for (const profile of instructorProfiles) {
+      const profiles = instructorsByCourse.get(profile.courseId) || []
+      profiles.push(profile)
+      instructorsByCourse.set(profile.courseId, profiles)
+    }
 
     // Format duration from minutes to readable string
     const formatDuration = (minutes: number | null): string => {
@@ -109,13 +121,27 @@ export async function GET(request: NextRequest) {
       const price = course.price ? parseFloat(course.price.toString()) : 0
       const discountPrice = course.discountPrice ? parseFloat(course.discountPrice.toString()) : null
       const rating = course.averageRating ? parseFloat(course.averageRating.toString()) : 0
+      const assignedInstructors = instructorsByCourse.get(course.id) || [{
+        id: course.instructorId,
+        name: course.instructorName,
+        displayName: course.instructorDisplayName,
+        image: course.instructorAvatar,
+      }]
 
       return {
         id: course.id,
         title: course.title,
         slug: course.slug,
-        instructor: course.instructorName || course.instructorDisplayName || 'Unknown',
+        instructor: assignedInstructors
+          .map((profile) => profile.displayName || profile.name || 'Unknown')
+          .join(', '),
         instructorId: course.instructorId,
+        instructorIds: assignedInstructors.map((profile) => profile.id),
+        instructors: assignedInstructors.map((profile) => ({
+          id: profile.id,
+          name: profile.displayName || profile.name || 'Unknown',
+          avatar: profile.image || '/images/default-avatar.svg',
+        })),
         instructorTitle: '',
         category: course.category,
         level: levelDisplayMap[course.level] || course.level,
@@ -177,6 +203,7 @@ export async function POST(request: NextRequest) {
       isFree = false,
       isPublished = false,
       instructorId,
+      instructorIds,
     } = body
 
     // Validation
@@ -204,8 +231,18 @@ export async function POST(request: NextRequest) {
     }
     const dbLevel = levelMap[level] || level
 
-    // Use provided instructorId or default to the authenticated user
-    const finalInstructorId = instructorId || authResult.user.id
+    const finalInstructorIds = resolveCourseInstructorIdsForActor(
+      instructorIds ?? (instructorId ? [instructorId] : []),
+      authResult.user.id,
+      authResult.role === 'ADMIN',
+    )
+    if (!await areValidCourseInstructorIds(finalInstructorIds)) {
+      return NextResponse.json(
+        { success: false, error: 'Um ou mais instrutores são inválidos' },
+        { status: 400 }
+      )
+    }
+    const finalInstructorId = finalInstructorIds[0]
 
     // Check if slug already exists
     const existingCourse = await db.select({ id: courses.id }).from(courses).where(eq(courses.slug, slug)).limit(1).then((r) => r[0] ?? null)
@@ -272,8 +309,9 @@ export async function POST(request: NextRequest) {
       finalCoverImage = coverResult.finalUrl
     }
 
-    // Create course with generated ID and promoted URLs
-    const [course] = await db.insert(courses).values({
+    // Create the course and all instructor assignments atomically.
+    const course = await db.transaction(async (tx) => {
+      const [createdCourse] = await tx.insert(courses).values({
         id: courseId,
         title,
         slug,
@@ -296,6 +334,17 @@ export async function POST(request: NextRequest) {
         reviewCount: 0,
       }).returning()
 
+      await tx.insert(courseInstructors).values(
+        finalInstructorIds.map((selectedInstructorId, order) => ({
+          courseId,
+          instructorId: selectedInstructorId,
+          order,
+        }))
+      )
+
+      return createdCourse
+    })
+
     // Invalidate cache so users see the new course immediately
     revalidatePath('/courses')
     revalidatePath(`/courses/${slug}`)
@@ -313,7 +362,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: course,
+      data: { ...course, instructorIds: finalInstructorIds },
     })
   } catch (error) {
     console.error('Error creating course:', error)

@@ -47,12 +47,12 @@ function generateCourseJsonLd(course: Awaited<ReturnType<typeof getCourseBySlug>
       url: baseUrl,
       logo: `${baseUrl}/images/logo.png`,
     },
-    instructor: {
+    instructor: course.course.instructors.map((instructor) => ({
       '@type': 'Person',
-      name: course.course.instructor.name,
-      description: course.course.instructor.bio,
-      image: course.course.instructor.image,
-    },
+      name: instructor.name,
+      description: instructor.bio,
+      image: instructor.image,
+    })),
     inLanguage: course.course.language || 'pt-BR',
     numberOfCredits: course.course.lessonsCount,
     educationalLevel: course.course.level,

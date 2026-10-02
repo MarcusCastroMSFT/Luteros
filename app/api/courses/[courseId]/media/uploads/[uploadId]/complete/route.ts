@@ -5,6 +5,7 @@ import { courses, lessons } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { completeCourseMediaUpload } from '@/lib/course-media-upload-service.server';
 import { courseMediaStorage } from '@/lib/course-media-storage.server';
+import { getCourseInstructorIds } from '@/lib/course-instructors.server';
 
 export async function POST(
   request: NextRequest,
@@ -22,7 +23,11 @@ export async function POST(
     storage: courseMediaStorage,
     findCourse: async (id) => {
       const [c] = await db.select().from(courses).where(eq(courses.id, id)).limit(1);
-      return c;
+      if (!c) return undefined;
+      return {
+        ...c,
+        instructorIds: await getCourseInstructorIds(id, c.instructorId),
+      };
     },
     findLesson: async (id) => {
       const [l] = await db.select({

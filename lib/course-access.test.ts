@@ -30,6 +30,19 @@ test('allows an instructor to manage only their own course', () => {
   assert.equal(requireCourseManager(instructor, instructor.id), null);
 });
 
+test('allows any assigned instructor to manage the course', async () => {
+  const assignedInstructorIds = ['primary-instructor', instructor.id];
+
+  assert.equal(canManageCourse(instructor, assignedInstructorIds), true);
+  assert.equal(requireCourseManager(instructor, assignedInstructorIds), null);
+
+  const response = requireCourseManager(
+    user('INSTRUCTOR', 'unassigned-instructor'),
+    assignedInstructorIds,
+  );
+  assert.equal(response?.status, 403);
+});
+
 test('denies students and professionals even when their ID matches', async () => {
   for (const deniedUser of [student, professional]) {
     assert.equal(canManageCourse(deniedUser, deniedUser.id), false);

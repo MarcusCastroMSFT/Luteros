@@ -37,10 +37,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/common/image-upload';
 import { LessonsPanel } from '@/components/courses/lessons-panel';
+import { CourseInstructorSelector } from '@/components/courses/course-instructor-selector';
 import { calculateCourseCompletion } from '@/lib/course-completion';
 import { uploadCourseMedia } from '@/lib/course-media-upload';
 import type { CourseMediaKind } from '@/lib/course-media';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/auth-context';
 
 interface Instructor {
   id: string;
@@ -66,6 +68,7 @@ interface CourseData {
   isFree: boolean;
   isPublished: boolean;
   instructorId: string;
+  instructorIds: string[];
 }
 
 interface CourseFormProps {
@@ -124,7 +127,7 @@ const fieldLabels: Record<string, string> = {
   description: 'Descrição',
   category: 'Categoria',
   level: 'Nível',
-  instructor: 'Instrutor',
+  instructor: 'Instrutores',
   price: 'Preço',
   discountPrice: 'Preço promocional',
   previewVideo: 'Vídeo de apresentação',
@@ -149,6 +152,8 @@ const CharacterCounter = ({ current, max, className }: { current: number; max: n
 
 export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const canAssignInstructors = user?.role === 'ADMIN';
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -156,7 +161,10 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
   // Instructors state
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [loadingInstructors, setLoadingInstructors] = useState(true);
-  const [selectedInstructorId, setSelectedInstructorId] = useState(initialData?.instructorId || '');
+  const [selectedInstructorIds, setSelectedInstructorIds] = useState<string[]>(
+    initialData?.instructorIds
+      ?? (initialData?.instructorId ? [initialData.instructorId] : []),
+  );
   
   // Form state
   const [title, setTitle] = useState(initialData?.title || '');
@@ -193,7 +201,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
     description,
     category,
     level,
-    instructorId: selectedInstructorId,
+    instructorId: selectedInstructorIds[0] || '',
     shortDescription,
     thumbnail,
     coverImage,
@@ -222,9 +230,12 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
           
           setInstructors(instructorUsers);
           
-          // Only auto-select first instructor in create mode if none selected
-          if (mode === 'create' && instructorUsers.length > 0 && !selectedInstructorId) {
-            setSelectedInstructorId(instructorUsers[0].id);
+          // Only auto-select an instructor in create mode if none selected
+          if (mode === 'create' && instructorUsers.length > 0) {
+            setSelectedInstructorIds((currentIds) => {
+              if (user?.role === 'INSTRUCTOR') return [user.id];
+              return currentIds.length > 0 ? currentIds : [instructorUsers[0].id];
+            });
           }
         } else {
           toast.error('Formato de dados inesperado ao carregar instrutores');
@@ -238,7 +249,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
     };
 
     fetchInstructors();
-  }, [mode, selectedInstructorId]);
+  }, [mode, user?.id, user?.role]);
 
   // Auto-generate slug from title
   const generateSlug = (value: string) => {
@@ -326,8 +337,8 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
         newErrors.push({ field: 'level', message: 'Nível é obrigatório para publicar' });
       }
       
-      if (!selectedInstructorId) {
-        newErrors.push({ field: 'instructor', message: 'Instrutor é obrigatório para publicar' });
+      if (selectedInstructorIds.length === 0) {
+        newErrors.push({ field: 'instructor', message: 'Selecione ao menos um instrutor para publicar' });
       }
     }
     
@@ -431,7 +442,7 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
           discountPrice: isFree ? null : (discountPrice ? parseFloat(discountPrice) : null),
           isFree,
           isPublished: shouldPublish,
-          instructorId: selectedInstructorId,
+          instructorIds: selectedInstructorIds,
         }),
       });
 
@@ -850,38 +861,24 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
                         </p>
                       </div>
 
-                      {/* Instructor */}
+                      {/* Instructors */}
                       <div className="space-y-2 sm:col-span-2">
                         <Label htmlFor="instructor" className="flex items-center gap-1">
-                          Instrutor <span className="text-destructive">*</span>
+                          Instrutores <span className="text-destructive">*</span>
                         </Label>
                         {loadingInstructors ? (
                           <Skeleton className="h-10 w-full" />
                         ) : (
-                          <Select 
-                            value={selectedInstructorId} 
-                            onValueChange={(value) => {
-                              setSelectedInstructorId(value);
+                          <CourseInstructorSelector
+                            instructors={instructors}
+                            selectedIds={selectedInstructorIds}
+                            onChange={(instructorIds) => {
+                              setSelectedInstructorIds(instructorIds);
                               setErrors(prev => prev.filter(e => e.field !== 'instructor'));
                             }}
-                          >
-                            <SelectTrigger id="instructor" className={cn(getFieldError('instructor') && "border-destructive")}>
-                              <SelectValue placeholder="Selecione um instrutor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {instructors.length === 0 ? (
-                                <SelectItem value="none" disabled>
-                                  Nenhum instrutor disponível
-                                </SelectItem>
-                              ) : (
-                                instructors.map((instructor) => (
-                                  <SelectItem key={instructor.id} value={instructor.id}>
-                                    {instructor.name}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
+                            invalid={Boolean(getFieldError('instructor'))}
+                            disabled={instructors.length === 0 || !canAssignInstructors}
+                          />
                         )}
                         {getFieldError('instructor') && (
                           <p className="text-sm text-destructive flex items-center gap-1">

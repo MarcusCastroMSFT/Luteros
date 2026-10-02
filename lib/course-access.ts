@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server'
 import type { AuthUser } from './auth-helpers'
 
-export function canManageCourse(user: AuthUser, instructorId: string): boolean {
+type CourseInstructorIds = string | readonly string[]
+
+export function canManageCourse(user: AuthUser, instructorIds: CourseInstructorIds): boolean {
+  const assignedInstructorIds = typeof instructorIds === 'string'
+    ? [instructorIds]
+    : instructorIds
+
   return user.role === 'ADMIN'
-    || (user.role === 'INSTRUCTOR' && user.id === instructorId)
+    || (user.role === 'INSTRUCTOR' && assignedInstructorIds.includes(user.id))
 }
 
 export function requireCourseManager(
   user: AuthUser,
-  instructorId: string,
+  instructorIds: CourseInstructorIds,
 ): NextResponse | null {
-  if (canManageCourse(user, instructorId)) return null
+  if (canManageCourse(user, instructorIds)) return null
 
   return NextResponse.json(
     {

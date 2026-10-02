@@ -270,7 +270,7 @@ export function TemplateEditorDialog({
             <div className="flex-1 overflow-auto mt-4">
               {/* Editor Tab */}
               <TabsContent value="editor" className="m-0 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome do Template</Label>
                     <Input
@@ -302,7 +302,7 @@ export function TemplateEditorDialog({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="subject">Assunto do E-mail *</Label>
                     <Input

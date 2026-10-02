@@ -25,10 +25,12 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
       {/* Article Controls */}
       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-gray-600" />
-            <span className="text-sm text-gray-600">Tempo de leitura: {lesson.duration}</span>
-          </div>
+          {lesson.duration && (
+            <div className="flex items-center gap-2">
+              <BookOpen size={16} className="text-gray-600" />
+              <span className="text-sm text-gray-600">Tempo de leitura: {lesson.duration}</span>
+            </div>
+          )}
           
           <div className="flex items-center gap-2">
             <Type size={16} className="text-gray-600" />

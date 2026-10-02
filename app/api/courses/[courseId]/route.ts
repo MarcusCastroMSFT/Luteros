@@ -3,13 +3,19 @@ import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
-import { courses, lessons, users } from '@/lib/db/schema'
+import { courseInstructors, courses, lessons, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
 import { alias } from 'drizzle-orm/pg-core'
 import { eq, sql } from 'drizzle-orm'
 import { validateFinalImageUrl } from '@/lib/course-media-promotion.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { collectCourseMediaReferences, deleteCourseMediaReferences } from '@/lib/course-media-cleanup.server'
+import { normalizeCourseInstructorIds } from '@/lib/course-instructors'
+import {
+  areValidCourseInstructorIds,
+  getCourseInstructorIds,
+  getCourseInstructorProfiles,
+} from '@/lib/course-instructors.server'
 
 // Format duration from minutes to readable string
 const formatDuration = (minutes: number | null): string => {
@@ -66,6 +72,18 @@ export async function GET(
     const price = row.price ? parseFloat(row.price.toString()) : 0
     const discountPrice = row.discountPrice ? parseFloat(row.discountPrice.toString()) : null
     const rating = row.averageRating ? parseFloat(row.averageRating.toString()) : 0
+    const assignedInstructors = await getCourseInstructorProfiles([courseId])
+    const instructorProfiles = assignedInstructors.length > 0
+      ? assignedInstructors
+      : [{
+          courseId,
+          id: row.instructorId,
+          name: row.instructorName,
+          displayName: row.instructorDisplayName,
+          image: row.instructorAvatar,
+          bio: null,
+          order: 0,
+        }]
 
     return NextResponse.json({
       success: true,
@@ -85,6 +103,12 @@ export async function GET(
           name: row.instructorName || row.instructorDisplayName || 'Unknown',
           avatar: row.instructorAvatar || '/images/default-avatar.svg',
         },
+        instructorIds: instructorProfiles.map((profile) => profile.id),
+        instructors: instructorProfiles.map((profile) => ({
+          id: profile.id,
+          name: profile.displayName || profile.name || 'Unknown',
+          avatar: profile.image || '/images/default-avatar.svg',
+        })),
         createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
       },
     })
@@ -108,15 +132,29 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Curso não encontrado' }, { status: 404 })
     }
 
-    const forbidden = requireCourseManager(authResult.user, existing.instructorId)
+    const currentInstructorIds = await getCourseInstructorIds(courseId, existing.instructorId)
+    const forbidden = requireCourseManager(authResult.user, currentInstructorIds)
     if (forbidden) return forbidden
 
     const body = await request.json()
     const {
       title, slug, description, shortDescription, level, category, language,
       duration, thumbnail, coverImage, previewVideo, price, discountPrice,
-      isFree, isPublished, instructorId,
+      isFree, isPublished, instructorId, instructorIds,
     } = body
+
+    const finalInstructorIds = authResult.role === 'ADMIN'
+      ? normalizeCourseInstructorIds(
+          instructorIds ?? (instructorId ? [instructorId] : currentInstructorIds),
+          existing.instructorId,
+        )
+      : currentInstructorIds
+    if (authResult.role === 'ADMIN' && !await areValidCourseInstructorIds(finalInstructorIds)) {
+      return NextResponse.json(
+        { success: false, error: 'Um ou mais instrutores são inválidos' },
+        { status: 400 }
+      )
+    }
 
     if (!title || !slug || !description || !level || !category) {
       return NextResponse.json({ success: false, error: 'Campos obrigatórios faltando' }, { status: 400 })
@@ -174,22 +212,35 @@ export async function PUT(
       courseId,
       references: replacedMedia,
       getStorage: getCourseMediaStorage,
-      mutate: () => db.update(courses).set({
-        title, slug, description,
-        shortDescription: shortDescription || null,
-        level: dbLevel, category,
-        language: language || existing.language,
-        duration: duration !== undefined ? duration : existing.duration,
-        thumbnail: thumbnail || null, coverImage: coverImage || null, previewVideo: previewVideo || null,
-        price: price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price,
-        discountPrice: discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice,
-        isFree: isFree !== undefined ? isFree : existing.isFree,
-        isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
-        publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
-        instructorId: authResult.role === 'ADMIN'
-          ? instructorId || existing.instructorId
-          : existing.instructorId,
-      }).where(eq(courses.id, courseId)).returning(),
+      mutate: () => db.transaction(async (tx) => {
+        const updatedCourses = await tx.update(courses).set({
+          title, slug, description,
+          shortDescription: shortDescription || null,
+          level: dbLevel, category,
+          language: language || existing.language,
+          duration: duration !== undefined ? duration : existing.duration,
+          thumbnail: thumbnail || null, coverImage: coverImage || null, previewVideo: previewVideo || null,
+          price: price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price,
+          discountPrice: discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice,
+          isFree: isFree !== undefined ? isFree : existing.isFree,
+          isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
+          publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
+          instructorId: finalInstructorIds[0],
+        }).where(eq(courses.id, courseId)).returning()
+
+        if (authResult.role === 'ADMIN') {
+          await tx.delete(courseInstructors).where(eq(courseInstructors.courseId, courseId))
+          await tx.insert(courseInstructors).values(
+            finalInstructorIds.map((selectedInstructorId, order) => ({
+              courseId,
+              instructorId: selectedInstructorId,
+              order,
+            }))
+          )
+        }
+
+        return updatedCourses
+      }),
     })
 
     revalidatePath('/courses')
@@ -238,7 +289,8 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
     }
 
-    const forbidden = requireCourseManager(authResult.user, existing.instructorId)
+    const instructorIds = await getCourseInstructorIds(courseId, existing.instructorId)
+    const forbidden = requireCourseManager(authResult.user, instructorIds)
     if (forbidden) return forbidden
 
     const lessonMedia = await db.select({

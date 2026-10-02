@@ -340,7 +340,7 @@ export function ServerSideDataTable<TData, TValue>({
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 text-sm text-muted-foreground">
             {loading ? (
               "Loading..."
@@ -356,7 +356,7 @@ export function ServerSideDataTable<TData, TValue>({
               </>
             )}
           </div>
-          <div className="flex items-center space-x-6 lg:space-x-8">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 lg:gap-x-8">
             <div className="flex items-center space-x-2">
               <Label htmlFor="rows-per-page" className="text-sm font-medium">
                 Rows per page

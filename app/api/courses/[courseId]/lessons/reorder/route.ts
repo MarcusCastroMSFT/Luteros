@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
+import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
-import { asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { getCourseInstructorIds } from '@/lib/course-instructors.server'
 
 // PUT reorder lessons
 export async function PUT(
@@ -15,10 +17,14 @@ export async function PUT(
 
     const { courseId } = await context.params
 
-    const course = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
+    const course = await db.select({ id: courses.id, instructorId: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
     if (!course) {
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
     }
+
+    const instructorIds = await getCourseInstructorIds(courseId, course.instructorId)
+    const forbidden = requireCourseManager(authResult.user, instructorIds)
+    if (forbidden) return forbidden
 
     const body = await request.json()
     const { lessonIds } = body
@@ -28,7 +34,10 @@ export async function PUT(
     }
 
     const existing = await db.select({ id: lessons.id }).from(lessons)
-      .where(inArray(lessons.id, lessonIds))
+      .where(and(
+        eq(lessons.courseId, courseId),
+        inArray(lessons.id, lessonIds),
+      ))
 
     if (existing.length !== lessonIds.length) {
       return NextResponse.json({ success: false, error: 'Some lessons were not found or do not belong to this course' }, { status: 400 })

@@ -12,6 +12,8 @@ import {
   deleteCourseMediaReferencesStrict,
 } from '@/lib/course-media-cleanup.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
+import { getCourseInstructorIds } from '@/lib/course-instructors.server'
+import { resolveLessonDuration } from '@/lib/reading-time'
 
 // GET a single lesson
 export async function GET(
@@ -63,7 +65,8 @@ export async function PUT(
     if (!courseOwner) {
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
     }
-    const forbidden = requireCourseManager(authResult.user, courseOwner.instructorId)
+    const instructorIds = await getCourseInstructorIds(courseId, courseOwner.instructorId)
+    const forbidden = requireCourseManager(authResult.user, instructorIds)
     if (forbidden) return forbidden
 
     const body = await request.json()
@@ -85,6 +88,14 @@ export async function PUT(
     if (isPublished !== undefined) updateData.isPublished = isPublished
     if (isFree !== undefined) updateData.isFree = isFree
 
+    const nextType = type !== undefined ? type : existingLesson.type
+    if (nextType === 'article') {
+      updateData.duration = resolveLessonDuration({
+        type: 'article',
+        duration: existingLesson.duration,
+        content: content !== undefined ? content : existingLesson.content,
+      }) || null
+    }
     const nextVideoUrl = videoUrl !== undefined ? videoUrl?.trim() || null : existingLesson.videoUrl
     const nextVideoProvider = videoProvider !== undefined ? videoProvider || null : existingLesson.videoProvider
     const videoWasReplaced = nextVideoUrl !== existingLesson.videoUrl
@@ -143,7 +154,8 @@ export async function DELETE(
     if (!courseOwner) {
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
     }
-    const forbidden = requireCourseManager(authResult.user, courseOwner.instructorId)
+    const instructorIds = await getCourseInstructorIds(courseId, courseOwner.instructorId)
+    const forbidden = requireCourseManager(authResult.user, instructorIds)
     if (forbidden) return forbidden
 
     const mediaToDelete = collectCourseMediaReferences({

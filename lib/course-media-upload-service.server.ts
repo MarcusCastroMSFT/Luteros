@@ -131,6 +131,7 @@ export function parseInitiationBody(
 interface Course {
   id: string;
   instructorId: string;
+  instructorIds?: string[];
 }
 
 interface Lesson {
@@ -245,7 +246,7 @@ export async function initiateCourseMediaUpload(
     // ── EXISTING COURSE PATH ──────────────────────────────────────────────
     const course = await deps.findCourse(request.courseId);
     if (!course) return { ok: false, status: 404, error: 'Course not found' };
-    if (!canManageCourse(user, course.instructorId)) {
+    if (!canManageCourse(user, course.instructorIds || course.instructorId)) {
       return { ok: false, status: 403, error: 'Cannot manage this course' };
     }
 
@@ -383,7 +384,7 @@ export async function completeCourseMediaUpload(
   if (request.courseId) {
     const course = await deps.findCourse(request.courseId);
     if (!course) return { ok: false, status: 404, error: 'Course not found' };
-    if (!canManageCourse(user, course.instructorId)) {
+    if (!canManageCourse(user, course.instructorIds || course.instructorId)) {
       return { ok: false, status: 403, error: 'Cannot manage this course' };
     }
 

@@ -4,6 +4,24 @@ import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
 import { courses, enrollments, lessons, users } from '@/lib/db/schema'
 import { sanitizeArticleContent } from '@/lib/article-content.server'
+import { resolveLessonDuration } from '@/lib/reading-time'
+import {
+  getCourseInstructorProfiles,
+  type CourseInstructorProfile,
+} from '@/lib/course-instructors.server'
+
+export type CourseInstructor = {
+  id: string
+  name: string
+  slug: string
+  title: string
+  bio: string
+  image: string
+  rating: number
+  reviewsCount: number
+  studentsCount: number
+  coursesCount: number
+}
 
 // Frontend Course type
 export type Course = {
@@ -15,18 +33,8 @@ export type Course = {
   image: string
   coverImage: string
   previewVideo: string
-  instructor: {
-    id: string
-    name: string
-    slug: string
-    title: string
-    bio: string
-    image: string
-    rating: number
-    reviewsCount: number
-    studentsCount: number
-    coursesCount: number
-  }
+  instructor: CourseInstructor
+  instructors: CourseInstructor[]
   price: number
   originalPrice: number | null
   isFree: boolean
@@ -75,7 +83,7 @@ function formatDate(date: Date): string {
 }
 
 // Transform DB course row to frontend Course type
-function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number }): Course {
+function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number }, assignedProfiles: CourseInstructorProfile[] = []): Course {
   const price = course.price ? parseFloat(course.price.toString()) : 0
   const discountPrice = course.discountPrice ? parseFloat(course.discountPrice.toString()) : null
   const rating = course.averageRating ? parseFloat(course.averageRating.toString()) : 0
@@ -84,6 +92,32 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
   if (course.isPublished) status = 'Ativo'
   
   const isBestSeller = course.enrollmentCount > 1000
+  const primaryInstructor: CourseInstructor = {
+    id: course.instructorId,
+    name: course.instructorDisplayName || course.instructorName || 'Unknown',
+    slug: course.instructorId,
+    title: '',
+    bio: course.instructorBio || '',
+    image: course.instructorAvatar || '/images/default-avatar.svg',
+    rating: 0,
+    reviewsCount: 0,
+    studentsCount: 0,
+    coursesCount: 0,
+  }
+  const instructors = assignedProfiles.length > 0
+    ? assignedProfiles.map((profile) => ({
+        id: profile.id,
+        name: profile.displayName || profile.name || 'Unknown',
+        slug: profile.id,
+        title: '',
+        bio: profile.bio || '',
+        image: profile.image || '/images/default-avatar.svg',
+        rating: 0,
+        reviewsCount: 0,
+        studentsCount: 0,
+        coursesCount: 0,
+      }))
+    : [primaryInstructor]
   
   return {
     id: course.id,
@@ -94,18 +128,8 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
     image: course.thumbnail || '',
     coverImage: course.coverImage || '',
     previewVideo: course.previewVideo || '',
-    instructor: {
-      id: course.instructorId,
-      name: course.instructorDisplayName || course.instructorName || 'Unknown',
-      slug: course.instructorId,
-      title: '',
-      bio: course.instructorBio || '',
-      image: course.instructorAvatar || '/images/default-avatar.svg',
-      rating: 0,
-      reviewsCount: 0,
-      studentsCount: 0,
-      coursesCount: 0,
-    },
+    instructor: instructors[0] || primaryInstructor,
+    instructors,
     price: discountPrice !== null ? discountPrice : price,
     originalPrice: discountPrice !== null ? price : null,
     isFree: course.isFree,
@@ -155,16 +179,28 @@ async function fetchCourses(page: number, limit: number, category?: string) {
 
   // Batch lesson counts for all courses on this page in one query (avoids correlated subquery per row)
   const courseIds = rows.map((r) => r.id)
-  const lessonCounts = courseIds.length > 0
-    ? await db
-        .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
-        .from(lessons)
-        .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
-        .groupBy(lessons.courseId)
-    : []
+  const [lessonCounts, instructorProfiles] = await Promise.all([
+    courseIds.length > 0
+      ? db
+          .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
+          .from(lessons)
+          .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
+          .groupBy(lessons.courseId)
+      : [],
+    getCourseInstructorProfiles(courseIds),
+  ])
   const lessonCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.count]))
+  const instructorsByCourse = new Map<string, CourseInstructorProfile[]>()
+  for (const profile of instructorProfiles) {
+    const profiles = instructorsByCourse.get(profile.courseId) || []
+    profiles.push(profile)
+    instructorsByCourse.set(profile.courseId, profiles)
+  }
 
-  const transformedCourses = rows.map((r) => transformCourse({ ...r, lessonsCount: lessonCountMap.get(r.id) ?? 0 }))
+  const transformedCourses = rows.map((r) => transformCourse(
+    { ...r, lessonsCount: lessonCountMap.get(r.id) ?? 0 },
+    instructorsByCourse.get(r.id),
+  ))
   const totalCourses = Number(total)
   const totalPages = Math.ceil(totalCourses / limit)
   const categories = ['Todos', ...categoriesRaw.map((c) => c.category)]
@@ -205,17 +241,18 @@ async function fetchCourseBySlug(slug: string) {
   if (!course) return null
 
   const [courseLessons, related] = await Promise.all([
-    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, type: lessons.type, videoUrl: lessons.videoUrl, videoProvider: lessons.videoProvider }).from(lessons).where(and(eq(lessons.courseId, course.id), eq(lessons.isPublished, true))).orderBy(asc(lessons.order)),
+    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, type: lessons.type, content: lessons.content, videoUrl: lessons.videoUrl, videoProvider: lessons.videoProvider }).from(lessons).where(and(eq(lessons.courseId, course.id), eq(lessons.isPublished, true))).orderBy(asc(lessons.order)),
     db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.category, course.category), ne(courses.slug, slug), eq(courses.isPublished, true))).orderBy(desc(courses.enrollmentCount)).limit(3),
   ])
 
   // Only expose video URLs for free/preview lessons — paid lesson videos must
   // never leak into the public payload (or into structured data).
   // Azure-hosted videos remain private even for free previews.
-  const safeLessons = courseLessons.map((l) => {
+  const safeLessons = courseLessons.map(({ content, ...l }) => {
     const isAzure = l.videoProvider === 'azure'
     return {
       ...l,
+      duration: resolveLessonDuration({ type: l.type, duration: l.duration, content }),
       videoUrl: l.isFree && !isAzure ? l.videoUrl : null,
       videoProvider: l.isFree && !isAzure ? l.videoProvider : null,
     }
@@ -231,11 +268,25 @@ async function fetchCourseBySlug(slug: string) {
         .groupBy(lessons.courseId)
     : []
   const relatedLessonCountMap = new Map(relatedLessonCounts.map((c) => [c.courseId, c.count]))
+  const allCourseIds = [course.id, ...relatedIds]
+  const instructorProfiles = await getCourseInstructorProfiles(allCourseIds)
+  const instructorsByCourse = new Map<string, CourseInstructorProfile[]>()
+  for (const profile of instructorProfiles) {
+    const profiles = instructorsByCourse.get(profile.courseId) || []
+    profiles.push(profile)
+    instructorsByCourse.set(profile.courseId, profiles)
+  }
 
   return {
-    course: transformCourse({ ...course, lessonsCount: courseLessons.length }),
+    course: transformCourse(
+      { ...course, lessonsCount: courseLessons.length },
+      instructorsByCourse.get(course.id),
+    ),
     lessons: safeLessons,
-    relatedCourses: related.map((r) => transformCourse({ ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0 })),
+    relatedCourses: related.map((r) => transformCourse(
+      { ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0 },
+      instructorsByCourse.get(r.id),
+    )),
   }
 }
 
@@ -291,6 +342,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
     ...courseData,
     lessons: enrolledLessons.map((lesson) => ({
       ...lesson,
+      duration: resolveLessonDuration(lesson),
       content: sanitizeArticleContent(lesson.content),
     })),
   }

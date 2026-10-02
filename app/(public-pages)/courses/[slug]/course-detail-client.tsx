@@ -9,7 +9,8 @@ import { CourseInfo } from '@/components/courses/courseInfo';
 import { Star, Clock, BookOpen, Globe } from 'lucide-react';
 import { type Course as CourseType } from '@/lib/courses';
 import { summarizeCourseContent } from '@/lib/course-content-summary';
-import { formatLessonCount } from '@/lib/course-labels';
+import { formatCourseItemCount } from '@/lib/course-labels';
+import { formatLessonDuration, formatSectionDuration } from '@/lib/reading-time';
 import { CourseSection, Lesson } from '@/types/course';
 
 // Dynamic imports for non-critical components (below the fold)
@@ -95,7 +96,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         title: lesson.title,
         description: lesson.description || '',
         type: lesson.type || 'video',
-        duration: lesson.duration ? `${Math.floor(lesson.duration / 60)}:${String(lesson.duration % 60).padStart(2, '0')}` : '0:00',
+        duration: formatLessonDuration(lesson.type || 'video', lesson.duration || 0),
         isPreview: lesson.isFree,
         order: lesson.order,
         videoUrl: lesson.videoUrl || undefined,
@@ -106,14 +107,12 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     const result: CourseSection[] = [];
     let sectionIndex = 0;
     sectionsMap.forEach((sectionLessons, title) => {
-      const totalSeconds = lessons
-        .filter((l) => (l.sectionTitle || 'Lições') === title)
-        .reduce((acc, l) => acc + (l.duration || 0), 0);
+      const sectionItems = lessons.filter((l) => (l.sectionTitle || 'Lições') === title);
       result.push({
         id: `section-${sectionIndex++}`,
         title,
         lessons: sectionLessons.sort((a, b) => a.order - b.order),
-        totalDuration: `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`,
+        totalDuration: formatSectionDuration(sectionItems),
       });
     });
     
@@ -217,7 +216,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
               </div>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
-                <span>{formatLessonCount(course.lessonsCount)}</span>
+                <span>{formatCourseItemCount(lessons)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4" style={{ color: 'var(--cta-highlight)' }} />
@@ -245,7 +244,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                   Conteúdo do Curso
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  {sections.length} seções • {formatLessonCount(lessons.length)} • {course.duration}
+                  {sections.length} seções • {formatCourseItemCount(lessons)} • {course.duration}
                 </p>
                 <CourseContent 
                   sections={sections} 
@@ -258,12 +257,16 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
             {/* Separator */}
             <div className="border-t border-gray-200"></div>
 
-            {/* Instructor Section */}
+            {/* Instructors Section */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Instrutor
+                {course.instructors.length === 1 ? 'Instrutor' : 'Instrutores'}
               </h2>
-              <InstructorCard instructor={course.instructor} />
+              <div className="space-y-8">
+                {course.instructors.map((instructor) => (
+                  <InstructorCard key={instructor.id} instructor={instructor} />
+                ))}
+              </div>
             </div>
           </div>
         </div>

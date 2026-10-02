@@ -253,11 +253,33 @@ describe('existing-course image initiation', () => {
 
   test('cover with courseId → finds and authorizes course', async () => {
     const deps = createDeps({
-      findCourse: async () => ({ id: MOCK_COURSE_ID, instructorId: 'someone-else' }),
+      findCourse: async () => ({
+        id: MOCK_COURSE_ID,
+        instructorId: 'primary-instructor',
+        instructorIds: ['primary-instructor', 'another-instructor'],
+      }),
     });
     const r = await initiateCourseMediaUpload(instructor, { kind: 'cover', contentType: 'image/png', size: 1024, courseId: MOCK_COURSE_ID }, deps);
     assert.equal(r.ok, false);
     if (!r.ok) assert.equal(r.status, 403);
+  });
+
+  test('assigned co-instructor can initiate an existing-course upload', async () => {
+    const deps = createDeps({
+      findCourse: async () => ({
+        id: MOCK_COURSE_ID,
+        instructorId: 'primary-instructor',
+        instructorIds: ['primary-instructor', instructor.id],
+      }),
+    });
+
+    const result = await initiateCourseMediaUpload(
+      instructor,
+      { kind: 'cover', contentType: 'image/png', size: 1024, courseId: MOCK_COURSE_ID },
+      deps,
+    );
+
+    assert.equal(result.ok, true);
   });
 
   test('course not found → status 404', async () => {

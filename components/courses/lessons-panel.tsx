@@ -744,11 +744,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-0.5 flex-shrink-0 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100">
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 cursor-pointer"
+          className="h-8 w-8 sm:h-6 sm:w-6 cursor-pointer"
           onClick={() => handleTogglePublished(lesson)}
           title={lesson.isPublished ? 'Ocultar aula' : 'Publicar aula'}
         >
@@ -761,7 +761,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 cursor-pointer"
+          className="h-8 w-8 sm:h-6 sm:w-6 cursor-pointer"
           onClick={() => handleEditLesson(lesson)}
         >
           <IconPencil className="h-3.5 w-3.5" />
@@ -769,7 +769,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 text-destructive hover:text-destructive cursor-pointer"
+          className="h-8 w-8 sm:h-6 sm:w-6 text-destructive hover:text-destructive cursor-pointer"
           onClick={() => {
             setLessonToDelete(lesson);
             setDeleteDialogOpen(true);
