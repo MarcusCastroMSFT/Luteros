@@ -22,3 +22,13 @@ export function resolveCourseInstructorIdsForActor(
     ? normalizeCourseInstructorIds(instructorIds, actorId)
     : [actorId]
 }
+
+export function replaceCoursePrimaryInstructor(
+  instructorIds: string[],
+  primaryInstructorId: string,
+): string[] {
+  return [
+    primaryInstructorId,
+    ...instructorIds.slice(1).filter((id) => id !== primaryInstructorId),
+  ]
+}

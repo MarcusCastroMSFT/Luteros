@@ -54,7 +54,10 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
 
         {showInstructor && (
           <span className="text-sm text-gray-600 hover:text-primary transition-colors cursor-pointer">
-            Por {(course.instructors || [course.instructor]).map((instructor) => instructor.name).join(', ')}
+            Por {(course.instructors || [course.instructor])[0]?.name}
+            {course.instructors && course.instructors.length > 1 && (
+              <> · Participação especial: {course.instructors.slice(1).map((instructor) => instructor.name).join(', ')}</>
+            )}
           </span>
         )}
       </div>

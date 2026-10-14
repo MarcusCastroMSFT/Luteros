@@ -260,14 +260,26 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
             {/* Instructors Section */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {course.instructors.length === 1 ? 'Instrutor' : 'Instrutores'}
+                Instrutor
               </h2>
               <div className="space-y-8">
-                {course.instructors.map((instructor) => (
+                {course.instructors.slice(0, 1).map((instructor) => (
                   <InstructorCard key={instructor.id} instructor={instructor} />
                 ))}
               </div>
             </div>
+            {course.instructors.length > 1 && (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Participação especial
+                </h2>
+                <div className="space-y-8">
+                  {course.instructors.slice(1).map((instructor) => (
+                    <InstructorCard key={instructor.id} instructor={instructor} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

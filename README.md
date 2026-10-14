@@ -20,6 +20,20 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Instrutores dos cursos
+
+No formulário de criação ou edição de cursos, administradores podem escolher um
+**instrutor principal** e adicionar outros instrutores em **Participação especial**.
+Os participantes podem ser buscados pelo nome ou usuário e removidos individualmente.
+O instrutor principal não aparece na lista de participantes especiais.
+
+Os vínculos usam a tabela existente `course_instructors`: o primeiro ID é o
+principal e os demais são participações especiais, na ordem de seleção. Não há
+migração nova. Cursos com vários instrutores já cadastrados seguem essa mesma
+ordem. Todos os vinculados mantêm as permissões de gerenciamento existentes;
+somente administradores podem mudar a seleção. A página pública e os cards
+identificam separadamente o principal e as participações especiais.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

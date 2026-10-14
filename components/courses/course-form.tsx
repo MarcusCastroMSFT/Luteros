@@ -863,9 +863,6 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
 
                       {/* Instructors */}
                       <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="instructor" className="flex items-center gap-1">
-                          Instrutores <span className="text-destructive">*</span>
-                        </Label>
                         {loadingInstructors ? (
                           <Skeleton className="h-10 w-full" />
                         ) : (
