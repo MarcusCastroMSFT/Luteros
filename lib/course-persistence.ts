@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
+import { eq, inArray, sql } from 'drizzle-orm'
 import type { db } from './db'
-import { courseInstructors, courses } from './db/schema'
+import { courseInstructors, courses, lessons } from './db/schema'
 
 type CourseDatabase = typeof db
 type NewCourse = typeof courses.$inferInsert
@@ -45,4 +45,20 @@ export async function updateCourseWithInstructors(
         ),
       ])
   return updatedCourses
+}
+
+// Two phases avoid the (courseId, order) unique-index conflict: temporary negative
+// orders first, then the final ones, atomically in a single batch.
+export async function reorderCourseLessons(database: CourseDatabase, lessonIds: string[]) {
+  const setOrder = (orderFor: (index: number) => number) => {
+    const cases = sql.join(
+      lessonIds.map((id, index) => sql`WHEN ${id}::uuid THEN ${orderFor(index)}`),
+      sql` `,
+    )
+    return database.update(lessons)
+      .set({ order: sql`CASE ${lessons.id} ${cases} END` })
+      .where(inArray(lessons.id, lessonIds))
+  }
+
+  await database.batch([setOrder((index) => -(index + 1)), setOrder((index) => index)])
 }

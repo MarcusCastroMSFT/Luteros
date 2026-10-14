@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { events, eventRegistrations, eventSpeakers } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
+import { updateEventWithSpeakers } from '@/lib/event-persistence'
 import { and, asc, eq, sql } from 'drizzle-orm'
 
 interface RouteParams {
@@ -151,50 +152,37 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    const [updatedEvent] = await db.transaction(async (tx) => {
-      const [ev] = await tx
-        .update(events)
-        .set({
-          title: body.title,
-          slug: body.slug || existingEvent.slug,
-          description: body.description,
-          fullDescription: body.fullDescription,
-          location: body.location,
-          eventDate: new Date(body.eventDate),
-          eventTime: body.eventTime,
-          duration: body.duration ? parseInt(body.duration, 10) : null,
-          image: body.image,
-          totalSlots: parseInt(body.totalSlots, 10),
-          cost: body.cost,
-          isFree: body.isFree,
-          isPublished: body.isPublished,
-          isCancelled: body.isCancelled,
-          updatedAt: new Date(),
-        })
-        .where(eq(events.id, id))
-        .returning()
+    const speakerRows = body.speakers === undefined
+      ? undefined
+      : (body.speakers ?? []).map((s: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; website?: string; order?: number }, i: number) => ({
+          eventId: id,
+          name: s.name,
+          title: s.title || null,
+          bio: s.bio || null,
+          image: s.image || null,
+          linkedin: s.linkedin || null,
+          twitter: s.twitter || null,
+          website: s.website || null,
+          order: s.order ?? i + 1,
+        }))
 
-      if (body.speakers !== undefined) {
-        await tx.delete(eventSpeakers).where(eq(eventSpeakers.eventId, id))
-        if (body.speakers && body.speakers.length > 0) {
-          await tx.insert(eventSpeakers).values(
-            body.speakers.map((s: { name: string; title?: string; bio?: string; image?: string; linkedin?: string; twitter?: string; website?: string; order?: number }, i: number) => ({
-              eventId: id,
-              name: s.name,
-              title: s.title || null,
-              bio: s.bio || null,
-              image: s.image || null,
-              linkedin: s.linkedin || null,
-              twitter: s.twitter || null,
-              website: s.website || null,
-              order: s.order ?? i + 1,
-            }))
-          )
-        }
-      }
-
-      return [ev]
-    })
+    const [updatedEvent] = await updateEventWithSpeakers(db, id, {
+      title: body.title,
+      slug: body.slug || existingEvent.slug,
+      description: body.description,
+      fullDescription: body.fullDescription,
+      location: body.location,
+      eventDate: new Date(body.eventDate),
+      eventTime: body.eventTime,
+      duration: body.duration ? parseInt(body.duration, 10) : null,
+      image: body.image,
+      totalSlots: parseInt(body.totalSlots, 10),
+      cost: body.cost,
+      isFree: body.isFree,
+      isPublished: body.isPublished,
+      isCancelled: body.isCancelled,
+      updatedAt: new Date(),
+    }, speakerRows)
 
     revalidateTag('events')
     revalidateTag('events-initial')

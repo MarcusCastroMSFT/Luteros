@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
-import test, { type TestContext } from 'node:test'
-import { neon, neonConfig } from '@neondatabase/serverless'
-import { getTableColumns } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/neon-http'
+import test from 'node:test'
 import * as schema from './db/schema'
-import { createCourseWithInstructors, updateCourseWithInstructors } from './course-persistence'
+import { createNeonHttpMock } from './neon-http-test-utils'
+import {
+  createCourseWithInstructors,
+  reorderCourseLessons,
+  updateCourseWithInstructors,
+} from './course-persistence'
 
 const COURSE_ID = '550e8400-e29b-41d4-a716-446655440000'
 const COURSE = {
@@ -17,37 +19,11 @@ const COURSE = {
   instructorId: 'primary',
 }
 
-type HttpQuery = { query: string; params: unknown[] }
-
-function createMockDatabase(context: TestContext, fail = false) {
-  const requests: HttpQuery[][] = []
-  const originalFetch = neonConfig.fetchFunction
-  context.after(() => { neonConfig.fetchFunction = originalFetch })
-  const mockFetch: typeof fetch = async (_input, init) => {
-    const payload = JSON.parse(String(init?.body))
-    assert.ok(Array.isArray(payload.queries), 'Writes must use a single transactional batch')
-    requests.push(payload.queries)
-    if (fail) {
-      return new Response(JSON.stringify({ message: 'Instructor foreign key violation', code: '23503' }), { status: 400 })
-    }
-    const columns = Object.values(getTableColumns(schema.courses))
-    return new Response(JSON.stringify({
-      results: payload.queries.map((query: HttpQuery) => ({
-        command: query.query.split(' ')[0].toUpperCase(),
-        rowCount: 1,
-        fields: query.query.includes('returning')
-          ? columns.map((column) => ({ name: column.name, dataTypeID: 25 }))
-          : [],
-        rows: query.query.includes('returning')
-          ? [columns.map((column) => column.name === 'id' ? COURSE_ID : column.name === 'title' ? COURSE.title : null)]
-          : [],
-      })),
-    }), { status: 200 })
-  }
-  neonConfig.fetchFunction = mockFetch
-
-  const database = drizzle(neon('postgresql://test:test@database.invalid/test'), { schema })
-  return { database, requests }
+function createMockDatabase(context: Parameters<typeof createNeonHttpMock>[0], fail = false) {
+  return createNeonHttpMock(context, {
+    fail,
+    returning: { table: schema.courses, values: { id: COURSE_ID, title: COURSE.title } },
+  })
 }
 
 test('reproduces the unsupported interactive transaction error without database access', async (context) => {
@@ -99,8 +75,28 @@ test('propagates batch failures instead of reporting a successful course update'
   const { database, requests } = createMockDatabase(context, true)
   await assert.rejects(
     updateCourseWithInstructors(database, COURSE_ID, COURSE, ['primary', 'invalid-guest']),
-    /Instructor foreign key violation/,
+    /Simulated constraint violation/,
   )
   assert.equal(requests.length, 1)
   assert.equal(requests[0].length, 3)
+})
+
+test('reorders lessons with temporary then final positions in one HTTP transaction', async (context) => {
+  const lessonIds = [
+    '770e8400-e29b-41d4-a716-446655440001',
+    '770e8400-e29b-41d4-a716-446655440002',
+  ]
+  const { database, requests } = createMockDatabase(context)
+  await reorderCourseLessons(database, lessonIds)
+  assert.equal(requests.length, 1)
+  const [temporary, final] = requests[0]
+  assert.match(temporary.query, /^update "lessons"/)
+  assert.deepEqual(temporary.params.filter((param) => typeof param === 'number' || /^-?\d+$/.test(String(param))), ['-1', '-2'])
+  assert.deepEqual(final.params.filter((param) => /^\d+$/.test(String(param))), ['0', '1'])
+  assert.ok(lessonIds.every((id) => temporary.params.includes(id) && final.params.includes(id)))
+})
+
+test('propagates lesson reorder failures instead of reporting success', async (context) => {
+  const { database } = createMockDatabase(context, true)
+  await assert.rejects(reorderCourseLessons(database, ['770e8400-e29b-41d4-a716-446655440001']), /Simulated constraint violation/)
 })

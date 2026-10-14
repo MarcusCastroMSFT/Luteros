@@ -3,8 +3,9 @@ import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
 import { courses, lessons } from '@/lib/db/schema'
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import { getCourseInstructorIds } from '@/lib/course-instructors.server'
+import { reorderCourseLessons } from '@/lib/course-persistence'
 
 // PUT reorder lessons
 export async function PUT(
@@ -43,25 +44,8 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Some lessons were not found or do not belong to this course' }, { status: 400 })
     }
 
-    // Two-phase reorder to avoid the (courseId, order) unique-index conflict,
-    // but each phase is a single batched CASE WHEN update instead of N queries.
-    await db.transaction(async (tx) => {
-      const tempCases = sql.join(
-        lessonIds.map((id: string, i: number) => sql`WHEN ${id}::uuid THEN ${-(i + 1)}`),
-        sql` `,
-      )
-      await tx.update(lessons)
-        .set({ order: sql`CASE ${lessons.id} ${tempCases} END` })
-        .where(inArray(lessons.id, lessonIds))
-
-      const finalCases = sql.join(
-        lessonIds.map((id: string, i: number) => sql`WHEN ${id}::uuid THEN ${i}`),
-        sql` `,
-      )
-      await tx.update(lessons)
-        .set({ order: sql`CASE ${lessons.id} ${finalCases} END` })
-        .where(inArray(lessons.id, lessonIds))
-    })
+    // Two-phase reorder to avoid the (courseId, order) unique-index conflict.
+    await reorderCourseLessons(db, lessonIds)
 
     const updatedLessons = await db
       .select({
