@@ -5,12 +5,13 @@ import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
-import { courseInstructors, courses, lessons, users } from '@/lib/db/schema'
+import { courses, lessons, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
 import { promoteOwnedDraftImage } from '@/lib/course-media-promotion.server'
 import { createOwnerFingerprint } from '@/lib/course-media-paths.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { resolveCourseInstructorIdsForActor } from '@/lib/course-instructors'
+import { createCourseWithInstructors } from '@/lib/course-persistence'
 import {
   areValidCourseInstructorIds,
   getCourseInstructorProfiles,
@@ -310,40 +311,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the course and all instructor assignments atomically.
-    const course = await db.transaction(async (tx) => {
-      const [createdCourse] = await tx.insert(courses).values({
-        id: courseId,
-        title,
-        slug,
-        description,
-        shortDescription: shortDescription || null,
-        level: dbLevel,
-        category,
-        language,
-        duration: duration ? parseInt(duration) : null,
-        thumbnail: finalThumbnail,
-        coverImage: finalCoverImage,
-        previewVideo: previewVideo || null,
-        price: price ? String(parseFloat(price)) : null,
-        discountPrice: discountPrice ? String(parseFloat(discountPrice)) : null,
-        isFree,
-        isPublished,
-        publishedAt: isPublished ? new Date() : null,
-        instructorId: finalInstructorId,
-        enrollmentCount: 0,
-        reviewCount: 0,
-      }).returning()
-
-      await tx.insert(courseInstructors).values(
-        finalInstructorIds.map((selectedInstructorId, order) => ({
-          courseId,
-          instructorId: selectedInstructorId,
-          order,
-        }))
-      )
-
-      return createdCourse
-    })
+    const [course] = await createCourseWithInstructors(db, {
+      id: courseId,
+      title,
+      slug,
+      description,
+      shortDescription: shortDescription || null,
+      level: dbLevel,
+      category,
+      language,
+      duration: duration ? parseInt(duration) : null,
+      thumbnail: finalThumbnail,
+      coverImage: finalCoverImage,
+      previewVideo: previewVideo || null,
+      price: price ? String(parseFloat(price)) : null,
+      discountPrice: discountPrice ? String(parseFloat(discountPrice)) : null,
+      isFree,
+      isPublished,
+      publishedAt: isPublished ? new Date() : null,
+      instructorId: finalInstructorId,
+      enrollmentCount: 0,
+      reviewCount: 0,
+    }, finalInstructorIds)
 
     // Invalidate cache so users see the new course immediately
     revalidatePath('/courses')

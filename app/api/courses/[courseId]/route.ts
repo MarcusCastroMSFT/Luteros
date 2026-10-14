@@ -3,7 +3,7 @@ import { revalidatePath, revalidateTag } from '@/lib/cache'
 import { requireAdminOrInstructor } from '@/lib/auth-helpers'
 import { requireCourseManager } from '@/lib/course-access'
 import { db } from '@/lib/db'
-import { courseInstructors, courses, lessons, users } from '@/lib/db/schema'
+import { courses, lessons, users } from '@/lib/db/schema'
 import { submitToIndexNow } from '@/lib/indexnow'
 import { alias } from 'drizzle-orm/pg-core'
 import { eq, sql } from 'drizzle-orm'
@@ -11,6 +11,7 @@ import { validateFinalImageUrl } from '@/lib/course-media-promotion.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { collectCourseMediaReferences, deleteCourseMediaReferences } from '@/lib/course-media-cleanup.server'
 import { normalizeCourseInstructorIds } from '@/lib/course-instructors'
+import { updateCourseWithInstructors } from '@/lib/course-persistence'
 import {
   areValidCourseInstructorIds,
   getCourseInstructorIds,
@@ -212,35 +213,20 @@ export async function PUT(
       courseId,
       references: replacedMedia,
       getStorage: getCourseMediaStorage,
-      mutate: () => db.transaction(async (tx) => {
-        const updatedCourses = await tx.update(courses).set({
-          title, slug, description,
-          shortDescription: shortDescription || null,
-          level: dbLevel, category,
-          language: language || existing.language,
-          duration: duration !== undefined ? duration : existing.duration,
-          thumbnail: thumbnail || null, coverImage: coverImage || null, previewVideo: previewVideo || null,
-          price: price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price,
-          discountPrice: discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice,
-          isFree: isFree !== undefined ? isFree : existing.isFree,
-          isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
-          publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
-          instructorId: finalInstructorIds[0],
-        }).where(eq(courses.id, courseId)).returning()
-
-        if (authResult.role === 'ADMIN') {
-          await tx.delete(courseInstructors).where(eq(courseInstructors.courseId, courseId))
-          await tx.insert(courseInstructors).values(
-            finalInstructorIds.map((selectedInstructorId, order) => ({
-              courseId,
-              instructorId: selectedInstructorId,
-              order,
-            }))
-          )
-        }
-
-        return updatedCourses
-      }),
+      mutate: () => updateCourseWithInstructors(db, courseId, {
+        title, slug, description,
+        shortDescription: shortDescription || null,
+        level: dbLevel, category,
+        language: language || existing.language,
+        duration: duration !== undefined ? duration : existing.duration,
+        thumbnail: thumbnail || null, coverImage: coverImage || null, previewVideo: previewVideo || null,
+        price: price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price,
+        discountPrice: discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice,
+        isFree: isFree !== undefined ? isFree : existing.isFree,
+        isPublished: isPublished !== undefined ? isPublished : existing.isPublished,
+        publishedAt: isPublished && !existing.isPublished ? new Date() : existing.publishedAt,
+        instructorId: finalInstructorIds[0],
+      }, authResult.role === 'ADMIN' ? finalInstructorIds : null),
     })
 
     revalidatePath('/courses')

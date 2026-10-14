@@ -34,6 +34,10 @@ ordem. Todos os vinculados mantêm as permissões de gerenciamento existentes;
 somente administradores podem mudar a seleção. A página pública e os cards
 identificam separadamente o principal e as participações especiais.
 
+A criação e a atualização do curso salvam os dados e os vínculos em um único
+`db.batch`, compatível com o driver Neon HTTP. Se uma consulta falhar, o lote
+inteiro é revertido, evitando salvar o curso sem suas participações.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
