@@ -110,11 +110,11 @@ export async function POST(request: NextRequest) {
     } = body
 
     if (!title || !slug || !excerpt || !content || !category) {
-      return NextResponse.json({ success: false, error: 'Campos obrigatÃ³rios faltando' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Campos obrigatórios faltando' }, { status: 400 })
     }
 
     if (relatedArticleIds && relatedArticleIds.length > 3) {
-      return NextResponse.json({ success: false, error: 'MÃ¡ximo de 3 artigos relacionados permitidos' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Máximo de 3 artigos relacionados permitidos' }, { status: 400 })
     }
 
     const finalAuthorId = authorId || authResult.user.id
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       .then((r) => r[0] ?? null)
 
     if (existing) {
-      return NextResponse.json({ success: false, error: 'JÃ¡ existe um artigo com esse slug' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Já existe um artigo com esse slug' }, { status: 400 })
     }
 
     const [article] = await db.insert(blogArticles).values({

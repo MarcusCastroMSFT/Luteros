@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, connection } from 'next/server';
-import { and, count, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
@@ -64,7 +64,11 @@ export async function GET(request: NextRequest) {
           ? isNotNull(enrollments.completedAt)
           : undefined;
 
-    const whereCondition = and(eq(enrollments.userId, userId), statusCondition);
+    const whereCondition = and(
+      eq(enrollments.userId, userId),
+      or(isNull(enrollments.paymentStatus), eq(enrollments.paymentStatus, 'COMPLETED')),
+      statusCondition,
+    );
 
     const instructors = alias(users, 'instructor');
 

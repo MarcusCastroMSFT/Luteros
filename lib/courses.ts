@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
 import { courses, enrollments, lessons, users } from '@/lib/db/schema'
+import { hasPaidAccess } from '@/lib/payment-status'
 import { sanitizeArticleContent } from '@/lib/article-content.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
 import { resolveCourseImage } from '@/lib/course-image'
@@ -311,7 +312,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
   if (!courseData) return null
 
   const enrollment = await db
-    .select({ id: enrollments.id })
+    .select({ id: enrollments.id, paymentStatus: enrollments.paymentStatus })
     .from(enrollments)
     .where(and(
       eq(enrollments.userId, userId),
@@ -320,7 +321,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
     .limit(1)
     .then((rows) => rows[0] ?? null)
 
-  if (!enrollment) return null
+  if (!enrollment || !hasPaidAccess(enrollment.paymentStatus)) return null
 
   const enrolledLessons = await db
     .select({

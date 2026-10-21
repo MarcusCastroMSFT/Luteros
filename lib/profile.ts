@@ -1,5 +1,5 @@
 import 'server-only'
-import { eq, count, sql } from 'drizzle-orm'
+import { and, eq, count, isNull, or, sql } from 'drizzle-orm'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
 import {
@@ -26,7 +26,7 @@ export async function getCurrentUserProfile(): Promise<UserProfileData | null> {
         completedCount: sql<number>`count(*) filter (where ${enrollments.completedAt} is not null)::int`,
       })
       .from(enrollments)
-      .where(eq(enrollments.userId, userId)),
+      .where(and(eq(enrollments.userId, userId), or(isNull(enrollments.paymentStatus), eq(enrollments.paymentStatus, 'COMPLETED')))),
     db.select({ eventsCount: count() }).from(eventRegistrations).where(eq(eventRegistrations.userId, userId)),
     db.select({ savedCount: count() }).from(blogBookmarks).where(eq(blogBookmarks.userId, userId)),
     db.select({ certsCount: count() }).from(certificates).where(eq(certificates.userId, userId)),

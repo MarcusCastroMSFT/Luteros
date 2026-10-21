@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!title || !slug || !description || !location || !eventDate || !eventTime || !totalSlots) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatÃ³rios faltando' },
+        { success: false, error: 'Campos obrigatórios faltando' },
         { status: 400 }
       )
     }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     if (existingEvent) {
       return NextResponse.json(
-        { success: false, error: 'JÃ¡ existe um evento com esse slug' },
+        { success: false, error: 'Já existe um evento com esse slug' },
         { status: 400 }
       )
     }

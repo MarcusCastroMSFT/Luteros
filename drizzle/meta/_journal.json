@@ -36,6 +36,13 @@
       "when": 1788606799030,
       "tag": "0004_awesome_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792593758100,
+      "tag": "0005_asaas_payments_and_access_ips",
+      "breakpoints": true
     }
   ]
 }

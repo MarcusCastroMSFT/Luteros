@@ -45,6 +45,8 @@ export const users = pgTable('users', {
   displayName: text('displayName'),
   bio: text('bio'),
   phone: text('phone'),
+  cpfCnpj: text('cpfCnpj'),
+  asaasCustomerId: text('asaasCustomerId'),
   dateOfBirth: timestamp('dateOfBirth', { mode: 'date' }),
   title: text('title'),
   company: text('company'),
@@ -427,11 +429,37 @@ export const enrollments = pgTable('enrollments', {
   progressPercent: integer('progressPercent').default(0).notNull(),
   paidAmount: numeric('paidAmount', { precision: 10, scale: 2 }),
   paymentStatus: text('paymentStatus'),
+  asaasPaymentId: text('asaasPaymentId'),
+  paymentUrl: text('paymentUrl'),
+  paidAt: timestamp('paidAt', { mode: 'date' }),
 }, (t) => [
   uniqueIndex('enrollments_userId_courseId_idx').on(t.userId, t.courseId),
   index('enrollments_courseId_idx').on(t.courseId),
   index('enrollments_enrolledAt_idx').on(t.enrolledAt),
   index('enrollments_paymentStatus_idx').on(t.paymentStatus),
+  uniqueIndex('enrollments_asaasPaymentId_idx').on(t.asaasPaymentId),
+])
+
+// Webhook deliveries are at-least-once; the event id makes processing idempotent.
+export const asaasWebhookEvents = pgTable('asaas_webhook_events', {
+  id: text('id').primaryKey(),
+  event: text('event').notNull(),
+  paymentId: text('paymentId'),
+  receivedAt: timestamp('receivedAt', { mode: 'date' }).defaultNow().notNull(),
+})
+
+// Distinct IPs that streamed paid media, used to detect shared accounts.
+export const courseAccessIps = pgTable('course_access_ips', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  courseId: uuid('courseId').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  ipAddress: text('ipAddress').notNull(),
+  userAgent: text('userAgent'),
+  firstSeenAt: timestamp('firstSeenAt', { mode: 'date' }).defaultNow().notNull(),
+  lastSeenAt: timestamp('lastSeenAt', { mode: 'date' }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex('course_access_ips_user_course_ip_idx').on(t.userId, t.courseId, t.ipAddress),
+  index('course_access_ips_user_course_lastSeen_idx').on(t.userId, t.courseId, t.lastSeenAt),
 ])
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────

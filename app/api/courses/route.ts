@@ -114,8 +114,8 @@ export async function GET(request: NextRequest) {
     // Map level from database format to Portuguese
     const levelDisplayMap: Record<string, string> = {
       'BEGINNER': 'Iniciante',
-      'INTERMEDIATE': 'IntermediÃ¡rio',
-      'ADVANCED': 'AvanÃ§ado',
+      'INTERMEDIATE': 'Intermediário',
+      'ADVANCED': 'Avançado',
     }
 
     const transformedCourses = coursesRows.map((course) => {

@@ -38,6 +38,42 @@ A criação e a atualização do curso salvam os dados e os vínculos em um úni
 `db.batch`, compatível com o driver Neon HTTP. Se uma consulta falhar, o lote
 inteiro é revertido, evitando salvar o curso sem suas participações.
 
+## Pagamentos de cursos (Asaas)
+
+Cursos pagos são cobrados pelo [Asaas](https://docs.asaas.com). O botão **Comprar curso**
+cria (ou reaproveita) a inscrição como `PENDING`, cadastra o cliente no Asaas (exige
+CPF/CNPJ, pedido em um diálogo na primeira compra) e redireciona para a fatura
+hospedada do Asaas, onde o aluno escolhe Pix, boleto ou cartão — nenhum dado de
+cartão passa pela aplicação. O valor cobrado é o preço promocional, quando houver.
+
+O acesso (aulas, mídia, progresso e "Meus cursos") só é liberado com
+`paymentStatus = COMPLETED`. O status é confirmado de duas formas: pelo webhook
+`POST /api/webhooks/asaas` e por reconciliação com `GET /payments/{id}` sempre que a
+página do curso consulta uma inscrição pendente. Em ambos os casos o status vem da API
+do Asaas (e não do corpo do webhook), então eventos forjados ou fora de ordem não
+liberam acesso, e reembolsos/chargebacks revogam o acesso.
+
+Variáveis de ambiente:
+
+| Variável | Descrição |
+| --- | --- |
+| `ASAAS_TYPE` | `sandbox` ou `production` (escolhe a URL base da API). |
+| `ASAAS_API_KEY` | Chave de API do ambiente correspondente. Em arquivos `.env*` escape o `$` inicial (`"\$aact_..."`), senão o Next.js o expande como variável e a chave chega vazia. Nas variáveis da Vercel use o valor puro. |
+| `ASAAS_WEBHOOK_TOKEN` | Token (32–255 caracteres, sem espaços) igual ao `authToken` do webhook cadastrado no Asaas; sem ele o endpoint responde 503. |
+| `COURSE_ACCESS_MAX_IPS` | Opcional. Máximo de IPs distintos por aluno/curso em 24 h para tocar mídia paga (padrão `3`; `0` desativa). IPv6 é comparado pelo prefixo /64. Administradores e instrutores são isentos. |
+| `COURSE_MEDIA_BIND_SAS_TO_IP` | Opcional. Com `true`, a URL assinada do vídeo só funciona a partir do IPv4 que a solicitou. Pode quebrar a reprodução em redes que trocam de IP (CGNAT, Wi-Fi ↔ 4G), por isso vem desativado. |
+
+Configuração no painel do Asaas: cadastre o webhook apontando para
+`https://<domínio>/api/webhooks/asaas`, com o mesmo token de `ASAAS_WEBHOOK_TOKEN` e
+os eventos de cobrança (`PAYMENT_*`). A migração `0005` adiciona as colunas/tabelas
+usadas (`pnpm db:migrate`).
+
+Proteção do conteúdo pago: o vídeo é entregue por URL assinada (SAS) de curta duração
+com `Content-Disposition: inline`, o player oculta o botão de download e o menu de
+contexto, e o limite de IPs acima dificulta o compartilhamento de contas. Não é DRM:
+quem consegue assistir ainda pode capturar a tela, e vídeos hospedados em YouTube/Vimeo
+dependem das proteções dessas plataformas.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

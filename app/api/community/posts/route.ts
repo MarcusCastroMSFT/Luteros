@@ -13,8 +13,8 @@ const RATE_LIMIT_MAX_POSTS = 5 // max 5 posts per minute
 // Valid categories (whitelist for security)
 const VALID_CATEGORIES = [
   'Gravidez',
-  'PÃ³s-parto', 
-  'Suporte ContÃ­nuo',
+  'Pós-parto', 
+  'Suporte Contínuo',
   'Paternidade',
   'Fertilidade',
   'Menopausa',
@@ -120,8 +120,8 @@ export async function POST(request: NextRequest) {
     // Author is the current authenticated user — their name/displayName are
     // already on the JWT session, no need for a follow-up SELECT against users.
     const authorName = newPost.isAnonymous
-      ? 'AnÃ´nimo'
-      : (authUser.displayName || authUser.name || 'UsuÃ¡rio')
+      ? 'Anônimo'
+      : (authUser.displayName || authUser.name || 'Usuário')
 
     // Revalidate community cache
     revalidateTag('community')

@@ -57,6 +57,7 @@ interface CourseInfoProps {
   onEnroll?: () => void;
   isEnrolling?: boolean;
   isEnrolled?: boolean;
+  isPaymentPending?: boolean;
   contentSummary: CourseContentSummaryItem[];
 }
 
@@ -67,7 +68,7 @@ const contentSummaryIcons = {
   section: ListTree,
 };
 
-export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false, contentSummary }: CourseInfoProps) {
+export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false, isPaymentPending = false, contentSummary }: CourseInfoProps) {
   const [showVideo, setShowVideo] = useState(false);
   const videoPosters = resolveVideoPosters(course.video, course.coverImage, course.image);
 
@@ -190,13 +191,18 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
               </>
             ) : (
               <>
-                Registrar
+                {isPaymentPending ? 'Concluir pagamento' : course.price > 0 ? 'Comprar curso' : 'Registrar'}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </>
             )}
           </button>
+          {isPaymentPending && !isEnrolled && (
+            <p className="text-sm text-amber-700 text-center">
+              Aguardando a confirmação do pagamento. O acesso é liberado automaticamente assim que for aprovado.
+            </p>
+          )}
         </div>
 
         {/* Course Includes Section */}

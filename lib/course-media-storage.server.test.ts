@@ -656,6 +656,22 @@ describe('courseMediaStorage.createReadUrl', () => {
 
     assert.ok(url.startsWith('https://test.blob.core.windows.net/course-videos/courses/123/lesson-video/xyz.mp4'));
     assert.ok(url.includes('?'));
+    assert.equal(new URL(url).searchParams.get('rscd'), 'inline');
+    assert.equal(new URL(url).searchParams.get('sip'), null);
+  });
+
+  test('binds the SAS to a single IP when requested', async () => {
+    const storage = createCourseMediaStorage(
+      createFakeClient() as unknown as BlobServiceClient,
+      'https://test.blob.core.windows.net',
+      () => new Date('2026-08-31T12:00:00Z'),
+    );
+
+    const url = await storage.createReadUrl('course-videos', 'courses/123/lesson-video/xyz.mp4', {
+      ipAddress: '200.10.20.30',
+    });
+
+    assert.equal(new URL(url).searchParams.get('sip'), '200.10.20.30');
   });
 });
 

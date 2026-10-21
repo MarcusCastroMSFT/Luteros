@@ -37,6 +37,11 @@ export type PromoteResult =
   | { ok: true }
   | { ok: false; error: string };
 
+export interface ReadUrlOptions {
+  // Restricts the SAS to a single IPv4 address (Azure SAS "sip").
+  ipAddress?: string;
+}
+
 export interface CourseMediaStorage {
   createUploadGrant(containerName: string, blobName: string): Promise<UploadGrant>;
   inspect(containerName: string, blobName: string): Promise<BlobInspection>;
@@ -51,7 +56,7 @@ export interface CourseMediaStorage {
     ref: ParsedCourseMediaReference,
     expectedCourseId: string,
   ): Promise<void>;
-  createReadUrl(containerName: string, blobName: string): Promise<string>;
+  createReadUrl(containerName: string, blobName: string, options?: ReadUrlOptions): Promise<string>;
 }
 
 export function createCourseMediaStorage(
@@ -64,6 +69,7 @@ export function createCourseMediaStorage(
     blobName: string,
     permissions: 'cw' | 'r',
     now: Date,
+    readOptions: ReadUrlOptions = {},
   ): Promise<{ sasUrl: string; expiresAt: Date }> {
     requireCourseMediaContainer(containerName);
     const policy = permissions === 'cw'
@@ -83,6 +89,10 @@ export function createCourseMediaStorage(
         protocol: SASProtocol.Https,
         startsOn: policy.startsOn,
         expiresOn: policy.expiresOn,
+        ...(permissions === 'r' ? { contentDisposition: 'inline' } : {}),
+        ...(readOptions.ipAddress
+          ? { ipRange: { start: readOptions.ipAddress } }
+          : {}),
       },
       userDelegationKey,
       client.accountName,
@@ -226,9 +236,9 @@ export function createCourseMediaStorage(
       await blobClient.deleteIfExists();
     },
 
-    async createReadUrl(containerName: string, blobName: string): Promise<string> {
+    async createReadUrl(containerName: string, blobName: string, options?: ReadUrlOptions): Promise<string> {
       const now = getNow();
-      const { sasUrl } = await generateSasUrl(containerName, blobName, 'r', now);
+      const { sasUrl } = await generateSasUrl(containerName, blobName, 'r', now, options);
       return sasUrl;
     },
   };

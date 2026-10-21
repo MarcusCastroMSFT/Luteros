@@ -3,6 +3,7 @@ import { and, count, eq } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { courseProgress, enrollments, lessonProgress, lessons } from '@/lib/db/schema';
+import { hasPaidAccess } from '@/lib/payment-status';
 
 // POST - Mark lesson as complete/incomplete
 export async function POST(
@@ -23,12 +24,12 @@ export async function POST(
     if (typeof isCompleted !== 'boolean') return NextResponse.json({ success: false, error: 'Campo isCompleted é obrigatório' }, { status: 400 });
 
     const [enrollment, lesson, [{ total }]] = await Promise.all([
-      db.select({ id: enrollments.id }).from(enrollments).where(and(eq(enrollments.userId, authUser.id), eq(enrollments.courseId, courseId))).limit(1).then((r) => r[0] ?? null),
+      db.select({ id: enrollments.id, paymentStatus: enrollments.paymentStatus }).from(enrollments).where(and(eq(enrollments.userId, authUser.id), eq(enrollments.courseId, courseId))).limit(1).then((r) => r[0] ?? null),
       db.select({ id: lessons.id }).from(lessons).where(and(eq(lessons.id, lessonId), eq(lessons.courseId, courseId), eq(lessons.isPublished, true))).limit(1).then((r) => r[0] ?? null),
       db.select({ total: count() }).from(lessons).where(and(eq(lessons.courseId, courseId), eq(lessons.isPublished, true))),
     ]);
 
-    if (!enrollment) return NextResponse.json({ success: false, error: 'Você não está inscrito neste curso' }, { status: 403 });
+    if (!enrollment || !hasPaidAccess(enrollment.paymentStatus)) return NextResponse.json({ success: false, error: 'Você não está inscrito neste curso' }, { status: 403 });
     if (!lesson) return NextResponse.json({ success: false, error: 'Aula não encontrada' }, { status: 404 });
 
     const totalLessons = Number(total);

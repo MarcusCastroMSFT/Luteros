@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/pageHeader';
 import { CourseInfo } from '@/components/courses/courseInfo';
+import { CpfDialog } from '@/components/courses/cpf-dialog';
 import { Star, Clock, BookOpen, Globe } from 'lucide-react';
 import { type Course as CourseType } from '@/lib/courses';
 import { summarizeCourseContent } from '@/lib/course-content-summary';
@@ -54,21 +55,29 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
   const router = useRouter();
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isPaymentPending, setIsPaymentPending] = useState(false);
+  const [showCpfDialog, setShowCpfDialog] = useState(false);
 
-  // Check enrollment status on mount with AbortController for cleanup
+  // Check enrollment status on mount (and keep polling while a payment is pending)
   useEffect(() => {
     const abortController = new AbortController();
-    
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
+
     async function checkEnrollment() {
       try {
         const response = await fetch(`/api/courses/${course.id}/enroll`, {
           signal: abortController.signal,
         });
         if (!response.ok) return;
-        
+
         const data = await response.json();
-        if (data.success && data.isEnrolled) {
-          setIsEnrolled(true);
+        if (!data.success) return;
+
+        setIsEnrolled(!!data.isEnrolled);
+        setIsPaymentPending(!!data.isPaymentPending);
+
+        if (data.isPaymentPending) {
+          pollTimer = setTimeout(checkEnrollment, 5000);
         }
       } catch (error) {
         // Ignore abort errors
@@ -76,10 +85,13 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         console.error('Error checking enrollment:', error);
       }
     }
-    
+
     checkEnrollment();
-    
-    return () => abortController.abort();
+
+    return () => {
+      abortController.abort();
+      if (pollTimer) clearTimeout(pollTimer);
+    };
   }, [course.id]);
 
   // Transform lessons into sections
@@ -119,13 +131,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     return result;
   }, [lessons]);
 
-  const handleEnroll = useCallback(async () => {
-    if (isEnrolled) {
-      // Already enrolled, navigate to course lessons
-      router.push(`/courses/${slug}/lessons`);
-      return;
-    }
-
+  const startEnrollment = useCallback(async (cpfCnpj?: string) => {
     if (isEnrolling) return; // Prevent double-clicks
 
     setIsEnrolling(true);
@@ -135,6 +141,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(cpfCnpj ? { cpfCnpj } : {}),
       });
 
       const data = await response.json();
@@ -145,13 +152,26 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
           router.push('/login?redirect=' + encodeURIComponent(`/courses/${slug}`));
           return;
         }
+        if (data.code === 'CPF_REQUIRED' || data.code === 'CPF_INVALID') {
+          if (data.code === 'CPF_INVALID') toast.error(data.error);
+          setShowCpfDialog(true);
+          return;
+        }
         toast.error(data.error || 'Erro ao se inscrever no curso');
+        return;
+      }
+
+      if (data.requiresPayment && data.checkoutUrl) {
+        setShowCpfDialog(false);
+        setIsPaymentPending(true);
+        toast.success(data.message || 'Redirecionando para o pagamento...');
+        window.location.assign(data.checkoutUrl);
         return;
       }
 
       toast.success(data.message || 'Você foi inscrito no curso com sucesso!');
       setIsEnrolled(true);
-      
+
       // Redirect to course lessons after successful enrollment
       router.push(`/courses/${slug}/lessons`);
     } catch (error) {
@@ -160,7 +180,17 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     } finally {
       setIsEnrolling(false);
     }
-  }, [isEnrolled, isEnrolling, course.id, slug, router]);
+  }, [isEnrolling, course.id, slug, router]);
+
+  const handleEnroll = useCallback(() => {
+    if (isEnrolled) {
+      // Already enrolled, navigate to course lessons
+      router.push(`/courses/${slug}/lessons`);
+      return;
+    }
+
+    return startEnrollment();
+  }, [isEnrolled, slug, router, startEnrollment]);
 
   // Create a course-like object for CourseInfo component - memoized to prevent re-renders
   const courseForInfo = useMemo(() => ({
@@ -196,7 +226,14 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                 onEnroll={handleEnroll}
                 isEnrolling={isEnrolling}
                 isEnrolled={isEnrolled}
+                isPaymentPending={isPaymentPending}
                 contentSummary={contentSummary}
+              />
+              <CpfDialog
+                open={showCpfDialog}
+                isSubmitting={isEnrolling}
+                onOpenChange={setShowCpfDialog}
+                onSubmit={startEnrollment}
               />
             </div>
           </div>

@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!title || !slug || !description || !shortDescription || !partnerId || !promoCode || !category) {
       return NextResponse.json(
-        { success: false, error: 'Campos obrigatÃ³rios faltando: tÃ­tulo, slug, descriÃ§Ã£o, descriÃ§Ã£o curta, parceiro, cÃ³digo promocional e categoria sÃ£o obrigatÃ³rios' },
+        { success: false, error: 'Campos obrigatórios faltando: título, slug, descrição, descrição curta, parceiro, código promocional e categoria são obrigatórios' },
         { status: 400 }
       );
     }
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
 
     if (existingProduct) {
       return NextResponse.json(
-        { success: false, error: 'JÃ¡ existe um produto com este slug' },
+        { success: false, error: 'Já existe um produto com este slug' },
         { status: 400 }
       );
     }
@@ -281,7 +281,7 @@ export async function POST(request: NextRequest) {
 
     if (!partner) {
       return NextResponse.json(
-        { success: false, error: 'Parceiro nÃ£o encontrado' },
+        { success: false, error: 'Parceiro não encontrado' },
         { status: 400 }
       );
     }

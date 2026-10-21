@@ -370,3 +370,108 @@ test('never logs SAS URL on success', async () => {
   assert.ok(!logs.some(log => log.includes('sasToken')));
   assert.ok(!logs.some(log => log.includes('storage.example.com')));
 });
+
+const COURSE_ID = '550e8400-e29b-41d4-a716-446655440000';
+const LESSON_ID = '660e8400-e29b-41d4-a716-446655440001';
+
+function paidLessonEnrollment(paymentStatus: string | null) {
+  return async () => ({
+    courseId: COURSE_ID,
+    lessonId: LESSON_ID,
+    lessonType: 'video' as const,
+    videoUrl: `courses/${COURSE_ID}/lesson-video/123e4567-e89b-42d3-a456-426614174000.mp4`,
+    videoProvider: 'azure',
+    enrollmentId: 'enrollment-1',
+    expiresAt: null,
+    paymentStatus,
+  });
+}
+
+test('denies playback while the payment is unpaid, overdue or refunded', async () => {
+  for (const status of ['PENDING', 'OVERDUE', 'REFUNDED', 'CANCELLED']) {
+    let readUrlCalls = 0;
+    const storage = createMockStorage();
+    storage.createReadUrl = async () => {
+      readUrlCalls += 1;
+      return '';
+    };
+    const service = createCourseMediaPlaybackService({
+      getAuthUser: async () => createMockUser(),
+      queryEnrollment: paidLessonEnrollment(status),
+      storage,
+    });
+
+    const result = await service.authorizePlayback(COURSE_ID, LESSON_ID);
+    assert.equal(result.status, 403, status);
+    assert.equal(result.error, 'Payment required');
+    assert.equal(readUrlCalls, 0);
+  }
+});
+
+test('allows playback once the payment is completed', async () => {
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser(),
+    queryEnrollment: paidLessonEnrollment('COMPLETED'),
+    storage: createMockStorage(),
+  });
+
+  const result = await service.authorizePlayback(COURSE_ID, LESSON_ID);
+  assert.equal(result.status, 200);
+});
+
+test('denies playback when the account exceeded its IP budget', async () => {
+  let readUrlCalls = 0;
+  const storage = createMockStorage();
+  storage.createReadUrl = async () => {
+    readUrlCalls += 1;
+    return '';
+  };
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser(),
+    queryEnrollment: paidLessonEnrollment('COMPLETED'),
+    storage,
+    registerAccess: async () => ({ allowed: false }),
+  });
+
+  const result = await service.authorizePlayback(COURSE_ID, LESSON_ID);
+  assert.equal(result.status, 403);
+  assert.equal(result.error, 'Access limit reached');
+  assert.equal(readUrlCalls, 0);
+});
+
+test('instructors and admins skip the IP budget', async () => {
+  let registerCalls = 0;
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser({ role: 'INSTRUCTOR' }),
+    queryEnrollment: paidLessonEnrollment('COMPLETED'),
+    storage: createMockStorage(),
+    registerAccess: async () => {
+      registerCalls += 1;
+      return { allowed: false };
+    },
+  });
+
+  const result = await service.authorizePlayback(COURSE_ID, LESSON_ID);
+  assert.equal(result.status, 200);
+  assert.equal(registerCalls, 0);
+});
+
+test('binds the media URL to the requester IP only when asked', async () => {
+  const seen: Array<{ ipAddress?: string } | undefined> = [];
+  const storage = createMockStorage();
+  storage.createReadUrl = async (_container, _blob, options) => {
+    seen.push(options);
+    return 'https://storage.example.com/blob?sas';
+  };
+  const service = createCourseMediaPlaybackService({
+    getAuthUser: async () => createMockUser(),
+    queryEnrollment: paidLessonEnrollment('COMPLETED'),
+    storage,
+  });
+
+  await service.authorizePlayback(COURSE_ID, LESSON_ID);
+  await service.authorizePlayback(COURSE_ID, LESSON_ID, { bindToIp: '200.10.20.30' });
+
+  assert.equal(seen[0], undefined);
+  assert.deepEqual(seen[1], { ipAddress: '200.10.20.30' });
+});
