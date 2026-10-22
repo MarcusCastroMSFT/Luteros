@@ -7,6 +7,7 @@ import { courses, lessons } from '@/lib/db/schema'
 import { asc, eq, sql } from 'drizzle-orm'
 import { getCourseInstructorIds } from '@/lib/course-instructors.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
+import { lessonReferencesSchema, resolveLessonReferences } from '@/lib/lesson-references'
 
 export async function GET(
   request: NextRequest,
@@ -42,6 +43,7 @@ export async function GET(
         type: lessons.type,
         description: lessons.description,
         content: lessons.content,
+        references: lessons.references,
         videoUrl: lessons.videoUrl,
         videoProvider: lessons.videoProvider,
         duration: lessons.duration,
@@ -120,6 +122,14 @@ export async function POST(
       isFree = false,
     } = body
 
+    const references = lessonReferencesSchema.safeParse(body.references)
+    if (!references.success) {
+      return NextResponse.json(
+        { success: false, error: 'As referências devem ser um texto.' },
+        { status: 400 }
+      )
+    }
+
     if (!title?.trim()) {
       return NextResponse.json(
         { success: false, error: 'Title is required' },
@@ -142,6 +152,7 @@ export async function POST(
         type,
         description: description?.trim() || null,
         content: content || null,
+        references: resolveLessonReferences(type, references.data),
         videoUrl: videoUrl?.trim() || null,
         videoProvider: videoProvider || null,
         duration: resolveLessonDuration({
@@ -174,4 +185,3 @@ export async function POST(
     )
   }
 }
-

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getArticles } from '@/lib/articles'
+import { CATALOG_PAGE_SIZE } from '@/lib/catalog-pagination'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '12')))
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || String(CATALOG_PAGE_SIZE))))
   const category = searchParams.get('category') || undefined
   const search = searchParams.get('search') || undefined
 

@@ -5,6 +5,8 @@ import { getCourseBySlug, getCourseMetadata } from '@/lib/courses';
 import { CourseDetailClient } from './course-detail-client';
 import { CourseDetailSkeleton } from '@/components/courses/courseDetailSkeleton';
 import { JsonLd } from '@/components/seo/json-ld';
+import { COURSE_SOCIAL_IMAGE } from '@/lib/social-images';
+import { resolveCourseImage } from '@/lib/course-image';
 
 interface CoursePageProps {
   params: Promise<{
@@ -18,9 +20,7 @@ function generateCourseJsonLd(course: Awaited<ReturnType<typeof getCourseBySlug>
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const courseUrl = `${baseUrl}/courses/${slug}`;
-  const imageUrl = course.course.image?.startsWith('http') 
-    ? course.course.image 
-    : `${baseUrl}${course.course.image || course.course.coverImage}`;
+  const imageUrl = new URL(resolveCourseImage(course.course.image, course.course.coverImage) || COURSE_SOCIAL_IMAGE.url, baseUrl).href;
 
   // Parse duration to ISO 8601 format (e.g., "PT5H30M")
   const parseDuration = (duration: string) => {
@@ -99,9 +99,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const courseUrl = `${baseUrl}/courses/${slug}`;
-  const imageUrl = metadata.image?.startsWith('http') 
-    ? metadata.image 
-    : `${baseUrl}${metadata.image}`;
+  const imageUrl = new URL(metadata.image?.trim() || COURSE_SOCIAL_IMAGE.url, baseUrl).href;
   
   return {
     title: `${metadata.title} | Cursos`,
@@ -116,12 +114,12 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
       description: metadata.description || '',
       url: courseUrl,
       siteName: 'lutteros',
-      images: metadata.image ? [{ 
+      images: [{
         url: imageUrl,
         width: 1200,
         height: 630,
         alt: metadata.title,
-      }] : [],
+      }],
       type: 'website',
       locale: 'pt_BR',
     },
@@ -129,7 +127,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
       card: 'summary_large_image',
       title: `${metadata.title} | lutteros`,
       description: metadata.description || '',
-      images: metadata.image ? [imageUrl] : [],
+      images: [imageUrl],
     },
     robots: {
       index: true,
@@ -164,7 +162,7 @@ async function CourseContentWrapper({ slug }: { slug: string }) {
         description: c.description,
         thumbnailUrl: videoThumb
           ? [videoThumb.startsWith('http') ? videoThumb : `${baseUrl}${videoThumb}`]
-          : [`${baseUrl}/images/og-image.png`],
+          : [`${baseUrl}${COURSE_SOCIAL_IMAGE.url}`],
         uploadDate: c.publishedAt,
         embedUrl: c.previewVideo,
         contentUrl: c.previewVideo,
@@ -202,7 +200,7 @@ async function CourseContentWrapper({ slug }: { slug: string }) {
   };
   const lessonThumb = videoThumb
     ? videoThumb.startsWith('http') ? videoThumb : `${baseUrl}${videoThumb}`
-    : `${baseUrl}/images/og-image.png`;
+    : `${baseUrl}${COURSE_SOCIAL_IMAGE.url}`;
 
   for (const lesson of courseData.lessons) {
     if (lesson.type !== 'video' || !lesson.isFree || !lesson.videoUrl || !c.publishedAt) continue;

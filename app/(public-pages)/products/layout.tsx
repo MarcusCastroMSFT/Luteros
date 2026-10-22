@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images';
 
 export const metadata: Metadata = {
   title: 'Produtos e Descontos Exclusivos | lutteros',
@@ -14,12 +15,14 @@ export const metadata: Metadata = {
     'benefícios membros'
   ],
   openGraph: {
+    images: [DEFAULT_SOCIAL_IMAGE],
     title: 'Produtos e Descontos Exclusivos | lutteros',
     description: 'Descontos especiais em produtos e serviços para mães, pais e famílias. Ofertas exclusivas para membros!',
     type: 'website',
     locale: 'pt_BR',
   },
   twitter: {
+    images: [DEFAULT_SOCIAL_IMAGE.url],
     card: 'summary_large_image',
     title: 'Produtos e Descontos Exclusivos | lutteros',
     description: 'Descontos especiais em produtos e serviços para mães, pais e famílias. Ofertas exclusivas para membros!',

@@ -108,6 +108,7 @@ interface Lesson {
   type: 'video' | 'article' | 'audio';
   description: string | null;
   content: string | null;
+  references: string | null;
   videoUrl: string | null;
   videoProvider: string | null;
   duration: number | null;
@@ -129,6 +130,7 @@ interface LessonFormData {
   type: 'video' | 'article' | 'audio';
   description: string;
   content: string;
+  references: string;
   videoUrl: string;
   videoProvider: string;
   duration: string;
@@ -142,6 +144,7 @@ const emptyFormData: LessonFormData = {
   type: 'video',
   description: '',
   content: '',
+  references: '',
   videoUrl: '',
   videoProvider: 'youtube',
   duration: '',
@@ -345,6 +348,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       type: lesson.type || 'video',
       description: lesson.description || '',
       content: lesson.content || '',
+      references: lesson.references || '',
       videoUrl: lesson.videoUrl || '',
       videoProvider: lesson.videoProvider === 'azure' ? 'upload' : (lesson.videoProvider || 'youtube'),
       duration: lesson.duration?.toString() || '',
@@ -464,6 +468,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
         type: formData.type,
         description: formData.description.trim() || null,
         content: formData.type === 'article' ? formData.content : null,
+        references: formData.type === 'article' ? formData.references : null,
         videoUrl: formData.type === 'video' || formData.type === 'audio'
           ? (formData.videoUrl.trim() || null)
           : null,
@@ -1321,16 +1326,32 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
 
             {/* Article Content - only show for article type */}
             {formData.type === 'article' && (
-              <div className="space-y-2">
-                <Label>Conteúdo do Artigo</Label>
-                <div className="border rounded-md overflow-hidden">
-                  <RichTextEditor
-                    initialValue={formData.content}
-                    onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
-                    placeholder="Escreva o conteúdo do artigo..."
-                  />
+              <>
+                <div className="space-y-2">
+                  <Label>Conteúdo do Artigo</Label>
+                  <div className="border rounded-md overflow-hidden">
+                    <RichTextEditor
+                      initialValue={formData.content}
+                      onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                      placeholder="Escreva o conteúdo do artigo..."
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <Label>Referências</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Bibliografia, links e fontes citadas no artigo. Aparecerá em uma seção colapsável após o conteúdo.
+                  </p>
+                  <div className="border rounded-md overflow-hidden">
+                    <RichTextEditor
+                      initialValue={formData.references}
+                      onChange={(value) => setFormData(prev => ({ ...prev, references: value }))}
+                      placeholder="Liste aqui as referências utilizadas no artigo..."
+                      autoFocus={false}
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Audio Content - only show for audio type */}

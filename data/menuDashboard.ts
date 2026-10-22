@@ -20,6 +20,7 @@ export interface SidebarDocument {
   name: string;
   url: string;
   icon: string;
+  adminOnly?: boolean;
 }
 
 export interface SidebarData {
@@ -136,6 +137,12 @@ export const sidebarData: SidebarData = {
     },
   ],
   documents: [
+    {
+      name: "Mensagens de contato",
+      url: "/admin/contact",
+      icon: "IconMail",
+      adminOnly: true,
+    },
     {
       name: "Usuários",
       url: "/admin/users",

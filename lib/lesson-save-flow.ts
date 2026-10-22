@@ -8,6 +8,7 @@ export interface LessonSavePayload {
   type: 'video' | 'article' | 'audio';
   description: string | null;
   content: string | null;
+  references?: string | null;
   videoUrl: string | null;
   videoProvider: string | null;
   duration: number | null;

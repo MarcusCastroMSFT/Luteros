@@ -25,6 +25,7 @@ interface RawLesson {
   isFree: boolean;
   type: 'video' | 'article' | 'audio';
   content: string | null;
+  references: string | null;
   videoUrl: string | null;
   videoProvider: string | null;
 }
@@ -61,6 +62,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         isPreview: lesson.isFree,
         order: lesson.order,
         content: lesson.content || undefined,
+        references: lesson.references || undefined,
         videoUrl,
         videoProvider: lesson.videoProvider || undefined,
       });

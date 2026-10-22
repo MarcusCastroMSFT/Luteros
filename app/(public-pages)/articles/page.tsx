@@ -1,23 +1,24 @@
 import { Metadata } from 'next'
 import { getArticles } from '@/lib/articles'
-import ArticleCard from '@/components/blog/articleCard'
 import { CategoryFilter } from '@/components/blog/categoryFilter'
-import { Pagination } from '@/components/common/pagination'
+import { CatalogList } from '@/components/common/catalog-list'
+import { CATALOG_PAGE_SIZE } from '@/lib/catalog-pagination'
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
 import { EmptyState } from '@/components/common/empty-state'
 import { PageHeader } from '@/components/common/pageHeader'
-
-const ARTICLES_PER_PAGE = 12
 
 export const metadata: Metadata = {
   title: 'Artigos',
   description: 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar. Dicas de especialistas e informações confiáveis.',
   keywords: ['artigos', 'saúde sexual', 'educação sexual', 'bem-estar', 'saúde íntima'],
   openGraph: {
+    images: [DEFAULT_SOCIAL_IMAGE],
     title: 'Artigos | lutteros',
     description: 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.',
     type: 'website',
   },
   twitter: {
+    images: [DEFAULT_SOCIAL_IMAGE.url],
     card: 'summary_large_image',
     title: 'Artigos | lutteros',
     description: 'Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar.',
@@ -32,9 +33,8 @@ interface ArticlesPageProps {
 }
 
 async function ArticlesContent({ page, category }: { page: number; category: string }) {
-  const data = await getArticles(page, ARTICLES_PER_PAGE, category === 'Todos' ? undefined : category)
+  const data = await getArticles(page, CATALOG_PAGE_SIZE, category === 'Todos' ? undefined : category)
   const { articles, pagination, categories } = data
-  const categoryParam = category !== 'Todos' ? category : undefined
 
   return (
     <>
@@ -56,24 +56,11 @@ async function ArticlesContent({ page, category }: { page: number; category: str
 
       {/* Articles Grid */}
       {articles.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {articles.map((article, i) => (
-              <ArticleCard key={article.id} article={article} priority={i < 3} />
-            ))}
-          </div>
-
-          {pagination.totalPages > 1 && (
-            <div className="mt-12">
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                basePath="/articles"
-                queryParams={{ category: categoryParam }}
-              />
-            </div>
-          )}
-        </>
+        <CatalogList
+          key={`${category}-${page}`}
+          initialPage={{ kind: 'articles', items: articles, pagination }}
+          category={category}
+        />
       ) : (
         <EmptyState
           variant={category !== 'Todos' ? 'search' : 'articles'}
@@ -98,6 +85,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   return (
     <div className="min-h-screen">
       <PageHeader
+        illustration="articles"
         title="Artigos"
         description="Artigos e conteúdos gratuitos sobre educação sexual e saúde íntima para seu bem-estar."
         breadcrumbs={[
@@ -106,7 +94,7 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
         ]}
       />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1428px] py-8 md:py-16">
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
         {/* Rendered directly (not streamed) so the LCP article image is present
             in the initial HTML with its high-priority preload. */}
         <ArticlesContent page={page} category={category} />

@@ -58,6 +58,7 @@ interface ServerSideDataTableProps<TData, TValue> {
   totalCount: number
   pageCount: number
   loading?: boolean
+  emptyMessage?: string
   
   // Search
   searchKey?: string
@@ -93,6 +94,7 @@ export function ServerSideDataTable<TData, TValue>({
   totalCount,
   pageCount,
   loading = false,
+  emptyMessage = "No results.",
   searchKey,
   searchPlaceholder = "Search...",
   searchValue = "",
@@ -331,7 +333,7 @@ export function ServerSideDataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    {emptyMessage}
                   </TableCell>
                 </TableRow>
               )}

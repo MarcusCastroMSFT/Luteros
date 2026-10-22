@@ -12,6 +12,7 @@ interface SidebarUser {
   fullName?: string | null;
   displayName?: string | null;
   avatar?: string | null;
+  role?: string;
 }
 
 interface Props {

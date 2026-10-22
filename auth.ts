@@ -65,6 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger }) {
       if (user) {
+        if (!user.id) throw new Error('Authenticated user is missing an id')
         token.id = user.id
         token.role = (user as typeof users.$inferSelect).role
         token.displayName = (user as typeof users.$inferSelect).displayName

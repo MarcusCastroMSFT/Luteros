@@ -26,6 +26,7 @@ export interface Lesson {
   isPreview?: boolean;
   order: number;
   content?: string;
+  references?: string;
   videoUrl?: string; // Optional video URL for video lessons
   videoProvider?: string;
 }

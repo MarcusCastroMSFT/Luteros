@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   ArrowRight,
   BookOpen,
-  CalendarDays,
   ChevronDown,
   ChevronRight,
   CircleHelp,
@@ -32,7 +31,6 @@ import { cn } from "@/lib/utils"
 const ICONS: Record<NavIconKey, LucideIcon> = {
   courses: BookOpen,
   articles: Newspaper,
-  events: CalendarDays,
   products: ShoppingBag,
   about: Info,
   contact: Mail,

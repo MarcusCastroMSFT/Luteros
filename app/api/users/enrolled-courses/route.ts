@@ -3,7 +3,7 @@ import { and, count, desc, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
-import { resolveCourseImage } from '@/lib/course-image';
+import { COURSE_PLACEHOLDER_IMAGE, resolveCourseImage } from '@/lib/course-image';
 import { courses, courseProgress, enrollments, users } from '@/lib/db/schema';
 
 // Type for enrolled course with progress (API response)
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
           slug: row.courseSlug,
           title: row.courseTitle,
           shortDescription: row.courseShortDescription || '',
-          thumbnail: resolveCourseImage(row.courseThumbnail, row.courseCoverImage) || '/images/course-placeholder.svg',
+          thumbnail: resolveCourseImage(row.courseThumbnail, row.courseCoverImage) || COURSE_PLACEHOLDER_IMAGE,
           category: row.courseCategory,
           level: row.courseLevel,
           duration: formatDuration(row.courseDuration),

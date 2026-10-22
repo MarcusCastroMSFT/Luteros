@@ -205,6 +205,7 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
             uploadFolder="avatars"
             allowUrl={false}
             allowRemove={false}
+            showOptimizationDetails={false}
           />
         </DialogContent>
       </Dialog>
@@ -316,8 +317,6 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <InfoRow label="Idioma" value={profile.language === 'pt' ? 'Português' : profile.language === 'en' ? 'English' : profile.language} />
-            <InfoRow label="Fuso Horário" value={profile.timezone} />
             <div className="flex justify-between items-center py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500">Notificações por Email</span>
               <Badge variant={profile.emailNotifications ? 'default' : 'secondary'}>

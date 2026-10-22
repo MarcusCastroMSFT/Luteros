@@ -1,7 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, User, FileText } from 'lucide-react';
+import { Calendar, User } from 'lucide-react';
+import { BrandIcon } from '@/components/brand/brand-icon';
 import { ArticleCardProps } from '@/types/blog';
 import { ArticleAccessBadge, ArticleAudienceBadge } from './article-access-badges';
 
@@ -28,9 +29,8 @@ export default function ArticleCard({ article, priority = false }: ArticleCardPr
               loading={priority ? undefined : 'lazy'}
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-50 via-brand-100 to-brand-secondary-50 flex flex-col items-center justify-center transition-transform duration-700 group-hover:scale-105">
-              <FileText className="w-12 h-12 md:w-16 md:h-16 text-amber-400/60 mb-2" strokeWidth={1.5} />
-              <span className="text-xs md:text-sm text-amber-600/60 font-medium">Artigo</span>
+            <div className="absolute inset-0 flex items-center justify-center bg-[#eee5ec]/60">
+              <BrandIcon kind="articles" className="size-32 md:size-40" />
             </div>
           )}
 

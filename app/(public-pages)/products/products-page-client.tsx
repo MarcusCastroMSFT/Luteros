@@ -89,7 +89,7 @@ export function ProductsPageClient({
   ].filter(Boolean).length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+    <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
       {/* Mobile Filter Bar */}
       <div className="md:hidden mb-4">
         <div className="flex gap-2">
@@ -98,16 +98,17 @@ export function ProductsPageClient({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <Input
               placeholder="Buscar produtos..."
+              aria-label="Buscar produtos"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9 h-10 text-sm"
+              className="h-12 border-brand-600/25 bg-background pl-9 text-base"
             />
           </div>
 
           {/* Filter Button with Badge */}
           <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10 px-3 relative">
+              <Button aria-label="Abrir filtros" variant="outline" size="sm" className="relative h-12 border-brand-600/25 bg-background px-4 text-brand-700">
                 <SlidersHorizontal size={18} />
                 {activeFilterCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-600 text-white text-xs rounded-full flex items-center justify-center">
@@ -213,7 +214,7 @@ export function ProductsPageClient({
       </div>
 
       {/* Desktop Filters */}
-      <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+      <div className="mb-10 hidden rounded-[12px_32px_12px_12px] border border-brand-600/15 bg-[#e4eeeb]/40 p-6 md:block">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -221,9 +222,10 @@ export function ProductsPageClient({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <Input
                 placeholder="Buscar produtos, marcas ou categorias..."
+                aria-label="Buscar produtos, marcas ou categorias"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-10"
+                className="h-12 border-brand-600/25 bg-background pl-10"
               />
             </div>
           </div>
@@ -233,7 +235,8 @@ export function ProductsPageClient({
             <select
               value={activeFilters.category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              aria-label="Categoria"
+              className="h-12 w-full cursor-pointer rounded-md border border-brand-600/25 bg-background px-3 py-2 text-brand-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500"
             >
               <option value="">Todas as categorias</option>
               {categories.map((category) => (
@@ -249,7 +252,8 @@ export function ProductsPageClient({
             <select
               value={activeFilters.availability}
               onChange={(e) => setAvailability(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              aria-label="Disponibilidade"
+              className="h-12 w-full cursor-pointer rounded-md border border-brand-600/25 bg-background px-3 py-2 text-brand-900 focus:border-brand-500 focus:ring-2 focus:ring-brand-500"
             >
               <option value="">Todos</option>
               <option value="all">Para Todos</option>
@@ -261,7 +265,8 @@ export function ProductsPageClient({
           <Button
             variant={activeFilters.featured ? 'default' : 'outline'}
             onClick={toggleFeatured}
-            className="lg:w-32 cursor-pointer"
+            aria-pressed={activeFilters.featured}
+            className="h-12 cursor-pointer shadow-none lg:w-32"
           >
             <Star size={16} className="mr-2" />
             Destacados

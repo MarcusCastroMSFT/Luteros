@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" role="img" aria-label="Conhecimento e cuidado: cursos Lutteros">
+  <rect width="800" height="480" fill="#faf9f6"/>
+  <path d="M268 88C361 29 512 58 554 163C601 281 522 402 406 410C291 419 207 336 214 231C218 173 233 115 268 88Z" fill="#e4eeeb"/>
+  <path d="M531 283C595 271 637 303 628 352C619 401 563 418 521 388C479 360 487 292 531 283Z" fill="#eadfe9"/>
+  <g fill="none" stroke="#198189" stroke-width="1.5" stroke-linecap="round" opacity=".4">
+    <path d="M647 100C686 138 723 90 770 126M647 113C686 151 723 103 770 139M647 126C686 164 723 116 770 152"/>
+    <path d="M58 346C79 374 120 385 161 371M50 359C76 391 121 401 168 385"/>
+    <path d="M235 149C266 62 390 29 481 75"/>
+  </g>
+  <path d="M400 341C355 314 311 304 255 309L255 322C310 319 357 331 400 356C443 331 490 319 545 322V309C489 304 445 314 400 341Z" fill="#c5a5bb"/>
+  <path d="M400 232C352 206 301 200 255 212V309C307 302 354 315 400 341C446 315 493 302 545 309V212C499 200 448 206 400 232Z" fill="#faf9f6" stroke="#146b71" stroke-width="3" stroke-linejoin="round"/>
+  <g fill="none" stroke="#146b71" stroke-width="2.5" stroke-linecap="round">
+    <path d="M400 232V341M279 236C309 233 345 242 376 257M279 257C309 254 345 263 376 278M279 278C309 275 332 281 352 288M424 258C451 245 478 239 511 238M424 279C451 266 478 260 511 259M424 300C451 287 478 281 499 280"/>
+  </g>
+  <path d="M462 209V246L475 237L488 240V205" fill="#eadfe9" stroke="#630a79" stroke-width="2"/>
+  <path d="M352 217C338 169 324 134 294 107M448 213C474 172 492 136 487 94" fill="none" stroke="#146b71" stroke-width="2" stroke-linecap="round"/>
+  <path d="M338 178C306 179 279 158 276 132C308 136 329 152 338 178Z" fill="#956486"/>
+  <path d="M323 150C319 122 328 104 348 92C360 119 348 140 323 150Z" fill="#c5a5bb"/>
+  <path d="M464 186C460 156 468 133 491 121C499 149 488 171 464 186Z" fill="#146b71"/>
+  <path d="M479 154C498 131 522 124 545 132C532 154 509 164 479 154Z" fill="#a8c4b8"/>
+  <g stroke="#faf9f6" stroke-width="1.1" stroke-linecap="round">
+    <path d="M328 170L291 144M470 173L485 135M490 151L530 138"/>
+  </g>
+</svg>

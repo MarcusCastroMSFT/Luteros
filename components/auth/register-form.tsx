@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { quickValidateEmail } from '@/lib/email-quick-validation'
+import { getPostLoginDestination } from '@/lib/auth-redirect'
 import {
   AuthDivider,
   AuthHeading,
@@ -58,7 +59,7 @@ export function RegisterForm() {
     try {
       await signUp(email.trim(), password, { full_name: fullName.trim() })
       toast.success('Conta criada! Seja bem-vindo(a).')
-      router.push('/')
+      router.push(getPostLoginDestination(new URLSearchParams(window.location.search)))
     } catch (error) {
       const err = error as { message?: string }
       toast.error(err.message || 'Falha ao criar a conta')

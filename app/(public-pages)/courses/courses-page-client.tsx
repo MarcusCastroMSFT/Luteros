@@ -3,10 +3,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { CategoryFilter } from '@/components/blog/categoryFilter';
-import { CourseCard } from '@/components/courses/courseCard';
-import { Pagination } from '@/components/common/pagination';
+import { CatalogList } from '@/components/common/catalog-list';
 import { EmptyState } from '@/components/common/empty-state';
-import { Button } from '@/components/ui/button';
 import { type Course, type CoursesPagination } from '@/lib/courses';
 
 interface CoursesPageClientProps {
@@ -36,15 +34,9 @@ export function CoursesPageClient({
     router.push(buildUrl(1, category));
   };
 
-  const handlePageChange = (page: number) => {
-    router.push(buildUrl(page, activeCategory));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <>
-      {/* Filters Section - Centered */}
-      <div className="flex justify-center mb-12">
+      <div className="mb-10">
         <CategoryFilter
           categories={categories}
           activeCategory={activeCategory}
@@ -65,23 +57,10 @@ export function CoursesPageClient({
           action={activeCategory !== 'Todos' ? { label: 'Ver todos os cursos', onClick: () => handleCategoryChange('Todos') } : undefined}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {courses.map((course, i) => (
-            <CourseCard
-              key={course.id}
-              course={course as import('@/types/course').Course}
-              priority={i < 4}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={handlePageChange}
+        <CatalogList
+          key={`${activeCategory}-${pagination.currentPage}`}
+          initialPage={{ kind: 'courses', items: courses, pagination }}
+          category={activeCategory}
         />
       )}
     </>

@@ -4,6 +4,7 @@ import { getProducts } from '@/lib/products-server'
 import { ProductsPageClient } from './products-page-client'
 import { ProductListSkeleton } from '@/components/products/productListSkeleton'
 import { PageHeader } from '@/components/common/pageHeader'
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
 
 const PRODUCTS_PER_PAGE = 12
 
@@ -12,11 +13,13 @@ export const metadata: Metadata = {
   description: 'Descontos especiais em produtos e serviços selecionados para mães, pais e famílias. Membros têm acesso a ofertas exclusivas!',
   keywords: ['produtos', 'descontos', 'ofertas', 'família', 'saúde', 'bem-estar'],
   openGraph: {
+    images: [DEFAULT_SOCIAL_IMAGE],
     title: 'Produtos | lutteros',
     description: 'Descontos especiais em produtos e serviços selecionados para mães, pais e famílias.',
     type: 'website',
   },
   twitter: {
+    images: [DEFAULT_SOCIAL_IMAGE.url],
     card: 'summary_large_image',
     title: 'Produtos | lutteros',
     description: 'Descontos especiais em produtos e serviços selecionados para mães, pais e famílias.',
@@ -69,7 +72,7 @@ async function ProductsContent({
 
 function ProductsPageFallback() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto max-w-[1480px] px-6 py-6 sm:px-10 lg:px-12">
       <ProductListSkeleton />
     </div>
   )
@@ -86,6 +89,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   return (
     <div className="min-h-screen">
       <PageHeader
+        illustration="products"
         title="Produtos"
         description="Descontos especiais em produtos e serviços selecionados para mães, pais e famílias. Membros têm acesso a ofertas exclusivas!"
         breadcrumbs={[

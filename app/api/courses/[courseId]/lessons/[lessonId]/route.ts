@@ -14,6 +14,7 @@ import {
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { getCourseInstructorIds } from '@/lib/course-instructors.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
+import { lessonReferencesSchema, resolveLessonReferences } from '@/lib/lesson-references'
 
 // GET a single lesson
 export async function GET(
@@ -72,6 +73,14 @@ export async function PUT(
     const body = await request.json()
     const { title, type, description, content, videoUrl, videoProvider, duration, sectionTitle, isPublished, isFree } = body
 
+    const references = lessonReferencesSchema.safeParse(body.references)
+    if (!references.success) {
+      return NextResponse.json(
+        { success: false, error: 'As referências devem ser um texto.' },
+        { status: 400 }
+      )
+    }
+
     if (title !== undefined && !title?.trim()) {
       return NextResponse.json({ success: false, error: 'Title cannot be empty' }, { status: 400 })
     }
@@ -89,6 +98,7 @@ export async function PUT(
     if (isFree !== undefined) updateData.isFree = isFree
 
     const nextType = type !== undefined ? type : existingLesson.type
+    updateData.references = resolveLessonReferences(nextType, references.data, existingLesson.references)
     if (nextType === 'article') {
       updateData.duration = resolveLessonDuration({
         type: 'article',

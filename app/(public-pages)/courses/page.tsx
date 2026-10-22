@@ -5,19 +5,21 @@ import { CoursesPageClient } from './courses-page-client'
 import { PageHeader } from '@/components/common/pageHeader'
 import { CourseListSkeleton } from '@/components/courses/courseSkeleton'
 import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
-
-const COURSES_PER_PAGE = 12
+import { CATALOG_PAGE_SIZE } from '@/lib/catalog-pagination'
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
 
 export const metadata: Metadata = {
   title: 'Cursos',
   description: 'Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis. Aprenda com especialistas.',
   keywords: ['cursos', 'educação sexual', 'saúde reprodutiva', 'relacionamentos', 'educação online'],
   openGraph: {
+    images: [DEFAULT_SOCIAL_IMAGE],
     title: 'Cursos | lutteros',
     description: 'Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis.',
     type: 'website',
   },
   twitter: {
+    images: [DEFAULT_SOCIAL_IMAGE.url],
     card: 'summary_large_image',
     title: 'Cursos | lutteros',
     description: 'Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis.',
@@ -32,10 +34,11 @@ interface CoursesPageProps {
 }
 
 async function CoursesContent({ page, category }: { page: number; category: string }) {
-  const data = await getCourses(page, COURSES_PER_PAGE, category === 'Todos' ? undefined : category)
+  const data = await getCourses(page, CATALOG_PAGE_SIZE, category === 'Todos' ? undefined : category)
 
   return (
     <CoursesPageClient
+      key={`${category}-${page}`}
       courses={data.courses}
       pagination={data.pagination}
       categories={data.categories}
@@ -50,7 +53,7 @@ function CoursesPageFallback() {
       <div className="flex justify-center mb-12">
         <CategoryFilterSkeleton />
       </div>
-      <CourseListSkeleton count={12} />
+      <CourseListSkeleton count={CATALOG_PAGE_SIZE} />
     </>
   )
 }
@@ -63,6 +66,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
   return (
     <div className="min-h-screen">
       <PageHeader
+        illustration="courses"
         title="Cursos"
         description="Descubra nossos cursos especializados em educação sexual, saúde reprodutiva e relacionamentos saudáveis."
         breadcrumbs={[
@@ -71,7 +75,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
         ]}
       />
 
-      <div className="container mx-auto px-4 max-w-[1428px] py-16">
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
         <Suspense key={`${page}-${category}`} fallback={<CoursesPageFallback />}>
           <CoursesContent page={page} category={category} />
         </Suspense>

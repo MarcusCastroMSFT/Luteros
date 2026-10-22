@@ -12,6 +12,21 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import type { AdapterAccountType } from 'next-auth/adapters'
+import type { ContactReason } from '../contact'
+
+export const contactMessages = pgTable('contact_messages', {
+  id: uuid('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  reason: text('reason').$type<ContactReason>().notNull(),
+  subject: text('subject'),
+  message: text('message').notNull(),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+}, (t) => [
+  index('contact_messages_createdAt_id_idx').on(t.createdAt, t.id),
+  index('contact_messages_email_createdAt_idx').on(t.email, t.createdAt),
+])
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
@@ -368,6 +383,7 @@ export const lessons = pgTable('lessons', {
   title: text('title').notNull(),
   description: text('description'),
   content: text('content'),
+  references: text('references'),
   videoUrl: text('videoUrl'),
   duration: integer('duration'),
   order: integer('order').notNull(),

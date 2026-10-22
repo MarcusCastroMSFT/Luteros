@@ -8,6 +8,7 @@ import { FloatingBookmarkButton } from '@/components/blog/floating-bookmark-butt
 import { Paywall } from '@/components/blog/paywall';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getArticleBySlug, getArticleMetadata, getAllArticleSlugs } from '@/lib/articles';
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images';
 import {
   getCurrentUserAccessContext,
   hasArticleAccess,
@@ -206,9 +207,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
   const articleUrl = `${baseUrl}/articles/${slug}`;
-  const imageUrl = article.image?.startsWith('http') 
-    ? article.image 
-    : `${baseUrl}${article.image}`;
+  const imageUrl = new URL(article.image?.trim() || DEFAULT_SOCIAL_IMAGE.url, baseUrl).href;
 
   // Prefer per-article meta fields when set by the editor
   const metaTitle = article.metaTitle || article.title;

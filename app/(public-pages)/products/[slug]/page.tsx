@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getProductBySlug, getProductMetadata, getRelatedProducts } from '@/lib/products'
 import { ProductDetailClient } from './product-detail-client'
 import { JsonLd } from '@/components/seo/json-ld'
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
 
 interface ProductPageProps {
   params: Promise<{
@@ -36,13 +37,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
       type: 'website',
       locale: 'pt_BR',
-      ...(metadata.image && { images: [metadata.image] }),
+      images: metadata.image ? [metadata.image] : [DEFAULT_SOCIAL_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${metadata.title} | lutteros`,
       description: metadata.description || `Desconto exclusivo em ${metadata.title}`,
-      ...(metadata.image && { images: [metadata.image] }),
+      images: [metadata.image || DEFAULT_SOCIAL_IMAGE.url],
     },
     alternates: {
       canonical: `/products/${slug}`,

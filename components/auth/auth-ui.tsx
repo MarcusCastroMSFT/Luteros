@@ -1,8 +1,10 @@
 'use client'
 
-import { useId, useState, type ReactNode } from 'react'
+import { Suspense, useId, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Check, Eye, EyeOff, X } from 'lucide-react'
+import { getAuthRedirect } from '@/lib/auth-redirect'
 import styles from './auth-shell.module.css'
 
 export const PASSWORD_REQUIREMENTS = [
@@ -32,9 +34,23 @@ export function CurrentYear() {
 
 export function AuthNavigation({ active }: { active: 'login' | 'register' }) {
   return (
+    <Suspense fallback={<AuthNavigationLinks active={active} />}>
+      <AuthNavigationWithRedirect active={active} />
+    </Suspense>
+  )
+}
+
+function AuthNavigationWithRedirect({ active }: { active: 'login' | 'register' }) {
+  const params = useSearchParams()
+  return <AuthNavigationLinks active={active} destination={getAuthRedirect(params)} />
+}
+
+function AuthNavigationLinks({ active, destination }: { active: 'login' | 'register'; destination?: string | null }) {
+  const query = destination ? `?redirect=${encodeURIComponent(destination)}` : ''
+  return (
     <nav className={styles.switcher} aria-label="Acesso à plataforma">
-      <Link href="/login" aria-current={active === 'login' ? 'page' : undefined}>Entrar</Link>
-      <Link href="/register" aria-current={active === 'register' ? 'page' : undefined}>Criar conta</Link>
+      <Link href={`/login${query}`} aria-current={active === 'login' ? 'page' : undefined}>Entrar</Link>
+      <Link href={`/register${query}`} aria-current={active === 'register' ? 'page' : undefined}>Criar conta</Link>
     </nav>
   )
 }

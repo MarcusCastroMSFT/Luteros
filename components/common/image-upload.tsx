@@ -29,6 +29,7 @@ interface ImageUploadProps {
   uploadFile?: (file: File) => Promise<string>;
   allowUrl?: boolean;
   allowRemove?: boolean;
+  showOptimizationDetails?: boolean;
   className?: string;
 }
 
@@ -56,6 +57,7 @@ export function ImageUpload({
   uploadFile,
   allowUrl = true,
   allowRemove = true,
+  showOptimizationDetails = true,
   className = '',
 }: ImageUploadProps) {
   const [urlInput, setUrlInput] = useState('');
@@ -117,7 +119,9 @@ export function ImageUpload({
 
         const ratio = getCompressionRatio(compressed.originalSize, compressed.compressedSize);
         toast.success(
-          `Imagem enviada! ${formatFileSize(compressed.originalSize)} → ${formatFileSize(compressed.compressedSize)} (${ratio}% menor)`,
+          showOptimizationDetails
+            ? `Imagem enviada! ${formatFileSize(compressed.originalSize)} → ${formatFileSize(compressed.compressedSize)} (${ratio}% menor)`
+            : 'Imagem enviada com sucesso!',
         );
         onChange(url);
       } catch (err) {
@@ -128,7 +132,7 @@ export function ImageUpload({
         setPendingSource(null);
       }
     },
-    [maxSizeMB, onChange, uploadFile, uploadFolder, uploadUrl],
+    [maxSizeMB, onChange, showOptimizationDetails, uploadFile, uploadFolder, uploadUrl],
   );
 
   // Re-open the cropper using the current value (so users can re-adjust)
@@ -227,7 +231,7 @@ export function ImageUpload({
               {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processando...
+                  {showOptimizationDetails ? 'Processando...' : 'Enviando...'}
                 </>
               ) : (
                 <>
@@ -310,8 +314,8 @@ export function ImageUpload({
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-12 w-12 mb-4 text-primary animate-spin" />
-                    <p className="text-sm font-medium mb-1">Processando imagem...</p>
-                    <p className="text-xs text-muted-foreground">Cortando e comprimindo</p>
+                    <p className="text-sm font-medium mb-1">{showOptimizationDetails ? 'Processando imagem...' : 'Enviando imagem...'}</p>
+                    {showOptimizationDetails && <p className="text-xs text-muted-foreground">Cortando e comprimindo</p>}
                   </>
                 ) : (
                   <>

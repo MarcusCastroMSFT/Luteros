@@ -25,6 +25,7 @@ export default async function ProtectedLayout({ children }: ProtectedLayoutProps
     fullName: session.user.name,
     displayName: session.user.displayName,
     avatar: session.user.image,
+    role,
   };
 
   return <ProtectedLayoutClient user={user}>{children}</ProtectedLayoutClient>;

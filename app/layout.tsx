@@ -7,6 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { Suspense } from "react";
 import { JsonLd } from "@/components/seo/json-ld";
+import { DEFAULT_SOCIAL_IMAGE } from "@/lib/social-images";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -52,22 +53,15 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: baseUrl,
     siteName: "lutteros",
-    title: "lutteros - Saúde Sexual e Bem-estar",
-    description: "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
-    images: [
-      {
-        url: "/images/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "lutteros - Saúde Sexual e Bem-estar",
-      },
-    ],
+    title: "Lutteros | Saúde sexual baseada em conhecimento científico",
+    description: "A Lutteros conecta ciência e prática clínica com conteúdos fundamentados em evidências, elaborados e revisados por especialistas.",
+    images: [DEFAULT_SOCIAL_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "lutteros - Saúde Sexual e Bem-estar",
-    description: "Plataforma de educação em saúde sexual e bem-estar.",
-    images: ["/images/og-image.png"],
+    title: "Lutteros | Saúde sexual baseada em conhecimento científico",
+    description: "Ciência que fundamenta a prática clínica.",
+    images: [DEFAULT_SOCIAL_IMAGE.url],
   },
   robots: {
     index: true,

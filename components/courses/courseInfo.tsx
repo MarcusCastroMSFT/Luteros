@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { Course } from '@/types/course';
 import { type CourseContentSummaryItem } from '@/lib/course-content-summary';
 import { resolveVideoPosters } from '@/lib/video';
+import { COURSE_PLACEHOLDER_IMAGE } from '@/lib/course-image';
 import { PreviewDialog } from './previewDialog';
 
 // Custom X (Twitter) Logo Component
@@ -35,19 +36,15 @@ function CoursePreviewImage({ images, title }: { images: string[]; title: string
   const [imageIndex, setImageIndex] = useState(0);
   const image = images[imageIndex];
 
-  if (!image) {
-    return <div className="h-full w-full bg-gray-900" aria-hidden="true" />;
-  }
-
   return (
     <Image
-      src={image}
+      src={image || COURSE_PLACEHOLDER_IMAGE}
       alt={title}
       width={400}
       height={192}
       className="h-full w-full object-cover"
       sizes="(max-width: 1023px) 100vw, 400px"
-      onError={() => setImageIndex((currentIndex) => currentIndex + 1)}
+      onError={image ? () => setImageIndex((currentIndex) => currentIndex + 1) : undefined}
     />
   );
 }

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Instagram, Mail } from "lucide-react";
+import { Heart, Instagram, Mail } from "lucide-react";
 import { Logo } from "@/components/common/logo";
 import { Subscribe } from "@/components/subscribe";
 import { CurrentYear } from "@/components/common/current-year";
@@ -15,7 +15,7 @@ const iconButton =
 
 export function Footer() {
   return (
-    <footer className="relative isolate mt-10 overflow-hidden bg-[#031a1c] text-white">
+    <footer id="site-footer" tabIndex={-1} className="relative isolate mt-10 overflow-hidden bg-[#031a1c] text-white">
       <div aria-hidden="true" className="absolute inset-0 -z-20">
         <Image
           src="/images/footer/water.webp"
@@ -87,10 +87,19 @@ export function Footer() {
           </section>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-white/15 py-4 text-xs leading-6 text-white/70 md:flex-row md:items-center md:justify-between md:gap-6">
+        <div className="flex flex-col gap-2 border-t border-white/15 py-4 text-xs leading-6 text-white/70 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-6">
           <p>
             © <CurrentYear /> lutteros · {entity.legalName} · CNPJ {entity.cnpj}
           </p>
+          <a
+            href="https://befrontier.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-fit items-center gap-1.5 rounded py-1.5 text-[11px] text-white/65 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7fd3d8]"
+            aria-label="Made with love by Frontier (abre em nova aba)"
+          >
+            Made with <Heart className="size-3 fill-current text-[#7fd3d8]" aria-hidden="true" /> by <span className="font-medium">Frontier</span>
+          </a>
           <p className="-mx-3 flex items-center gap-1">
             <Link href="/terms" className="rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-[#7fd3d8]">
               Termos de Uso

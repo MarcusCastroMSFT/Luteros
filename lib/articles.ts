@@ -78,7 +78,7 @@ async function fetchArticles(page: number, limit: number, category?: string, sea
   }
 
   const [articles, [{ total }], categoriesRaw] = await Promise.all([
-    db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(where).orderBy(desc(blogArticles.publishedAt)).offset((page - 1) * limit).limit(limit),
+    db.select(articleCols).from(blogArticles).innerJoin(users, eq(blogArticles.authorId, users.id)).where(where).orderBy(desc(blogArticles.publishedAt), desc(blogArticles.id)).offset((page - 1) * limit).limit(limit),
     db.select({ total: sql<number>`count(*)::int` }).from(blogArticles).where(where),
     db.selectDistinct({ category: blogArticles.category }).from(blogArticles).where(eq(blogArticles.isPublished, true)).orderBy(asc(blogArticles.category)),
   ])

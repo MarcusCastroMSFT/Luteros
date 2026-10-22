@@ -43,6 +43,20 @@
       "when": 1792593758100,
       "tag": "0005_asaas_payments_and_access_ips",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792671939561,
+      "tag": "0006_contact_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792673724004,
+      "tag": "0007_lesson_references",
+      "breakpoints": true
     }
   ]
 }

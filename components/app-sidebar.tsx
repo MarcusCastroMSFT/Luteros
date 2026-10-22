@@ -84,6 +84,7 @@ interface AppSidebarUser {
   fullName?: string | null;
   displayName?: string | null;
   avatar?: string | null;
+  role?: string;
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -97,7 +98,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     navClouds: processNavItems(sidebarData.navClouds),
     navSecondary: processNavItems(sidebarData.navSecondary),
     newsletter: processDocuments(sidebarData.newsletter),
-    documents: processDocuments(sidebarData.documents),
+    documents: processDocuments(sidebarData.documents.filter(item => !item.adminOnly || user?.role === 'ADMIN')),
   }
 
   return (

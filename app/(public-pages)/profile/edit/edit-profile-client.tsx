@@ -44,8 +44,6 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
     linkedin: initialProfile.linkedin || '',
     twitter: initialProfile.twitter || '',
     instagram: initialProfile.instagram || '',
-    language: initialProfile.language || 'pt',
-    timezone: initialProfile.timezone || 'America/Sao_Paulo',
     emailNotifications: initialProfile.emailNotifications ?? true,
     marketingEmails: initialProfile.marketingEmails ?? false,
   });
@@ -313,42 +311,10 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
               Preferências
             </CardTitle>
             <CardDescription>
-              Configurações de idioma e notificações.
+              Escolha quais notificações deseja receber.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="language">Idioma</Label>
-              <select
-                id="language"
-                name="language"
-                value={formData.language}
-                onChange={(e) => setFormData(prev => ({ ...prev, language: e.target.value }))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="pt">Português</option>
-                <option value="en">English</option>
-                <option value="es">Español</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Fuso Horário</Label>
-              <select
-                id="timezone"
-                name="timezone"
-                value={formData.timezone}
-                onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="America/Sao_Paulo">Brasília (GMT-3)</option>
-                <option value="America/Manaus">Manaus (GMT-4)</option>
-                <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
-                <option value="America/Rio_Branco">Acre (GMT-5)</option>
-                <option value="UTC">UTC</option>
-              </select>
-            </div>
-
             <div className="flex items-center justify-between py-2">
               <div className="space-y-0.5">
                 <Label htmlFor="emailNotifications">Notificações por Email</Label>

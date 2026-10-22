@@ -1,7 +1,6 @@
 export type NavIconKey =
   | "courses"
   | "articles"
-  | "events"
   | "products"
   | "about"
   | "contact"
@@ -28,12 +27,6 @@ export const primaryNav: NavLinkItem[] = [
     href: "/articles",
     description: "Leituras confiáveis, claras e sem tabu.",
     icon: "articles",
-  },
-  {
-    title: "Eventos",
-    href: "/events",
-    description: "Encontros, palestras e lives para participar.",
-    icon: "events",
   },
   {
     title: "Produtos",
@@ -82,7 +75,6 @@ export const footerColumns: FooterColumn[] = [
     links: [
       { label: "Cursos", href: "/courses" },
       { label: "Artigos", href: "/articles" },
-      { label: "Eventos", href: "/events" },
     ],
   },
   {

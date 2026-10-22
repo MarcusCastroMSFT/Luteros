@@ -176,7 +176,7 @@ async function fetchCourses(page: number, limit: number, category?: string) {
   }
 
   const [rows, [{ total }], categoriesRaw] = await Promise.all([
-    db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(where).orderBy(desc(courses.enrollmentCount), desc(courses.averageRating)).offset((page - 1) * limit).limit(limit),
+    db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(where).orderBy(desc(courses.enrollmentCount), desc(courses.averageRating), desc(courses.id)).offset((page - 1) * limit).limit(limit),
     db.select({ total: sql<number>`count(*)::int` }).from(courses).where(where),
     db.selectDistinct({ category: courses.category }).from(courses).where(eq(courses.isPublished, true)).orderBy(asc(courses.category)),
   ])
@@ -334,6 +334,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
       isFree: lessons.isFree,
       type: lessons.type,
       content: lessons.content,
+      references: lessons.references,
       videoUrl: lessons.videoUrl,
       videoProvider: lessons.videoProvider,
     })
@@ -350,6 +351,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
       ...lesson,
       duration: resolveLessonDuration(lesson),
       content: sanitizeArticleContent(lesson.content),
+      references: sanitizeArticleContent(lesson.references),
     })),
   }
 }

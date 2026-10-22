@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Star, Clock, BookOpen, ArrowRight } from 'lucide-react';
 import { type CourseCardProps } from '@/types/course';
 import { formatCourseCounts } from '@/lib/course-labels';
+import { COURSE_PLACEHOLDER_IMAGE } from '@/lib/course-image';
 
 export function CourseCard({ course, showInstructor = true, priority = false }: CourseCardProps & { priority?: boolean }) {
   return (
@@ -12,7 +13,7 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
       <Link href={`/courses/${course.slug}`}>
         <div className="relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg group">
           <Image
-            src={course.image || '/images/course-placeholder.svg'}
+            src={course.image || COURSE_PLACEHOLDER_IMAGE}
             alt={course.title}
             width={400}
             height={240}

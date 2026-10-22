@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Lesson } from '@/types/course';
 import { BookOpen, Type, Bookmark, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ArticleReferences } from '@/components/blog/article-references';
 
 interface ArticleLessonProps {
   lesson: Lesson;
@@ -74,6 +75,8 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
       ) : (
         <p className="py-8 text-center text-sm text-gray-500">Conteúdo indisponível.</p>
       )}
+
+      <ArticleReferences key={lesson.id} html={lesson.references || ''} />
 
       {/* Article Notes Section */}
       <div className="bg-gray-50 rounded-lg p-4">

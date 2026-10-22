@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCourses } from '@/lib/courses';
+import { CATALOG_PAGE_SIZE } from '@/lib/catalog-pagination';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   
   // Extract query parameters
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '12');
+  const limit = parseInt(searchParams.get('limit') || String(CATALOG_PAGE_SIZE));
   const category = searchParams.get('category') || undefined;
 
   try {

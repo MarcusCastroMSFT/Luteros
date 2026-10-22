@@ -2,15 +2,8 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Clock, 
   Send, 
   CheckCircle2,
-  MessageSquare,
-  HelpCircle,
-  Users,
   Loader2,
   AlertCircle,
 } from 'lucide-react';
@@ -27,48 +20,29 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/pageHeader';
+import { BrandIcon, type BrandIconName } from '@/components/brand/brand-icon';
 import { cn } from '@/lib/utils';
+import { formatBrazilianPhone } from '@/lib/phone';
+import { contactFormSchema, contactReasons } from '@/lib/contact';
 import Link from 'next/link';
 
 // =============================================================================
 // CONSTANTS
 // =============================================================================
 
-const contactReasons = [
-  { value: 'general', label: 'Informações Gerais', icon: MessageSquare },
-  { value: 'support', label: 'Suporte Técnico', icon: HelpCircle },
-  { value: 'courses', label: 'Dúvidas sobre Cursos', icon: Users },
-  { value: 'partnership', label: 'Parcerias', icon: Users },
-  { value: 'other', label: 'Outro', icon: MessageSquare },
-];
-
-const contactInfo = [
+const contactInfo: { icon: BrandIconName; title: string; description: string; value: string; href: string | null }[] = [
   {
-    icon: Mail,
-    title: 'Email',
-    description: 'Responderemos em até 24 horas',
+    icon: 'contact',
+    title: 'E-mail',
+    description: 'Converse com a equipe',
     value: 'contato@lutteros.com.br',
     href: 'mailto:contato@lutteros.com.br',
   },
   {
-    icon: Phone,
-    title: 'Telefone',
-    description: 'Segunda a Sexta, 9h às 18h',
-    value: '+55 (11) 9999-9999',
-    href: 'tel:+5511999999999',
-  },
-  {
-    icon: MapPin,
-    title: 'Endereço',
-    description: 'Visite nosso escritório',
-    value: 'São Paulo, SP - Brasil',
-    href: null,
-  },
-  {
-    icon: Clock,
-    title: 'Horário de Atendimento',
-    description: 'Estamos disponíveis',
-    value: 'Seg - Sex: 9h às 18h',
+    icon: 'discussion',
+    title: 'Prazo de resposta',
+    description: 'Nosso retorno é por e-mail',
+    value: 'Até 48 horas úteis',
     href: null,
   },
 ];
@@ -76,15 +50,15 @@ const contactInfo = [
 const faqs = [
   {
     question: 'Qual o prazo de resposta?',
-    answer: 'Respondemos todas as mensagens em até 24 horas úteis.',
+    answer: 'Respondemos todas as mensagens em até 48 horas úteis.',
   },
   {
-    question: 'Posso agendar uma reunião?',
-    answer: 'Sim! Após o primeiro contato, podemos agendar uma chamada de vídeo.',
+    question: 'O que devo incluir na mensagem?',
+    answer: 'Descreva sua dúvida e, se necessário, informe o curso ou artigo relacionado. Não envie senhas ou dados de cartão.',
   },
   {
     question: 'Vocês oferecem suporte por WhatsApp?',
-    answer: 'Atualmente nosso suporte é via email e telefone durante horário comercial.',
+    answer: 'Utilize este formulário ou o e-mail de contato para falar com a equipe.',
   },
 ];
 
@@ -101,27 +75,6 @@ interface ValidationErrors {
   message?: string;
 }
 
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  return emailRegex.test(email) && email.length <= 254;
-};
-
-const validatePhone = (phone: string): boolean => {
-  if (!phone) return true; // Phone is optional
-  // Brazilian phone format: allow various formats
-  const phoneRegex = /^[\d\s()+-]{10,20}$/;
-  return phoneRegex.test(phone);
-};
-
-const sanitizeInput = (input: string): string => {
-  // Remove potentially dangerous characters while preserving legitimate content
-  return input
-    .trim()
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '');
-};
-
 const initialFormData = {
   name: '',
   email: '',
@@ -133,52 +86,15 @@ const initialFormData = {
 
 const validateForm = (data: typeof initialFormData): ValidationErrors => {
   const errors: ValidationErrors = {};
-
-  // Name validation
-  const cleanName = sanitizeInput(data.name);
-  if (!cleanName) {
-    errors.name = 'Nome é obrigatório';
-  } else if (cleanName.length < 2) {
-    errors.name = 'Nome deve ter pelo menos 2 caracteres';
-  } else if (cleanName.length > 100) {
-    errors.name = 'Nome deve ter no máximo 100 caracteres';
-  } else if (!/^[a-zA-ZÀ-ÿ\s'-]+$/.test(cleanName)) {
-    errors.name = 'Nome contém caracteres inválidos';
+  const result = contactFormSchema.safeParse(data);
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const field = issue.path[0];
+      if (typeof field === 'string' && field in data) {
+        errors[field as keyof ValidationErrors] ??= issue.message;
+      }
+    }
   }
-
-  // Email validation
-  const cleanEmail = sanitizeInput(data.email).toLowerCase();
-  if (!cleanEmail) {
-    errors.email = 'Email é obrigatório';
-  } else if (!validateEmail(cleanEmail)) {
-    errors.email = 'Digite um email válido';
-  }
-
-  // Phone validation (optional)
-  if (data.phone && !validatePhone(data.phone)) {
-    errors.phone = 'Digite um telefone válido';
-  }
-
-  // Reason validation
-  if (!data.reason) {
-    errors.reason = 'Selecione um motivo de contato';
-  }
-
-  // Subject validation (optional but with limits)
-  if (data.subject && data.subject.length > 200) {
-    errors.subject = 'Assunto deve ter no máximo 200 caracteres';
-  }
-
-  // Message validation
-  const cleanMessage = sanitizeInput(data.message);
-  if (!cleanMessage) {
-    errors.message = 'Mensagem é obrigatória';
-  } else if (cleanMessage.length < 10) {
-    errors.message = 'Mensagem deve ter pelo menos 10 caracteres';
-  } else if (cleanMessage.length > 2000) {
-    errors.message = 'Mensagem deve ter no máximo 2000 caracteres';
-  }
-
   return errors;
 };
 
@@ -204,7 +120,7 @@ function FormField({ label, htmlFor, error, touched, required, children, hint }:
       <Label 
         htmlFor={htmlFor} 
         className={cn(
-          "text-sm font-medium",
+          "text-base font-medium text-brand-900",
           showError && "text-red-600"
         )}
       >
@@ -212,12 +128,12 @@ function FormField({ label, htmlFor, error, touched, required, children, hint }:
       </Label>
       {children}
       {showError ? (
-        <p className="text-sm text-red-600 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+        <p id={`${htmlFor}-feedback`} role="alert" className="text-sm text-red-600 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
           <AlertCircle className="w-3 h-3" />
           {error}
         </p>
       ) : hint ? (
-        <p className="text-xs text-gray-500">{hint}</p>
+        <p id={`${htmlFor}-feedback`} className="text-xs text-gray-500">{hint}</p>
       ) : null}
     </div>
   );
@@ -233,6 +149,8 @@ export function ContactPageClient() {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [submitError, setSubmitError] = useState('');
+  const submissionId = useRef<string | null>(null);
   
   // Security: Honeypot field (hidden from users, bots will fill it)
   const [honeypot, setHoneypot] = useState('');
@@ -274,11 +192,28 @@ export function ContactPageClient() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    submissionId.current = null;
+    const nextValue = name === 'phone' ? formatBrazilianPhone(value) : value;
+    setFormData(prev => ({ ...prev, [name]: nextValue }));
+
+    if (name === 'phone') {
+      const input = e.currentTarget;
+      const cursor = input.selectionStart;
+      if (cursor !== null && cursor < value.length) {
+        const digitsBeforeCursor = value.slice(0, cursor).replace(/\D/g, '').length;
+        let position = 0;
+        let digits = 0;
+        while (position < nextValue.length && digits < digitsBeforeCursor) {
+          if (/\d/.test(nextValue[position])) digits++;
+          position++;
+        }
+        requestAnimationFrame(() => input.setSelectionRange(position, position));
+      }
+    }
     
     // Validate if field was already touched
     if (touched[name]) {
-      validateField(name, value);
+      validateField(name, nextValue);
     }
   }, [touched, validateField]);
 
@@ -289,6 +224,7 @@ export function ContactPageClient() {
   }, [formData]);
 
   const handleReasonChange = useCallback((value: string) => {
+    submissionId.current = null;
     setFormData(prev => ({ ...prev, reason: value }));
     setTouched(prev => ({ ...prev, reason: true }));
     
@@ -298,12 +234,13 @@ export function ContactPageClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setSubmitError('');
     
     // Security: Check honeypot (should be empty)
     if (honeypot) {
-      // Bot detected - silently "succeed" to not reveal detection
       console.warn('Bot submission detected');
-      setIsSubmitted(true);
+      setSubmitError('Não foi possível validar o envio. Atualize a página e tente novamente.');
       return;
     }
 
@@ -341,34 +278,26 @@ export function ContactPageClient() {
     }
 
     setIsSubmitting(true);
-    setLastSubmitTime(Date.now());
 
     try {
-      // Sanitize data before sending
-      const _sanitizedData = {
-        name: sanitizeInput(formData.name),
-        email: sanitizeInput(formData.email).toLowerCase(),
-        phone: sanitizeInput(formData.phone),
-        reason: formData.reason,
-        subject: sanitizeInput(formData.subject),
-        message: sanitizeInput(formData.message),
-      };
+      submissionId.current ??= crypto.randomUUID();
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, website: honeypot, submissionId: submissionId.current }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.success !== true) {
+        throw new Error(result.error || 'Não foi possível salvar sua mensagem. Tente novamente.');
+      }
 
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/contact', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(sanitizedData),
-      // });
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
+      setLastSubmitTime(Date.now());
       setIsSubmitted(true);
       toast.success('Mensagem enviada com sucesso!');
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast.error('Erro ao enviar mensagem. Tente novamente.');
+      const message = error instanceof Error ? error.message : 'Não foi possível salvar sua mensagem. Tente novamente.';
+      setSubmitError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -379,6 +308,8 @@ export function ContactPageClient() {
     setErrors({});
     setTouched({});
     setIsSubmitted(false);
+    setSubmitError('');
+    submissionId.current = null;
     formLoadTime.current = Date.now();
   }, []);
 
@@ -387,8 +318,9 @@ export function ContactPageClient() {
   const messageMaxLength = 2000;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <PageHeader
+        illustration="contact"
         title="Entre em Contato"
         description="Estamos aqui para ajudar. Envie sua mensagem e responderemos o mais breve possível."
         breadcrumbs={[
@@ -397,21 +329,21 @@ export function ContactPageClient() {
         ]}
       />
 
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-8 sm:px-10 lg:px-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="rounded-[12px_40px_12px_12px] border border-brand-600/15 bg-white/60 p-5 sm:p-8 lg:p-10">
               {isSubmitted ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-300">
-                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-[42%_58%_52%_38%] bg-brand-50">
+                    <CheckCircle2 className="size-10 text-brand-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  <h3 className="mb-3 font-[family-name:var(--font-cardo)] text-3xl text-brand-900">
                     Mensagem Enviada!
                   </h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Obrigado por entrar em contato. Nossa equipe responderá sua mensagem em até 24 horas úteis.
+                    Obrigado por entrar em contato. Nossa equipe responderá sua mensagem em até 48 horas úteis.
                   </p>
                   <Button onClick={resetForm} variant="outline" className="cursor-pointer">
                     Enviar outra mensagem
@@ -420,8 +352,8 @@ export function ContactPageClient() {
               ) : (
                 <>
                   <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                      Envie sua Mensagem
+                    <h2 className="mb-3 font-[family-name:var(--font-cardo)] text-3xl text-brand-900 sm:text-4xl">
+                      Envie sua mensagem
                     </h2>
                     <p className="text-gray-600">
                       Preencha o formulário abaixo e entraremos em contato.
@@ -429,6 +361,7 @@ export function ContactPageClient() {
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                    <fieldset disabled={isSubmitting} className="min-w-0 space-y-6">
                     {/* Honeypot field - hidden from users */}
                     <input
                       type="text"
@@ -461,7 +394,7 @@ export function ContactPageClient() {
                           aria-invalid={touched.name && !!errors.name}
                           aria-describedby={errors.name ? 'name-error' : undefined}
                           className={cn(
-                            "transition-colors",
+                            "min-h-12 border-brand-600/25 bg-background text-base md:text-base motion-reduce:transition-none",
                             touched.name && errors.name && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
@@ -486,7 +419,7 @@ export function ContactPageClient() {
                           autoComplete="email"
                           aria-invalid={touched.email && !!errors.email}
                           className={cn(
-                            "transition-colors",
+                            "min-h-12 border-brand-600/25 bg-background text-base md:text-base motion-reduce:transition-none",
                             touched.email && errors.email && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
@@ -505,15 +438,16 @@ export function ContactPageClient() {
                           id="phone"
                           name="phone"
                           type="tel"
+                          inputMode="tel"
                           placeholder="(11) 99999-9999"
                           value={formData.phone}
                           onChange={handleInputChange}
                           onBlur={() => handleBlur('phone')}
-                          maxLength={20}
                           autoComplete="tel"
                           aria-invalid={touched.phone && !!errors.phone}
+                          aria-describedby="phone-feedback"
                           className={cn(
-                            "transition-colors",
+                            "min-h-12 border-brand-600/25 bg-background text-base md:text-base motion-reduce:transition-none",
                             touched.phone && errors.phone && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
@@ -534,7 +468,7 @@ export function ContactPageClient() {
                             id="reason"
                             aria-invalid={touched.reason && !!errors.reason}
                             className={cn(
-                              "transition-colors",
+                              "min-h-12 w-full border-brand-600/25 bg-background text-base motion-reduce:transition-none",
                               touched.reason && errors.reason && "border-red-500 focus-visible:ring-red-500"
                             )}
                           >
@@ -568,7 +502,7 @@ export function ContactPageClient() {
                         maxLength={200}
                         aria-invalid={touched.subject && !!errors.subject}
                         className={cn(
-                          "transition-colors",
+                          "min-h-12 border-brand-600/25 bg-background text-base md:text-base motion-reduce:transition-none",
                           touched.subject && errors.subject && "border-red-500 focus-visible:ring-red-500"
                         )}
                       />
@@ -586,14 +520,14 @@ export function ContactPageClient() {
                           id="message"
                           name="message"
                           placeholder="Descreva detalhadamente sua dúvida ou solicitação..."
-                          rows={6}
+                          rows={10}
                           value={formData.message}
                           onChange={handleInputChange}
                           onBlur={() => handleBlur('message')}
                           maxLength={messageMaxLength}
                           aria-invalid={touched.message && !!errors.message}
                           className={cn(
-                            "transition-colors resize-none",
+                            "min-h-64 field-sizing-fixed resize-y border-brand-600/25 bg-background text-base md:text-base sm:min-h-72 motion-reduce:transition-none",
                             touched.message && errors.message && "border-red-500 focus-visible:ring-red-500"
                           )}
                         />
@@ -609,11 +543,12 @@ export function ContactPageClient() {
                       </div>
                     </FormField>
 
+                    {submitError ? <p role="alert" className="text-sm text-red-600">{submitError}</p> : null}
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                       <Button
                         type="submit"
                         size="lg"
-                        className="w-full sm:w-auto cursor-pointer"
+                        className="h-14 w-full cursor-pointer bg-brand-600 text-base shadow-none hover:bg-brand-700 motion-reduce:transition-none sm:w-auto"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? (
@@ -633,6 +568,7 @@ export function ContactPageClient() {
                         Campos marcados com <span className="text-red-500">*</span> são obrigatórios
                       </p>
                     </div>
+                    </fieldset>
                   </form>
                 </>
               )}
@@ -642,23 +578,21 @@ export function ContactPageClient() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Info Cards */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Informações de Contato
+            <div className="rounded-[12px_32px_12px_12px] bg-[#e4eeeb]/60 p-6 sm:p-8">
+              <h3 className="mb-6 font-[family-name:var(--font-cardo)] text-2xl text-brand-900">
+                Vamos conversar
               </h3>
               <div className="space-y-5">
                 {contactInfo.map((info, index) => (
                   <div key={index} className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <info.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
+                    <BrandIcon kind={info.icon} className="size-14 shrink-0" />
+                    <div className="min-w-0">
                       <p className="font-medium text-gray-900">{info.title}</p>
                       <p className="text-sm text-gray-500 mb-1">{info.description}</p>
                       {info.href ? (
                         <a
                           href={info.href}
-                          className="text-sm text-primary hover:underline"
+                          className="break-words text-base text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600"
                         >
                           {info.value}
                         </a>
@@ -672,9 +606,9 @@ export function ContactPageClient() {
             </div>
 
             {/* Quick FAQ */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Perguntas Frequentes
+            <div className="rounded-xl border border-brand-600/15 bg-background p-6 sm:p-8">
+              <h3 className="mb-6 font-[family-name:var(--font-cardo)] text-2xl text-brand-900">
+                Antes de enviar
               </h3>
               <div className="space-y-4">
                 {faqs.map((faq, index) => (
@@ -686,21 +620,21 @@ export function ContactPageClient() {
                   </div>
                 ))}
               </div>
-              <Button variant="link" asChild className="mt-4 p-0 h-auto cursor-pointer">
-                <a href="/faq">Ver todas as perguntas →</a>
+              <Button variant="ghost" asChild className="mt-5 h-auto min-h-12 w-full justify-start whitespace-normal px-0 text-base text-brand-700 hover:bg-transparent hover:text-brand-900">
+                <Link href="/faq">Ver todas as perguntas →</Link>
               </Button>
             </div>
 
             {/* Help Center CTA */}
-            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/10">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Precisa de ajuda rápida?
+            <div className="rounded-[12px_32px_12px_12px] bg-[#eee5ec] p-6 sm:p-8">
+              <h3 className="mb-3 font-[family-name:var(--font-cardo)] text-2xl text-brand-900">
+                Sua privacidade importa
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Visite nossa Central de Ajuda para encontrar respostas para as dúvidas mais comuns.
+                Compartilhe apenas as informações necessárias para entendermos sua solicitação.
               </p>
               <Button asChild variant="outline" className="w-full cursor-pointer">
-                <Link href="/help">Acessar Central de Ajuda</Link>
+                <Link href="/privacy">Política de privacidade</Link>
               </Button>
             </div>
           </div>

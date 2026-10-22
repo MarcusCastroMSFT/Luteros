@@ -1,476 +1,226 @@
 'use client';
 
-import { PageHeader } from '@/components/common/pageHeader';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { Search } from 'lucide-react';
+import { BrandIcon } from '@/components/brand/brand-icon';
+import { CategoryFilter } from '@/components/blog/categoryFilter';
+import { EmptyState } from '@/components/common/empty-state';
+import { PageHeader } from '@/components/common/pageHeader';
+import { JsonLd } from '@/components/seo/json-ld';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface FAQItem {
   id: string;
   question: string;
-  answer: string | React.ReactNode;
-  /** Plain-text answer for FAQPage structured data (required when `answer` is JSX). */
-  schemaAnswer?: string;
+  answer: string;
   category: string;
+  link?: { href: string; label: string };
 }
 
 const faqData: FAQItem[] = [
-  // Sobre a Plataforma
   {
-    id: 'platform-1',
-    category: 'Sobre a Plataforma',
-    question: 'O que é a lutteros?',
-    answer: 'A lutteros é uma plataforma educacional dedicada à saúde sexual e reprodutiva. Oferecemos conteúdo científico, consultas com especialistas credenciados, cursos educativos e uma comunidade segura para discussões sobre temas relacionados à sexualidade e bem-estar.'
+    id: 'platform',
+    category: 'A plataforma',
+    question: 'O que é a Lutteros?',
+    answer: 'A Lutteros é uma plataforma de saúde sexual baseada em conhecimento científico. Conecta ciência e prática clínica com conteúdos fundamentados em evidências, elaborados e revisados por especialistas.',
+    link: { href: '/about', label: 'Conheça a Lutteros' },
   },
   {
-    id: 'platform-2',
-    category: 'Sobre a Plataforma',
-    question: 'A plataforma é confiável e segura?',
-    schemaAnswer: 'Sim. A lutteros segue altos padrões de segurança e privacidade: todos os especialistas são credenciados e verificados, o conteúdo é revisado por profissionais de saúde, os dados são criptografados e em conformidade com a LGPD, e o ambiente é moderado 24/7 para garantir respeito e segurança.',
-    answer: (
-      <div className="space-y-2">
-        <p>Sim, a lutteros segue os mais altos padrões de segurança e privacidade:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Todos os especialistas são credenciados e verificados</li>
-          <li>Conteúdo revisado por profissionais de saúde</li>
-          <li>Criptografia de dados e proteção LGPD</li>
-          <li>Ambiente moderado 24/7 para garantir respeito e segurança</li>
-        </ul>
-      </div>
-    )
+    id: 'audience',
+    category: 'A plataforma',
+    question: 'Para quem são os conteúdos?',
+    answer: 'Para profissionais que desejam aprofundar seus conhecimentos e qualificar sua prática em saúde sexual, com respeito à individualidade e à diversidade. Consulte a descrição de cada curso para conhecer seu público e conteúdo.',
   },
   {
-    id: 'platform-3',
-    category: 'Sobre a Plataforma',
-    question: 'Qual a diferença entre a lutteros e outras plataformas de saúde?',
-    answer: 'A lutteros se especializa exclusivamente em saúde sexual e reprodutiva, oferecendo um ambiente seguro e livre de julgamentos. Nossa abordagem combina educação científica com suporte emocional, sempre respeitando a diversidade e individualidade de cada pessoa.'
-  },
-
-  // Conta e Acesso
-  {
-    id: 'account-1',
-    category: 'Conta e Acesso',
-    question: 'Como criar uma conta na lutteros?',
-    answer: 'Para criar sua conta, clique em "Registrar" no menu superior, preencha seus dados básicos (nome, email, idade) e confirme seu email. O processo é rápido e seus dados ficam protegidos por nossa política de privacidade.'
+    id: 'clinical-care',
+    category: 'A plataforma',
+    question: 'O conteúdo substitui uma avaliação de saúde?',
+    answer: 'Não. Os conteúdos têm finalidade educacional e não substituem avaliação individual, diagnóstico ou tratamento por um profissional habilitado. Em caso de emergência médica, procure atendimento presencial ou ligue 192.',
   },
   {
-    id: 'account-2',
-    category: 'Conta e Acesso',
-    question: 'Preciso ter mais de 18 anos para usar a plataforma?',
-    schemaAnswer: 'Sim. O acesso completo a todos os recursos é permitido apenas para maiores de 18 anos. O acesso não é permitido para menores de 18 anos.',
-    answer: (
-      <div className="space-y-2">
-        <p>Nossa política de idade é flexível mas responsável:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li><strong>18+ anos:</strong> Acesso completo a todos os recursos</li>
-          <li><strong>Menores de 18 anos:</strong> Acesso não permitido</li>
-        </ul>
-      </div>
-    )
+    id: 'account',
+    category: 'Conta e acesso',
+    question: 'Como criar minha conta?',
+    answer: 'Acesse a página de cadastro e siga as instruções para criar sua conta. Se já tiver uma conta, utilize a opção de entrar com seus dados de acesso.',
+    link: { href: '/register', label: 'Criar conta' },
   },
   {
-    id: 'account-3',
-    category: 'Conta e Acesso',
-    question: 'Posso usar um nome fictício ou permanecer anônimo?',
-    answer: 'Sim! Respeitamos sua privacidade. Você pode usar um nome social ou apelido na plataforma. Para consultas individuais, pedimos dados reais apenas para garantir a segurança do atendimento, mas isso fica entre você e o especialista.'
-  },
-
-  // Consultas e Especialistas
-  {
-    id: 'consultations-1',
-    category: 'Consultas e Especialistas',
-    question: 'Como funciona uma consulta online?',
-    schemaAnswer: 'As consultas na lutteros são educacionais e informativas. Você agenda através da plataforma com especialistas disponíveis, as sessões acontecem por videochamada, chat ou telefone, com duração típica de 30 a 60 minutos, focadas em educação, esclarecimento de dúvidas e orientação. Elas não substituem consultas médicas presenciais quando necessárias.',
-    answer: (
-      <div className="space-y-2">
-        <p>As consultas na lutteros são educacionais e informativas:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Agende através da plataforma com especialistas disponíveis</li>
-          <li>Sessões por videochamada, chat ou telefone</li>
-          <li>Duração típica de 30-60 minutos</li>
-          <li>Foco em educação, esclarecimento de dúvidas e orientação</li>
-          <li>Não substituem consultas médicas presenciais quando necessárias</li>
-        </ul>
-      </div>
-    )
+    id: 'my-courses',
+    category: 'Conta e acesso',
+    question: 'Onde encontro meus cursos?',
+    answer: 'Entre na mesma conta utilizada na inscrição ou compra e acesse Meus cursos. Se um curso pago não aparecer após a confirmação do pagamento, entre em contato com a equipe informando o nome do curso.',
+    link: { href: '/courses/my-courses', label: 'Acessar meus cursos' },
   },
   {
-    id: 'consultations-2',
-    category: 'Consultas e Especialistas',
-    question: 'Quem são os especialistas da lutteros?',
-    answer: 'Nossa equipe inclui ginecologistas, urologistas, psicólogos especializados em sexualidade, terapeutas sexuais, educadores sexuais e outros profissionais de saúde devidamente credenciados. Todos passam por verificação rigorosa de credenciais e formação contínua.'
+    id: 'course-details',
+    category: 'Cursos e artigos',
+    question: 'Como saber o que está incluído em um curso?',
+    answer: 'Na página de cada curso, consulte a descrição, as aulas e as condições de acesso apresentadas antes de se inscrever ou comprar. O formato e os materiais disponíveis podem variar entre os cursos.',
+    link: { href: '/courses', label: 'Explorar cursos' },
   },
   {
-    id: 'consultations-3',
-    category: 'Consultas e Especialistas',
-    question: 'As consultas podem diagnosticar problemas médicos?',
-    answer: 'Não. Nossas consultas são de natureza educacional e informativa. Para diagnósticos, prescrições ou tratamentos médicos específicos, sempre recomendamos consulta presencial com profissional médico habilitado.'
+    id: 'articles',
+    category: 'Cursos e artigos',
+    question: 'Onde posso ler os artigos?',
+    answer: 'Acesse a página de artigos e escolha o conteúdo que deseja ler. Você pode filtrar por categoria e usar a busca para encontrar temas de seu interesse. As condições de acesso são indicadas na página do conteúdo.',
+    link: { href: '/articles', label: 'Ler artigos' },
   },
   {
-    id: 'consultations-4',
-    category: 'Consultas e Especialistas',
-    question: 'Quanto custam as consultas?',
-    answer: 'Os preços variam conforme o especialista e tipo de consulta (30min, 60min, follow-up). Consulte nossa página de preços para valores atualizados. Oferecemos também consultas gratuitas em campanhas especiais e para casos de vulnerabilidade social.'
-  },
-
-  // Privacidade e Segurança
-  {
-    id: 'privacy-1',
-    category: 'Privacidade e Segurança',
-    question: 'Minhas informações ficam realmente seguras?',
-    schemaAnswer: 'Sim. Implementamos múltiplas camadas de proteção: criptografia end-to-end em todas as comunicações, servidores seguros com backups criptografados, acesso restrito apenas a pessoal autorizado, conformidade total com a LGPD e nunca compartilhamos dados para fins comerciais.',
-    answer: (
-      <div className="space-y-2">
-        <p>Sim! Implementamos múltiplas camadas de proteção:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Criptografia end-to-end em todas as comunicações</li>
-          <li>Servidores seguros com backups criptografados</li>
-          <li>Acesso restrito apenas a pessoal autorizado</li>
-          <li>Conformidade total com a LGPD</li>
-          <li>Nunca compartilhamos dados para fins comerciais</li>
-        </ul>
-      </div>
-    )
+    id: 'payment-methods',
+    category: 'Pagamentos',
+    question: 'Quais formas de pagamento estão disponíveis?',
+    answer: 'As opções disponíveis são apresentadas na etapa de pagamento do curso. Confira o valor e as condições exibidas antes de concluir a compra.',
   },
   {
-    id: 'privacy-2',
-    category: 'Privacidade e Segurança',
-    question: 'Quem pode ver minhas perguntas na comunidade?',
-    answer: 'Você controla totalmente sua privacidade na comunidade. Pode participar anonimamente, usar apenas o primeiro nome, ou revelar sua identidade conforme se sentir confortável. Moderamos todo o conteúdo para garantir um ambiente respeitoso.'
+    id: 'payment-access',
+    category: 'Pagamentos',
+    question: 'Quando o acesso ao curso pago é liberado?',
+    answer: 'O acesso é liberado após a confirmação do pagamento. O tempo de confirmação pode variar conforme a forma de pagamento escolhida. Acompanhe o status na página de pagamento e acesse o curso com a conta utilizada na compra.',
   },
   {
-    id: 'privacy-3',
-    category: 'Privacidade e Segurança',
-    question: 'Posso excluir minha conta e dados a qualquer momento?',
-    answer: 'Sim! Você tem total controle sobre seus dados. Pode solicitar a exclusão completa da conta e dados através das configurações ou entrando em contato conosco. O processo é imediato e irreversível.'
-  },
-
-  // Conteúdo e Comunidade
-  {
-    id: 'content-1',
-    category: 'Conteúdo e Comunidade',
-    question: 'O conteúdo é baseado em ciência?',
-    answer: 'Absolutamente! Todo nosso conteúdo é revisado por especialistas, baseado em evidências científicas atuais e segue diretrizes de organizações médicas reconhecidas. Citamos fontes e atualizamos informações regularmente.'
+    id: 'refunds',
+    category: 'Pagamentos',
+    question: 'Como solicitar cancelamento ou reembolso?',
+    answer: 'Consulte os Termos de Uso e entre em contato com a equipe para solicitar orientações sobre sua compra. Informe o curso e o e-mail da conta, sem enviar senhas ou dados de cartão.',
+    link: { href: '/terms', label: 'Consultar os Termos de Uso' },
   },
   {
-    id: 'content-2',
-    category: 'Conteúdo e Comunidade',
-    question: 'Como a comunidade é moderada?',
-    schemaAnswer: 'Temos moderação ativa e inteligente: moderadores treinados em saúde sexual disponíveis 24/7, filtros automáticos para conteúdo inadequado, um sistema de denúncias rápido e eficiente, diretrizes claras de comportamento respeitoso e tolerância zero para assédio ou discriminação.',
-    answer: (
-      <div className="space-y-2">
-        <p>Temos moderação ativa e inteligente:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li>Moderadores treinados em saúde sexual disponíveis 24/7</li>
-          <li>Filtros automáticos para conteúdo inadequado</li>
-          <li>Sistema de denúncias rápido e eficiente</li>
-          <li>Diretrizes claras de comportamento respeitoso</li>
-          <li>Tolerância zero para assédio ou discriminação</li>
-        </ul>
-      </div>
-    )
+    id: 'privacy',
+    category: 'Privacidade',
+    question: 'Onde encontro informações sobre o uso dos meus dados?',
+    answer: 'A Política de Privacidade apresenta informações sobre o tratamento de dados pessoais e os canais para exercer seus direitos. Para dúvidas ou solicitações sobre seus dados, entre em contato com a equipe.',
+    link: { href: '/privacy', label: 'Ler a Política de Privacidade' },
   },
   {
-    id: 'content-3',
-    category: 'Conteúdo e Comunidade',
-    question: 'Posso compartilhar minha experiência pessoal?',
-    answer: 'Sim, compartilhar experiências pode ajudar outras pessoas! Incentivamos relatos respeitosos e construtivos. Nossos moderadores garantem que o ambiente permaneça seguro e acolhedor para todos.'
-  },
-
-  // Pagamentos e Planos
-  {
-    id: 'payment-1',
-    category: 'Pagamentos e Planos',
-    question: 'Quais são os planos disponíveis?',
-    schemaAnswer: 'Oferecemos opções para diferentes necessidades: plano Gratuito com acesso a artigos básicos e comunidade; plano Premium com cursos completos, webinars e conteúdo exclusivo; Consultas individuais com pagamento por sessão; e plano Empresarial com programas de bem-estar para empresas.',
-    answer: (
-      <div className="space-y-2">
-        <p>Oferecemos opções para diferentes necessidades:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li><strong>Gratuito:</strong> Acesso a artigos básicos e comunidade</li>
-          <li><strong>Premium:</strong> Cursos completos, webinars e conteúdo exclusivo</li>
-          <li><strong>Consultas:</strong> Sessões individuais (pagamento por consulta)</li>
-          <li><strong>Empresarial:</strong> Programas de bem-estar para empresas</li>
-        </ul>
-      </div>
-    )
+    id: 'contact',
+    category: 'Suporte',
+    question: 'Como falar com a equipe?',
+    answer: 'Envie sua mensagem pelo formulário de contato ou para contato@lutteros.com.br. O prazo de resposta é de até 48 horas úteis.',
+    link: { href: '/contact', label: 'Enviar uma mensagem' },
   },
   {
-    id: 'payment-2',
-    category: 'Pagamentos e Planos',
-    question: 'Como funciona o cancelamento e reembolso?',
-    answer: 'Você pode cancelar assinaturas a qualquer momento. Para reembolsos: consultas podem ser canceladas até 24h antes (100% reembolso), cursos têm garantia de 7 dias se menos de 20% foi acessado. Assinaturas não têm reembolso proporcional.'
+    id: 'mobile',
+    category: 'Suporte',
+    question: 'Posso acessar pelo celular?',
+    answer: 'Sim. Você pode acessar o site pelo navegador do celular, tablet ou computador, sem instalar um aplicativo.',
   },
   {
-    id: 'payment-3',
-    category: 'Pagamentos e Planos',
-    question: 'Aceita quais formas de pagamento?',
-    answer: 'Aceitamos cartões de crédito/débito (Visa, Mastercard, Elo), PIX, boleto bancário e carteiras digitais. Todos os pagamentos são processados com segurança através de parceiros certificados.'
+    id: 'technical',
+    category: 'Suporte',
+    question: 'O que fazer se uma página ou aula não carregar?',
+    answer: 'Verifique sua conexão e atualize a página. Se o problema continuar, envie uma mensagem informando a página ou o curso, o dispositivo utilizado e a mensagem de erro exibida. Não inclua senhas ou dados de pagamento.',
+    link: { href: '/contact', label: 'Relatar um problema' },
   },
-
-  // Suporte Técnico
-  {
-    id: 'support-1',
-    category: 'Suporte Técnico',
-    question: 'Como entrar em contato com o suporte?',
-    schemaAnswer: 'Oferecemos várias formas de suporte: chat online disponível 24/7 na plataforma, e-mail em suporte@lutteros.com.br com resposta em até 24h, WhatsApp em horário comercial e uma Central de Ajuda com base de conhecimento completa.',
-    answer: (
-      <div className="space-y-2">
-        <p>Oferecemos várias formas de suporte:</p>
-        <ul className="list-disc pl-6 space-y-1">
-          <li><strong>Chat online:</strong> Disponível 24/7 na plataforma</li>
-          <li><strong>Email:</strong> suporte@lutteros.com.br (resposta em até 24h)</li>
-          <li><strong>WhatsApp:</strong> (11) 9999-9999 (horário comercial)</li>
-          <li><strong>Central de Ajuda:</strong> Base de conhecimento completa</li>
-        </ul>
-      </div>
-    )
-  },
-  {
-    id: 'support-2',
-    category: 'Suporte Técnico',
-    question: 'A plataforma funciona no celular?',
-    answer: 'Sim! Nossa plataforma é totalmente responsiva e funciona perfeitamente em smartphones, tablets e computadores. Também estamos desenvolvendo um aplicativo mobile que será lançado em breve.'
-  },
-  {
-    id: 'support-3',
-    category: 'Suporte Técnico',
-    question: 'Estou com problemas técnicos, o que fazer?',
-    answer: 'Primeiro, tente atualizar a página ou fazer logout/login. Se persistir, entre em contato com nosso suporte técnico detalhando o problema. Temos uma equipe especializada que resolve a maioria dos casos rapidamente.'
-  }
 ];
 
-const categories = [
-  'Sobre a Plataforma',
-  'Conta e Acesso', 
-  'Consultas e Especialistas',
-  'Privacidade e Segurança',
-  'Conteúdo e Comunidade',
-  'Pagamentos e Planos',
-  'Suporte Técnico'
-];
+const categories = ['Todas', ...new Set(faqData.map((item) => item.category))];
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqData.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+};
 
-function FAQAccordion({ item }: { item: FAQItem }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border border-gray-200 rounded-lg">
-      <button
-        className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors rounded-lg cursor-pointer"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className="font-medium text-gray-900 pr-4">
-          {item.question}
-        </span>
-        {isOpen ? (
-          <ChevronUp className="text-brand-600 flex-shrink-0" size={20} />
-        ) : (
-          <ChevronDown className="text-brand-600 flex-shrink-0" size={20} />
-        )}
-      </button>
-      {isOpen && (
-        <div className="px-6 pb-4">
-          <div className="text-gray-700 leading-relaxed">
-            {typeof item.answer === 'string' ? (
-              <p>{item.answer}</p>
-            ) : (
-              item.answer
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+function normalizeSearch(value: string) {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('pt-BR').trim();
 }
 
 export default function FAQPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // FAQPage structured data — uses schemaAnswer for JSX answers, otherwise the
-  // plain-string answer. Rendered server-side (Next SSRs client components).
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqData
-      .map((item) => ({
-        '@type': 'Question' as const,
-        name: item.question,
-        acceptedAnswer: {
-          '@type': 'Answer' as const,
-          text: item.schemaAnswer ?? (typeof item.answer === 'string' ? item.answer : ''),
-        },
-      }))
-      .filter((q) => q.acceptedAnswer.text),
-  };
-
-  const filteredFAQs = faqData.filter(item => {
-    const matchesCategory = !selectedCategory || item.category === selectedCategory;
-    const matchesSearch = !searchTerm || 
-      item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (typeof item.answer === 'string' && item.answer.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  const query = normalizeSearch(searchTerm);
+  const filteredFAQs = faqData.filter((item) => (
+    (selectedCategory === 'Todas' || item.category === selectedCategory)
+    && normalizeSearch(`${item.question} ${item.answer}`).includes(query)
+  ));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+    <div className="min-h-screen bg-background">
+      <JsonLd data={faqJsonLd} />
       <PageHeader
-        title="Perguntas Frequentes"
-        description="Encontre respostas para suas dúvidas sobre a lutteros"
-        breadcrumbs={[
-          { label: 'Início', href: '/' },
-          { label: 'FAQ' }
-        ]}
+        illustration="help"
+        title="Perguntas frequentes"
+        description="Encontre orientações sobre conteúdos, acesso e pagamentos."
+        breadcrumbs={[{ label: 'Início', href: '/' }, { label: 'FAQ' }]}
       />
-      
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          {/* Search */}
-          <div className="max-w-lg mx-auto">
-            <input
-              type="text"
-              placeholder="Buscar nas perguntas frequentes..."
+
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-8 sm:px-10 lg:px-12">
+        <div className="mb-10 space-y-5">
+          <div className="relative max-w-2xl">
+            <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-4 size-5 text-brand-600" />
+            <Input
+              type="search"
+              aria-label="Buscar nas perguntas frequentes"
+              placeholder="Qual é a sua dúvida?"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-cta-highlight focus:border-transparent"
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="h-14 border-brand-600/25 bg-white/60 pl-12 text-base md:text-base"
             />
           </div>
-
-          {/* Category Filters */}
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                !selectedCategory
-                  ? 'bg-cta-highlight text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              Todas
-            </button>
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                  selectedCategory === category
-                    ? 'bg-cta-highlight text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          <CategoryFilter categories={categories} activeCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
         </div>
 
-        {/* FAQ Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Sidebar with Quick Links */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 sticky top-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Acesso Rápido
-              </h3>
-              <div className="space-y-3">
-                <div className="bg-gradient-to-r from-brand-50 to-brand-100 border-l-4 border-brand-500 p-4 rounded-lg">
-                  <h4 className="font-medium text-brand-800 mb-2">
-                    Precisa de Ajuda Imediata?
-                  </h4>
-                  <p className="text-sm text-brand-700 mb-3">
-                    Nossa equipe está sempre disponível para ajudar você.
-                  </p>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-brand-800">
-                      <strong>Chat:</strong> Disponível 24/7
-                    </p>
-                    <p className="text-brand-800">
-                      <strong>Email:</strong> suporte@lutteros.com.br
-                    </p>
-                    <p className="text-brand-800">
-                      <strong>WhatsApp:</strong> (11) 9999-9999
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-800 mb-2">
-                    Emergência Médica?
-                  </h4>
-                  <p className="text-sm text-blue-700">
-                    Em caso de emergência médica, procure imediatamente atendimento presencial ou ligue 192.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Link href="/privacy" className="block hover:text-cta-highlight text-sm transition-colors">
-                    → Política de Privacidade
-                  </Link>
-                  <Link href="/terms" className="block hover:text-cta-highlight text-sm transition-colors">
-                    → Termos de Uso
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main FAQ Content */}
-          <div className="lg:col-span-2">
-            <div className="space-y-4">
-              {filteredFAQs.length > 0 ? (
-                <>
-                  {selectedCategory && (
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                        {selectedCategory}
-                      </h2>
-                      <p className="text-gray-600">
-                        {filteredFAQs.length} pergunta{filteredFAQs.length !== 1 ? 's' : ''} encontrada{filteredFAQs.length !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {filteredFAQs.map(item => (
-                    <FAQAccordion key={item.id} item={item} />
-                  ))}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">
-                    Nenhuma pergunta encontrada para &ldquo;{searchTerm}&rdquo;
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    Tente buscar com outras palavras ou entre em contato conosco.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-12 text-center">
-          <div className="bg-gradient-to-r from-brand-50 to-brand-100 border border-brand-200 rounded-lg p-8">
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-              Não encontrou sua resposta?
-            </h3>
-            <p className="text-gray-700 mb-6">
-              Nossa equipe de suporte está pronta para ajudar você com qualquer dúvida específica.
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)] lg:gap-14">
+          <section aria-labelledby="faq-results" className="min-w-0">
+            <h2 id="faq-results" className="mb-2 font-[family-name:var(--font-cardo)] text-3xl text-brand-900">
+              {selectedCategory === 'Todas' ? 'Como podemos ajudar?' : selectedCategory}
+            </h2>
+            <p role="status" className="mb-6 text-sm text-slate-500">
+              {filteredFAQs.length} {filteredFAQs.length === 1 ? 'pergunta encontrada' : 'perguntas encontradas'}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact" className="bg-cta-highlight hover:bg-cta-highlight/90 text-white px-6 py-3 rounded-lg font-medium transition-colors text-center">
-                Entrar em Contato
-              </Link>
-              <Link href="/specialists" className="border border-cta-highlight text-cta-highlight hover:bg-cta-highlight/10 px-6 py-3 rounded-lg font-medium transition-colors text-center">
-                Agendar Consulta
-              </Link>
+            {filteredFAQs.length > 0 ? (
+              <Accordion type="multiple" className="border-t border-brand-600/20">
+                {filteredFAQs.map((item) => (
+                  <AccordionItem key={item.id} value={item.id} className="border-brand-600/20">
+                    <AccordionTrigger className="cursor-pointer gap-5 rounded-sm px-1 py-6 text-left text-lg text-brand-900 hover:text-brand-700 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 motion-reduce:transition-none motion-reduce:[&>svg]:transition-none">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-1 pb-7 text-base leading-[1.85] text-slate-600">
+                      <p>{item.answer}</p>
+                      {item.link && (
+                        <Link href={item.link.href} className="mt-4 inline-block font-medium text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600">
+                          {item.link.label} <span aria-hidden="true">→</span>
+                        </Link>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <EmptyState
+                variant="search"
+                title="Nenhuma pergunta encontrada"
+                description="Tente buscar com outras palavras ou remova os filtros para ver todas as perguntas."
+                action={{ label: 'Limpar busca e filtros', onClick: () => { setSearchTerm(''); setSelectedCategory('Todas'); } }}
+              />
+            )}
+          </section>
+
+          <aside aria-label="Contato e informações úteis" className="space-y-6 lg:sticky lg:top-28">
+            <div className="rounded-[12px_40px_12px_12px] bg-[#e4eeeb]/70 p-6 sm:p-8">
+              <BrandIcon kind="contact" className="mb-5 size-24" />
+              <h2 className="mb-4 font-[family-name:var(--font-cardo)] text-3xl leading-tight text-brand-900">Sua dúvida não está aqui?</h2>
+              <p className="mb-6 text-base leading-[1.8] text-slate-600">Fale com a equipe. Respondemos em até 48 horas úteis.</p>
+              <Button asChild className="h-auto min-h-12 w-full whitespace-normal bg-brand-600 px-5 text-base shadow-none hover:bg-brand-700">
+                <Link href="/contact">Entre em contato</Link>
+              </Button>
+              <a href="mailto:contato@lutteros.com.br" className="mt-5 block break-words text-center text-sm text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600">contato@lutteros.com.br</a>
             </div>
-          </div>
+            <div className="rounded-xl border border-[#630a79]/15 p-6 sm:p-8">
+              <h3 className="mb-3 font-medium text-brand-900">Precisa de atendimento de saúde?</h3>
+              <p className="text-sm leading-[1.8] text-slate-600">A Lutteros é uma plataforma educacional. Em caso de emergência médica, procure atendimento presencial ou ligue <a href="tel:192" className="font-semibold text-[#630a79] focus-visible:outline-2 focus-visible:outline-offset-2">192</a>.</p>
+            </div>
+            <nav aria-label="Políticas da plataforma" className="flex flex-wrap gap-x-6 gap-y-4 px-1 text-sm text-brand-700">
+              <Link href="/privacy" className="hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4">Política de privacidade</Link>
+              <Link href="/terms" className="hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4">Termos de uso</Link>
+            </nav>
+          </aside>
         </div>
       </div>
     </div>

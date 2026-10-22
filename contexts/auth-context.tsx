@@ -4,6 +4,7 @@ import { createContext, useContext, useCallback } from 'react'
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { refreshStoredProfile } from '@/lib/auth-session'
+import { getPostLoginDestination } from '@/lib/auth-redirect'
 
 interface UserProfile {
   id: string
@@ -74,18 +75,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const updated = await update()
     const role = updated?.user?.role as string | undefined
     const params = new URLSearchParams(window.location.search)
-    const redirectTo = params.get('redirectTo')
-    const fallback = role === 'ADMIN' || role === 'INSTRUCTOR' ? '/admin' : '/'
-    const destination = redirectTo?.startsWith('/') ? redirectTo : fallback
-    router.push(destination)
+    router.push(getPostLoginDestination(params, role))
   }
 
   const signInWithGoogle = async () => {
     const params = new URLSearchParams(window.location.search)
-    const redirectTo = params.get('redirectTo')
     // Google sign-ups create USER-role accounts; default to home so the
     // middleware doesn't bounce them out of /admin.
-    const callbackUrl = redirectTo?.startsWith('/') ? redirectTo : '/'
+    const callbackUrl = getPostLoginDestination(params)
     await nextAuthSignIn('google', { callbackUrl })
   }
 
