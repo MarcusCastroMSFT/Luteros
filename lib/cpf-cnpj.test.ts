@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { isValidCnpj, isValidCpf, isValidCpfCnpj, normalizeCpfCnpj } from './cpf-cnpj';
+import { formatCpfCnpj, isValidCnpj, isValidCpf, isValidCpfCnpj, normalizeCpfCnpj } from './cpf-cnpj';
 
 test('normalizeCpfCnpj strips formatting', () => {
   assert.equal(normalizeCpfCnpj('529.982.247-25'), '52998224725');
@@ -23,4 +23,11 @@ test('isValidCpfCnpj dispatches on length', () => {
   assert.equal(isValidCpfCnpj('52998224725'), true);
   assert.equal(isValidCpfCnpj('11222333000181'), true);
   assert.equal(isValidCpfCnpj('1234567890'), false);
+});
+
+test('formatCpfCnpj masks CPF and CNPJ progressively', () => {
+  assert.equal(formatCpfCnpj('52998224725'), '529.982.247-25');
+  assert.equal(formatCpfCnpj('529982'), '529.982');
+  assert.equal(formatCpfCnpj('11222333000181'), '11.222.333/0001-81');
+  assert.equal(formatCpfCnpj('abc'), '');
 });

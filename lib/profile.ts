@@ -42,6 +42,7 @@ export async function getCurrentUserProfile(): Promise<UserProfileData | null> {
     avatar: profile.image,
     email: profile.email || '',
     phone: profile.phone,
+    cpfCnpj: profile.cpfCnpj,
     dateOfBirth: profile.dateOfBirth?.toISOString() || null,
     title: profile.title,
     company: profile.company,

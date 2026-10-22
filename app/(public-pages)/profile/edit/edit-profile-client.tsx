@@ -19,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import type { UserProfileData } from '@/app/api/users/profile/route';
+import { formatCpfCnpj, isValidCpfCnpj } from '@/lib/cpf-cnpj';
 
 interface EditProfileClientProps {
   initialProfile: UserProfileData;
@@ -27,6 +28,7 @@ interface EditProfileClientProps {
 export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
   const { refreshProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [cpfCnpjError, setCpfCnpjError] = useState<string | null>(null);
 
   // Form state seeded from SSR-fetched profile
   const [formData, setFormData] = useState({
@@ -34,6 +36,7 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
     displayName: initialProfile.displayName || '',
     bio: initialProfile.bio || '',
     phone: initialProfile.phone || '',
+    cpfCnpj: initialProfile.cpfCnpj ? formatCpfCnpj(initialProfile.cpfCnpj) : '',
     dateOfBirth: initialProfile.dateOfBirth ? initialProfile.dateOfBirth.split('T')[0] : '',
     title: initialProfile.title || '',
     company: initialProfile.company || '',
@@ -58,6 +61,11 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.cpfCnpj && !isValidCpfCnpj(formData.cpfCnpj)) {
+      setCpfCnpjError('Informe um CPF ou CNPJ válido.');
+      return;
+    }
     
     try {
       setIsSaving(true);
@@ -92,7 +100,7 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
 
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       {/* Back Button */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" asChild className="cursor-pointer gap-2">
@@ -165,6 +173,28 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
                 onChange={handleInputChange}
                 placeholder="(11) 99999-9999"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cpfCnpj">CPF ou CNPJ</Label>
+              <Input
+                id="cpfCnpj"
+                name="cpfCnpj"
+                inputMode="numeric"
+                autoComplete="off"
+                value={formData.cpfCnpj}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, cpfCnpj: formatCpfCnpj(e.target.value) }));
+                  setCpfCnpjError(null);
+                }}
+                placeholder="000.000.000-00"
+                aria-invalid={cpfCnpjError ? true : undefined}
+              />
+              {cpfCnpjError ? (
+                <p className="text-sm text-red-600">{cpfCnpjError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Usado para emitir a cobrança na compra de cursos.</p>
+              )}
             </div>
 
             <div className="space-y-2">

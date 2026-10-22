@@ -132,13 +132,11 @@ async function ensureAsaasCustomer(
     throw new CheckoutError('Sua conta precisa ter um e-mail para realizar pagamentos.', 'PAYMENT_PROVIDER_ERROR', 400)
   }
 
-  if (user.asaasCustomerId) {
-    if (cpfCnpj !== user.cpfCnpj) {
-      await db.update(users).set({ cpfCnpj }).where(eq(users.id, user.id))
-    }
+  if (user.asaasCustomerId && cpfCnpj === user.cpfCnpj) {
     return user.asaasCustomerId
   }
 
+  // A new or changed CPF/CNPJ needs a fresh Asaas customer, since the existing one keeps the old document.
   const customer = await client.createCustomer({
     name: user.name || user.displayName || user.email,
     email: user.email,

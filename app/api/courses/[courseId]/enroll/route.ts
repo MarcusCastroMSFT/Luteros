@@ -3,7 +3,7 @@ import { revalidateTag } from '@/lib/cache';
 import { and, eq, sql } from 'drizzle-orm';
 import { getAuthUser, requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
-import { courses, enrollments } from '@/lib/db/schema';
+import { courses, enrollments, users } from '@/lib/db/schema';
 import { getCourseChargeAmount } from '@/lib/course-pricing';
 import { CheckoutError, startCoursePayment, syncEnrollmentPayment } from '@/lib/course-payments.server';
 import { hasPaidAccess } from '@/lib/payment-status';
@@ -128,11 +128,13 @@ export async function GET(
 
     const isEnrolled = !!enrollment && hasPaidAccess(enrollment.paymentStatus);
     const isPaymentPending = !!enrollment && !isEnrolled && enrollment.paymentStatus === 'PENDING';
+    const hasCpfCnpj = await db.select({ cpfCnpj: users.cpfCnpj }).from(users).where(eq(users.id, authUser.id)).limit(1).then((r) => !!r[0]?.cpfCnpj);
 
     return NextResponse.json({
       success: true,
       isEnrolled,
       isPaymentPending,
+      hasCpfCnpj,
       paymentUrl: isPaymentPending ? enrollment?.paymentUrl ?? null : null,
       enrollment: enrollment && {
         id: enrollment.id,

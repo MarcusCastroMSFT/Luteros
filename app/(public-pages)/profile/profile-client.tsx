@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { synchronizeProfileAvatar } from '@/lib/profile-avatar-sync';
 import Link from 'next/link';
 import { type UserProfileData } from '@/app/api/users/profile/route';
+import { formatCpfCnpj } from '@/lib/cpf-cnpj';
 
 interface ProfileClientProps {
   initialProfile: UserProfileData;
@@ -255,6 +256,7 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
             <InfoRow label="Nome de Exibição" value={profile.displayName} />
             <InfoRow label="Email" value={profile.email} />
             <InfoRow label="Telefone" value={profile.phone} />
+            <InfoRow label="CPF / CNPJ" value={profile.cpfCnpj ? formatCpfCnpj(profile.cpfCnpj) : null} />
             <InfoRow label="Data de Nascimento" value={formatDateOfBirth(profile.dateOfBirth)} />
           </CardContent>
         </Card>

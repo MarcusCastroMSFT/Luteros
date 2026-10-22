@@ -56,9 +56,10 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [isPaymentPending, setIsPaymentPending] = useState(false);
+  const [hasCpfCnpj, setHasCpfCnpj] = useState(false);
   const [showCpfDialog, setShowCpfDialog] = useState(false);
 
-  // Check enrollment status on mount (and keep polling while a payment is pending)
+  // Check enrollment status (and keep polling while a payment is pending, e.g. paid in another tab)
   useEffect(() => {
     const abortController = new AbortController();
     let pollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -75,6 +76,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
 
         setIsEnrolled(!!data.isEnrolled);
         setIsPaymentPending(!!data.isPaymentPending);
+        setHasCpfCnpj(!!data.hasCpfCnpj);
 
         if (data.isPaymentPending) {
           pollTimer = setTimeout(checkEnrollment, 5000);
@@ -92,7 +94,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
       abortController.abort();
       if (pollTimer) clearTimeout(pollTimer);
     };
-  }, [course.id]);
+  }, [course.id, isPaymentPending]);
 
   // Transform lessons into sections
   const sections = useMemo(() => {
@@ -134,6 +136,18 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
   const startEnrollment = useCallback(async (cpfCnpj?: string) => {
     if (isEnrolling) return; // Prevent double-clicks
 
+    // Paid checkout opens in a new tab. It must be opened inside the click handler,
+    // before any await, or the browser's pop-up blocker will stop it.
+    let checkoutTab: Window | null = null;
+    if (course.price > 0 && (cpfCnpj || hasCpfCnpj)) {
+      checkoutTab = window.open('', '_blank');
+      if (checkoutTab) {
+        checkoutTab.opener = null;
+        checkoutTab.document.title = 'Pagamento';
+        checkoutTab.document.body.textContent = 'Preparando o pagamento...';
+      }
+    }
+
     setIsEnrolling(true);
     try {
       const response = await fetch(`/api/courses/${course.id}/enroll`, {
@@ -147,6 +161,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
       const data = await response.json();
 
       if (!response.ok) {
+        checkoutTab?.close();
         if (response.status === 401) {
           toast.error('Você precisa estar logado para se inscrever no curso');
           router.push('/login?redirect=' + encodeURIComponent(`/courses/${slug}`));
@@ -163,24 +178,36 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
 
       if (data.requiresPayment && data.checkoutUrl) {
         setShowCpfDialog(false);
+        setHasCpfCnpj(true);
         setIsPaymentPending(true);
-        toast.success(data.message || 'Redirecionando para o pagamento...');
-        window.location.assign(data.checkoutUrl);
+
+        const tab = checkoutTab ?? window.open(data.checkoutUrl, '_blank', 'noopener');
+        if (checkoutTab) {
+          checkoutTab.location.href = data.checkoutUrl;
+        }
+        if (tab) {
+          toast.success('Abrimos o pagamento em uma nova aba. O acesso é liberado aqui assim que for aprovado.');
+        } else {
+          // Pop-ups blocked: fall back to leaving this tab.
+          window.location.assign(data.checkoutUrl);
+        }
         return;
       }
 
+      checkoutTab?.close();
       toast.success(data.message || 'Você foi inscrito no curso com sucesso!');
       setIsEnrolled(true);
 
       // Redirect to course lessons after successful enrollment
       router.push(`/courses/${slug}/lessons`);
     } catch (error) {
+      checkoutTab?.close();
       console.error('Error enrolling:', error);
       toast.error('Erro ao se inscrever no curso. Tente novamente.');
     } finally {
       setIsEnrolling(false);
     }
-  }, [isEnrolling, course.id, slug, router]);
+  }, [isEnrolling, hasCpfCnpj, course.id, course.price, slug, router]);
 
   const handleEnroll = useCallback(() => {
     if (isEnrolled) {

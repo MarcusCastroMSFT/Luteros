@@ -13,6 +13,7 @@ export interface UserProfileData {
   avatar: string | null;
   email: string;
   phone: string | null;
+  cpfCnpj: string | null;
   dateOfBirth: string | null;
   title: string | null;
   company: string | null;
@@ -71,6 +72,7 @@ export async function GET(request: NextRequest) {
       avatar: profile.image,
       email: profile.email || '',
       phone: profile.phone,
+      cpfCnpj: profile.cpfCnpj,
       dateOfBirth: profile.dateOfBirth?.toISOString() || null,
       title: profile.title,
       company: profile.company,

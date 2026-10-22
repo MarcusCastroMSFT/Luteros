@@ -4,12 +4,14 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { connection } from 'next/server';
+import { isValidCpfCnpj, normalizeCpfCnpj } from '@/lib/cpf-cnpj';
 
 export interface UpdateProfileData {
   fullName?: string;
   displayName?: string;
   bio?: string;
   phone?: string;
+  cpfCnpj?: string;
   dateOfBirth?: string;
   title?: string;
   company?: string;
@@ -40,6 +42,17 @@ export async function PUT(request: NextRequest) {
     if (body.displayName !== undefined) updateData.displayName = body.displayName?.trim() || null;
     if (body.bio !== undefined) updateData.bio = body.bio?.trim() || null;
     if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
+    if (body.cpfCnpj !== undefined) {
+      const cpfCnpj = normalizeCpfCnpj(body.cpfCnpj ?? '');
+      if (cpfCnpj && !isValidCpfCnpj(cpfCnpj)) {
+        return NextResponse.json({ success: false, error: 'CPF ou CNPJ inválido' }, { status: 400 });
+      }
+      updateData.cpfCnpj = cpfCnpj || null;
+
+      // The Asaas customer keeps the document it was created with, so a change needs a new customer.
+      const current = await db.select({ cpfCnpj: users.cpfCnpj }).from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0] ?? null);
+      if ((current?.cpfCnpj ?? null) !== updateData.cpfCnpj) updateData.asaasCustomerId = null;
+    }
     if (body.dateOfBirth !== undefined) updateData.dateOfBirth = body.dateOfBirth ? new Date(body.dateOfBirth) : null;
     if (body.title !== undefined) updateData.title = body.title?.trim() || null;
     if (body.company !== undefined) updateData.company = body.company?.trim() || null;
@@ -66,6 +79,7 @@ export async function PUT(request: NextRequest) {
         displayName: updatedProfile.displayName,
         bio: updatedProfile.bio,
         phone: updatedProfile.phone,
+        cpfCnpj: updatedProfile.cpfCnpj,
         dateOfBirth: updatedProfile.dateOfBirth?.toISOString() || null,
         title: updatedProfile.title,
         company: updatedProfile.company,

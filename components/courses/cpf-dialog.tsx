@@ -5,28 +5,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { isValidCpfCnpj, normalizeCpfCnpj } from '@/lib/cpf-cnpj';
+import { isValidCpfCnpj, formatCpfCnpj, normalizeCpfCnpj } from '@/lib/cpf-cnpj';
 
 interface CpfDialogProps {
   open: boolean;
   isSubmitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (cpfCnpj: string) => void;
-}
-
-function formatCpfCnpj(value: string): string {
-  const digits = normalizeCpfCnpj(value).slice(0, 14);
-  if (digits.length <= 11) {
-    return digits
-      .replace(/^(\d{3})(\d)/, '$1.$2')
-      .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-      .replace(/\.(\d{3})(\d)/, '.$1-$2');
-  }
-  return digits
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2');
 }
 
 export function CpfDialog({ open, isSubmitting, onOpenChange, onSubmit }: CpfDialogProps) {
@@ -46,7 +31,7 @@ export function CpfDialog({ open, isSubmitting, onOpenChange, onSubmit }: CpfDia
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <DialogHeader>
             <DialogTitle>Dados para o pagamento</DialogTitle>
             <DialogDescription>
