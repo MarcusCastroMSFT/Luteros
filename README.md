@@ -28,7 +28,11 @@ Contato, FAQ e Sobre a Lutteros compartilham o cabeçalho compacto de marca
 (`PageHeader`, com a propriedade `illustration`) e os ícones de `components/brand`.
 A página Sobre usa o posicionamento científico aprovado em `data/about.ts`,
 sem números de alunos, equipe ou histórico fictícios. Novas informações
-institucionais devem ser confirmadas antes de sua publicação.
+institucionais devem ser confirmadas antes de sua publicação. A página usa fotos
+geradas por IA em `public/images/about` (não retratam pessoas reais), com paleta
+da marca e plantas apenas como elemento de ambiente, sem grafismos de folhas.
+O princípio de Transparência afirma só o que o site já faz: referências nos
+conteúdos e aviso de acesso gratuito ou pago antes da leitura.
 
 O FAQ mantém respostas visíveis, busca e dados estruturados na mesma fonte,
 em `app/(public-pages)/faq/page.tsx`. Formas de pagamento e condições de acesso

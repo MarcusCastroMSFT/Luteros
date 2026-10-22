@@ -18,6 +18,12 @@ export const aboutValues = [
     icon: 'practice',
   },
   {
+    id: 'transparency',
+    title: 'Transparência',
+    description: 'Os conteúdos indicam as referências que os embasam, e cada um informa, antes do acesso, se é gratuito ou pago.',
+    icon: 'search',
+  },
+  {
     id: 'care',
     title: 'Cuidado centrado na pessoa',
     description: 'Uma abordagem da saúde sexual que valoriza a individualidade, respeita a diversidade e promove uma assistência qualificada, acolhedora e livre de julgamentos.',
