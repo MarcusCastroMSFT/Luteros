@@ -13,6 +13,13 @@ test('getAsaasConfig rejects a missing key or unknown type', () => {
   assert.throws(() => getAsaasConfig({ ASAAS_API_KEY: 'k', ASAAS_TYPE: 'staging' }), /ASAAS_TYPE/);
 });
 
+test('getAsaasConfig cleans a key pasted with quotes or the .env escape', () => {
+  const key = '$aact_hmlg_abc123';
+  for (const pasted of [key, `\\${key}`, `"\\${key}"`, `"${key}"`, `  ${key}\n`]) {
+    assert.equal(getAsaasConfig({ ASAAS_API_KEY: pasted }).apiKey, key, pasted);
+  }
+});
+
 function recordingFetch(response: { status?: number; body: unknown }) {
   const calls: Array<{ url: string; init: RequestInit }> = [];
   const fetchImpl = async (url: string, init?: RequestInit) => {

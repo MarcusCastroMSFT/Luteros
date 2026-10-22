@@ -53,8 +53,13 @@ export class AsaasError extends Error {
   }
 }
 
+// Tolerates values pasted as written in .env files: surrounding quotes and the "\$" escape.
+export function sanitizeApiKey(raw: string): string {
+  return raw.trim().replace(/^["']+|["']+$/g, '').replace(/^\\+/, '').trim()
+}
+
 export function getAsaasConfig(env: Record<string, string | undefined> = process.env): AsaasConfig {
-  const apiKey = env.ASAAS_API_KEY?.trim()
+  const apiKey = sanitizeApiKey(env.ASAAS_API_KEY ?? '')
   if (!apiKey) {
     throw new Error('ASAAS_API_KEY is not configured (escape a leading "$" as "\\$" in .env files)')
   }
