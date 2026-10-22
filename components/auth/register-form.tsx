@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
-import { quickValidateEmail } from '@/lib/email-validation'
+import { quickValidateEmail } from '@/lib/email-quick-validation'
 import {
   AuthDivider,
   AuthHeading,

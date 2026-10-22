@@ -142,41 +142,5 @@ export function validateEmail(email: string): EmailValidationResult {
   return { isValid: true }
 }
 
-/**
- * Client-side quick validation (subset of server validation)
- * Use this for instant feedback without exposing full validation logic
- */
-export function quickValidateEmail(email: string): { isValid: boolean; error?: string } {
-  const trimmedEmail = email.trim().toLowerCase()
-  
-  // Basic format validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(trimmedEmail)) {
-    return {
-      isValid: false,
-      error: 'Por favor, insira um e-mail válido (ex: nome@email.com)',
-    }
-  }
 
-  const [localPart] = trimmedEmail.split('@')
-  
-  // Check for obvious fake patterns (client-side only)
-  const obviousFakes = [
-    /^test[0-9]*$/i,
-    /^fake[0-9]*$/i,
-    /^aaa+$/i,
-    /^asdf+$/i,
-    /^[a-z]$/i, // Single character
-  ]
-
-  for (const pattern of obviousFakes) {
-    if (pattern.test(localPart)) {
-      return {
-        isValid: false,
-        error: 'Por favor, use seu e-mail real',
-      }
-    }
-  }
-
-  return { isValid: true }
-}
+export { quickValidateEmail } from './email-quick-validation'

@@ -1,95 +1,105 @@
-export interface MenuSection {
+export type NavIconKey =
+  | "courses"
+  | "articles"
+  | "events"
+  | "products"
+  | "about"
+  | "contact"
+  | "faq"
+  | "help";
+
+export interface NavLinkItem {
   title: string;
-  links: {
-    label: string;
-    href: string;
-  }[];
+  href: string;
+  description: string;
+  icon: NavIconKey;
 }
 
-export interface NavigationMenuItem {
-  title: string;
-  href?: string;
-  description?: string;
-  items?: {
-    title: string;
-    href: string;
-    description: string;
-  }[];
-}
-
-export interface ContactInfo {
-  phone: string;
-  email: string;
-  address: string;
-}
-
-export const contactInfo: ContactInfo = {
-  phone: "+1 (555) 123-4567",
-  email: "suporte@lutteros.com.br",
-  address: "58 Howard Street #2 San Francisco"
-};
-
-export const navigationMenu: NavigationMenuItem[] = [
-  {
-    title: "Início",
-    href: "/"
-  },
+/** Main destinations, in order of importance. */
+export const primaryNav: NavLinkItem[] = [
   {
     title: "Cursos",
-    href: "/courses"
-  },
-  {
-    title: "Páginas",
-    items: [
-      {
-        title: "Sobre Nós",
-        href: "/about",
-        description: "Saiba mais sobre nossa missão e equipe."
-      },
-      {
-        title: "Contato",
-        href: "/contact",
-        description: "Entre em contato com nossa equipe de suporte."
-      },
-      {
-        title: "FAQ",
-        href: "/faq",
-        description: "Perguntas frequentes e suporte."
-      }
-    ]
-  },
-  {
-    title: "Eventos",
-    href: "/events"
+    href: "/courses",
+    description: "Aprenda no seu ritmo com especialistas em saúde sexual.",
+    icon: "courses",
   },
   {
     title: "Artigos",
-    href: "/articles"
+    href: "/articles",
+    description: "Leituras confiáveis, claras e sem tabu.",
+    icon: "articles",
+  },
+  {
+    title: "Eventos",
+    href: "/events",
+    description: "Encontros, palestras e lives para participar.",
+    icon: "events",
   },
   {
     title: "Produtos",
-    href: "/products"
-  }
+    href: "/products",
+    description: "Seleção de parceiros e ofertas para o seu bem-estar.",
+    icon: "products",
+  },
 ];
 
-export const footerMenu: MenuSection[] = [
+/** Institutional pages, shown in the "Mais" menu. */
+export const moreNav: NavLinkItem[] = [
   {
-    title: "Empresa",
-    links: [
-      { label: "Sobre", href: "/about" },
-      { label: "Eventos", href: "/events" },
-      { label: "Artigos", href: "/articles" }
-    ]
+    title: "Sobre nós",
+    href: "/about",
+    description: "Nossa missão, valores e equipe.",
+    icon: "about",
   },
   {
-    title: "Links Úteis",
+    title: "Contato",
+    href: "/contact",
+    description: "Fale com a nossa equipe de suporte.",
+    icon: "contact",
+  },
+  {
+    title: "Perguntas frequentes",
+    href: "/faq",
+    description: "Respostas rápidas para as dúvidas mais comuns.",
+    icon: "faq",
+  },
+  {
+    title: "Central de Ajuda",
+    href: "/help",
+    description: "Guias e tutoriais para usar a plataforma.",
+    icon: "help",
+  },
+];
+
+export interface FooterColumn {
+  title: string;
+  links: { label: string; href: string }[];
+}
+
+export const footerColumns: FooterColumn[] = [
+  {
+    title: "Explorar",
     links: [
-      { label: "FAQ", href: "/faq" },
+      { label: "Cursos", href: "/courses" },
+      { label: "Artigos", href: "/articles" },
+      { label: "Eventos", href: "/events" },
+    ],
+  },
+  {
+    title: "Lutteros",
+    links: [
+      { label: "Produtos e parceiros", href: "/products" },
+      { label: "Sobre nós", href: "/about" },
+    ],
+  },
+  {
+    title: "Ajuda",
+    links: [
       { label: "Central de Ajuda", href: "/help" },
-      { label: "Termos", href: "/terms" },
-      { label: "Privacidade", href: "/privacy" }
-    ]
-  }
+      { label: "Perguntas frequentes", href: "/faq" },
+      { label: "Contato", href: "/contact" },
+    ],
+  },
 ];
 
 export interface SocialLink {

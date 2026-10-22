@@ -1,142 +1,83 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Send, Check, Loader2, Mail } from "lucide-react";
+import { useId, useRef, useState } from "react";
+import { ArrowRight, Check, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { quickValidateEmail } from "@/lib/email-quick-validation";
+import { cn } from "@/lib/utils";
 
 interface SubscribeProps {
   className?: string;
   title?: string;
   description?: string;
   source?: string;
+  /** "dark" is meant for the footer band over the deep teal background. */
+  variant?: "light" | "dark";
+  hideHeading?: boolean;
 }
 
-type SubscribeStatus = 'idle' | 'loading' | 'success' | 'error';
+type SubscribeStatus = "idle" | "loading" | "success" | "error";
 
-// Client-side quick validation (lightweight version for instant feedback)
-function quickValidateEmail(email: string): { isValid: boolean; error?: string } {
-  const trimmedEmail = email.trim().toLowerCase()
-  
-  // Basic format validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(trimmedEmail)) {
-    return {
-      isValid: false,
-      error: 'Por favor, insira um e-mail válido (ex: nome@email.com)',
-    }
-  }
-
-  const [localPart, domain] = trimmedEmail.split('@')
-  
-  // Check for very short local parts
-  if (localPart.length < 2) {
-    return {
-      isValid: false,
-      error: 'E-mail muito curto',
-    }
-  }
-
-  // Check for obvious fake patterns (client-side only)
-  const obviousFakePatterns = [
-    /^test[0-9]*$/i,
-    /^fake[0-9]*$/i,
-    /^aaa+$/i,
-    /^asdf+$/i,
-    /^qwerty[0-9]*$/i,
-    /^[0-9]+$/i, // All numbers
-    /^(.)\1{3,}$/i, // Repeating characters like "aaaa"
-  ]
-
-  for (const pattern of obviousFakePatterns) {
-    if (pattern.test(localPart)) {
-      return {
-        isValid: false,
-        error: 'Por favor, use seu e-mail real',
-      }
-    }
-  }
-
-  // Check for blocked test domains
-  const blockedDomains = ['example.com', 'test.com', 'fake.com', 'mailinator.com']
-  if (blockedDomains.includes(domain)) {
-    return {
-      isValid: false,
-      error: 'Este domínio de e-mail não é permitido',
-    }
-  }
-
-  return { isValid: true }
-}
-
-export function Subscribe({ 
+export function Subscribe({
   className = "",
   title = "Newsletter",
   description = "Inscreva-se em nossa newsletter e receba conteúdos exclusivos diretamente no seu e-mail.",
-  source = "footer"
+  source = "footer",
+  variant = "light",
+  hideHeading = false,
 }: SubscribeProps) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<SubscribeStatus>('idle');
+  const [status, setStatus] = useState<SubscribeStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const errorId = useId();
+  const dark = variant === "dark";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) return;
 
-    // Client-side validation
-    const validationResult = quickValidateEmail(trimmedEmail);
-    if (!validationResult.isValid) {
-      setStatus('error');
-      setErrorMessage(validationResult.error || 'E-mail inválido');
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setStatus("error");
+      setErrorMessage("Informe seu e-mail para se inscrever.");
       inputRef.current?.focus();
       return;
     }
 
-    setStatus('loading');
+    const validationResult = quickValidateEmail(trimmedEmail);
+    if (!validationResult.isValid) {
+      setStatus("error");
+      setErrorMessage(validationResult.error || "E-mail inválido");
+      inputRef.current?.focus();
+      return;
+    }
+
+    setStatus("loading");
     setErrorMessage("");
-    
+
     try {
-      const response = await fetch('/api/newsletter/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: trimmedEmail,
-          source 
-        }),
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, source }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao processar inscrição');
+        throw new Error(data.error || "Erro ao processar inscrição");
       }
 
-      setStatus('success');
+      setStatus("success");
       setEmail("");
-      toast.success(data.message || 'Inscrição realizada com sucesso!');
-      
-      // Reset to idle after 3 seconds
-      setTimeout(() => {
-        setStatus('idle');
-      }, 3000);
+      toast.success(data.message || "Inscrição realizada com sucesso!");
 
     } catch (error) {
-      setStatus('error');
-      const message = error instanceof Error ? error.message : 'Erro ao processar inscrição';
+      setStatus("error");
+      const message = error instanceof Error ? error.message : "Erro ao processar inscrição";
       setErrorMessage(message);
       toast.error(message);
-      
-      // Reset to idle after 5 seconds
-      setTimeout(() => {
-        setStatus('idle');
-        setErrorMessage("");
-      }, 5000);
+
     }
   };
 
@@ -144,26 +85,32 @@ export function Subscribe({
     if (email.trim()) {
       const validationResult = quickValidateEmail(email);
       if (!validationResult.isValid) {
-        setStatus('error');
-        setErrorMessage(validationResult.error || 'E-mail inválido');
+        setStatus("error");
+        setErrorMessage(validationResult.error || "E-mail inválido");
       }
     }
   };
 
+  const busy = status === "loading" || status === "success";
+
   return (
-    <div className={`space-y-3 ${className}`}>
-      <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
-      <p className="text-sm text-text-secondary">
-        {description}
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <div className="flex gap-2 w-full">
-          <div className="relative flex-1">
-            <Mail 
-              size={16} 
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" 
+    <div className={cn("space-y-3", className)}>
+      {hideHeading ? null : (
+        <>
+          <h3 className={cn("text-lg font-semibold", dark ? "text-white" : "text-text-primary")}>{title}</h3>
+          <p className={cn("text-sm", dark ? "text-white/70" : "text-text-secondary")}>{description}</p>
+        </>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-2" noValidate>
+        <div className="flex w-full gap-2">
+          <div className="relative min-w-0 flex-1">
+            <Mail
+              size={16}
+              className={cn("pointer-events-none absolute left-4 top-1/2 -translate-y-1/2", dark ? "text-white/50" : "text-muted-foreground")}
+              aria-hidden="true"
             />
-            <Input
+            <input
               ref={inputRef}
               type="text"
               inputMode="email"
@@ -171,75 +118,66 @@ export function Subscribe({
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => {
-                const value = e.target.value;
-                setEmail(value);
-                // Clear error when user starts typing
-                if (status === 'error' && errorMessage) {
-                  setStatus('idle');
+                setEmail(e.target.value);
+                if (status === "error" && errorMessage) {
+                  setStatus("idle");
                   setErrorMessage("");
                 }
               }}
               onBlur={handleBlur}
-              className={`h-10 pl-9 pr-4 text-base transition-colors ${
-                status === 'error' 
-                  ? 'border-red-400 focus-visible:ring-red-400 bg-red-50/50' 
-                  : status === 'success' 
-                    ? 'border-green-500 bg-green-50/50' 
-                    : ''
-              }`}
-              disabled={status === 'loading' || status === 'success'}
+              disabled={busy}
               aria-label="Endereço de e-mail"
-              aria-invalid={status === 'error'}
-              aria-describedby={errorMessage ? "email-error" : undefined}
+              aria-invalid={status === "error"}
+              aria-describedby={errorMessage ? errorId : undefined}
+              className={cn(
+                "h-12 w-full rounded-xl border pl-11 pr-4 text-base outline-none transition-[border-color,box-shadow,background-color] duration-200 disabled:opacity-70",
+                dark
+                  ? "border-white/20 bg-white/10 text-white placeholder:text-white/45 hover:bg-white/15 focus-visible:border-[#7fd3d8] focus-visible:bg-white/15 focus-visible:ring-4 focus-visible:ring-[#7fd3d8]/20"
+                  : "border-input bg-background focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                status === "error" && (dark ? "border-red-300 bg-red-400/10" : "border-red-400 bg-red-50/50"),
+                status === "success" && (dark ? "border-emerald-300" : "border-green-500 bg-green-50/50")
+              )}
             />
           </div>
-          <Button 
-            type="submit" 
-            size="sm"
-            disabled={status === 'loading' || status === 'success' || !email.trim()}
-            className={`px-3 cursor-pointer h-10 min-w-[44px] transition-all ${
-              status === 'success' 
-                ? 'bg-green-600 hover:bg-green-700' 
-                : ''
-            }`}
-            aria-label={status === 'loading' ? 'Enviando...' : 'Inscrever-se'}
+          <button
+            type="submit"
+            disabled={busy}
+            className={cn(
+              "group inline-flex h-12 min-w-12 flex-none cursor-pointer items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-default",
+              dark
+                ? "bg-[#198189] text-white hover:bg-[#126a71] focus-visible:outline-[#7fd3d8]"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring",
+              status === "success" && "from-emerald-500 to-emerald-600 bg-emerald-600"
+            )}
+            aria-label={status === "loading" ? "Enviando..." : status === "success" ? "Inscrição realizada" : "Inscrever-se na newsletter"}
           >
-            {status === 'loading' && <Loader2 size={16} className="animate-spin" />}
-            {status === 'success' && <Check size={16} />}
-            {(status === 'idle' || status === 'error') && <Send size={16} />}
-            <span className="sr-only">
-              {status === 'loading' ? 'Enviando...' : 'Inscrever-se na newsletter'}
-            </span>
-          </Button>
-        </div>
-        
-        {/* Error message */}
-        <div 
-          className={`overflow-hidden transition-all duration-200 ${
-            errorMessage ? 'max-h-10 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <p 
-            id="email-error" 
-            className="text-xs text-red-500 flex items-center gap-1" 
-            role="alert"
-          >
-            <span className="inline-block w-1 h-1 rounded-full bg-red-500" />
-            {errorMessage}
-          </p>
+            {status === "loading" ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : null}
+            {status === "success" ? <Check size={18} aria-hidden="true" /> : null}
+            {status === "idle" || status === "error" ? (
+              <>
+                <span className={dark ? "sr-only" : "hidden sm:inline"}>Inscrever-se</span>
+                <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
+              </>
+            ) : null}
+          </button>
         </div>
 
-        {/* Success message */}
-        <div 
-          className={`overflow-hidden transition-all duration-200 ${
-            status === 'success' ? 'max-h-10 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <p className="text-xs text-green-600 flex items-center gap-1" role="status">
-            <Check size={12} />
+        {errorMessage ? (
+          <p
+            id={errorId}
+            className={cn("text-sm leading-5", dark ? "text-red-200" : "text-red-500")}
+            role="alert"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
+
+        {status === "success" ? (
+          <p className={cn("flex items-center gap-1.5 text-xs", dark ? "text-emerald-200" : "text-green-600")} role="status">
+            <Check size={12} aria-hidden="true" />
             Inscrição realizada com sucesso!
           </p>
-        </div>
+        ) : null}
       </form>
     </div>
   );

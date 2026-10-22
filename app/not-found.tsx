@@ -31,7 +31,7 @@ export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <main className={styles.page}>
+      <main id="main-content" tabIndex={-1} className={styles.page}>
         <section className={styles.hero} aria-labelledby="not-found-title">
           <div className={styles.heroInner}>
             <div className={styles.copy}>

@@ -1,13 +1,8 @@
 "use client"
 
-import {
-  IconBookmark,
-  IconCalendarEvent,
-  IconLogout,
-  IconSettings,
-  IconUserCircle,
-} from "@tabler/icons-react"
-
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Bookmark, CalendarDays, ChevronDown, GraduationCap, LogOut, Settings2, UserRound } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,11 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+
+const itemClass =
+  "cursor-pointer gap-3 rounded-lg px-3 py-2.5 text-sm text-[#0a2f33] focus:bg-[#198189]/10 focus:text-[#0a2f33]"
 
 export function HeaderUserMenu() {
   const { user, userProfile, signOut } = useAuth()
@@ -29,81 +24,88 @@ export function HeaderUserMenu() {
 
   const handleLogout = async () => {
     await signOut()
-    router.push('/login')
+    router.push("/login")
   }
 
-  // Get display name with fallbacks
-  const displayName = userProfile?.displayName || userProfile?.name || user?.email?.split('@')[0] || 'User'
-  const userEmail = user?.email || 'user@example.com'
-  
-  // Check if user is admin
-  const isAdmin = userProfile?.role === 'ADMIN'
+  const displayName = userProfile?.displayName || userProfile?.name || user?.email?.split("@")[0] || "Minha conta"
+  const userEmail = user?.email || ""
+  const canAccessAdmin = userProfile?.role === "ADMIN" || userProfile?.role === "INSTRUCTOR"
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative h-9 w-9 rounded-full p-0 hover:bg-accent cursor-pointer"
+        <button
+          type="button"
+          className="group flex h-11 cursor-pointer items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition-colors duration-200 hover:bg-[#198189]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#198189] data-[state=open]:bg-[#198189]/10"
+          aria-label="Abrir menu da conta"
         >
-          <UserAvatar 
-            name={displayName} 
-            avatar={userProfile?.image} 
-            className="h-9 w-9"
+          <UserAvatar
+            name={displayName}
+            avatar={userProfile?.image}
+            className="size-9 ring-2 ring-white ring-offset-1 ring-offset-[#198189]/30"
           />
-        </Button>
+          <ChevronDown
+            className="hidden size-4 text-[#4f666a] transition-transform duration-200 group-data-[state=open]:rotate-180 sm:block"
+            aria-hidden="true"
+          />
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56"
+        className="w-64 rounded-2xl border-[#0a2f33]/10 bg-white/95 p-2 shadow-[0_30px_70px_-30px_rgba(10,47,51,0.5)] backdrop-blur-xl"
         align="end"
-        forceMount
+        sideOffset={10}
       >
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{displayName}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {userEmail}
-            </p>
+        <DropdownMenuLabel className="flex items-center gap-3 rounded-xl bg-[#198189]/8 p-3 font-normal">
+          <UserAvatar name={displayName} avatar={userProfile?.image} className="size-10" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-[#0a2f33]">{displayName}</p>
+            <p className="truncate text-xs text-[#4f666a]">{userEmail}</p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {isAdmin && (
-          <>
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/admin">
-                  <IconSettings className="mr-2 h-4 w-4" />
-                  <span>Administração</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-          </>
-        )}
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild className="cursor-pointer">
+
+        <DropdownMenuGroup className="mt-2">
+          <DropdownMenuItem asChild className={itemClass}>
+            <Link href="/courses/my-courses">
+              <GraduationCap className="size-4 text-[#198189]" aria-hidden="true" />
+              Meus cursos
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className={itemClass}>
             <Link href="/profile">
-              <IconUserCircle className="mr-2 h-4 w-4" />
-              <span>Meu Perfil</span>
+              <UserRound className="size-4 text-[#198189]" aria-hidden="true" />
+              Meu perfil
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer">
+          <DropdownMenuItem asChild className={itemClass}>
             <Link href="/events/my-events">
-              <IconCalendarEvent className="mr-2 h-4 w-4" />
-              <span>Meus Eventos</span>
+              <CalendarDays className="size-4 text-[#198189]" aria-hidden="true" />
+              Meus eventos
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer">
+          <DropdownMenuItem asChild className={itemClass}>
             <Link href="/articles/saved">
-              <IconBookmark className="mr-2 h-4 w-4" />
-              <span>Artigos Salvos</span>
+              <Bookmark className="size-4 text-[#198189]" aria-hidden="true" />
+              Artigos salvos
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-          <IconLogout className="mr-2 h-4 w-4" />
-          <span>Sair</span>
+
+        {canAccessAdmin ? (
+          <>
+            <DropdownMenuSeparator className="bg-[#0a2f33]/10" />
+            <DropdownMenuItem asChild className={itemClass}>
+              <Link href="/admin">
+                <Settings2 className="size-4 text-[#630a79]" aria-hidden="true" />
+                Administração
+              </Link>
+            </DropdownMenuItem>
+          </>
+        ) : null}
+
+        <DropdownMenuSeparator className="bg-[#0a2f33]/10" />
+        <DropdownMenuItem onClick={handleLogout} className={itemClass}>
+          <LogOut className="size-4 text-[#4f666a]" aria-hidden="true" />
+          Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

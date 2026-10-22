@@ -1,67 +1,103 @@
-'use client'
-
-import { footerMenu } from "@/data/menu";
-import { SocialLinks } from "@/components/social-links";
-import { Subscribe } from "@/components/subscribe";
-import { Logo } from "@/components/common/logo";
+import Image from "next/image";
 import Link from "next/link";
+import { Instagram, Mail } from "lucide-react";
+import { Logo } from "@/components/common/logo";
+import { Subscribe } from "@/components/subscribe";
+import { CurrentYear } from "@/components/common/current-year";
+import { footerColumns, socialLinks } from "@/data/menu";
+import { LUTTEROS_ENTITY as entity } from "@/lib/legal-entity";
+
+const footerLink =
+  "-mx-2 inline-flex items-center rounded-md px-2 py-1.5 text-sm leading-5 text-white/75 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7fd3d8]";
+
+const iconButton =
+  "grid size-11 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white/85 backdrop-blur transition-colors duration-200 hover:border-white/30 hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7fd3d8]";
 
 export function Footer() {
-  // Using state-based year to avoid hydration mismatch and prerender issues
-  const currentYear = 2026; // Static year for prerender compatibility
-
   return (
-    <footer className="bg-white border-t border-gray-200">
-      <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10 py-10 md:py-14">
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-12">
-          {/* Logo and Contact Info */}
-          <div className="col-span-2 md:col-span-1 lg:col-span-1 space-y-3 md:space-y-6 pb-2 md:pb-0">
-            <div className="flex items-center">
-              <Logo iconSize="lg" textSize="md" showText asLink />
-            </div>
+    <footer className="relative isolate mt-10 overflow-hidden bg-[#031a1c] text-white">
+      <div aria-hidden="true" className="absolute inset-0 -z-20">
+        <Image
+          src="/images/footer/water.webp"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-bottom"
+        />
+      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(3,26,28,0.96)_0%,rgba(3,26,28,0.86)_45%,rgba(3,26,28,0.72)_100%)]"
+      />
 
-            <div className="flex items-center gap-2 text-sm text-text-primary">
-              <SocialLinks />
-              <Link
-                href="https://www.instagram.com/lutteros"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-primary transition-colors"
-              >
-                @lutteros
-              </Link>
+      <div className="mx-auto max-w-[1428px] px-6 sm:px-8 lg:px-10">
+        <div className="grid gap-x-8 gap-y-8 py-9 sm:grid-cols-2 lg:grid-cols-12 lg:gap-x-10 lg:py-10">
+          <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-4 sm:block sm:space-y-4 lg:col-span-3">
+            <div className="inline-flex brightness-0 invert">
+              <Logo iconSize="lg" asLink />
+            </div>
+            <p className="col-span-2 row-start-2 max-w-xs text-sm leading-6 text-white/75">
+              Educação em saúde sexual e bem-estar, sem tabu e com acolhimento.
+            </p>
+            <div className="col-start-2 row-start-1 flex items-center gap-1 sm:gap-2.5">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={iconButton}
+                  aria-label={`${link.name} da lutteros`}
+                >
+                  <Instagram className="size-[18px]" aria-hidden="true" />
+                </a>
+              ))}
+              <a href="mailto:suporte@lutteros.com.br" className={iconButton} aria-label="Escrever para o suporte">
+                <Mail className="size-[18px]" aria-hidden="true" />
+              </a>
             </div>
           </div>
 
-          {/* Menu Sections */}
-          {footerMenu.map((section, index) => (
-            <div key={section.title} className={`space-y-3 md:space-y-4 ${index === 0 ? 'lg:ml-8' : ''}`}>
-              <h3 className="text-base md:text-lg font-semibold text-text-primary">{section.title}</h3>
-              <ul className="space-y-2 md:space-y-3">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-text-primary hover:text-primary transition-colors duration-200"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <nav aria-label="Rodapé" className="grid grid-cols-3 gap-x-4 sm:order-3 sm:col-span-2 lg:order-none lg:col-span-5">
+            {footerColumns.map((column) => (
+              <div key={column.title}>
+                <h3 className="mb-3 text-xs font-semibold tracking-wide text-[#7fd3d8]">{column.title}</h3>
+                <ul>
+                  {column.links.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} className={footerLink}>
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
 
-          {/* Subscribe Section */}
-          <div className="col-span-2 lg:col-span-2 space-y-6 md:space-y-8">
-            <Subscribe />
-          </div>
+          <section aria-labelledby="footer-newsletter-title" className="min-w-0 lg:col-span-4">
+            <h3
+              id="footer-newsletter-title"
+              className="max-w-xs font-[family-name:var(--font-cardo)] text-2xl font-normal leading-tight text-white"
+            >
+              Saúde sexual sem tabu, no seu e-mail.
+            </h3>
+            <p className="mb-4 mt-2 text-sm leading-6 text-white/75">Artigos e novidades. Sem spam.</p>
+            <Subscribe variant="dark" hideHeading source="footer" />
+          </section>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-gray-200 text-center">
-          <p className="text-xs md:text-sm text-text-secondary">
-            © {currentYear} lutteros. Todos os direitos reservados
+        <div className="flex flex-col gap-2 border-t border-white/15 py-4 text-xs leading-6 text-white/70 md:flex-row md:items-center md:justify-between md:gap-6">
+          <p>
+            © <CurrentYear /> lutteros · {entity.legalName} · CNPJ {entity.cnpj}
+          </p>
+          <p className="-mx-3 flex items-center gap-1">
+            <Link href="/terms" className="rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-[#7fd3d8]">
+              Termos de Uso
+            </Link>
+            <Link href="/privacy" className="rounded-md px-3 py-1.5 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-[#7fd3d8]">
+              Privacidade
+            </Link>
           </p>
         </div>
       </div>

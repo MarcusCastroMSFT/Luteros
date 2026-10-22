@@ -8,6 +8,7 @@ const formPaths = [
   '../components/auth/forgot-password-form.tsx',
   '../components/auth/reset-password-form.tsx',
   '../components/courses/cpf-dialog.tsx',
+  '../components/subscribe.tsx',
 ];
 
 test('forms never rely on the browser default validation', async () => {

@@ -10,6 +10,7 @@ interface LogoProps {
   asLink?: boolean;
   /** When asLink is true, open the home page in a new tab. */
   newTab?: boolean;
+  eager?: boolean;
 }
 
 export function Logo({
@@ -17,6 +18,7 @@ export function Logo({
   iconSize = "md",
   asLink = false,
   newTab = false,
+  eager = false,
 }: LogoProps) {
   const layout = getLogoLayout(iconSize);
   const content = (
@@ -32,6 +34,8 @@ export function Logo({
         alt="lutteros"
         width={layout.canvasSize}
         height={layout.canvasSize}
+        unoptimized
+        loading={eager ? "eager" : "lazy"}
         className="absolute left-0 max-w-none object-contain"
         style={{ top: layout.offsetTop }}
       />
