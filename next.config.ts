@@ -206,6 +206,13 @@ const nextConfig: NextConfig = {
   // Configure redirects if needed for SEO
   async redirects() {
     return [
+      // Plans are paused; the code is kept in app/(public-pages)/_pricing-plans.
+      // Temporary on purpose: /pricing comes back when subscriptions go live.
+      {
+        source: '/pricing',
+        destination: '/waitlist',
+        permanent: false,
+      },
       {
         source: '/blog',
         destination: '/articles',

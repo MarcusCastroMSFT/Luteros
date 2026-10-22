@@ -6,6 +6,7 @@ interface DisplayHeadingProps {
   size?: "sm" | "md" | "lg" | "xl";
   highlightText?: string;
   className?: string;
+  style?: React.CSSProperties;
   as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 }
 
@@ -21,6 +22,7 @@ export function DisplayHeading({
   size = "lg",
   highlightText,
   className,
+  style,
   as: Component = "h1",
 }: DisplayHeadingProps) {
   const renderContent = () => {
@@ -45,7 +47,7 @@ export function DisplayHeading({
         sizeClasses[size],
         className
       )}
-      style={{ fontFamily: "var(--font-cardo)" }}
+      style={{ fontFamily: "var(--font-cardo)", ...style }}
     >
       {renderContent()}
     </Component>

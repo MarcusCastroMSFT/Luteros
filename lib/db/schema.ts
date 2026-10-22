@@ -29,6 +29,20 @@ export const contactMessages = pgTable('contact_messages', {
   index('contact_messages_email_createdAt_idx').on(t.email, t.createdAt),
 ])
 
+// Interest list for paid-content subscriptions, kept apart from the newsletter
+// because joining it is not consent to receive newsletters.
+export const subscriptionWaitlist = pgTable('subscription_waitlist', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  audience: text('audience').$type<'general' | 'doctors'>(),
+  source: text('source'),
+  ipAddress: text('ipAddress'),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { mode: 'date' }).defaultNow().notNull(),
+}, (t) => [
+  index('subscription_waitlist_createdAt_idx').on(t.createdAt),
+])
+
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export const userRoleEnum = pgEnum('UserRole', ['ADMIN', 'INSTRUCTOR', 'USER', 'PROFESSIONAL'])

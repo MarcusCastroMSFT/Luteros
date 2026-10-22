@@ -23,7 +23,7 @@ Idioma principal: Português (pt-BR).
 ## Institucional
 
 - [Sobre](${baseUrl}/about): Nossa história e missão.
-- [Planos e preços](${baseUrl}/pricing): Assinaturas e benefícios.
+- [Assinatura](${baseUrl}/waitlist): Lista de espera para a assinatura de conteúdos de acesso pago.
 - [Central de ajuda](${baseUrl}/help): Perguntas frequentes e suporte.
 - [Termos de uso](${baseUrl}/terms)
 - [Política de privacidade](${baseUrl}/privacy)

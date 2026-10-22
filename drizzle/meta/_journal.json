@@ -64,6 +64,13 @@
       "when": 1792682851245,
       "tag": "0008_contact_responded",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792696250542,
+      "tag": "0009_subscription_waitlist",
+      "breakpoints": true
     }
   ]
 }

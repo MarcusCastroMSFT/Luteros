@@ -246,6 +246,55 @@
   }
 }
 
+/* ─── Site motion (page entrance + scroll reveal) ───────────────────────────
+   Hidden states only apply when scripting is on, so the content is always
+   readable without JavaScript. `PageMotion` adds `.is-visible` on scroll. */
+@keyframes heroRise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+/* No opacity: headings and photos can be the LCP element and must paint at once. */
+@keyframes heroRiseSoft {
+  from { transform: translateY(16px); }
+}
+@keyframes heroPhotoIn {
+  from { transform: scale(1.06); }
+}
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(20px); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter {
+    animation: heroRise 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) var(--enter-delay, 0s) both;
+  }
+  .hero-rise {
+    animation: heroRiseSoft 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) var(--enter-delay, 0s) both;
+  }
+  .hero-photo {
+    animation: heroPhotoIn 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) var(--enter-delay, 0s) both;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  [data-reveal]:not(.is-visible),
+  [data-reveal-stagger]:not(.is-visible) > * {
+    opacity: 0;
+  }
+  [data-reveal-stagger].is-visible > * {
+    animation: revealUp 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0s) backwards;
+  }
+  [data-reveal].is-visible {
+    animation: revealUp 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0s) backwards;
+  }
+}
+
+/* Reading-progress bar driven by `--scroll-progress` from `PageMotion`. */
+.scroll-progress {
+  transform: scaleX(var(--scroll-progress, 0));
+  transform-origin: left;
+  will-change: transform;
+}
+
 /* Article Content Prose Styles */
 .prose {
   color: #374151;

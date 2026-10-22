@@ -22,6 +22,31 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Catálogo público
 
+### Assinatura: lista de espera
+
+`/waitlist` recebe e-mails de quem quer assinar os artigos de acesso pago. A API
+`POST /api/waitlist` grava na tabela `subscription_waitlist` (migração `0009`),
+separada da newsletter: entrar na lista não é consentimento para newsletter e
+nenhum e-mail é enviado automaticamente. O envio exige o aceite do usuário, o
+e-mail é único e repetir o cadastro apenas atualiza o perfil escolhido, sem
+revelar se o e-mail já estava na lista. Os dados ficam só no banco; consulte a
+tabela para avisar os interessados.
+
+`/pricing` redireciona (temporário, 307) para `/waitlist` em `next.config.ts`, e
+o paywall dos artigos aponta para a lista de espera.
+
+**Como voltar com os planos quando a assinatura for ao ar:**
+
+1. Mova `app/(public-pages)/_pricing-plans` de volta para `app/(public-pages)/pricing`
+   (a pasta com `_` não gera rota, mas continua sendo verificada pelo TypeScript).
+2. Remova o redirecionamento de `/pricing` em `next.config.ts`.
+3. Troque os links de `/waitlist` por `/pricing` em `components/blog/paywall.tsx`,
+   `app/sitemap.ts` e `app/llms.txt/route.ts`.
+4. Revise valores, benefícios e garantia em `data/pricing.ts` antes de publicar:
+   são dados de exemplo da versão anterior. Os componentes continuam em
+   `components/pricing`.
+5. Aplique o novo visual de marca à página de planos, que ainda usa o estilo antigo.
+
 ### Páginas institucionais
 
 Contato, FAQ e Sobre a Lutteros compartilham o cabeçalho compacto de marca
@@ -45,6 +70,27 @@ sem API nem dados simulados. Cada guia descreve apenas recursos existentes, sem
 datas, contagens de visualização ou canais não confirmados. Ao criar ou alterar
 um recurso da plataforma, atualize o guia correspondente. Os guias entram
 automaticamente na página do site e no sitemap.
+
+### Motion
+
+O motion segue o padrão da DSG Capital, sem biblioteca extra: animações CSS em
+`app/globals.css` e um único componente, `components/common/page-motion.tsx`, no
+layout das páginas públicas.
+
+- **Entrada do topo:** `hero-enter` (opacidade + subida) e `hero-rise` (só
+  subida, para títulos e fotos que podem ser o LCP). Use `enterDelay(ms)` de
+  `lib/motion.ts` para escalonar. `PageHeader` já aplica isso a todas as páginas
+  com cabeçalho de marca.
+- **Revelação ao rolar:** `data-reveal` em um bloco, ou `data-reveal-stagger` em
+  uma grade (cada card entra em cascata por coluna). `reveal(índice)` de
+  `lib/motion.ts` gera o atraso de irmãos.
+- **Barra de progresso de leitura** no topo, com o gradiente teal → roxo.
+
+Páginas com motion: home, Sobre, Contato, FAQ, Ajuda, Lista de espera, e as grades
+de artigos, cursos, produtos e eventos. Os estados escondidos só valem com
+JavaScript ativo e `prefers-reduced-motion: no-preference`; sem isso o conteúdo
+aparece normalmente. Evite `data-reveal` em elementos cuja classe o React altera,
+porque a classe `is-visible` é adicionada fora dele.
 
 ### Imagens da marca
 

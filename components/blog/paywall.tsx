@@ -31,27 +31,25 @@ export function Paywall({ audience, isAuthenticated, redirectTo }: PaywallProps)
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 font-cardo">
               {isDoctors
-                ? 'Acesse este artigo com um plano para profissionais'
+                ? 'Este artigo é para assinantes profissionais'
                 : 'Continue lendo com uma assinatura'}
             </h2>
             <p className="text-gray-700 leading-relaxed mb-6">
-              {isDoctors
-                ? 'Este conteúdo é exclusivo para profissionais de saúde assinantes. Assinantes do plano Médicos têm acesso a artigos técnicos, protocolos clínicos e estudos de caso.'
-                : 'Continue lendo este artigo e tenha acesso ilimitado a todo nosso conteúdo educacional sobre saúde sexual e bem-estar.'}
+              A assinatura ainda não está disponível. Entre na lista de espera e avisamos você por e-mail quando ela abrir.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <Button asChild size="lg" className="cursor-pointer">
-                <Link href="/pricing">
+                <Link href="/waitlist">
                   {isDoctors ? (
                     <>
                       <Stethoscope className="w-4 h-4 mr-2" />
-                      Ver plano Médicos
+                      Entrar na lista de espera
                     </>
                   ) : (
                     <>
                       <Users className="w-4 h-4 mr-2" />
-                      Ver planos
+                      Entrar na lista de espera
                     </>
                   )}
                 </Link>
@@ -59,7 +57,7 @@ export function Paywall({ audience, isAuthenticated, redirectTo }: PaywallProps)
 
               {!isAuthenticated && (
                 <p className="text-sm text-gray-600">
-                  Já é assinante?{' '}
+                  Já tem acesso?{' '}
                   <Link
                     href={`/login${redirectTo ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''}`}
                     className="text-primary hover:underline font-medium"

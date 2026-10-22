@@ -43,7 +43,7 @@ export function WhyStudyWithUs({ features }: WhyStudyWithUsProps) {
         className="pointer-events-none absolute -left-48 -top-16 hidden h-auto w-80 rotate-[-20deg] opacity-35 lg:block"
       />
       <div className="relative mx-auto max-w-[1480px] px-6 sm:px-10 lg:px-12">
-        <div className="mb-14 text-center lg:mb-20">
+        <div data-reveal="" className="mb-14 text-center lg:mb-20">
           <p className="mb-5 text-sm font-medium text-brand-700 sm:text-base">
             Ciência que fundamenta a prática clínica
           </p>
@@ -51,7 +51,7 @@ export function WhyStudyWithUs({ features }: WhyStudyWithUsProps) {
             <span className="italic text-brand-600">Por que</span> escolher a Lutteros?
           </h2>
         </div>
-        <div className="grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-10 lg:gap-16">
+        <div data-reveal-stagger="" className="grid grid-cols-1 gap-14 md:grid-cols-3 md:gap-10 lg:gap-16">
           {(features ?? defaultFeatures).map((feature) => (
             <div key={feature.title} className="text-center">
               <div className="mb-7 flex justify-center">{feature.icon}</div>
