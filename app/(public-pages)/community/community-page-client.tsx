@@ -142,8 +142,8 @@ export function CommunityPageClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1428px] mx-auto px-4 sm:px-6 lg:px-10 py-4 md:py-8">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
         
         {/* Mobile Quick Access Bar - Only visible on mobile */}
         <div className="xl:hidden mb-4">
@@ -156,10 +156,10 @@ export function CommunityPageClient({
                 <button
                   key={tab.id}
                   onClick={() => handleCategorySelect(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors motion-reduce:transition-none shrink-0 cursor-pointer ${
                     isSelected
                       ? 'bg-brand-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                      : 'bg-background text-brand-700 border border-brand-600/20 hover:bg-brand-50'
                   }`}
                 >
                   <Icon size={16} />
@@ -172,10 +172,10 @@ export function CommunityPageClient({
             <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors motion-reduce:transition-none shrink-0 cursor-pointer ${
                     !selectedCategory?.includes('my-')
                       ? 'bg-brand-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                      : 'bg-background text-brand-700 border border-brand-600/20 hover:bg-brand-50'
                   }`}
                 >
                   <Filter size={16} />

@@ -25,6 +25,14 @@ interface EditProfileClientProps {
   initialProfile: UserProfileData;
 }
 
+const cardClass = 'rounded-[12px_32px_12px_12px] border-brand-600/15 bg-white/60 shadow-none';
+const cardTitleClass = 'flex items-center gap-2 font-[family-name:var(--font-cardo)] text-2xl font-normal text-brand-900';
+const formFieldStyles = [
+  '[&_label]:text-base [&_label]:font-medium [&_label]:text-brand-900',
+  '[&_input]:h-12 [&_input]:border-brand-600/25 [&_input]:bg-background [&_input]:text-base',
+  '[&_textarea]:border-brand-600/25 [&_textarea]:bg-background [&_textarea]:text-base',
+].join(' ');
+
 export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
   const { refreshProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
@@ -98,17 +106,17 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
 
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+    <form onSubmit={handleSubmit} className={`space-y-8 ${formFieldStyles}`} noValidate>
       {/* Back Button */}
       <div className="flex items-center justify-between">
-        <Button variant="ghost" asChild className="cursor-pointer gap-2">
+        <Button variant="ghost" asChild className="cursor-pointer gap-2 text-brand-700 hover:bg-brand-50 hover:text-brand-700">
           <Link href="/profile">
             <IconArrowLeft className="h-4 w-4" />
             Voltar ao Perfil
           </Link>
         </Button>
         
-        <Button type="submit" disabled={isSaving} className="cursor-pointer gap-2">
+        <Button type="submit" disabled={isSaving} className="cursor-pointer gap-2 bg-brand-600 shadow-none hover:bg-brand-700">
           <IconDeviceFloppy className="h-4 w-4" />
           {isSaving ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
@@ -116,9 +124,9 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <Card>
+        <Card className={cardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={cardTitleClass}>
               <IconUser className="h-5 w-5" />
               Informações Pessoais
             </CardTitle>
@@ -209,9 +217,9 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
         </Card>
 
         {/* Professional Information */}
-        <Card>
+        <Card className={cardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={cardTitleClass}>
               <IconBriefcase className="h-5 w-5" />
               Informações Profissionais
             </CardTitle>
@@ -257,9 +265,9 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
         </Card>
 
         {/* Social Links */}
-        <Card>
+        <Card className={cardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={cardTitleClass}>
               <IconWorld className="h-5 w-5" />
               Redes Sociais
             </CardTitle>
@@ -304,9 +312,9 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
         </Card>
 
         {/* Preferences */}
-        <Card>
+        <Card className={cardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={cardTitleClass}>
               <IconSettings className="h-5 w-5" />
               Preferências
             </CardTitle>
@@ -348,7 +356,7 @@ export function EditProfileClient({ initialProfile }: EditProfileClientProps) {
 
       {/* Save Button (Mobile) */}
       <div className="flex justify-end md:hidden">
-        <Button type="submit" disabled={isSaving} className="cursor-pointer gap-2 w-full">
+        <Button type="submit" disabled={isSaving} className="w-full cursor-pointer gap-2 bg-brand-600 shadow-none hover:bg-brand-700">
           <IconDeviceFloppy className="h-4 w-4" />
           {isSaving ? 'Salvando...' : 'Salvar Alterações'}
         </Button>

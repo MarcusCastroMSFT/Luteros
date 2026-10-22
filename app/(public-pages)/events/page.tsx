@@ -4,6 +4,7 @@ import { getEvents } from '@/lib/events'
 import { EventsPageClient } from './events-page-client'
 import { PageHeader } from '@/components/common/pageHeader'
 import { EventListSkeleton } from '@/components/events/eventSkeleton'
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
 
 const EVENTS_PER_PAGE = 9
 
@@ -12,11 +13,13 @@ export const metadata: Metadata = {
   description: 'Participe de nossos eventos e workshops sobre saúde sexual e bem-estar. Encontre palestras, cursos presenciais e online.',
   keywords: ['eventos', 'workshops', 'palestras', 'saúde sexual', 'bem-estar', 'cursos'],
   openGraph: {
+    images: [DEFAULT_SOCIAL_IMAGE],
     title: 'Eventos | lutteros',
     description: 'Participe de nossos eventos e workshops sobre saúde sexual e bem-estar.',
     type: 'website',
   },
   twitter: {
+    images: [DEFAULT_SOCIAL_IMAGE.url],
     card: 'summary_large_image',
     title: 'Eventos | lutteros',
     description: 'Participe de nossos eventos e workshops sobre saúde sexual e bem-estar.',
@@ -44,12 +47,12 @@ async function EventsContent({ page, search }: { page: number; search: string })
 
 function EventsPageFallback() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+    <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
       <div className="mb-8">
-        <div className="h-10 bg-gray-200 rounded-md w-full max-w-md animate-pulse" />
+        <div className="h-12 w-full max-w-md animate-pulse rounded-md bg-gray-200" />
       </div>
       <div className="mb-6">
-        <div className="h-5 bg-gray-200 rounded w-40 animate-pulse" />
+        <div className="h-5 w-40 animate-pulse rounded bg-gray-200" />
       </div>
       <EventListSkeleton count={9} />
     </div>
@@ -62,8 +65,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const search = sp.search ?? ''
 
   return (
-    <div className="bg-gray-50 pb-16">
+    <div className="min-h-screen bg-background">
       <PageHeader
+        illustration="events"
         title="Eventos"
         description="Participe de nossos eventos e workshops sobre saúde sexual e bem-estar."
         breadcrumbs={[

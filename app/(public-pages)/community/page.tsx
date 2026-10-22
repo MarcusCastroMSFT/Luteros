@@ -4,20 +4,25 @@ import { getInitialCommunityPosts, getCategoryStats } from '@/lib/community'
 import { CommunityPageClient } from './community-page-client'
 import { CommunitySkeleton } from '@/components/community/communitySkeleton'
 import { PageHeader } from '@/components/common/pageHeader'
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
+
+const communityDescription = 'Espaço de discussão da Lutteros para trocar experiências e refletir sobre saúde sexual.'
 
 export const metadata: Metadata = {
   title: 'Comunidade',
-  description: 'Conecte-se com outras pessoas que compartilham experiências semelhantes. Participe de discussões sobre gravidez, pós-parto, fertilidade e muito mais.',
-  keywords: ['comunidade', 'fórum', 'gravidez', 'maternidade', 'pós-parto', 'fertilidade', 'apoio'],
+  description: communityDescription,
+  keywords: ['comunidade', 'fórum', 'saúde sexual', 'discussões', 'apoio'],
   openGraph: {
+    images: [DEFAULT_SOCIAL_IMAGE],
     title: 'Comunidade | lutteros',
-    description: 'Conecte-se com outras pessoas que compartilham experiências semelhantes.',
+    description: communityDescription,
     type: 'website',
   },
   twitter: {
+    images: [DEFAULT_SOCIAL_IMAGE.url],
     card: 'summary_large_image',
     title: 'Comunidade | lutteros',
-    description: 'Conecte-se com outras pessoas que compartilham experiências semelhantes.',
+    description: communityDescription,
   },
   alternates: {
     canonical: '/community',
@@ -43,10 +48,11 @@ async function CommunityContent() {
 
 export default function CommunityPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <PageHeader
+        illustration="discussion"
         title="Comunidade"
-        description="Conecte-se com outras pessoas que compartilham experiências semelhantes."
+        description="Troque experiências e reflita sobre saúde sexual com outras pessoas."
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'Comunidade' }

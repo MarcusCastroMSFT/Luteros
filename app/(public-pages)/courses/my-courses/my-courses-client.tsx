@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, Clock, CheckCircle2, Loader2 } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { FilterTabs, UserCardSkeleton, UserStat, loadMoreButtonClass } from '@/components/common/user-area';
 import { EmptyState } from '@/components/common/empty-state';
 import { EnrolledCourseCard } from '@/components/courses/enrolled-course-card';
 import { type EnrolledCourse } from '@/app/api/users/enrolled-courses/route';
@@ -114,75 +114,29 @@ export function MyCoursesClient() {
   return (
     <div className="space-y-8">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-            <p className="text-sm text-gray-500">Cursos Inscritos</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
-            <Clock className="w-6 h-6 text-amber-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{stats.inProgress}</p>
-            <p className="text-sm text-gray-500">Em Andamento</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6 text-green-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-            <p className="text-sm text-gray-500">Concluídos</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <UserStat icon={<BookOpen className="size-6" />} value={stats.total} label="Cursos inscritos" />
+        <UserStat icon={<Clock className="size-6" />} value={stats.inProgress} label="Em andamento" />
+        <UserStat icon={<CheckCircle2 className="size-6" />} value={stats.completed} label="Concluídos" />
       </div>
 
       {/* Filter Tabs */}
-      <Tabs value={status} onValueChange={handleStatusChange} className="w-full">
-        <TabsList className="h-auto p-1 bg-muted/50 border border-border rounded-lg w-fit">
-          <TabsTrigger 
-            value="all"
-            className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            Todos ({stats.total})
-          </TabsTrigger>
-          <TabsTrigger 
-            value="in-progress"
-            className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            <Clock className="h-4 w-4 mr-2 text-amber-500" />
-            Em Andamento ({stats.inProgress})
-          </TabsTrigger>
-          <TabsTrigger 
-            value="completed"
-            className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-            Concluídos ({stats.completed})
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <FilterTabs<StatusFilter>
+        label="Filtrar cursos"
+        value={status}
+        onChange={handleStatusChange}
+        options={[
+          { value: 'all', label: `Todos (${stats.total})` },
+          { value: 'in-progress', label: `Em andamento (${stats.inProgress})` },
+          { value: 'completed', label: `Concluídos (${stats.completed})` },
+        ]}
+      />
 
       {/* Course Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
-              <div className="h-40 bg-gray-200" />
-              <div className="p-5 space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-2 bg-gray-200 rounded w-full" />
-              </div>
-            </div>
+            <UserCardSkeleton key={i} />
           ))}
         </div>
       ) : courses.length === 0 ? (
@@ -220,6 +174,7 @@ export function MyCoursesClient() {
                 size="lg"
                 onClick={handleLoadMore}
                 disabled={isLoading}
+                className={loadMoreButtonClass}
               >
                 {isLoading ? (
                   <>

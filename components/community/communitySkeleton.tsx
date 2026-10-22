@@ -2,13 +2,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function CommunitySkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1428px] mx-auto px-6 sm:px-8 lg:px-10 py-8">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
         <div className="xl:grid xl:grid-cols-5 xl:gap-8">
           {/* Sidebar Skeleton - 2 columns */}
           <div className="xl:col-span-2 mb-8 xl:mb-0">
             <div className="sticky top-8">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="rounded-[12px_32px_12px_12px] border border-brand-600/15 bg-white/60 p-6">
                 {/* Profile Section Skeleton */}
                 <div className="mb-6">
                   <div className="flex items-center space-x-3 mb-4">

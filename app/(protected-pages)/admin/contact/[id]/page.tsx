@@ -8,6 +8,7 @@ import { db } from '@/lib/db'
 import { contactMessages } from '@/lib/db/schema'
 import { contactPhoneLabel, contactReasonLabel } from '@/lib/contact'
 import { Button } from '@/components/ui/button'
+import { ContactRespondedButton } from '@/components/admin/contact-responded-button'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 
 export default async function ContactMessagePage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,14 @@ export default async function ContactMessagePage({ params }: { params: Promise<{
             timeZone: 'America/Sao_Paulo', dateStyle: 'long', timeStyle: 'short',
           })} (Brasília)
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <ContactRespondedButton id={message.id} responded={message.respondedAt !== null} variant="default" />
+          <p className="text-sm text-muted-foreground">
+            {message.respondedAt
+              ? `Respondida em ${message.respondedAt.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' })}`
+              : 'Ainda sem resposta'}
+          </p>
+        </div>
       </header>
       <section aria-label="Dados do remetente" className="rounded-xl border bg-card p-5">
         <dl className="grid gap-5 sm:grid-cols-2">

@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { connection } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
+import { helpArticles } from '@/data/help'
 import { blogArticles, courses, events, products } from '@/lib/db/schema'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -94,6 +95,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    ...Object.keys(helpArticles).map((slug) => ({
+      url: `${baseUrl}/help/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.4,
+    })),
   ]
 
   // Fetch all published blog articles

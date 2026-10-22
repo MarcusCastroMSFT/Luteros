@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { PageHeader } from '@/components/common/pageHeader';
+import { USER_PAGE_CONTAINER } from '@/components/common/user-area';
 import { MyCoursesClient } from './my-courses-client';
 
 export const metadata: Metadata = {
@@ -13,8 +14,9 @@ export const metadata: Metadata = {
 
 export default function MyCoursesPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <PageHeader
+        illustration="courses"
         title="Meus Cursos"
         description="Acompanhe seu progresso e continue aprendendo."
         breadcrumbs={[
@@ -24,7 +26,7 @@ export default function MyCoursesPage() {
         ]}
       />
 
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
+      <div className={USER_PAGE_CONTAINER}>
         <MyCoursesClient />
       </div>
     </div>

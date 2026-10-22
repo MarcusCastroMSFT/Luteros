@@ -44,30 +44,30 @@ export function EventsPageClient({ events, pagination, activeSearch }: EventsPag
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+    <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
       {/* Search Bar */}
       <div className="mb-8">
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-brand-600" />
           <Input
-            type="text"
+            type="search"
+            aria-label="Buscar eventos"
             placeholder="Buscar eventos..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10"
+            className="h-12 border-brand-600/25 bg-white/60 pl-12 text-base md:text-base"
           />
         </div>
       </div>
 
       {/* Results Count */}
-      <div className="mb-6">
-        <p className="text-gray-600">
-          {pagination.totalEvents === 0
-            ? 'Nenhum evento encontrado'
-            : `${pagination.totalEvents} evento${pagination.totalEvents !== 1 ? 's' : ''} encontrado${pagination.totalEvents !== 1 ? 's' : ''}`
-          }
-        </p>
-      </div>
+      {pagination.totalEvents > 0 && (
+        <div className="mb-6">
+          <p role="status" className="text-base text-slate-600">
+            {`${pagination.totalEvents} evento${pagination.totalEvents !== 1 ? 's' : ''} encontrado${pagination.totalEvents !== 1 ? 's' : ''}`}
+          </p>
+        </div>
+      )}
 
       {/* Events List */}
       {events.length > 0 ? (

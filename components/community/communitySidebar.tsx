@@ -11,6 +11,7 @@ import {
   FlowerIcon as Flower,
   Sparkles
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CommunitySidebarProps {
   onCategorySelect: (category: string) => void;
@@ -29,46 +30,52 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory, isMobile 
     {
       title: 'GRAVIDEZ E CUIDADOS COM RECÉM-NASCIDOS',
       items: [
-        { id: 'pregnancy', label: 'Gravidez', icon: Baby, color: 'text-brand-600' },
-        { id: 'birth-month-groups', label: 'Grupos por mês de nascimento', icon: Users, color: 'text-blue-600' },
-        { id: 'postpartum', label: 'Pós-parto', icon: Heart, color: 'text-pink-600' },
+        { id: 'pregnancy', label: 'Gravidez', icon: Baby },
+        { id: 'birth-month-groups', label: 'Grupos por mês de nascimento', icon: Users },
+        { id: 'postpartum', label: 'Pós-parto', icon: Heart },
       ]
     },
     {
       title: 'SUPORTE CONTÍNUO',
       items: [
-        { id: 'ask-provider', label: 'Pergunte a um especialista', icon: Stethoscope, color: 'text-green-600' },
-        { id: 'general-health', label: 'Saúde geral', icon: Heart, color: 'text-red-600' },
+        { id: 'ask-provider', label: 'Pergunte a um especialista', icon: Stethoscope },
+        { id: 'general-health', label: 'Saúde geral', icon: Heart },
       ]
     },
     {
       title: 'PATERNIDADE E PEDIATRIA',
       items: [
-        { id: 'parenting-pediatrics', label: 'Paternidade e pediatria', icon: Users, color: 'text-indigo-600' },
+        { id: 'parenting-pediatrics', label: 'Paternidade e pediatria', icon: Users },
       ]
     },
     {
       title: 'FERTILIDADE E CONSTRUÇÃO FAMILIAR',
       items: [
-        { id: 'ttc-fertility', label: 'TTC e fertilidade', icon: Flower, color: 'text-purple-600' },
-        { id: 'fertility-treatment', label: 'Tratamento de fertilidade', icon: Sparkles, color: 'text-brand-600' },
-        { id: 'adoption-surrogacy', label: 'Adoção e barriga de aluguel', icon: Heart, color: 'text-rose-600' },
+        { id: 'ttc-fertility', label: 'TTC e fertilidade', icon: Flower },
+        { id: 'fertility-treatment', label: 'Tratamento de fertilidade', icon: Sparkles },
+        { id: 'adoption-surrogacy', label: 'Adoção e barriga de aluguel', icon: Heart },
       ]
     },
     {
       title: 'MENOPAUSA E SAÚDE DA MEIA-IDADE',
       items: [
-        { id: 'menopause', label: 'Menopausa', icon: Flower, color: 'text-violet-600' },
+        { id: 'menopause', label: 'Menopausa', icon: Flower },
       ]
     }
   ];
 
+  const itemClass = (active: boolean, bordered = false) => cn(
+    'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
+    active ? 'bg-brand-600 text-white' : 'text-brand-900 hover:bg-white/70',
+    bordered && !active && 'border border-brand-600/20',
+  );
+
   return (
-    <div className={isMobile ? '' : 'bg-white rounded-lg shadow-sm border border-gray-200 p-6'}>
+    <div className={isMobile ? '' : 'rounded-[12px_40px_12px_12px] border border-brand-600/15 bg-[#e4eeeb]/40 p-6'}>
       {/* User Sections - Hide on mobile since we have quick access tabs */}
       {!isMobile && (
         <div className="mb-8">
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
+          <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-brand-700">
             MINHA COMUNIDADE
           </h3>
           <div className="space-y-2">
@@ -78,13 +85,10 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory, isMobile 
                 <button
                   key={section.id}
                   onClick={() => onCategorySelect(section.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer ${
-                    selectedCategory === section.id
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  aria-pressed={selectedCategory === section.id}
+                  className={itemClass(selectedCategory === section.id)}
                 >
-                  <Icon size={18} />
+                  <Icon size={18} aria-hidden="true" />
                   <span className="text-sm font-medium">{section.label}</span>
                 </button>
               );
@@ -95,24 +99,22 @@ export function CommunitySidebar({ onCategorySelect, selectedCategory, isMobile 
 
       {/* Category Sections */}
       {categorySections.map((category, categoryIndex) => (
-        <div key={categoryIndex} className={isMobile ? 'mb-6' : 'mb-6'}>
-          <h3 className={`font-medium text-gray-500 uppercase tracking-wider ${isMobile ? 'text-xs mb-3' : 'text-xs mb-3'}`}>
+        <div key={categoryIndex} className="mb-6">
+          <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-brand-700">
             {category.title}
           </h3>
           <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'space-y-1'}>
             {category.items.map((item) => {
               const Icon = item.icon;
+              const active = selectedCategory === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => onCategorySelect(item.id)}
-                  className={`${isMobile ? '' : 'w-full'} flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors cursor-pointer ${
-                    selectedCategory === item.id
-                      ? 'bg-brand-50 text-brand-700 border-brand-200'
-                      : 'text-gray-700 hover:bg-gray-50 border-gray-100'
-                  } ${isMobile ? 'border' : ''}`}
+                  aria-pressed={active}
+                  className={itemClass(active, isMobile)}
                 >
-                  <Icon size={16} className={item.color} />
+                  <Icon size={16} aria-hidden="true" className={active ? 'text-white' : 'text-brand-600'} />
                   <span className="text-sm">{item.label}</span>
                 </button>
               );

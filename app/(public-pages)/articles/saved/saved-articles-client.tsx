@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bookmark, Loader2 } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { FilterTabs, UserCardSkeleton, UserStat, loadMoreButtonClass } from '@/components/common/user-area';
 import { EmptyState } from '@/components/common/empty-state';
 import { SavedArticleCard } from '@/components/blog/saved-article-card';
 import { type SavedArticle } from '@/app/api/users/saved-articles/route';
@@ -113,52 +113,28 @@ export function SavedArticlesClient() {
   return (
     <div className="space-y-8">
       {/* Stats Card */}
-      <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4 w-fit">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <Bookmark className="w-6 h-6 text-primary" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
-          <p className="text-sm text-gray-500">Artigos Salvos</p>
-        </div>
+      <div className="w-fit">
+        <UserStat icon={<Bookmark className="size-6" />} value={totalCount} label="Artigos salvos" />
       </div>
 
       {/* Category Filter Tabs */}
       {categories.length > 0 && (
-        <Tabs value={selectedCategory} onValueChange={handleCategoryChange} className="w-full">
-          <TabsList className="h-auto p-1 bg-muted/50 border border-border rounded-lg w-fit flex-wrap">
-            <TabsTrigger 
-              value="all"
-              className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              Todos ({totalCount})
-            </TabsTrigger>
-            {categories.map((category) => (
-              <TabsTrigger 
-                key={category}
-                value={category}
-                className="cursor-pointer px-5 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <FilterTabs<string>
+          label="Filtrar por categoria"
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          options={[
+            { value: 'all', label: `Todos (${totalCount})` },
+            ...categories.map((category) => ({ value: category, label: category })),
+          ]}
+        />
       )}
 
       {/* Articles Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
-              <div className="h-48 bg-gray-200" />
-              <div className="p-5 space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-full" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-              </div>
-            </div>
+            <UserCardSkeleton key={i} imageHeight="h-48" />
           ))}
         </div>
       ) : articles.length === 0 ? (
@@ -188,6 +164,7 @@ export function SavedArticlesClient() {
                 size="lg"
                 onClick={handleLoadMore}
                 disabled={isLoading}
+                className={loadMoreButtonClass}
               >
                 {isLoading ? (
                   <>

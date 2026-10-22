@@ -54,7 +54,7 @@ export function SavedArticleCard({ savedArticle, onRemove }: SavedArticleCardPro
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
+    <div className="group overflow-hidden rounded-[12px_36px_12px_12px] border border-brand-600/15 bg-white/60 transition-colors hover:bg-[#e4eeeb]/40 motion-reduce:transition-none">
       {/* Article Image */}
       <Link href={`/articles/${article.slug}`} className="block relative">
         <div className="relative h-48 overflow-hidden">
@@ -88,7 +88,7 @@ export function SavedArticleCard({ savedArticle, onRemove }: SavedArticleCardPro
       <div className="p-5">
         {/* Title */}
         <Link href={`/articles/${article.slug}`}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="mb-2 line-clamp-2 font-[family-name:var(--font-cardo)] text-2xl leading-tight text-brand-900 group-hover:text-brand-700 motion-reduce:transition-none">
             {article.title}
           </h3>
         </Link>
@@ -111,7 +111,7 @@ export function SavedArticleCard({ savedArticle, onRemove }: SavedArticleCardPro
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between border-t border-brand-600/15 pt-3">
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <Bookmark className="w-3 h-3" />
             <span>Salvo em {formatSavedAt(savedAt)}</span>

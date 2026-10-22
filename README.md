@@ -36,6 +36,12 @@ são consultadas no curso/checkout; regras de cancelamento remetem aos Termos
 de Uso. Os canais de contato são o formulário e `contato@lutteros.com.br`,
 com resposta em até 48 horas úteis.
 
+A Central de ajuda (`/help`) é renderizada no servidor a partir de `data/help.ts`,
+sem API nem dados simulados. Cada guia descreve apenas recursos existentes, sem
+datas, contagens de visualização ou canais não confirmados. Ao criar ou alterar
+um recurso da plataforma, atualize o guia correspondente. Os guias entram
+automaticamente na página do site e no sitemap.
+
 ### Imagens da marca
 
 Cursos sem foto usam `public/images/course-placeholder-v2.svg` nos cards e na
@@ -165,7 +171,14 @@ por nome, e-mail ou assunto, paginação e leitura completa. As páginas e a API
 listagem (`GET /api/admin/contact`) exigem o papel `ADMIN`; instrutores não
 possuem acesso. Não há envio automático de e-mail nem resposta dentro do painel.
 
-A migração `0006_contact_messages.sql` deve ser aplicada antes da publicação.
+A **Visão Geral** (`/admin`) mostra as 3 mensagens mais recentes e quantas estão
+sem resposta. Cada mensagem pode ser marcada como **respondida** (ou reaberta) na
+Visão Geral, na lista e na página da mensagem, por `PATCH /api/admin/contact/[id]`
+com `{ "responded": true | false }`. O status fica em `respondedAt`; marcar de novo
+mantém a data original. É um controle interno: o sistema não envia a resposta.
+
+As migrações `0006_contact_messages.sql` e `0008_contact_responded.sql` (coluna
+opcional `respondedAt`) devem ser aplicadas antes da publicação.
 Use `npm run db:migrate` com `DIRECT_URL` apontando para a conexão direta do banco
 do ambiente desejado. Teste primeiro em uma branch isolada; não use `db:push`
 para aplicar alterações indiscriminadas em produção.

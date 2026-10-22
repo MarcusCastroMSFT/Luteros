@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { PageHeader } from '@/components/common/pageHeader';
+import { USER_PAGE_CONTAINER } from '@/components/common/user-area';
 import { MyEventsClient } from './my-events-client';
 
 export const metadata: Metadata = {
@@ -13,8 +14,9 @@ export const metadata: Metadata = {
 
 export default function MyEventsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <PageHeader
+        illustration="events"
         title="Meus Eventos"
         description="Acompanhe seus eventos e não perca nenhuma data importante."
         breadcrumbs={[
@@ -24,7 +26,7 @@ export default function MyEventsPage() {
         ]}
       />
 
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
+      <div className={USER_PAGE_CONTAINER}>
         <MyEventsClient />
       </div>
     </div>

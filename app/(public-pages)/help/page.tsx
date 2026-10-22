@@ -1,203 +1,76 @@
-'use client';
-
-import { PageHeader } from '@/components/common/pageHeader';
-import { Search, ChevronRight, Clock } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { QuickActions, PopularArticles, HelpCategories, ContactSection } from '@/components/help';
-import type { HelpPageData } from '@/types/help';
+import { ArrowRight } from 'lucide-react';
+import { BrandIcon } from '@/components/brand/brand-icon';
+import { PageHeader } from '@/components/common/pageHeader';
+import { HelpSearch } from '@/components/help/help-search';
+import { Button } from '@/components/ui/button';
+import { helpArticles, helpCategories, SUPPORT_EMAIL } from '@/data/help';
+import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images';
+
+const description = 'Guias para criar sua conta, acessar cursos, entender pagamentos e falar com a equipe da Lutteros.';
+
+export const metadata: Metadata = {
+  title: 'Central de ajuda',
+  description,
+  alternates: { canonical: '/help' },
+  openGraph: { title: 'Central de ajuda | lutteros', description, type: 'website', images: [DEFAULT_SOCIAL_IMAGE] },
+  twitter: { card: 'summary_large_image', title: 'Central de ajuda | lutteros', description, images: [DEFAULT_SOCIAL_IMAGE.url] },
+};
 
 export default function HelpPage() {
-  const [data, setData] = useState<HelpPageData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    const fetchHelpData = async () => {
-      try {
-        const response = await fetch('/api/help');
-        if (!response.ok) {
-          throw new Error('Erro ao carregar dados da ajuda');
-        }
-        
-        const helpData = await response.json();
-        if (helpData.success) {
-          setData(helpData);
-        } else {
-          throw new Error(helpData.error || 'Erro ao carregar dados da ajuda');
-        }
-      } catch (err) {
-        console.error('Error fetching help data:', err);
-        setError(err instanceof Error ? err.message : 'Erro ao carregar dados da ajuda');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHelpData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <PageHeader
-          title="Central de Ajuda"
-          description="Encontre respostas para suas dúvidas e aprenda a usar a lutteros"
-          breadcrumbs={[
-            { label: 'Início', href: '/' },
-            { label: 'Central de Ajuda' }
-          ]}
-        />
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-12 bg-gray-200 rounded w-full mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-40 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <PageHeader
-          title="Central de Ajuda"
-          description="Encontre respostas para suas dúvidas e aprenda a usar a lutteros"
-          breadcrumbs={[
-            { label: 'Início', href: '/' },
-            { label: 'Central de Ajuda' }
-          ]}
-        />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-red-600">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return null;
-  }
-
-  const filteredCategories = data.categories.filter(category => {
-    if (!searchTerm) return true;
-    return category.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           category.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           category.articles.some(article => 
-             article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             article.description.toLowerCase().includes(searchTerm.toLowerCase())
-           );
-  });
-
-  const allArticles = data.categories.flatMap(category => 
-    category.articles.map(article => ({ ...article, category: category.title }))
-  );
-
-  const filteredArticles = searchTerm ? 
-    allArticles.filter(article => 
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.description.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : [];
+  const articles = Object.values(helpArticles);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <PageHeader
-        title="Central de Ajuda"
-        description="Encontre respostas, guias e suporte para usar a lutteros"
-        breadcrumbs={[
-          { label: 'Início', href: '/' },
-          { label: 'Ajuda' }
-        ]}
+        illustration="help"
+        title="Central de ajuda"
+        description="Guias para criar sua conta, acessar cursos e resolver dúvidas comuns."
+        breadcrumbs={[{ label: 'Início', href: '/' }, { label: 'Central de ajuda' }]}
       />
-      
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-        {/* Search Section */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Buscar artigos de ajuda..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-cta-highlight focus:border-transparent shadow-sm text-lg"
-            />
-          </div>
-          
-          {searchTerm && (
-            <div className="mt-4 text-sm text-gray-600">
-              {filteredArticles.length} resultado{filteredArticles.length !== 1 ? 's' : ''} encontrado{filteredArticles.length !== 1 ? 's' : ''} para &ldquo;{searchTerm}&rdquo;
-            </div>
-          )}
+
+      <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-8 sm:px-10 lg:px-12">
+        <HelpSearch articles={articles.map(({ slug, title, description, category }) => ({ slug, title, description, category }))} />
+
+        <div className="grid gap-14 lg:grid-cols-3 lg:gap-12">
+          {helpCategories.map((category) => (
+            <section key={category.id} aria-labelledby={`help-${category.id}`}>
+              <BrandIcon kind={category.icon} className="mb-5 size-24" />
+              <h2 id={`help-${category.id}`} className="mb-3 font-[family-name:var(--font-cardo)] text-3xl leading-tight text-brand-900">
+                {category.title}
+              </h2>
+              <p className="mb-6 text-base leading-[1.8] text-slate-600">{category.description}</p>
+              <ul className="divide-y divide-brand-600/15 border-y border-brand-600/15">
+                {category.articleSlugs.map((slug) => (
+                  <li key={slug}>
+                    <Link
+                      href={`/help/${slug}`}
+                      className="group flex items-center justify-between gap-4 py-4 text-lg text-brand-900 hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                    >
+                      {helpArticles[slug].title}
+                      <ArrowRight aria-hidden="true" className="size-5 shrink-0 text-brand-600 motion-safe:transition-transform motion-safe:group-hover:translate-x-1" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
         </div>
 
-        {/* Quick Actions */}
-        <QuickActions actions={data.quickActions} />
-
-        {/* Search Results */}
-        {searchTerm && filteredArticles.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Resultados da Busca
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredArticles.map(article => (
-                <Link
-                  key={article.id}
-                  href={article.href}
-                  className="bg-white border border-gray-200 rounded-lg p-6 hover:border-cta-highlight hover:shadow-md transition-all cursor-pointer group"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-900 group-hover:text-cta-highlight transition-colors">
-                      {article.title}
-                    </h3>
-                    <ChevronRight className="text-gray-400 group-hover:text-cta-highlight transition-colors flex-shrink-0 ml-2" size={16} />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {article.description}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span className="bg-gray-100 px-2 py-1 rounded">
-                      {article.category}
-                    </span>
-                    <span className="flex items-center">
-                      <Clock size={12} className="mr-1" />
-                      {article.readTime}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+        <section aria-labelledby="help-contact" className="relative mt-20 overflow-hidden rounded-[12px_48px_12px_12px] bg-[#eee5ec] px-6 py-10 sm:p-12 lg:flex lg:items-center lg:justify-between lg:gap-12">
+          <div className="max-w-2xl">
+            <h2 id="help-contact" className="mb-4 font-[family-name:var(--font-cardo)] text-3xl text-brand-900 sm:text-4xl">Não encontrou o que procurava?</h2>
+            <p className="text-base leading-[1.8] text-slate-600">
+              Veja também as <Link href="/faq" className="font-medium text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">perguntas frequentes</Link> ou
+              escreva para a equipe. Respondemos em até 48 horas úteis.
+            </p>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-3 block break-words text-sm text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">{SUPPORT_EMAIL}</a>
           </div>
-        )}
-
-        {/* Main Content */}
-        {!searchTerm && (
-          <>
-            {/* Popular Articles */}
-            <PopularArticles articles={data.popularArticles} />
-
-            {/* Categories */}
-            <HelpCategories categories={filteredCategories} />
-          </>
-        )}
-
-        {/* Contact Section */}
-        <ContactSection />
+          <Button asChild className="mt-6 h-auto min-h-14 whitespace-normal bg-[#630a79] px-7 text-base shadow-none hover:bg-[#4e0860] lg:mt-0">
+            <Link href="/contact">Entre em contato</Link>
+          </Button>
+        </section>
       </div>
     </div>
   );

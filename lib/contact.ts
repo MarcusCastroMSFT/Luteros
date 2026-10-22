@@ -32,6 +32,8 @@ export const contactListQuerySchema = z.object({
   search: z.string().trim().max(200).default(''),
 })
 
+export const contactRespondedSchema = z.object({ responded: z.boolean() })
+
 export type ContactSubmission = z.infer<typeof contactSubmissionSchema>
 export type ContactReason = ContactSubmission['reason']
 
@@ -50,4 +52,5 @@ export interface ContactSummary {
   reason: ContactReason
   subject: string | null
   createdAt: string
+  respondedAt: string | null
 }

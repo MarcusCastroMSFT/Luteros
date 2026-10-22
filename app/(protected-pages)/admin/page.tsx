@@ -1,7 +1,10 @@
 import { connection } from 'next/server';
+import { Suspense } from 'react';
 import { DollarSign, Users, UserPlus, UserMinus, Activity, TrendingUp } from 'lucide-react';
 import { getAdminOverview } from '@/lib/admin-dashboard';
+import { getAuthUser } from '@/lib/auth-helpers';
 import { KpiCard } from '@/components/admin/kpi-card';
+import { RecentContactMessages } from '@/components/admin/recent-contact-messages';
 import { QuickActions } from '@/components/admin/quick-actions';
 import { TopArticlesPanel } from '@/components/admin/top-articles-panel';
 import { UpcomingEventsPanel } from '@/components/admin/upcoming-events-panel';
@@ -21,7 +24,7 @@ function formatPercent(value: number, fractionDigits = 1): string {
 
 export default async function AdminDashboardPage() {
   await connection();
-  const data = await getAdminOverview();
+  const [data, user] = await Promise.all([getAdminOverview(), getAuthUser()]);
 
   // Compute deltas for the "new users" card (this 30d vs prev 30d)
   const newUsersDelta = data.users.newPrev30d > 0
@@ -139,6 +142,11 @@ export default async function AdminDashboardPage() {
           {/* Operational panels */}
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="lg:col-span-2 flex flex-col gap-4">
+              {user?.role === 'ADMIN' && (
+                <Suspense fallback={<div className="h-48 animate-pulse rounded-xl border border-gray-200 bg-white" aria-hidden="true" />}>
+                  <RecentContactMessages />
+                </Suspense>
+              )}
               <TopArticlesPanel articles={data.topArticles} />
               <UpcomingEventsPanel events={data.upcomingEvents} />
             </div>

@@ -34,6 +34,15 @@ const columns: ColumnDef<ContactSummary>[] = [
     }),
   },
   {
+    id: 'status',
+    header: 'Situação',
+    cell: ({ row }) => row.original.respondedAt ? (
+      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Respondida</span>
+    ) : (
+      <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">Sem resposta</span>
+    ),
+  },
+  {
     id: 'actions',
     header: 'Mensagem',
     cell: ({ row }) => (

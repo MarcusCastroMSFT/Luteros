@@ -291,14 +291,14 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="rounded-[12px_40px_12px_12px] border border-brand-600/15 bg-white/60">
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-gray-200">
+      <div className="border-b border-brand-600/15 p-4 md:p-6">
         <div className="flex items-center justify-between mb-4 gap-2">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
+          <h2 className="truncate font-[family-name:var(--font-cardo)] text-2xl text-brand-900 md:text-3xl">
             {getCategoryTitle()}
           </h2>
-          <Button onClick={() => setCreatePostDialog(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer shrink-0" size="sm">
+          <Button onClick={() => setCreatePostDialog(true)} className="shrink-0 cursor-pointer bg-brand-600 text-white shadow-none hover:bg-brand-700 motion-reduce:transition-none" size="sm">
             <Plus size={16} className="md:mr-2" />
             <span className="hidden md:inline">Criar novo post</span>
             <span className="md:hidden">Novo</span>
@@ -309,13 +309,14 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
         <div className="space-y-3 md:space-y-4">
           {/* Search */}
           <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-600" />
             <input
-              type="text"
+              type="search"
+              aria-label="Buscar na comunidade"
               placeholder="Buscar na comunidade"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="h-12 w-full rounded-md border border-brand-600/25 bg-background pl-10 pr-4 text-base text-brand-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             />
           </div>
 
@@ -325,9 +326,10 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
             {subcategories.length > 0 && (
               <div className="flex-1 min-w-0">
                 <select
+                  aria-label="Filtrar por subcategoria"
                   value={selectedSubcategory}
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="h-12 w-full rounded-md border border-brand-600/25 bg-background px-3 text-base text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
                 >
                   <option value="all">Todas as subcategorias</option>
                   {subcategories.map(subcategory => (
@@ -340,23 +342,25 @@ export function CommunityPostList({ posts: initialPosts, selectedCategory, onPos
             )}
 
             {/* Sort Filter */}
-            <div className="flex bg-gray-100 rounded-lg p-1 self-start">
+            <div className="flex self-start rounded-md border border-brand-600/20 bg-background p-1">
               <button
                 onClick={() => setSortBy('popular')}
-                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors cursor-pointer ${
+                aria-pressed={sortBy === 'popular'}
+                className={`min-h-10 cursor-pointer rounded px-4 text-sm font-medium transition-colors motion-reduce:transition-none ${
                   sortBy === 'popular'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-brand-600 text-white'
+                    : 'text-brand-700 hover:bg-brand-50'
                 }`}
               >
                 Populares
               </button>
               <button
                 onClick={() => setSortBy('recent')}
-                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors cursor-pointer ${
+                aria-pressed={sortBy === 'recent'}
+                className={`min-h-10 cursor-pointer rounded px-4 text-sm font-medium transition-colors motion-reduce:transition-none ${
                   sortBy === 'recent'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-brand-600 text-white'
+                    : 'text-brand-700 hover:bg-brand-50'
                 }`}
               >
                 Recentes

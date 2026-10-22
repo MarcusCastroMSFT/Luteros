@@ -23,6 +23,7 @@ export const contactMessages = pgTable('contact_messages', {
   subject: text('subject'),
   message: text('message').notNull(),
   createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+  respondedAt: timestamp('respondedAt', { mode: 'date' }),
 }, (t) => [
   index('contact_messages_createdAt_id_idx').on(t.createdAt, t.id),
   index('contact_messages_email_createdAt_idx').on(t.email, t.createdAt),

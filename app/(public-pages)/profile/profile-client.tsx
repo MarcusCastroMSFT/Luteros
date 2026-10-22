@@ -37,10 +37,14 @@ import { synchronizeProfileAvatar } from '@/lib/profile-avatar-sync';
 import Link from 'next/link';
 import { type UserProfileData } from '@/app/api/users/profile/route';
 import { formatCpfCnpj } from '@/lib/cpf-cnpj';
+import { cn } from '@/lib/utils';
 
 interface ProfileClientProps {
   initialProfile: UserProfileData;
 }
+
+const profileCardClass = 'rounded-[12px_32px_12px_12px] border-brand-600/15 bg-white/60 shadow-none';
+const profileCardTitleClass = 'flex items-center gap-2 font-[family-name:var(--font-cardo)] text-2xl font-normal text-brand-900';
 
 export function ProfileClient({ initialProfile }: ProfileClientProps) {
   const { refreshProfile } = useAuth();
@@ -125,7 +129,7 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
   return (
     <div className="space-y-8">
       {/* Profile Header Card */}
-      <Card>
+      <Card className={profileCardClass}>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <button
@@ -146,7 +150,7 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
             
             <div className="flex-1">
               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
-                <h2 className="text-2xl font-bold text-gray-900">{displayName}</h2>
+                <h2 className="font-[family-name:var(--font-cardo)] text-4xl leading-tight text-brand-900">{displayName}</h2>
                 {profile.title && (
                   <Badge variant="secondary">{profile.title}</Badge>
                 )}
@@ -213,30 +217,30 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
-          icon={<IconBook className="h-6 w-6 text-blue-600" />}
+          icon={<IconBook className="h-6 w-6 text-brand-600" />}
           label="Cursos Matriculados"
           value={profile.stats.enrolledCourses}
           href="/courses/my-courses"
         />
         <StatCard
-          icon={<IconCertificate className="h-6 w-6 text-green-600" />}
+          icon={<IconCertificate className="h-6 w-6 text-brand-600" />}
           label="Cursos Concluídos"
           value={profile.stats.completedCourses}
         />
         <StatCard
-          icon={<IconCalendarEvent className="h-6 w-6 text-purple-600" />}
+          icon={<IconCalendarEvent className="h-6 w-6 text-brand-600" />}
           label="Eventos Registrados"
           value={profile.stats.registeredEvents}
           href="/events/my-events"
         />
         <StatCard
-          icon={<IconBookmark className="h-6 w-6 text-orange-600" />}
+          icon={<IconBookmark className="h-6 w-6 text-[#630a79]" />}
           label="Artigos Salvos"
           value={profile.stats.savedArticles}
           href="/articles/saved"
         />
         <StatCard
-          icon={<IconCertificate className="h-6 w-6 text-amber-600" />}
+          icon={<IconCertificate className="h-6 w-6 text-[#630a79]" />}
           label="Certificados"
           value={profile.stats.certificates}
         />
@@ -245,9 +249,9 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
       {/* Details Grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <Card>
+        <Card className={profileCardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={profileCardTitleClass}>
               <IconUser className="h-5 w-5" />
               Informações Pessoais
             </CardTitle>
@@ -263,9 +267,9 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
         </Card>
 
         {/* Professional Information */}
-        <Card>
+        <Card className={profileCardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={profileCardTitleClass}>
               <IconBriefcase className="h-5 w-5" />
               Informações Profissionais
             </CardTitle>
@@ -282,9 +286,9 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
         </Card>
 
         {/* Social Links */}
-        <Card>
+        <Card className={profileCardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={profileCardTitleClass}>
               <IconWorld className="h-5 w-5" />
               Redes Sociais
             </CardTitle>
@@ -309,9 +313,9 @@ export function ProfileClient({ initialProfile }: ProfileClientProps) {
         </Card>
 
         {/* Preferences */}
-        <Card>
+        <Card className={profileCardClass}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={profileCardTitleClass}>
               <IconSettings className="h-5 w-5" />
               Preferências
             </CardTitle>
@@ -356,17 +360,19 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <Card className={href ? 'hover:shadow-md transition-shadow cursor-pointer' : ''}>
+    <Card className={cn(profileCardClass, href && 'cursor-pointer transition-colors hover:bg-[#e4eeeb]/50 motion-reduce:transition-none')}>
       <CardContent className="pt-6 text-center">
-        <div className="flex justify-center mb-2">{icon}</div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        <p className="text-xs text-gray-500">{label}</p>
+        <div className="mb-3 flex justify-center">
+          <span className="flex size-12 items-center justify-center rounded-[42%_58%_52%_38%] bg-[#e4eeeb]">{icon}</span>
+        </div>
+        <p className="font-[family-name:var(--font-cardo)] text-3xl leading-none text-brand-900">{value}</p>
+        <p className="mt-1 text-xs text-slate-600">{label}</p>
       </CardContent>
     </Card>
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return <Link href={href} className="rounded-[12px_32px_12px_12px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600">{content}</Link>;
   }
 
   return content;

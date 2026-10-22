@@ -7,14 +7,14 @@ export function EventList({ events = [], limit, className = '' }: EventListProps
 
   if (displayedEvents.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No events found.</p>
+      <div className="py-12 text-center">
+        <p className="text-slate-600">Nenhum evento encontrado.</p>
       </div>
     );
   }
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
+    <div className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 ${className}`}>
       {displayedEvents.map((event) => (
         <EventCard 
           key={event.id} 

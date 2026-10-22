@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         reason: contactMessages.reason,
         subject: contactMessages.subject,
         createdAt: contactMessages.createdAt,
+        respondedAt: contactMessages.respondedAt,
       }).from(contactMessages).where(where)
         .orderBy(desc(contactMessages.createdAt), desc(contactMessages.id))
         .limit(pageSize).offset(page * pageSize),

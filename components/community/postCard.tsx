@@ -132,11 +132,11 @@ export function PostCard({
   });
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+    <div className="rounded-[12px_32px_12px_12px] border border-brand-600/15 bg-white/60 p-4 md:p-6">
       <div className="flex items-start gap-3 md:gap-4">
         {/* Avatar */}
-        <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-cta-highlight font-medium text-xs md:text-sm">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-[42%_58%_52%_38%] bg-[#e4eeeb] md:size-12">
+          <span className="text-sm font-medium text-brand-700 md:text-base">
             {post.isAnonymous ? 'A' : post.author.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -147,7 +147,7 @@ export function PostCard({
             <div className="flex-1 min-w-0">
               <h3 
                 onClick={() => onViewReplies(getUpdatedPost())}
-                className="text-base md:text-lg font-semibold text-gray-900 mb-1.5 md:mb-2 cursor-pointer hover:text-primary transition-colors line-clamp-2"
+                className="mb-1.5 line-clamp-2 cursor-pointer font-[family-name:var(--font-cardo)] text-xl leading-tight text-brand-900 transition-colors hover:text-brand-700 motion-reduce:transition-none md:mb-2 md:text-2xl"
               >
                 {post.title}
               </h3>
@@ -155,7 +155,7 @@ export function PostCard({
                 <span>{post.isAnonymous ? 'Anônimo' : post.author}</span>
                 <span className="hidden sm:inline">•</span>
                 <span>{formatDate(post.createdDate)}</span>
-                <span className="text-xs bg-gray-100 px-2 py-0.5 md:py-1 rounded hidden sm:inline-block">
+                <span className="hidden rounded bg-[#eadfe9] px-2 py-0.5 text-xs text-[#630a79] sm:inline-block md:py-1">
                   {post.subcategory}
                 </span>
               </div>
@@ -173,10 +173,10 @@ export function PostCard({
             <button 
               onClick={handleLike}
               disabled={isLiking}
-              className={`flex items-center gap-1.5 md:gap-2 transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 md:gap-2 transition-colors cursor-pointer motion-reduce:transition-none ${
                 isLiked 
-                  ? 'text-red-500' 
-                  : 'hover:text-red-500'
+                  ? 'text-[#630a79]' 
+                  : 'hover:text-[#630a79]'
               } ${isLiking ? 'opacity-50' : ''}`}
             >
               <Heart size={14} className={`md:w-4 md:h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -184,7 +184,7 @@ export function PostCard({
             </button>
             <button 
               onClick={() => onViewReplies(getUpdatedPost())}
-              className="flex items-center gap-1.5 md:gap-2 hover:text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 md:gap-2 hover:text-brand-700 transition-colors cursor-pointer motion-reduce:transition-none"
             >
               <MessageSquare size={14} className="md:w-4 md:h-4" />
               <span className="hidden sm:inline">Ver </span>

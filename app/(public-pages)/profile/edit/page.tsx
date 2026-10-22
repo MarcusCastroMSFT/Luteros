@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/common/pageHeader';
+import { USER_PAGE_CONTAINER } from '@/components/common/user-area';
 import { getCurrentUserProfile } from '@/lib/profile';
 import { EditProfileClient } from './edit-profile-client';
 
@@ -18,8 +19,9 @@ export default async function EditProfilePage() {
   if (!profile) redirect('/login?redirectTo=/profile/edit');
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <PageHeader
+        illustration="care"
         title="Editar Perfil"
         description="Atualize suas informações pessoais e preferências."
         breadcrumbs={[
@@ -29,7 +31,7 @@ export default async function EditProfilePage() {
         ]}
       />
 
-      <div className="container mx-auto px-4 max-w-[1428px] py-12">
+      <div className={USER_PAGE_CONTAINER}>
         <EditProfileClient initialProfile={profile} />
       </div>
     </div>

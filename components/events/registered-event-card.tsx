@@ -33,7 +33,7 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
 
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
+    <div className="group overflow-hidden rounded-[12px_36px_12px_12px] border border-brand-600/15 bg-white/60 transition-colors hover:bg-[#e4eeeb]/40 motion-reduce:transition-none">
       {/* Event Image */}
       <Link href={`/events/${event.slug}`} className="block relative">
         <div className="relative h-40 overflow-hidden">
@@ -54,7 +54,7 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
               </Badge>
             ) : isPast ? (
               attended ? (
-                <Badge className="bg-green-500 hover:bg-green-600 text-white">
+                <Badge className="bg-brand-600 hover:bg-brand-700 text-white">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Participou
                 </Badge>
@@ -72,7 +72,7 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
           {/* Free badge */}
           {event.isFree && (
             <div className="absolute top-3 left-3">
-              <Badge className="bg-green-500 hover:bg-green-600 text-white">
+              <Badge className="bg-brand-600 hover:bg-brand-700 text-white">
                 Gratuito
               </Badge>
             </div>
@@ -92,7 +92,7 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
 
         {/* Title */}
         <Link href={`/events/${event.slug}`}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="mb-2 line-clamp-2 font-[family-name:var(--font-cardo)] text-2xl leading-tight text-brand-900 group-hover:text-brand-700 motion-reduce:transition-none">
             {event.title}
           </h3>
         </Link>
@@ -116,7 +116,7 @@ export function RegisteredEventCard({ registration }: RegisteredEventCardProps) 
         </div>
 
         {/* Registration Info & CTA */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between border-t border-brand-600/15 pt-3">
           <div className="text-xs text-gray-500">
             Inscrito em {formatRegisteredAt(registeredAt)}
           </div>

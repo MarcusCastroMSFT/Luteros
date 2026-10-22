@@ -34,7 +34,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
+    <div className="group overflow-hidden rounded-[12px_36px_12px_12px] border border-brand-600/15 bg-white/60 transition-colors hover:bg-[#e4eeeb]/40 motion-reduce:transition-none">
       {/* Course Image */}
       <Link href={`/courses/${course.slug}/lessons`} className="block relative">
         <div className="relative h-40 overflow-hidden">
@@ -47,7 +47,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
           {/* Status Badge */}
           <div className="absolute top-3 right-3">
             {isCompleted ? (
-              <Badge className="bg-green-500 hover:bg-green-600 text-white">
+              <Badge className="bg-brand-600 hover:bg-brand-700 text-white">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Concluído
               </Badge>
@@ -79,7 +79,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
 
         {/* Title */}
         <Link href={`/courses/${course.slug}/lessons`}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="mb-2 line-clamp-2 font-[family-name:var(--font-cardo)] text-2xl leading-tight text-brand-900 group-hover:text-brand-700 motion-reduce:transition-none">
             {course.title}
           </h3>
         </Link>
@@ -110,7 +110,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
         </div>
 
         {/* Instructor & CTA */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between border-t border-brand-600/15 pt-3">
           <div className="flex items-center gap-2">
             <Image
               src={course.instructor.avatar}
@@ -123,7 +123,7 @@ export function EnrolledCourseCard({ enrollment }: EnrolledCourseCardProps) {
               {course.instructor.name}
             </span>
           </div>
-          <Button asChild size="sm" variant={isCompleted ? 'outline' : 'default'}>
+          <Button asChild size="sm" variant={isCompleted ? 'outline' : 'default'} className={isCompleted ? 'border-brand-600/30 text-brand-700 shadow-none hover:bg-brand-50' : 'bg-brand-600 shadow-none hover:bg-brand-700'}>
             <Link href={`/courses/${course.slug}/lessons`} className="flex items-center gap-1">
               {isCompleted ? 'Revisar' : 'Continuar'}
               <ArrowRight className="w-4 h-4" />
