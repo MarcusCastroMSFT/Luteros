@@ -1,302 +1,326 @@
-import { PageHeader } from '@/components/common/pageHeader';
+import type { Metadata } from 'next'
+import { ScrollText } from 'lucide-react'
+import { JsonLd } from '@/components/seo/json-ld'
+import { LegalCallout, LegalDocument, LegalLink, LegalList, LegalSection, LegalSub } from '@/components/legal/legal-document'
+import { LEGAL_LAST_UPDATED, LUTTEROS_ENTITY as entity } from '@/lib/legal-entity'
+
+export const metadata: Metadata = {
+  title: 'Termos de Uso',
+  description:
+    'Conheça as regras de uso da plataforma lutteros: cadastro, compra de cursos, acesso aos conteúdos, comunidade, reembolso e responsabilidades.',
+  alternates: { canonical: `${entity.siteUrl}/terms` },
+}
+
+const sections = [
+  { id: 'aceitacao', title: '1. Aceitação dos Termos' },
+  { id: 'servicos', title: '2. Sobre a lutteros e os Serviços' },
+  { id: 'natureza-educativa', title: '3. Natureza Educativa' },
+  { id: 'conta', title: '4. Cadastro e Conta' },
+  { id: 'compras', title: '5. Compra de Cursos e Pagamento' },
+  { id: 'reembolso', title: '6. Arrependimento e Reembolso' },
+  { id: 'uso-conteudo', title: '7. Acesso e Uso do Conteúdo' },
+  { id: 'conduta', title: '8. Conduta e Comunidade' },
+  { id: 'conteudo-usuario', title: '9. Conteúdo Publicado por Você' },
+  { id: 'propriedade', title: '10. Propriedade Intelectual' },
+  { id: 'eventos-parceiros', title: '11. Eventos, Produtos e Parceiros' },
+  { id: 'privacidade', title: '12. Privacidade' },
+  { id: 'responsabilidade', title: '13. Responsabilidade' },
+  { id: 'suspensao', title: '14. Suspensão e Encerramento' },
+  { id: 'alteracoes', title: '15. Alterações dos Termos' },
+  { id: 'foro', title: '16. Lei Aplicável e Foro' },
+  { id: 'contato', title: '17. Contato' },
+]
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PageHeader
-        title="Termos de Uso"
-        description="Condições para uso da plataforma lutteros"
-        breadcrumbs={[
-          { label: 'Início', href: '/' },
-          { label: 'Termos de Uso' }
-        ]}
+    <>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Início', item: entity.siteUrl },
+            { '@type': 'ListItem', position: 2, name: 'Termos de Uso', item: `${entity.siteUrl}/terms` },
+          ],
+        }}
       />
-      
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 space-y-8">
-          
-          <div className="text-sm text-gray-600 mb-8">
-            <p><strong>Última atualização:</strong> 21 de setembro de 2025</p>
-          </div>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              1. Aceitação dos Termos
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">
-                Ao acessar e usar a plataforma lutteros, você concorda em cumprir e estar vinculado a estes 
-                Termos de Uso. Se você não concorda com qualquer parte destes termos, não deve usar nossos serviços.
-              </p>
-              <div className="bg-gradient-to-r from-brand-50 to-brand-100 border-l-4 border-brand-500 p-4 my-6 rounded-lg">
-                <p className="text-brand-800 font-medium">
-                  <strong>Importante:</strong> Nossa plataforma trata de temas sensíveis relacionados à saúde sexual. 
-                  Ao usar nossos serviços, você confirma ter idade mínima de 18 anos ou consentimento parental 
-                  se for menor de idade.
-                </p>
-              </div>
-            </div>
-          </section>
+      <LegalDocument
+        eyebrow="Regras da plataforma"
+        eyebrowIcon={ScrollText}
+        title="Termos de Uso"
+        intro="As condições para usar a lutteros: cadastro, compra de cursos, acesso aos conteúdos, comunidade, reembolso e responsabilidades de cada parte."
+        lastUpdated={LEGAL_LAST_UPDATED}
+        sections={sections}
+      >
+        <LegalSection id="aceitacao" title="1. Aceitação dos Termos">
+          <p>
+            Estes Termos de Uso (&quot;Termos&quot;) regulam o acesso e o uso da plataforma <strong>lutteros</strong> em{' '}
+            <LegalLink href={entity.siteUrl}>lutteros.com.br</LegalLink> e em seus serviços (a &quot;Plataforma&quot;), operada pela{' '}
+            <strong>{entity.legalName}</strong>, CNPJ {entity.cnpj} (&quot;lutteros&quot;, &quot;nós&quot;).
+          </p>
+          <p>
+            Ao criar uma conta, comprar um curso ou usar a Plataforma, você declara que leu e concorda com estes Termos e com a{' '}
+            <LegalLink href="/privacy">Política de Privacidade</LegalLink>. Se não concordar, não utilize a Plataforma.
+          </p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              2. Descrição dos Serviços
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">A lutteros oferece:</p>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><strong>Conteúdo Educativo:</strong> Artigos, cursos e recursos sobre saúde sexual e reprodutiva</li>
-                <li><strong>Consultas Online:</strong> Sessões com especialistas credenciados</li>
-                <li><strong>Comunidade:</strong> Fóruns seguros para discussão (sempre respeitosos e moderados)</li>
-                <li><strong>Recursos Especializados:</strong> Ferramentas e materiais desenvolvidos por profissionais</li>
-              </ul>
-              
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 p-4 rounded-lg">
-                <p className="text-blue-800 font-medium">
-                  <strong>Natureza dos Serviços:</strong> Nossos serviços são exclusivamente educacionais e informativos. 
-                  Não constituem diagnóstico médico, tratamento ou aconselhamento médico profissional.
-                </p>
-              </div>
-            </div>
-          </section>
+        <LegalSection id="servicos" title="2. Sobre a lutteros e os Serviços">
+          <p>A lutteros oferece, conforme disponibilidade:</p>
+          <LegalList>
+            <li>
+              <strong>Cursos online</strong> (gratuitos e pagos) em vídeo, áudio e texto, conduzidos por instrutores;
+            </li>
+            <li>
+              <strong>Artigos</strong> e conteúdos educativos, alguns restritos a determinados públicos, como profissionais de
+              saúde;
+            </li>
+            <li>
+              <strong>Eventos</strong> e inscrições;
+            </li>
+            <li>
+              <strong>Comunidade</strong> para troca de experiências entre usuários;
+            </li>
+            <li>
+              <strong>Indicação de especialistas</strong> e de produtos e parceiros;
+            </li>
+            <li>
+              <strong>Newsletter</strong> com novidades e conteúdos.
+            </li>
+          </LegalList>
+          <p>Podemos criar, alterar ou descontinuar serviços e funcionalidades, com aviso quando houver impacto em algo que você já contratou.</p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              3. Elegibilidade e Registro
-            </h2>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800">Requisitos de Idade:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><strong>18+ anos:</strong> Uso completo da plataforma</li>
-                <li><strong>13-17 anos:</strong> Uso permitido com consentimento parental e supervisão</li>
-                <li><strong>Menores de 13 anos:</strong> Uso não permitido</li>
-              </ul>
-              
-              <h3 className="text-lg font-medium text-gray-800">Responsabilidades do Usuário:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Fornecer informações verdadeiras e atualizadas</li>
-                <li>Manter a confidencialidade de sua conta</li>
-                <li>Usar a plataforma de forma responsável e respeitosa</li>
-                <li>Notificar sobre qualquer uso não autorizado de sua conta</li>
-              </ul>
-            </div>
-          </section>
+        <LegalSection id="natureza-educativa" title="3. Natureza Educativa">
+          <LegalCallout title="Importante">
+            <p>
+              Os conteúdos da lutteros são <strong>educativos e informativos</strong>. Eles não constituem diagnóstico,
+              tratamento, prescrição ou aconselhamento médico individual, e não substituem a consulta com um profissional de
+              saúde.
+            </p>
+          </LegalCallout>
+          <LegalList>
+            <li>Se você tem sintomas, dúvidas clínicas ou está em situação de risco, procure atendimento profissional;</li>
+            <li>Em emergências, procure um serviço de urgência (SAMU 192);</li>
+            <li>
+              A indicação de um especialista na Plataforma é informativa. Quando você contrata um atendimento com um
+              profissional, a relação é diretamente entre você e ele, e a lutteros não é parte dela.
+            </li>
+          </LegalList>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              4. Conduta do Usuário
-            </h2>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800">Comportamento Esperado:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Tratar todos os usuários com respeito e dignidade</li>
-                <li>Manter discussões construtivas e educativas</li>
-                <li>Respeitar a privacidade e confidencialidade de outros usuários</li>
-                <li>Usar linguagem apropriada e respeitosa</li>
-              </ul>
-              
-              <h3 className="text-lg font-medium text-gray-800">Comportamentos Proibidos:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Assédio, discriminação ou intimidação</li>
-                <li>Compartilhamento de conteúdo pornográfico ou explícito não educativo</li>
-                <li>Spam, propaganda não autorizada ou conteúdo comercial</li>
-                <li>Divulgação de informações pessoais de terceiros</li>
-                <li>Tentativas de hackear ou comprometer a segurança da plataforma</li>
-                <li>Uso de múltiplas contas para contornar restrições</li>
-              </ul>
-              
-              <div className="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 p-4 rounded-lg">
-                <p className="text-red-800 font-medium">
-                  <strong>Tolerância Zero:</strong> Temos política de tolerância zero para assédio sexual, 
-                  discriminação ou qualquer forma de abuso em nossa plataforma.
-                </p>
-              </div>
-            </div>
-          </section>
+        <LegalSection id="conta" title="4. Cadastro e Conta">
+          <LegalSub>4.1 Quem pode usar</LegalSub>
+          <LegalList>
+            <li>
+              <strong>Maiores de 18 anos:</strong> uso completo, incluindo compras;
+            </li>
+            <li>
+              <strong>De 13 a 17 anos:</strong> apenas conteúdos educativos, com consentimento e supervisão do responsável legal.
+              Compras e contratações são restritas a maiores de 18 anos;
+            </li>
+            <li>
+              <strong>Menores de 13 anos:</strong> não podem criar conta.
+            </li>
+          </LegalList>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              5. Conteúdo e Propriedade Intelectual
-            </h2>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800">Nosso Conteúdo:</h3>
-              <p className="text-gray-700 leading-relaxed">
-                Todo o conteúdo da lutteros (textos, imagens, vídeos, cursos) é protegido por direitos autorais 
-                e propriedade intelectual. É permitido o uso pessoal e educativo, mas não a reprodução comercial 
-                sem autorização expressa.
-              </p>
-              
-              <h3 className="text-lg font-medium text-gray-800">Seu Conteúdo:</h3>
-              <p className="text-gray-700 leading-relaxed">
-                Ao compartilhar conteúdo em nossa plataforma (posts, comentários, perguntas), você:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Mantém a propriedade de seu conteúdo original</li>
-                <li>Concede à lutteros licença para usar, exibir e distribuir o conteúdo na plataforma</li>
-                <li>Garante que possui os direitos necessários sobre o conteúdo</li>
-                <li>Aceita que podemos moderar ou remover conteúdo inadequado</li>
-              </ul>
-            </div>
-          </section>
+          <LegalSub>4.2 Sua responsabilidade</LegalSub>
+          <LegalList>
+            <li>Informar dados verdadeiros, completos e atualizados;</li>
+            <li>Manter a senha em sigilo e avisar-nos imediatamente sobre qualquer uso não autorizado;</li>
+            <li>
+              Usar uma conta <strong>pessoal e intransferível</strong>: ela não pode ser compartilhada, cedida ou revendida.
+            </li>
+          </LegalList>
+          <p>Você é responsável pelas atividades realizadas na sua conta.</p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              6. Consultas e Serviços Profissionais
-            </h2>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800">Natureza das Consultas:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>São de natureza educacional e informativa</li>
-                <li>Não substituem consulta médica presencial</li>
-                <li>Não estabelecem relação médico-paciente formal</li>
-                <li>Devem ser complementadas com acompanhamento médico adequado</li>
-              </ul>
-              
-              <h3 className="text-lg font-medium text-gray-800">Responsabilidades:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><strong>Nossos Especialistas:</strong> Fornecer informações precisas e atualizadas dentro de sua expertise</li>
-                <li><strong>Usuários:</strong> Buscar atendimento médico adequado para questões de saúde específicas</li>
-              </ul>
-              
-              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg">
-                <p className="text-yellow-800 font-medium">
-                  <strong>Emergências Médicas:</strong> Em caso de emergência médica, procure imediatamente 
-                  atendimento médico presencial ou ligue para os serviços de emergência.
-                </p>
-              </div>
-            </div>
-          </section>
+        <LegalSection id="compras" title="5. Compra de Cursos e Pagamento">
+          <LegalList>
+            <li>O preço e as condições de cada curso são informados na página do curso antes da compra, em reais (R$);</li>
+            <li>
+              O pagamento é feito em ambiente seguro do <strong>Asaas</strong>, por Pix, boleto ou cartão de crédito, conforme as
+              opções exibidas. Para emitir a cobrança, solicitamos seu CPF ou CNPJ;
+            </li>
+            <li>
+              O acesso ao curso é liberado <strong>após a confirmação do pagamento</strong>. Pix e cartão costumam ser
+              confirmados em minutos; o boleto pode levar até alguns dias úteis;
+            </li>
+            <li>
+              A cobrança tem prazo de vencimento. Se ele passar sem pagamento, ela perde a validade e você pode gerar uma nova
+              pela página do curso;
+            </li>
+            <li>Promoções e preços com desconto valem pelo período informado e podem ser encerrados sem aviso prévio;</li>
+            <li>A compra concede uma licença de acesso, e não a propriedade do conteúdo (seção 10).</li>
+          </LegalList>
+          <p>
+            O acesso ao curso permanece enquanto ele estiver disponível na Plataforma e sua conta estiver ativa e regular. Se
+            descontinuarmos um curso, avisaremos com antecedência razoável.
+          </p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              7. Pagamentos e Reembolsos
-            </h2>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800">Serviços Pagos:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Consultas individuais com especialistas</li>
-                <li>Cursos premium e conteúdo especializado</li>
-                <li>Assinaturas para acesso completo à plataforma</li>
-              </ul>
-              
-              <h3 className="text-lg font-medium text-gray-800">Política de Reembolso:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li><strong>Consultas:</strong> Reembolso integral se canceladas com 24h de antecedência</li>
-                <li><strong>Cursos:</strong> Reembolso em até 7 dias se menos de 20% do conteúdo foi acessado</li>
-                <li><strong>Assinaturas:</strong> Cancelamento a qualquer momento, sem reembolso proporcional</li>
-              </ul>
-            </div>
-          </section>
+        <LegalSection id="reembolso" title="6. Arrependimento e Reembolso">
+          <p>
+            Por ser uma compra feita pela internet, você pode desistir do curso em até <strong>7 (sete) dias corridos</strong>{' '}
+            contados da confirmação da compra, nos termos do art. 49 do Código de Defesa do Consumidor, com{' '}
+            <strong>reembolso integral</strong>, independentemente de já ter acessado o conteúdo.
+          </p>
+          <LegalList>
+            <li>
+              Para pedir, escreva para <LegalLink href={`mailto:${entity.legalEmail}`}>{entity.legalEmail}</LegalLink> usando o
+              e-mail da sua conta e informando o curso;
+            </li>
+            <li>
+              O reembolso é feito pelo mesmo meio de pagamento, no prazo do provedor (cartão e Pix, em geral, em poucos dias;
+              boleto por transferência bancária);
+            </li>
+            <li>Com o reembolso, o acesso ao curso é encerrado;</li>
+            <li>
+              Depois do prazo de 7 dias, o reembolso só é devido nos casos previstos em lei, como falha na prestação do serviço
+              ou cobrança indevida.
+            </li>
+          </LegalList>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              8. Privacidade e Confidencialidade
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">
-                A proteção de sua privacidade é fundamental para nós. Consulte nossa 
-                <a href="/privacy" className="text-brand-600 hover:text-brand-700 underline">
-                  Política de Privacidade
-                </a> para detalhes completos sobre como protegemos suas informações pessoais.
-              </p>
-              
-              <h3 className="text-lg font-medium text-gray-800">Confidencialidade Especial:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Todas as consultas são confidenciais</li>
-                <li>Dados de saúde recebem proteção adicional</li>
-                <li>Participação em fóruns pode ser anônima</li>
-                <li>Nunca compartilhamos informações pessoais para fins comerciais</li>
-              </ul>
-            </div>
-          </section>
+        <LegalSection id="uso-conteudo" title="7. Acesso e Uso do Conteúdo">
+          <p>
+            Ao comprar ou se inscrever em um curso, concedemos a você uma licença <strong>pessoal, limitada, não exclusiva e
+            intransferível</strong> para assistir ao conteúdo na Plataforma, para fins de estudo próprio. É proibido:
+          </p>
+          <LegalList>
+            <li>Compartilhar login e senha, ou permitir que outras pessoas acessem o conteúdo com a sua conta;</li>
+            <li>Baixar, copiar, gravar a tela, extrair, reproduzir, redistribuir, revender ou publicar aulas, materiais ou qualquer parte do conteúdo;</li>
+            <li>Contornar ou tentar contornar medidas técnicas de proteção, limites de acesso ou verificações de pagamento;</li>
+            <li>Usar o conteúdo para treinar sistemas de inteligência artificial ou para qualquer finalidade comercial.</li>
+          </LegalList>
+          <LegalCallout title="Proteções técnicas">
+            <p>
+              Para proteger o conteúdo e os instrutores, a Plataforma usa links de vídeo de curta duração, bloqueia o botão de
+              download e limita o número de redes (endereços IP) diferentes que podem acessar o conteúdo pago em cada conta.
+              Se você atingir o limite, entre em contato com o suporte.
+            </p>
+          </LegalCallout>
+          <p>
+            O descumprimento destas regras pode levar à suspensão ou ao encerramento da conta, sem direito a reembolso, além de
+            responsabilização civil e criminal.
+          </p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              9. Limitação de Responsabilidade
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed"><strong>A lutteros não se responsabiliza por:</strong></p>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Decisões tomadas com base em informações da plataforma</li>
-                <li>Resultados de tratamentos médicos</li>
-                <li>Danos indiretos ou consequenciais</li>
-                <li>Interrupções temporárias do serviço</li>
-                <li>Conteúdo gerado por usuários</li>
-              </ul>
-              
-              <p className="text-gray-700 leading-relaxed">
-                Nossos serviços são fornecidos &ldquo;como estão&rdquo; e &ldquo;conforme disponíveis&rdquo;. 
-                Recomendamos sempre buscar aconselhamento médico profissional para questões de saúde.
-              </p>
-            </div>
-          </section>
+        <LegalSection id="conduta" title="8. Conduta e Comunidade">
+          <p>A comunidade existe para acolher e informar. Esperamos respeito, empatia e linguagem adequada. É proibido:</p>
+          <LegalList>
+            <li>Assédio, discriminação, intimidação, ameaças ou discurso de ódio;</li>
+            <li>Conteúdo pornográfico, explícito sem finalidade educativa, ou que envolva menores de idade;</li>
+            <li>Divulgar dados pessoais ou imagens íntimas de terceiros sem autorização;</li>
+            <li>Spam, divulgação comercial não autorizada, esquemas e golpes;</li>
+            <li>Fazer-se passar por outra pessoa ou por profissional de saúde sem sê-lo;</li>
+            <li>Atacar a segurança da Plataforma ou usar contas múltiplas para burlar restrições;</li>
+            <li>Dar aconselhamento médico individual ou indicar tratamentos como se fosse atendimento profissional.</li>
+          </LegalList>
+          <p>
+            Podemos moderar, ocultar ou remover conteúdo que viole estes Termos e, quando necessário, suspender contas. Você
+            pode denunciar conteúdos pelos recursos de denúncia da Plataforma.
+          </p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              10. Moderação e Suspensão
-            </h2>
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800">Nosso Direito:</h3>
-              <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                <li>Moderar todo o conteúdo da plataforma</li>
-                <li>Remover conteúdo inadequado</li>
-                <li>Suspender ou banir contas que violem estes termos</li>
-                <li>Alterar ou descontinuar serviços</li>
-              </ul>
-              
-              <h3 className="text-lg font-medium text-gray-800">Processo de Recurso:</h3>
-              <p className="text-gray-700 leading-relaxed">
-                Usuários suspensos podem entrar em contato conosco para esclarecimentos e possível 
-                reversão da decisão, desde que demonstrem mudança de comportamento.
-              </p>
-            </div>
-          </section>
+        <LegalSection id="conteudo-usuario" title="9. Conteúdo Publicado por Você">
+          <p>Posts, comentários, avaliações e outros conteúdos que você publicar na Plataforma:</p>
+          <LegalList>
+            <li>Continuam sendo seus. Você declara ter os direitos necessários sobre eles;</li>
+            <li>
+              Nos dão uma licença gratuita, não exclusiva e limitada para exibi-los e distribuí-los na Plataforma enquanto
+              estiverem publicados;
+            </li>
+            <li>São de sua responsabilidade. Não os usamos para publicidade de terceiros.</li>
+          </LegalList>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              11. Alterações nos Termos
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">
-                Podemos atualizar estes termos periodicamente. Alterações significativas serão comunicadas 
-                com pelo menos 30 dias de antecedência através de email ou aviso na plataforma.
-              </p>
-              
-              <p className="text-gray-700 leading-relaxed">
-                O uso continuado da plataforma após as alterações constitui aceitação dos novos termos.
-              </p>
-            </div>
-          </section>
+        <LegalSection id="propriedade" title="10. Propriedade Intelectual">
+          <p>
+            Marcas, logotipos, textos, vídeos, áudios, imagens, cursos, layout e software da Plataforma pertencem à lutteros ou
+            a seus instrutores e parceiros e são protegidos pela legislação de propriedade intelectual. Nada nestes Termos
+            transfere a você qualquer direito além da licença de uso descrita aqui.
+          </p>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              12. Lei Aplicável e Jurisdição
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">
-                Estes termos são regidos pelas leis brasileiras. Qualquer disputa será resolvida no 
-                foro da comarca de [Cidade], Brasil.
-              </p>
-            </div>
-          </section>
+        <LegalSection id="eventos-parceiros" title="11. Eventos, Produtos e Parceiros">
+          <LegalList>
+            <li>
+              Eventos podem ter vagas limitadas, alteração de data ou formato e regras próprias, informadas na página do evento;
+            </li>
+            <li>
+              Produtos, ofertas e códigos promocionais de parceiros são de responsabilidade do respectivo parceiro, que define o
+              preço, a entrega e o atendimento. A lutteros apenas divulga;
+            </li>
+            <li>Links para sites de terceiros são fornecidos por conveniência. Não controlamos nem nos responsabilizamos por eles.</li>
+          </LegalList>
+        </LegalSection>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              13. Contato
-            </h2>
-            <div className="space-y-4">
-              <p className="text-gray-700 leading-relaxed">Para questões sobre estes termos:</p>
-              <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-                <p className="text-gray-800"><strong>Email:</strong> legal@lutteros.com.br</p>
-                <p className="text-gray-800"><strong>Telefone:</strong> (11) 9999-9999</p>
-                <p className="text-gray-800"><strong>Endereço:</strong> [Endereço da empresa]</p>
-                <p className="text-gray-800"><strong>Horário de Atendimento:</strong> Segunda a Sexta, 9h às 18h</p>
-              </div>
-            </div>
-          </section>
+        <LegalSection id="privacidade" title="12. Privacidade">
+          <p>
+            O tratamento de dados pessoais é descrito na <LegalLink href="/privacy">Política de Privacidade</LegalLink>, que faz
+            parte destes Termos. Por tratar de temas íntimos, aplicamos cuidado redobrado e não compartilhamos dados sobre saúde
+            ou vida sexual para fins comerciais.
+          </p>
+        </LegalSection>
 
-        </div>
-      </div>
-    </div>
-  );
+        <LegalSection id="responsabilidade" title="13. Responsabilidade">
+          <LegalList>
+            <li>
+              Empenhamo-nos para manter a Plataforma disponível e o conteúdo correto, mas não garantimos funcionamento
+              ininterrupto nem ausência de erros. Podem ocorrer manutenções e instabilidades;
+            </li>
+            <li>
+              Não nos responsabilizamos por decisões tomadas apenas com base no conteúdo educativo, nem por danos decorrentes de
+              uso indevido da conta pelo usuário ou de falhas fora do nosso controle, como internet, dispositivo ou provedores
+              de pagamento;
+            </li>
+            <li>
+              Nada nestes Termos limita direitos que a lei garante ao consumidor nem exclui responsabilidade que a lei não
+              permita excluir.
+            </li>
+          </LegalList>
+        </LegalSection>
+
+        <LegalSection id="suspensao" title="14. Suspensão e Encerramento">
+          <p>
+            Você pode parar de usar a Plataforma quando quiser e pedir a exclusão da sua conta pelo e-mail da seção 17. Podemos
+            suspender ou encerrar contas que violem estes Termos, a lei ou direitos de terceiros, com aviso quando possível. A
+            exclusão da conta encerra o acesso aos cursos, observado o direito de reembolso da seção 6 quando aplicável.
+          </p>
+        </LegalSection>
+
+        <LegalSection id="alteracoes" title="15. Alterações dos Termos">
+          <p>
+            Podemos atualizar estes Termos. A data da última atualização está no topo da página. Em mudanças relevantes,
+            avisaremos por e-mail ou na Plataforma com antecedência razoável. Continuar usando a Plataforma depois disso
+            significa que você aceita a nova versão.
+          </p>
+        </LegalSection>
+
+        <LegalSection id="foro" title="16. Lei Aplicável e Foro">
+          <p>
+            Estes Termos são regidos pela legislação brasileira. Para consumidores, fica eleito o foro do domicílio do
+            consumidor. Para os demais casos, fica eleito o foro da comarca de {entity.forumCity}. Antes de qualquer medida,
+            buscaremos resolver a questão amigavelmente com você.
+          </p>
+        </LegalSection>
+
+        <LegalSection id="contato" title="17. Contato">
+          <LegalList>
+            <li>
+              <strong>Jurídico e reembolsos:</strong> <LegalLink href={`mailto:${entity.legalEmail}`}>{entity.legalEmail}</LegalLink>
+            </li>
+            <li>
+              <strong>Privacidade e dados pessoais:</strong>{' '}
+              <LegalLink href={`mailto:${entity.privacyEmail}`}>{entity.privacyEmail}</LegalLink>
+            </li>
+            <li>
+              <strong>Empresa:</strong> {entity.legalName} — CNPJ {entity.cnpj}
+            </li>
+          </LegalList>
+        </LegalSection>
+      </LegalDocument>
+    </>
+  )
 }
