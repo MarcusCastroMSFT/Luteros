@@ -10,7 +10,7 @@ export function LatestArticles({ articles, limit = 12 }: LatestArticlesProps) {
   
   return (
     <section aria-labelledby="home-articles-title" className="relative isolate overflow-hidden border-y border-brand-600/10 bg-[#f1f4ef] py-20 lg:py-28">
-      <Image src="/images/brand/care-petals.svg" alt="" aria-hidden="true" width={180} height={240} unoptimized className="pointer-events-none absolute -right-12 -top-20 hidden h-auto w-48 rotate-[-45deg] opacity-30 lg:block" />
+      <Image src="/images/brand/care-orbits.svg" alt="" aria-hidden="true" width={180} height={240} unoptimized className="pointer-events-none absolute -right-12 -top-20 hidden h-auto w-48 rotate-[-45deg] opacity-30 lg:block" />
       <div className="relative mx-auto max-w-[1480px] px-6 sm:px-10 lg:px-12">
         {/* Header Section */}
         <div className="mb-14 flex flex-col lg:mb-16 lg:flex-row lg:items-center lg:justify-between">

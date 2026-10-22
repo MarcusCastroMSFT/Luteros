@@ -13,7 +13,7 @@ export function HeroSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[url('/images/brand/paper-grain.svg')]"
       />
-      <div className="relative mx-auto grid max-w-[1380px] items-center gap-8 px-6 pb-8 pt-12 sm:gap-10 sm:px-10 sm:py-14 lg:grid-cols-[1.15fr_1fr] lg:gap-12 lg:px-12 lg:py-16 xl:gap-20">
+      <div className="relative mx-auto grid max-w-[1480px] items-center gap-8 px-6 pb-8 pt-12 sm:gap-10 sm:px-10 sm:py-14 lg:grid-cols-[1fr_1.1fr] lg:gap-10 lg:px-12 lg:py-14 xl:gap-14">
         <div className="relative z-10">
           <h1
             id="home-hero-title"
@@ -60,7 +60,7 @@ export function HeroSection() {
           </div>
         </div>
 
-        <div className="relative mx-auto aspect-[0.9] w-full max-w-[520px] lg:max-w-none">
+        <div className="relative mx-auto aspect-[0.95] w-full max-w-[600px] lg:max-w-none">
           <div
             aria-hidden="true"
             className="absolute -right-[40%] top-[5%] h-[104%] w-[130%] rounded-[46%_0_42%_48%] bg-[#e4eeeb] lg:-top-[14%] lg:rotate-[-12deg]"
@@ -71,27 +71,18 @@ export function HeroSection() {
           />
           <div
             aria-hidden="true"
-            className="absolute bottom-[8%] left-[4%] right-[10%] top-[3%] rotate-[-6deg] rounded-[47%_47%_44%_16%] border border-brand-600/30"
+            className="absolute bottom-[6%] left-[1%] right-[5%] top-[2%] rotate-[-6deg] rounded-[47%_47%_44%_16%] border border-brand-600/30"
           />
-          <div className="absolute inset-x-[8%] bottom-[8%] top-[5%] overflow-hidden rounded-[47%_47%_44%_16%]">
+          <div className="absolute inset-x-[3%] bottom-[5%] top-[3%] overflow-hidden rounded-[47%_47%_44%_16%]">
             <Image
-              src="/images/home/page-title-home4-2.jpg"
-              alt="Duas mulheres conversando durante uma caminhada ao ar livre."
+              src="/images/home/hero-peers.webp"
+              alt="Uma profissional e um profissional de saúde conversando de forma descontraída em uma mesa de trabalho."
               fill
               preload
-              sizes="(min-width: 1380px) 440px, (min-width: 1024px) 38vw, (min-width: 640px) 437px, 84vw"
-              className="object-cover object-[50%_35%]"
+              sizes="(min-width: 1480px) 700px, (min-width: 1024px) 50vw, (min-width: 640px) 600px, 92vw"
+              className="object-cover object-[60%_40%]"
             />
           </div>
-          <Image
-            src="/images/brand/care-petals.svg"
-            alt=""
-            aria-hidden="true"
-            width={180}
-            height={240}
-            unoptimized
-            className="pointer-events-none absolute -left-[3%] bottom-[2%] h-auto w-[29%] rotate-[-18deg]"
-          />
           <Image
             src="/images/brand/care-flow.svg"
             alt=""

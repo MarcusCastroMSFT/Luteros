@@ -14,6 +14,28 @@ export const metadata: Metadata = {
   description: "A Lutteros conecta ciência e prática clínica com conteúdos fundamentados em evidências, elaborados e revisados por especialistas.",
 };
 
+const audiences: { image: string; alt: string; title: string; description: string; position?: string }[] = [
+  {
+    image: "/images/home/audience-physicians.webp",
+    position: "object-[50%_30%]",
+    alt: "Uma médica e um médico conversando em um consultório iluminado.",
+    title: "Médicos",
+    description: "Aprofunde seu conhecimento e tenha recursos para abordar a sexualidade com mais segurança.",
+  },
+  {
+    image: "/images/home/audience-therapy.webp",
+    alt: "Psicóloga ouvindo com atenção durante um atendimento.",
+    title: "Psicólogos e terapeutas",
+    description: "Conteúdo científico e ferramentas para a prática clínica.",
+  },
+  {
+    image: "/images/home/audience-health.webp",
+    alt: "Profissional de saúde sorrindo em um espaço de atendimento.",
+    title: "Profissionais de saúde",
+    description: "Conhecimento multidisciplinar para uma abordagem integral da saúde sexual.",
+  },
+];
+
 const learningFormats: { icon: BrandIconName; title: string; description: string }[] = [
   {
     icon: "articles",
@@ -51,28 +73,43 @@ export default async function Home() {
           unoptimized
           className="pointer-events-none absolute -bottom-64 -left-24 hidden h-auto w-64 rotate-[25deg] opacity-30 lg:block"
         />
-        <div className="relative mx-auto grid max-w-[1480px] gap-10 px-6 py-20 sm:px-10 md:grid-cols-2 md:items-center md:gap-16 lg:min-h-[600px] lg:px-12 lg:py-28">
-          <div>
-            <p className="mb-6 text-sm font-medium text-brand-700 sm:text-base">Para quem é a Lutteros?</p>
-            <h2 id="home-audience-title" className="max-w-xl text-balance font-[family-name:var(--font-cardo)] text-4xl leading-[1.12] text-brand-900 lg:text-[56px]">
-              Conhecimento para quem cuida da saúde sexual
-            </h2>
+        <div className="relative mx-auto max-w-[1480px] px-6 py-16 sm:px-10 lg:px-12 lg:py-24">
+          <div className="grid gap-8 md:grid-cols-2 md:items-end md:gap-16">
+            <div>
+              <p className="mb-5 text-sm font-medium text-brand-700 sm:text-base">Para quem é a Lutteros?</p>
+              <h2 id="home-audience-title" className="max-w-xl text-balance font-[family-name:var(--font-cardo)] text-4xl leading-[1.12] text-brand-900 lg:text-[56px]">
+                Conhecimento para quem cuida da saúde sexual
+              </h2>
+            </div>
+            <div className="max-w-xl">
+              <p className="text-xl leading-[1.6] text-brand-900/80 lg:text-2xl">
+                Educação científica para profissionais que desejam aprofundar conhecimentos
+                e qualificar sua prática.
+              </p>
+            </div>
           </div>
-          <div className="max-w-xl">
-            <Image
-              src="/images/brand/care-bloom.svg"
-              alt=""
-              aria-hidden="true"
-              width={320}
-              height={300}
-              unoptimized
-              className="mb-6 h-auto w-32 md:w-44 lg:w-52"
-            />
-            <p className="text-xl leading-[1.6] text-brand-900/80 lg:text-2xl">
-              Educação científica para profissionais que desejam aprofundar conhecimentos
-              e qualificar sua prática.
-            </p>
-          </div>
+
+          <ul className="mt-10 grid gap-5 md:grid-cols-3 lg:mt-14 lg:gap-6">
+            {audiences.map(({ image, alt, title, description, position }) => (
+              <li key={title}>
+                <div className="flex h-full flex-col overflow-hidden rounded-xl bg-[#faf9f6] shadow-[0_1px_2px_rgba(5,38,40,0.06)]">
+                  <div className="relative aspect-[16/9]">
+                    <Image
+                      src={image}
+                      alt={alt}
+                      fill
+                      sizes="(min-width: 1480px) 450px, (min-width: 768px) 30vw, calc(100vw - 48px)"
+                      className={`object-cover ${position ?? ""}`}
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="mb-3 text-lg font-semibold text-brand-900">{title}</h3>
+                    <p className="max-w-[34ch] text-base leading-[1.7] text-slate-600">{description}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -123,16 +160,24 @@ export default async function Home() {
             className="pointer-events-none absolute -bottom-10 -right-8 hidden h-auto w-64 opacity-50 lg:block"
           />
           <div className="relative grid items-center gap-8 px-6 pb-10 pt-12 sm:px-12 sm:py-16 lg:grid-cols-[0.9fr_1.3fr] lg:gap-12 lg:px-14 lg:py-20">
-            <div className="order-2 mx-auto w-full max-w-56 sm:max-w-80 lg:order-1 lg:max-w-none">
-              <Image
-                src="/images/brand/care-garden.svg"
-                alt=""
+            <div className="relative order-2 mx-auto aspect-[1.05] w-full max-w-sm sm:max-w-md lg:order-1 lg:max-w-none">
+              <div
                 aria-hidden="true"
-                width={520}
-                height={560}
-                unoptimized
-                className="h-auto w-full"
+                className="absolute bottom-[-4%] right-[-4%] h-[48%] w-[50%] rotate-12 rounded-[45%_50%_40%_50%] bg-[#e3d6e3]"
               />
+              <div
+                aria-hidden="true"
+                className="absolute inset-[2%_6%_6%_0] rotate-[-5deg] rounded-[38%_62%_44%_56%/34%_46%_54%_66%] border border-cta-secondary/25"
+              />
+              <div className="absolute inset-[5%_8%_8%_4%] overflow-hidden rounded-[38%_62%_44%_56%/34%_46%_54%_66%]">
+                <Image
+                  src="/images/home/cta-desk.webp"
+                  alt="Mesa de consultório com livros sobre saúde sexual, prática clínica e evidências, ao lado de um estetoscópio."
+                  fill
+                  sizes="(min-width: 1480px) 480px, (min-width: 1024px) 34vw, (min-width: 640px) 448px, 90vw"
+                  className="object-cover object-[35%_30%]"
+                />
+              </div>
             </div>
             <div className="order-1 min-w-0 lg:order-2">
               <h2 id="home-cta-title" className="text-balance font-[family-name:var(--font-cardo)] text-[clamp(2rem,3.8vw,3.5rem)] leading-[1.12] tracking-[-0.025em] text-brand-900">

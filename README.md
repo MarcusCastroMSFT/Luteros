@@ -44,6 +44,18 @@ automaticamente na página do site e no sitemap.
 
 ### Imagens da marca
 
+O hero da home usa `public/images/home/hero-peers.webp`, uma conversa
+descontraída entre dois profissionais, sem jaleco nem estetoscópio, e sem grafismo
+botânico sobre a foto. A seção "Para quem é a Lutteros?" apresenta três cards de
+público com as fotos `audience-physicians.webp` (médica e médico em consultório),
+`audience-therapy.webp` e `audience-health.webp`. O chamado final usa
+`cta-desk.webp`, com um quadro sobre o ciclo da resposta sexual, distinto do
+quadro anatômico da foto dos médicos.
+As cinco imagens foram geradas por IA e não retratam pessoas reais; mantenha essa
+informação ao divulgá-las. Em outras seções, os círculos de `care-orbits.svg`
+substituem ramos e flores, com expressão mais neutra em relação a gênero. As telas
+de login e cadastro permanecem inalteradas.
+
 Cursos sem foto usam `public/images/course-placeholder-v2.svg` nos cards e na
 prévia do curso. A versão PNG é usada no compartilhamento desses cursos.
 A imagem padrão de compartilhamento do site é `public/images/og-image.png`.
