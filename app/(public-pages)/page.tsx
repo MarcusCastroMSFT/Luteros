@@ -135,10 +135,10 @@ export default async function Home() {
           </div>
           <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-10 lg:mt-20 lg:gap-16">
             {learningFormats.map(({ icon, title, description }) => (
-              <div key={title} className="pb-10">
-                <BrandIcon kind={icon} className="mb-7 size-24 lg:size-28" />
+              <div key={title} className="pb-10 text-center">
+                <BrandIcon kind={icon} className="mx-auto mb-7 size-24 lg:size-28" />
                 <h3 className="mb-5 text-xl font-semibold text-brand-900 lg:text-2xl">{title}</h3>
-                <p className="text-base leading-[1.8] text-slate-600 lg:text-lg">{description}</p>
+                <p className="mx-auto max-w-sm text-base leading-[1.8] text-slate-600 lg:text-lg">{description}</p>
               </div>
             ))}
           </div>
