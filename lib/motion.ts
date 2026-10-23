@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 export function reveal(index = 0, step = 90) {
   return {
     "data-reveal": "",
+    suppressHydrationWarning: true,
     style: { "--reveal-delay": `${index * step}ms` } as CSSProperties,
   };
 }

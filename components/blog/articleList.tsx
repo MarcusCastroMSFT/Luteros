@@ -4,7 +4,7 @@ import { ArticleListProps } from '@/types/blog';
 
 export default function ArticleList({ articles = [] }: ArticleListProps) {
   return (
-    <div data-reveal-stagger="" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div data-reveal-stagger="" suppressHydrationWarning className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {articles.map((article) => (
         <ArticleCard key={article.id} article={article} />
       ))}

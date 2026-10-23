@@ -36,7 +36,7 @@ export default function AboutPage() {
 
       <section aria-labelledby="about-purpose">
         <div className="mx-auto grid max-w-[1480px] items-center gap-10 px-6 py-16 sm:px-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:px-12 lg:py-24">
-          <div data-reveal="">
+          <div data-reveal="" suppressHydrationWarning>
             <p className="mb-5 text-sm font-medium uppercase tracking-[0.14em] text-brand-700">Nosso propósito</p>
             <h2 id="about-purpose" className="max-w-xl text-balance font-[family-name:var(--font-cardo)] text-4xl leading-[1.12] tracking-[-0.03em] text-brand-900 sm:text-5xl lg:text-6xl">
               Conhecimento para quem cuida da <span className="italic text-brand-600">saúde sexual.</span>
@@ -61,10 +61,10 @@ export default function AboutPage() {
 
       <section aria-labelledby="about-principles" className="bg-[#e4eeeb]/70">
         <div className="mx-auto max-w-[1480px] px-6 py-16 sm:px-10 lg:px-12 lg:py-24">
-          <h2 id="about-principles" data-reveal="" className="max-w-2xl font-[family-name:var(--font-cardo)] text-4xl leading-tight text-brand-900 sm:text-5xl">
+          <h2 id="about-principles" data-reveal="" suppressHydrationWarning className="max-w-2xl font-[family-name:var(--font-cardo)] text-4xl leading-tight text-brand-900 sm:text-5xl">
             O que orienta a Lutteros
           </h2>
-          <ul data-reveal-stagger="" className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <ul data-reveal-stagger="" suppressHydrationWarning className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {aboutValues.map((value) => (
               <li key={value.id} className="rounded-xl border border-brand-900/10 bg-[#faf9f6] p-6 lg:p-7">
                 <BrandIcon kind={value.icon} className="mb-5 size-16" />
@@ -78,7 +78,7 @@ export default function AboutPage() {
 
       <section aria-labelledby="about-learning">
         <div className="mx-auto grid max-w-[1480px] items-center gap-10 px-6 py-16 sm:px-10 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-12 lg:py-24">
-          <div data-reveal="" className="relative order-2 aspect-[4/3] overflow-hidden rounded-2xl bg-[#e4eeeb] shadow-[0_24px_60px_-36px_rgba(5,38,40,0.5)] lg:order-1">
+          <div data-reveal="" suppressHydrationWarning className="relative order-2 aspect-[4/3] overflow-hidden rounded-2xl bg-[#e4eeeb] shadow-[0_24px_60px_-36px_rgba(5,38,40,0.5)] lg:order-1">
             <Image
               src="/images/about/study.webp"
               alt="Mesa de estudo com uma revista científica aberta, caderno de anotações, caneta e uma xícara de chá."
@@ -119,7 +119,7 @@ export default function AboutPage() {
       </section>
 
       <section aria-labelledby="about-contact" className="mx-auto max-w-[1480px] px-6 pb-20 sm:px-10 lg:px-12">
-        <div data-reveal="" className="grid overflow-hidden rounded-2xl bg-[#0a2f33] text-[#fbf8f3] lg:grid-cols-[1fr_1.1fr]">
+        <div data-reveal="" suppressHydrationWarning className="grid overflow-hidden rounded-2xl bg-[#0a2f33] text-[#fbf8f3] lg:grid-cols-[1fr_1.1fr]">
           <div className="relative min-h-64 lg:min-h-[360px]">
             <Image
               src="/images/about/room.webp"

@@ -74,7 +74,7 @@ export default async function Home() {
           className="pointer-events-none absolute -bottom-64 -left-24 hidden h-auto w-64 rotate-[25deg] opacity-30 lg:block"
         />
         <div className="relative mx-auto max-w-[1480px] px-6 py-16 sm:px-10 lg:px-12 lg:py-24">
-          <div data-reveal="" className="grid gap-8 md:grid-cols-2 md:items-end md:gap-16">
+          <div data-reveal="" suppressHydrationWarning className="grid gap-8 md:grid-cols-2 md:items-end md:gap-16">
             <div>
               <p className="mb-5 text-sm font-medium text-brand-700 sm:text-base">Para quem é a Lutteros?</p>
               <h2 id="home-audience-title" className="max-w-xl text-balance font-[family-name:var(--font-cardo)] text-4xl leading-[1.12] text-brand-900 lg:text-[56px]">
@@ -89,7 +89,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <ul data-reveal-stagger="" className="mt-10 grid gap-5 md:grid-cols-3 lg:mt-14 lg:gap-6">
+          <ul data-reveal-stagger="" suppressHydrationWarning className="mt-10 grid gap-5 md:grid-cols-3 lg:mt-14 lg:gap-6">
             {audiences.map(({ image, alt, title, description, position }) => (
               <li key={title}>
                 <div className="flex h-full flex-col overflow-hidden rounded-xl bg-[#faf9f6] shadow-[0_1px_2px_rgba(5,38,40,0.06)]">
@@ -124,7 +124,7 @@ export default async function Home() {
           className="pointer-events-none absolute -right-16 top-8 hidden h-auto w-72 rotate-[20deg] opacity-60 xl:block"
         />
         <div className="relative mx-auto max-w-[1480px] px-6 py-20 sm:px-10 lg:px-12 lg:py-28">
-          <div data-reveal="" className="mx-auto max-w-3xl text-center">
+          <div data-reveal="" suppressHydrationWarning className="mx-auto max-w-3xl text-center">
             <h2 id="home-learning-title" className="text-balance font-[family-name:var(--font-cardo)] text-4xl leading-[1.12] text-brand-900 lg:text-[52px]">
               Da evidência científica à prática clínica
             </h2>
@@ -133,7 +133,7 @@ export default async function Home() {
               relevantes e refletir sobre sua aplicação na assistência em saúde sexual.
             </p>
           </div>
-          <div data-reveal-stagger="" className="mt-14 grid gap-12 md:grid-cols-3 md:gap-10 lg:mt-20 lg:gap-16">
+          <div data-reveal-stagger="" suppressHydrationWarning className="mt-14 grid gap-12 md:grid-cols-3 md:gap-10 lg:mt-20 lg:gap-16">
             {learningFormats.map(({ icon, title, description }) => (
               <div key={title} className="pb-10 text-center">
                 <BrandIcon kind={icon} className="mx-auto mb-7 size-24 lg:size-28" />
@@ -148,7 +148,7 @@ export default async function Home() {
       <LatestArticles articles={articles} limit={4} />
 
       <section aria-labelledby="home-cta-title" className="mx-auto max-w-[1480px] px-6 py-20 sm:px-10 lg:px-12 lg:py-28">
-        <div data-reveal="" className="relative isolate overflow-hidden rounded-[12px_56px_12px_12px] bg-[#eee5ec] sm:rounded-[12px_112px_12px_12px]">
+        <div data-reveal="" suppressHydrationWarning className="relative isolate overflow-hidden rounded-[12px_56px_12px_12px] bg-[#eee5ec] sm:rounded-[12px_112px_12px_12px]">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[url('/images/brand/paper-grain.svg')]" />
           <Image
             src="/images/brand/care-flow.svg"

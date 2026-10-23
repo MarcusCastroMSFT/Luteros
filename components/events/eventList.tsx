@@ -14,7 +14,7 @@ export function EventList({ events = [], limit, className = '' }: EventListProps
   }
 
   return (
-    <div data-reveal-stagger="" className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 ${className}`}>
+    <div data-reveal-stagger="" suppressHydrationWarning className={`grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 ${className}`}>
       {displayedEvents.map((event) => (
         <EventCard 
           key={event.id} 

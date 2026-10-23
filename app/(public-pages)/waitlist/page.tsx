@@ -29,12 +29,12 @@ export default function WaitlistPage() {
 
       <section aria-labelledby="waitlist-heading">
         <div className="mx-auto grid max-w-[1480px] items-start gap-10 px-6 pb-20 pt-4 sm:px-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:px-12 lg:pb-28">
-          <div data-reveal="">
+          <div data-reveal="" suppressHydrationWarning>
             <h2 id="waitlist-heading" className="sr-only">Lista de espera</h2>
             <WaitlistForm />
           </div>
 
-          <div data-reveal="" style={reveal(1, 140).style}>
+          <div data-reveal="" suppressHydrationWarning style={reveal(1, 140).style}>
             <div className="relative mb-8 aspect-[4/3] overflow-hidden rounded-2xl bg-[#e4eeeb] shadow-[0_24px_60px_-36px_rgba(5,38,40,0.5)]">
               <Image
                 src="/images/about/study.webp"

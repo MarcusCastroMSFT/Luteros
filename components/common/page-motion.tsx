@@ -10,7 +10,9 @@ const TARGETS = "[data-reveal], [data-reveal-stagger]";
  *
  * It only ever sets the `data-revealed` attribute on those elements. Never touch `class`
  * or `style` here: React compares both during hydration, and pages that stream
- * (Suspense) would fail to hydrate and render blank.
+ * (Suspense) would fail to hydrate and render blank. The attribute can land before React
+ * hydrates a streamed list, so every `data-reveal*` element also carries
+ * `suppressHydrationWarning` (the `reveal()` helper already adds it).
  * Hidden states live in `globals.css` and only apply with scripting on and
  * `prefers-reduced-motion: no-preference`.
  */

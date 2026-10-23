@@ -166,7 +166,7 @@ export default function FAQPage() {
           <CategoryFilter categories={categories} activeCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
         </div>
 
-        <div data-reveal="" className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)] lg:gap-14">
+        <div data-reveal="" suppressHydrationWarning className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)] lg:gap-14">
           <section aria-labelledby="faq-results" className="min-w-0">
             <h2 id="faq-results" className="mb-2 font-[family-name:var(--font-cardo)] text-3xl text-brand-900">
               {selectedCategory === 'Todas' ? 'Como podemos ajudar?' : selectedCategory}

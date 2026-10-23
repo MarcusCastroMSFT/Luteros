@@ -33,7 +33,7 @@ export default function HelpPage() {
       <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-8 sm:px-10 lg:px-12">
         <HelpSearch articles={articles.map(({ slug, title, description, category }) => ({ slug, title, description, category }))} />
 
-        <div data-reveal-stagger="" className="grid gap-14 lg:grid-cols-3 lg:gap-12">
+        <div data-reveal-stagger="" suppressHydrationWarning className="grid gap-14 lg:grid-cols-3 lg:gap-12">
           {helpCategories.map((category) => (
             <section key={category.id} aria-labelledby={`help-${category.id}`}>
               <BrandIcon kind={category.icon} className="mb-5 size-24" />
@@ -58,7 +58,7 @@ export default function HelpPage() {
           ))}
         </div>
 
-        <section aria-labelledby="help-contact" data-reveal="" className="relative mt-20 overflow-hidden rounded-[12px_48px_12px_12px] bg-[#eee5ec] px-6 py-10 sm:p-12 lg:flex lg:items-center lg:justify-between lg:gap-12">
+        <section aria-labelledby="help-contact" data-reveal="" suppressHydrationWarning className="relative mt-20 overflow-hidden rounded-[12px_48px_12px_12px] bg-[#eee5ec] px-6 py-10 sm:p-12 lg:flex lg:items-center lg:justify-between lg:gap-12">
           <div className="max-w-2xl">
             <h2 id="help-contact" className="mb-4 font-[family-name:var(--font-cardo)] text-3xl text-brand-900 sm:text-4xl">Não encontrou o que procurava?</h2>
             <p className="text-base leading-[1.8] text-slate-600">

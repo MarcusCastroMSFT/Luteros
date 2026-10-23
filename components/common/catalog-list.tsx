@@ -74,7 +74,7 @@ export function CatalogList({ initialPage, category }: CatalogListProps) {
           Ver desde o início da lista
         </Link>
       )}
-      <div role="list" data-reveal-stagger="" aria-label={`Lista de ${label}`} aria-busy={loading} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
+      <div role="list" data-reveal-stagger="" suppressHydrationWarning aria-label={`Lista de ${label}`} aria-busy={loading} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 md:gap-8">
         {visiblePage.kind === 'articles'
           ? visiblePage.items.map((article, i) => (
             <div role="listitem" key={article.id}>

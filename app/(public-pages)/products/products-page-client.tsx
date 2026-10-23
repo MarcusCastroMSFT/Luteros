@@ -363,7 +363,7 @@ export function ProductsPageClient({
           </div>
 
           {/* Products Grid - 2 columns on mobile */}
-          <div data-reveal-stagger="" className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-8">
+          <div data-reveal-stagger="" suppressHydrationWarning className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-8">
             {products.map((product, i) => (
               <ProductCard key={product.id} product={product} priority={i < 3} />
             ))}

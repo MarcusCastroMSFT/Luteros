@@ -330,7 +330,7 @@ export function ContactPageClient() {
       />
 
       <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-8 sm:px-10 lg:px-12">
-        <div data-reveal-stagger="" className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
+        <div data-reveal-stagger="" suppressHydrationWarning className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <div className="rounded-[12px_40px_12px_12px] border border-brand-600/15 bg-white/60 p-5 sm:p-8 lg:p-10">
