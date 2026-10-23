@@ -9,6 +9,8 @@ import { Paywall } from '@/components/blog/paywall';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getArticleBySlug, getArticleMetadata, getAllArticleSlugs } from '@/lib/articles';
 import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images';
+import { SITE_URL, absoluteUrl, stripHtml, truncateMeta } from '@/lib/seo';
+import { JsonLd } from '@/components/seo/json-ld';
 import {
   getCurrentUserAccessContext,
   hasArticleAccess,
@@ -70,20 +72,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     : article.content;
 
   // Generate full URL for sharing
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
+  const baseUrl = SITE_URL;
   const articleUrl = `${baseUrl}/articles/${article.slug}`;
+  const isPaid = article.accessType === 'paid';
 
   // JSON-LD structured data for SEO (following schema.org best practices)
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    '@id': articleUrl,
-    headline: article.title,
-    description: article.metaDescription || article.excerpt,
-    image: article.image ? {
-      '@type': 'ImageObject',
-      url: article.image.startsWith('http') ? article.image : `${baseUrl}${article.image}`,
-    } : undefined,
+    '@id': `${articleUrl}#article`,
+    url: articleUrl,
+    headline: article.title.trim(),
+    description: truncateMeta(article.metaDescription || article.excerpt, 300),
+    image: article.image ? [absoluteUrl(article.image)] : undefined,
     author: {
       '@type': 'Person',
       name: article.author,
@@ -91,17 +92,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     },
     datePublished: article.dateISO,
     dateModified: article.updatedAtISO ?? article.dateISO,
-    publisher: {
-      '@type': 'Organization',
-      name: 'lutteros',
-      url: baseUrl,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${baseUrl}/images/logo.png`,
-        width: 200,
-        height: 60,
-      },
-    },
+    publisher: { '@id': `${baseUrl}/#organization` },
+    isPartOf: { '@id': `${baseUrl}/#website` },
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': articleUrl,
@@ -110,19 +102,34 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     keywords: article.tags?.length ? article.tags.join(', ') : undefined,
     // Strip HTML tags before counting words for an accurate wordCount
     wordCount: article.content
-      ? article.content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
+      ? stripHtml(article.content).split(/\s+/).filter(Boolean).length
       : undefined,
     timeRequired: `PT${article.readTime.replace(' min', '')}M`,
     inLanguage: 'pt-BR',
+    isAccessibleForFree: !isPaid,
+    // Tells search engines the paywall is a gated section, not cloaking.
+    ...(isPaid && {
+      hasPart: {
+        '@type': 'WebPageElement',
+        isAccessibleForFree: false,
+        cssSelector: '#article-paywall',
+      },
+    }),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Artigos', item: `${baseUrl}/articles` },
+      { '@type': 'ListItem', position: 3, name: article.title, item: articleUrl },
+    ],
   };
 
   return (
     <>
-      {/* JSON-LD structured data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={[jsonLd, breadcrumbJsonLd]} />
       
       {/* Article Content */}
       <div className="container mx-auto px-4 max-w-[1428px] py-16">
@@ -151,11 +158,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           )}
 
           {isGated && (
-            <Paywall
-              audience={article.targetAudience ?? 'general'}
-              isAuthenticated={accessContext.isAuthenticated}
-              redirectTo={`/articles/${article.slug}`}
-            />
+            <div id="article-paywall">
+              <Paywall
+                audience={article.targetAudience ?? 'general'}
+                isAuthenticated={accessContext.isAuthenticated}
+                redirectTo={`/articles/${article.slug}`}
+              />
+            </div>
           )}
 
           {/* Share Section */}
@@ -205,13 +214,14 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br';
+  const baseUrl = SITE_URL;
   const articleUrl = `${baseUrl}/articles/${slug}`;
   const imageUrl = new URL(article.image?.trim() || DEFAULT_SOCIAL_IMAGE.url, baseUrl).href;
 
-  // Prefer per-article meta fields when set by the editor
-  const metaTitle = article.metaTitle || article.title;
-  const metaDescription = article.metaDescription || article.excerpt;
+  // Prefer per-article meta fields when set by the editor. Excerpts can be long
+  // paragraphs, so descriptions are trimmed to what search results actually show.
+  const metaTitle = (article.metaTitle || article.title).trim();
+  const metaDescription = truncateMeta(article.metaDescription || article.excerpt);
   const keywords = article.tags?.length
     ? article.tags
     : [article.category, 'saúde sexual', 'educação', 'bem-estar'];
@@ -232,8 +242,6 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       images: [
         {
           url: imageUrl,
-          width: 1200,
-          height: 630,
           alt: metaTitle,
         },
       ],

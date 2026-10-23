@@ -180,6 +180,52 @@ volta à página da URL, sem misturar os lotes acumulados no mobile.
 
 Testes: `npx tsx --test lib/catalog-pagination.test.ts`.
 
+### SEO e visibilidade em IA
+
+- **Rotas geradas:** `app/robots.ts`, `app/sitemap.ts`, `app/manifest.ts`,
+  `/feed.xml` (RSS dos artigos), `/llms.txt` (guia para IAs, com artigos, cursos
+  e eventos vindos do banco), `/llms-full.txt` (texto integral **só dos artigos
+  gratuitos**) e `/.well-known/security.txt`.
+- **Origem canônica:** `lib/seo.ts` (`SITE_URL`) lê `NEXT_PUBLIC_BASE_URL`. O
+  mesmo arquivo tem `truncateMeta` (descrições de ~160 caracteres) e `escapeXml`.
+  Testes: `npx tsx --test lib/seo.test.ts`.
+- **Previews:** `robots.txt` bloqueia tudo quando `VERCEL_ENV` não é `production`.
+- **Páginas privadas** (login, cadastro, painel, editor de teste, "meus cursos"
+  etc.) usam `noindex` por metadata. Não as bloqueie no `robots.txt`: o
+  buscador precisa abrir a página para ler o `noindex`.
+- **Metadata:** cada página pública define `alternates.canonical`. O link do
+  feed RSS fica no `<head>` do layout raiz porque `alternates` de uma página
+  substitui o do layout inteiro.
+- **Dados estruturados:** `Organization` + `WebSite` no layout raiz; `Article` +
+  `BreadcrumbList` nos artigos (com `isAccessibleForFree` e a seção `#article-paywall`
+  nos pagos); `Course`, `Event`, `Product` e `FAQPage` nas respectivas páginas.
+  `JsonLd` escapa `<` para o conteúdo do editor nunca fechar a tag `script`.
+- **Sitemap:** páginas fixas não têm `lastModified`; só conteúdo do banco informa
+  a data real de atualização.
+
+## Especialistas
+
+A página `/specialists` lista os usuários marcados como **Exibir em Especialistas**
+(coluna `users.isSpecialist`, migração `0010_user_is_specialist.sql`, padrão `false`).
+Não há dados de exemplo: tudo vem do perfil do usuário.
+
+- **Como incluir ou remover alguém:** Admin → Usuários → Editar → marque
+  "Exibir em Especialistas". Cargo, empresa, biografia, LinkedIn, Instagram, X e
+  site são os mesmos campos do perfil. Na biografia, **cada linha vira um item**
+  de "Formação e atuação".
+- **Links:** `lib/specialist-profile.ts` normaliza o que a pessoa digitou
+  (`@user`, `linkedin.com/in/x`, `instagram.com.br/x`) e só aceita links http(s)
+  da rede esperada. Valores inválidos são ignorados.
+- **Perfil sem biografia:** aparece na lista, mas o card não tem link, a página
+  usa `noindex` e fica fora do sitemap e do `llms.txt` até a bio ser preenchida.
+- **Cursos:** o perfil lista os cursos **publicados** em que a pessoa é instrutora
+  (`course_instructors`). E-mail e telefone nunca são exibidos.
+- **Cache:** `lib/specialists.ts` usa a tag `specialists`; salvar um perfil ou a
+  marcação atualiza as páginas na hora.
+- **Slug:** gerado do nome (`tetzi-oliveira-brandao`); mudar o nome muda a URL.
+
+Testes: `npx tsx --test lib/specialist-profile.test.ts`.
+
 ## Instrutores dos cursos
 
 No formulário de criação ou edição de cursos, administradores podem escolher um

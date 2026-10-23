@@ -71,7 +71,8 @@ export const users = pgTable('users', {
   password: text('password'),
   // Role stored directly on user (replaces user_roles table)
   role: userRoleEnum('role').default('USER').notNull(),
-  // Profile fields (from user_profiles)
+  // Shown on the public /specialists pages (independent of role)
+  isSpecialist: boolean('isSpecialist').default(false).notNull(),
   displayName: text('displayName'),
   bio: text('bio'),
   phone: text('phone'),

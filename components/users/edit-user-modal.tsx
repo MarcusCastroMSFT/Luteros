@@ -45,6 +45,7 @@ interface UserFormData {
   emailNotifications: boolean
   marketingEmails: boolean
   role: string
+  isSpecialist: boolean
 }
 
 const userRoles = [
@@ -94,6 +95,7 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
         emailNotifications: data.emailNotifications ?? true,
         marketingEmails: data.marketingEmails ?? false,
         role: userRole,
+        isSpecialist: data.isSpecialist ?? false,
       })
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -221,6 +223,9 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
                   placeholder="Conte um pouco sobre você..."
                   className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background"
                 />
+                <p className="text-sm text-muted-foreground">
+                  Na página de especialistas, cada linha vira um item de &quot;Formação e atuação&quot;.
+                </p>
               </div>
             </div>
 
@@ -251,6 +256,23 @@ export function EditUserModal({ userId, open, onOpenChange, onSuccess }: EditUse
                 <p className="text-sm text-muted-foreground">
                   A função determina as permissões e acessos do usuário na plataforma.
                 </p>
+              </div>
+
+              <div className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="isSpecialist"
+                  {...register('isSpecialist')}
+                  className="mt-1 rounded border-gray-300"
+                />
+                <div>
+                  <Label htmlFor="isSpecialist" className="font-normal cursor-pointer">
+                    Exibir em Especialistas
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Publica o perfil (foto, cargo, empresa, bio e redes) na página pública de especialistas.
+                  </p>
+                </div>
               </div>
             </div>
 

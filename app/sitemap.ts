@@ -4,11 +4,13 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { helpArticles } from '@/data/help'
 import { blogArticles, courses, events, products } from '@/lib/db/schema'
+import { SITE_URL } from '@/lib/seo'
+import { getSpecialists, hasProfileContent } from '@/lib/specialists'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection()
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+  const baseUrl = SITE_URL
 
   // Turn a stored image path (absolute URL or site-relative) into an absolute
   // URL so search engines can index it via the sitemap's <image:image> entries.
@@ -16,92 +18,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     img ? [img.startsWith('http') ? img : `${baseUrl}${img}`] : []
 
   // Static pages
-  const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/articles`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/courses`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/events`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/specialists`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/products`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/community`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/faq`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/help`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/waitlist`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    ...Object.keys(helpArticles).map((slug) => ({
-      url: `${baseUrl}/help/${slug}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.4,
-    })),
+  // No lastModified here on purpose: a value that changes on every request teaches
+  // crawlers to ignore it, which hurts the real lastmod of articles/courses/events.
+  type Freq = NonNullable<MetadataRoute.Sitemap[number]['changeFrequency']>
+  const staticRoutes: [path: string, changeFrequency: Freq, priority: number][] = [
+    ['', 'daily', 1],
+    ['/articles', 'daily', 0.9],
+    ['/courses', 'weekly', 0.8],
+    ['/events', 'weekly', 0.8],
+    ['/about', 'monthly', 0.7],
+    ['/specialists', 'weekly', 0.7],
+    ['/products', 'weekly', 0.7],
+    ['/community', 'weekly', 0.6],
+    ['/faq', 'monthly', 0.5],
+    ['/help', 'monthly', 0.5],
+    ['/contact', 'yearly', 0.5],
+    ['/waitlist', 'monthly', 0.5],
+    ['/privacy', 'yearly', 0.3],
+    ['/terms', 'yearly', 0.3],
+    ...Object.keys(helpArticles).map((slug): [string, Freq, number] => [`/help/${slug}`, 'monthly', 0.4]),
   ]
+  const staticPages: MetadataRoute.Sitemap = staticRoutes.map(([path, changeFrequency, priority]) => ({
+    url: `${baseUrl}${path}`,
+    changeFrequency,
+    priority,
+  }))
+
+  // Specialist profiles without a bio are noindex, so they stay out of the sitemap too
+  let specialistPages: MetadataRoute.Sitemap = []
+  try {
+    const specialists = await getSpecialists()
+    specialistPages = specialists.filter(hasProfileContent).map((s) => ({
+      url: `${baseUrl}/specialists/${s.slug}`,
+      lastModified: new Date(s.updatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+      images: absoluteImage(s.image),
+    }))
+  } catch (error) {
+    console.error('Error fetching specialists for sitemap:', error)
+  }
 
   // Fetch all published blog articles
   let articlePages: MetadataRoute.Sitemap = []
@@ -167,5 +123,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching products for sitemap:', error)
   }
 
-  return [...staticPages, ...articlePages, ...coursePages, ...eventPages, ...productPages]
+  return [...staticPages, ...specialistPages, ...articlePages, ...coursePages, ...eventPages, ...productPages]
 }

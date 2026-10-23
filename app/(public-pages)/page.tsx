@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { getArticles } from "@/lib/articles";
 
 export const metadata: Metadata = {
-  title: "Lutteros | Saúde sexual baseada em conhecimento científico",
+  title: { absolute: "Lutteros | Saúde sexual baseada em conhecimento científico" },
   description: "A Lutteros conecta ciência e prática clínica com conteúdos fundamentados em evidências, elaborados e revisados por especialistas.",
+  alternates: { canonical: "/" },
 };
 
 const audiences: { image: string; alt: string; title: string; description: string; position?: string }[] = [

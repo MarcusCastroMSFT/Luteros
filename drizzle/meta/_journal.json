@@ -71,6 +71,13 @@
       "when": 1792696250542,
       "tag": "0009_subscription_waitlist",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792747099691,
+      "tag": "0010_user_is_specialist",
+      "breakpoints": true
     }
   ]
 }

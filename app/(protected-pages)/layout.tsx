@@ -1,7 +1,13 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ProtectedLayoutClient } from "./protected-layout-client";
+
+export const metadata: Metadata = {
+  title: "Painel",
+  robots: { index: false, follow: false },
+};
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;

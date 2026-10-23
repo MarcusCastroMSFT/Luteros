@@ -1,22 +1,22 @@
 import { MetadataRoute } from 'next'
+import { SITE_URL } from '@/lib/seo'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.lutteros.com.br'
+  // Preview/branch deployments must never compete with the production site in search results.
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production') {
+    return { rules: [{ userAgent: '*', disallow: '/' }] }
+  }
 
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/login',
-          '/register',
-          '/auth/',
-        ],
+        // Login and personal pages stay out of the index with a noindex meta tag
+        // (a crawler must fetch a page to see it), so only non-HTML areas are blocked.
+        disallow: ['/api/', '/admin/'],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   }
 }

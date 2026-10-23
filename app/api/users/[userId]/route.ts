@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { requireAdmin } from '@/lib/auth-helpers'
+import { revalidateTag } from '@/lib/cache'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 
@@ -17,7 +18,7 @@ export async function GET(
     const user = await db
       .select({
         id: users.id, name: users.name, email: users.email, emailVerified: users.emailVerified,
-        image: users.image, role: users.role, displayName: users.displayName, bio: users.bio,
+        image: users.image, role: users.role, isSpecialist: users.isSpecialist, displayName: users.displayName, bio: users.bio,
         phone: users.phone, dateOfBirth: users.dateOfBirth, title: users.title, company: users.company,
         website: users.website, linkedin: users.linkedin, twitter: users.twitter, instagram: users.instagram,
         rating: users.rating, reviewsCount: users.reviewsCount, studentsCount: users.studentsCount,
@@ -83,6 +84,7 @@ export async function PATCH(
     if (body.emailNotifications !== undefined) updateData.emailNotifications = body.emailNotifications
     if (body.marketingEmails !== undefined) updateData.marketingEmails = body.marketingEmails
     if (body.role !== undefined) updateData.role = body.role
+    if (body.isSpecialist !== undefined) updateData.isSpecialist = Boolean(body.isSpecialist)
     updateData.updatedAt = new Date()
 
     const [updated] = await db
@@ -90,6 +92,8 @@ export async function PATCH(
       .set(updateData)
       .where(eq(users.id, userId))
       .returning()
+
+    revalidateTag('specialists')
 
     const { password: _pw, ...safeUser } = updated
     return NextResponse.json(safeUser)
@@ -126,6 +130,7 @@ export async function DELETE(
     }
 
     await db.delete(users).where(eq(users.id, userId))
+    revalidateTag('specialists')
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' })
   } catch (error) {

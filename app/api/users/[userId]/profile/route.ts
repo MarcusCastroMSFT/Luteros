@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/auth-helpers'
+import { revalidateTag } from '@/lib/cache'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 
@@ -95,6 +96,8 @@ export async function PATCH(
       .set(updateData)
       .where(eq(users.id, userId))
       .returning()
+
+    revalidateTag('specialists')
 
     return NextResponse.json(updated)
   } catch (error) {

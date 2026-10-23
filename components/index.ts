@@ -37,11 +37,7 @@ export { AuthorBio } from "./blog/authorBio";
 export { RelatedArticles } from "./blog/relatedArticles";
 
 // Specialist components
-export { SpecialistCard } from "./specialists/specialistCard";
-export { SpecialistList } from "./specialists/specialistList";
-export { SpecialistContact } from "./specialists/specialistContact";
-export { SpecialistAbout } from "./specialists/specialistAbout";
-export { SpecialistCourses } from "./specialists/specialistCourses";
+export { SpecialistCard } from "./specialists/specialist-card";
 
 // Course components
 export { CourseCard } from "./courses/courseCard";

@@ -1,9 +1,15 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import { ArrowUpRight, LockKeyhole } from "lucide-react"
 import { Logo } from "@/components/common/logo"
 import { CurrentYear } from "@/components/auth/auth-ui"
 import { WaterReflection, WaterScene } from "@/components/auth/water-scene"
 import styles from "@/components/auth/auth-shell.module.css"
+
+// Account screens carry no search value and must never appear in results.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default function AuthSceneLayout({ children }: { children: React.ReactNode }) {
   return (

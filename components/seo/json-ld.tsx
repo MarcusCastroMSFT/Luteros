@@ -14,8 +14,8 @@ export function JsonLd({ data }: { data: JsonLdData | JsonLdData[] }) {
         <Fragment key={i}>
           <script
             type="application/ld+json"
-            // JSON.stringify output is safe here; keys/values are app-controlled.
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(block) }}
+            // Escape "<" so editor-controlled text can never close the script tag.
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(block).replace(/</g, '\\u003c') }}
           />
         </Fragment>
       ))}

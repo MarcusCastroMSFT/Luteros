@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Cardo } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../components/providers";
@@ -31,8 +31,16 @@ const baseUrl =
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
   'https://www.lutteros.com.br';
 
+export const viewport: Viewport = {
+  themeColor: "#198189",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  applicationName: "Lutteros",
+  category: "health",
   title: {
     default: "lutteros - Saúde Sexual e Bem-estar",
     template: "%s | lutteros",
@@ -87,6 +95,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {/* Declared here, not via metadata.alternates: pages that set their own
+            canonical replace the whole alternates object and would lose the feed. */}
+        <link rel="alternate" type="application/rss+xml" title="Lutteros — Artigos" href="/feed.xml" />
+      </head>
       <body
         className={`${dmSans.variable} ${cardo.variable} antialiased min-h-screen font-sans`}
       >
@@ -95,9 +108,11 @@ export default function RootLayout({
           data={[
             {
               "@context": "https://schema.org",
-              "@type": "Organization",
+              "@type": ["Organization", "EducationalOrganization"],
               "@id": `${baseUrl}/#organization`,
               name: "lutteros",
+              alternateName: "Lutteros",
+              legalName: "LUTTEROS SEXUAL HEALTH LTDA",
               url: baseUrl,
               logo: {
                 "@type": "ImageObject",
@@ -105,8 +120,20 @@ export default function RootLayout({
                 width: 790,
                 height: 209,
               },
+              image: `${baseUrl}${DEFAULT_SOCIAL_IMAGE.url}`,
               description:
                 "Plataforma de educação em saúde sexual e bem-estar. Cursos, artigos e especialistas para cuidar da sua saúde íntima.",
+              areaServed: { "@type": "Country", name: "Brasil" },
+              knowsLanguage: "pt-BR",
+              contactPoint: [
+                {
+                  "@type": "ContactPoint",
+                  contactType: "customer support",
+                  email: "contato@lutteros.com.br",
+                  availableLanguage: "pt-BR",
+                  url: `${baseUrl}/contact`,
+                },
+              ],
               sameAs: ["https://www.instagram.com/lutteros"],
             },
             {
@@ -117,14 +144,6 @@ export default function RootLayout({
               url: baseUrl,
               inLanguage: "pt-BR",
               publisher: { "@id": `${baseUrl}/#organization` },
-              potentialAction: {
-                "@type": "SearchAction",
-                target: {
-                  "@type": "EntryPoint",
-                  urlTemplate: `${baseUrl}/articles?search={search_term_string}`,
-                },
-                "query-input": "required name=search_term_string",
-              },
             },
           ]}
         />
