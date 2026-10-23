@@ -289,6 +289,22 @@ branch e o `AUTH_SECRET` local. Ele cria e remove dados fictícios e verifica
 persistência, edição, limpeza, sanitização e bloqueio antes do pagamento ou
 depois de reembolso.
 
+## Login com Google
+
+- O cliente OAuth fica no Google Cloud (projeto `507989042720`). URIs de redirecionamento
+  autorizados: `https://www.lutteros.com.br/api/auth/callback/google` e
+  `http://localhost:3001/api/auth/callback/google`. Variáveis: `GOOGLE_CLIENT_ID` e
+  `GOOGLE_CLIENT_SECRET` (na Vercel; copie para o `.env.local` para testar localmente).
+- **Mesmo e-mail com senha e Google:** o Google se vincula à conta existente
+  (`allowDangerousEmailAccountLinking`). Se o e-mail da conta **nunca tinha sido verificado**,
+  ela passa a verificada e a **senha antiga é apagada** (`events.linkAccount` em `auth.ts`),
+  para quem cadastrou o e-mail de outra pessoa não manter acesso.
+- Quem fica sem senha e tenta entrar por e-mail vê "Esta conta entra com o Google…" (código
+  `password_not_set`). Para voltar a usar senha: **Esqueceu sua senha?** — depois disso os dois
+  métodos funcionam.
+- Erros de login voltam para `/login?error=…` e aparecem no aviso acima do formulário
+  (`lib/auth-errors.ts`).
+
 ## Pagamentos de cursos (Asaas)
 
 Cursos pagos são cobrados pelo [Asaas](https://docs.asaas.com). O botão **Comprar curso**

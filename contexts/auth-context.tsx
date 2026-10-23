@@ -69,7 +69,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       redirect: false,
     })
     if (result?.error) {
-      throw new Error(result.error)
+      // Custom credential errors arrive in `code`; the default one is "credentials".
+      throw new Error(result.code && result.code !== 'credentials' ? result.code : result.error)
     }
     // Refresh session so role-based redirect uses fresh data
     const updated = await update()

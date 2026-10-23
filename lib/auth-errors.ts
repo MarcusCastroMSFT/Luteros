@@ -5,6 +5,8 @@ export function translateAuthError(code?: string | null, provider?: AuthProvider
   switch (code) {
     case 'CredentialsSignin':
       return 'E-mail ou senha incorretos.'
+    case 'password_not_set':
+      return 'Esta conta entra com o Google. Use "Continuar com Google" ou crie uma senha em "Esqueceu sua senha?".'
     case 'OAuthAccountNotLinked':
       return 'Já existe uma conta com este e-mail. Entre com seu e-mail e senha ou use "Esqueceu sua senha?" para criar uma nova.'
     case 'AccessDenied':

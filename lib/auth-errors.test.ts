@@ -8,6 +8,12 @@ test('explains how to continue when the e-mail already has a password account', 
   assert.match(message, /senha/)
 })
 
+test('explains how to get in when the account has no password', () => {
+  const message = translateAuthError('password_not_set')
+  assert.match(message, /Continuar com Google/)
+  assert.match(message, /Esqueceu sua senha/)
+})
+
 test('maps common Auth.js codes to Portuguese messages', () => {
   assert.equal(translateAuthError('CredentialsSignin'), 'E-mail ou senha incorretos.')
   assert.match(translateAuthError('AccessDenied'), /autorizado/)

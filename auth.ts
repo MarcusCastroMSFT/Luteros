@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth'
+import NextAuth, { CredentialsSignin } from 'next-auth'
 import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
@@ -7,6 +7,13 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { users, accounts, sessions, verificationTokens } from '@/lib/db/schema'
 import { applyStoredSessionImage } from '@/lib/auth-session'
+
+// Account exists but has no password (created with Google, or its unverified password was
+// dropped when Google was linked). The login form explains how to get in instead of
+// reporting a wrong password. The code ends up in the URL, so it carries no details.
+class PasswordNotSetError extends CredentialsSignin {
+  code = 'password_not_set'
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -51,7 +58,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .limit(1)
           .then((r) => r[0] ?? null)
 
-        if (!user || !user.password) return null
+        if (!user) return null
+        if (!user.password) throw new PasswordNotSetError()
 
         const isValid = await bcrypt.compare(
           credentials.password as string,
