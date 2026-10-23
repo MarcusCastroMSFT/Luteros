@@ -94,6 +94,33 @@ porque a classe `is-visible` é adicionada fora dele.
 
 ### Imagens da marca
 
+**Capas dos artigos.** As 22 capas (foto realista, sem texto, em 16:10) ficam em
+`public/images/articles/<tema>-v2.webp`: profissionais de saúde (homens e mulheres),
+pacientes, casais, famílias e objetos quando o tema pede, na paleta da marca. O título
+já aparece junto da capa nos cards e na página, então a imagem não repete texto nem
+logo. São geradas por IA e não retratam pessoas reais. Duas exceções: "Anamnese
+estruturada" usa a foto de consulta aprovada, e "Dispositivos sexuais" usa uma imagem
+criada no ChatGPT (a moderação do Azure recusa esse tema) que contém textos pequenos
+em português, em placas e rótulos. Imagens com crianças também são recusadas pela
+moderação; por isso a capa de educação sexual mostra os pais.
+
+- **Primeira rodada (paisagens e objetos)** foi descartada e arquivada em
+  `../Luteros-backups/article-covers-v1-webp`, caso queira comparar (versão `v1`).
+- Prompts: `scripts/article-covers/prompts.json`. Gerar: `node scripts/generate-article-covers.mjs generate [id]`
+  (retoma de onde parou; pula PNGs já existentes). Otimizar: `... build [id]`. Os PNGs
+  brutos ficam fora do repositório, em `../Luteros-backups/article-covers-raw`.
+- **Originais salvos** em `../Luteros-backups/article-images-original`, com
+  `manifest.json` (artigo → URL antiga). As capas antigas continuam no Vercel Blob.
+- **Aplicar/reverter:** `node scripts/apply-article-covers.mjs plan|apply|revert [id]`
+  (`plan` só mostra; `revert` restaura as URLs antigas; o `id` opcional, de
+  `prompts.json`, limita a ação a um único artigo). O banco local é o de produção: rode `apply`
+  somente depois que os arquivos novos estiverem no deploy, senão o site publicado
+  pede imagens que ainda não existem. Depois, o cache das páginas pode levar até
+  1 hora para atualizar.
+
+Para mudar apenas um artigo, gere de novo com `generate <id>` (apague o PNG bruto) e
+incremente `VERSION` nos dois scripts para evitar cache da imagem anterior.
+
 O hero da home usa `public/images/home/hero-peers.webp`, uma conversa
 descontraída entre dois profissionais, sem jaleco nem estetoscópio, e sem grafismo
 botânico sobre a foto. A seção "Para quem é a Lutteros?" apresenta três cards de
