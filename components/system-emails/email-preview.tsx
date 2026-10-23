@@ -24,6 +24,7 @@ export function SystemEmailPreview({
   const getSampleVariables = (): Record<string, string> => {
     const samples: Record<string, string> = {
       name: 'João Silva',
+      greeting: 'Olá, João',
       email: 'joao@exemplo.com',
       appUrl: 'https://lutteros.com.br',
       year: new Date().getFullYear().toString(),
@@ -107,8 +108,8 @@ export function SystemEmailPreview({
         {/* Email Header */}
         <div className="border-b bg-muted/30 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-lime-100 flex items-center justify-center">
-              <span className="text-lime-600 font-semibold">L</span>
+            <div className="w-10 h-10 rounded-full bg-[#e4eeeb] flex items-center justify-center">
+              <span className="text-[#0f5459] font-semibold">L</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -141,7 +142,7 @@ export function SystemEmailPreview({
               title="Email Preview"
               className={cn(
                 "w-full border-0 bg-white rounded-lg shadow-sm transition-all duration-300",
-                viewMode === 'desktop' ? "min-h-[600px]" : "min-h-[700px]"
+                viewMode === 'desktop' ? "min-h-[1000px]" : "min-h-[1150px]"
               )}
               sandbox="" // Empty sandbox for maximum security - no scripts, forms, or navigation
               referrerPolicy="no-referrer"

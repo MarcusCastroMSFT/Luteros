@@ -150,9 +150,8 @@ export async function sendSystemEmail(
 // Convenience functions for specific emails
 // ============================================
 
-// NOTE: Authentication emails (welcome, email verification, password reset,
-// password changed, email changed) are now handled by Supabase Auth.
-// Configure them in Supabase Dashboard > Authentication > Email Templates
+// Password reset is rendered by lib/account-emails.ts and sent from
+// app/api/auth/forgot-password. All emails share lib/email-layout.ts.
 
 /**
  * Send profile updated notification email

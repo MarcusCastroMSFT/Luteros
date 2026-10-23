@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         }).where(eq(newsletterSubscribers.email, trimmedEmail))
 
         // Send welcome back email (don't wait for it)
-        sendWelcomeEmail(trimmedEmail).catch(err => 
+        sendWelcomeEmail(trimmedEmail, existingSubscriber.unsubscribeToken).catch(err => 
           console.error('Failed to send welcome back email:', err)
         )
         
@@ -118,16 +118,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new subscriber
-    await db.insert(newsletterSubscribers).values({
+    const [created] = await db.insert(newsletterSubscribers).values({
       email: trimmedEmail,
       source: sanitizedSource,
       ipAddress: clientIP,
       status: 'ACTIVE',
       confirmedAt: new Date(),
-    })
+    }).returning({ unsubscribeToken: newsletterSubscribers.unsubscribeToken })
 
     // Send welcome email (don't wait for it to complete)
-    sendWelcomeEmail(trimmedEmail).catch(err => 
+    sendWelcomeEmail(trimmedEmail, created?.unsubscribeToken).catch(err => 
       console.error('Failed to send welcome email:', err)
     )
 

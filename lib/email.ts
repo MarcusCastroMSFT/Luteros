@@ -1,4 +1,20 @@
 import { Resend } from 'resend'
+import {
+  campaignUnsubscribeUrl,
+  renderCampaignEmail,
+  type CampaignEmailPayload,
+} from '@/lib/email-campaign'
+import {
+  emailButton,
+  emailEyebrow,
+  emailHeading,
+  emailList,
+  emailNote,
+  emailParagraph,
+  emailTextFooter,
+  renderEmailLayout,
+} from '@/lib/email-layout'
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity'
 
 // Lazily initialize the Resend client: the constructor throws when RESEND_API_KEY
 // is missing, which would otherwise crash every route importing this module.
@@ -130,110 +146,62 @@ export async function sendBatchEmails(options: SendBatchEmailOptions): Promise<B
   return results
 }
 
+
 /**
- * Send welcome email to new newsletter subscriber
+ * Welcome email for a new (or returning) newsletter subscriber.
  */
-export async function sendWelcomeEmail(email: string): Promise<EmailResult> {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bem-vindo à Newsletter lutteros</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <!-- Header -->
-          <tr>
-            <td style="padding: 40px 40px 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #18181b;">
-                🎉 Bem-vindo à lutteros!
-              </h1>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 20px 40px;">
-              <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-                Olá! Obrigado por se inscrever na nossa newsletter.
-              </p>
-              <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-                A partir de agora, você receberá em primeira mão:
-              </p>
-              <ul style="margin: 0 0 16px; padding-left: 24px; font-size: 16px; line-height: 1.8; color: #3f3f46;">
-                <li>Novos cursos e conteúdos exclusivos</li>
-                <li>Dicas e materiais sobre saúde e bem-estar</li>
-                <li>Eventos e workshops especiais</li>
-                <li>Ofertas e promoções exclusivas para assinantes</li>
-              </ul>
-              <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-                Fique de olho na sua caixa de entrada!
-              </p>
-            </td>
-          </tr>
-          
-          <!-- CTA Button -->
-          <tr>
-            <td style="padding: 20px 40px 40px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td align="center">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'}" 
-                       style="display: inline-block; padding: 14px 32px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">
-                      Explorar Cursos
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 20px 40px; background-color: #f4f4f5; border-radius: 0 0 12px 12px;">
-              <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #71717a; text-align: center;">
-                Você está recebendo este email porque se inscreveu na newsletter da lutteros.
-                <br>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'}/unsubscribe?email=${encodeURIComponent(email)}" 
-                   style="color: #71717a; text-decoration: underline;">
-                  Cancelar inscrição
-                </a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `
+export function renderWelcomeEmail(unsubscribeToken?: string): { subject: string; html: string; text: string } {
+  const unsubscribeUrl = campaignUnsubscribeUrl(unsubscribeToken)
+  const articlesUrl = `${LUTTEROS_ENTITY.siteUrl}/articles`
+  const subject = 'Boas-vindas à newsletter da lutteros'
 
-  const text = `
-Bem-vindo à Newsletter lutteros!
+  const html = renderEmailLayout({
+    title: subject,
+    preheader: 'Artigos, cursos e eventos sobre saúde sexual, com base em evidências.',
+    audience: 'newsletter',
+    unsubscribeUrl,
+    content: [
+      emailEyebrow('Newsletter'),
+      emailHeading('Que bom ter você por aqui'),
+      emailParagraph(
+        'A partir de agora, você recebe na sua caixa de entrada o que publicamos sobre saúde sexual, sempre com base em evidências e revisado por especialistas.',
+      ),
+      emailParagraph('O que chega até você:'),
+      emailList([
+        'Artigos novos sobre prática clínica e bem-estar sexual',
+        'Aviso de novos cursos e eventos assim que as inscrições abrirem',
+        'Materiais de apoio para usar no consultório',
+      ]),
+      emailButton('Ler os artigos mais recentes', articlesUrl),
+      emailNote(
+        'Você pode cancelar a inscrição quando quiser pelo link no fim de cada e-mail.',
+      ),
+    ].join('\n'),
+  })
 
-Olá! Obrigado por se inscrever na nossa newsletter.
+  const text = `Que bom ter você por aqui
 
-A partir de agora, você receberá em primeira mão:
-- Novos cursos e conteúdos exclusivos
-- Dicas e materiais sobre saúde e bem-estar
-- Eventos e workshops especiais
-- Ofertas e promoções exclusivas para assinantes
+A partir de agora, você recebe na sua caixa de entrada o que publicamos sobre saúde sexual, sempre com base em evidências e revisado por especialistas.
 
-Fique de olho na sua caixa de entrada!
+O que chega até você:
+• Artigos novos sobre prática clínica e bem-estar sexual
+• Aviso de novos cursos e eventos assim que as inscrições abrirem
+• Materiais de apoio para usar no consultório
 
----
-Você está recebendo este email porque se inscreveu na newsletter da lutteros.
-  `
+Ler os artigos mais recentes: ${articlesUrl}
 
+Você pode cancelar a inscrição quando quiser pelo link no fim de cada e-mail.
+
+${emailTextFooter({ audience: 'newsletter', unsubscribeUrl })}`
+
+  return { subject, html, text }
+}
+
+export async function sendWelcomeEmail(email: string, unsubscribeToken?: string): Promise<EmailResult> {
+  const { subject, html, text } = renderWelcomeEmail(unsubscribeToken)
   return sendEmail({
     to: email,
-    subject: '🎉 Bem-vindo à Newsletter lutteros!',
+    subject,
     html,
     text,
     tags: [
@@ -243,111 +211,7 @@ Você está recebendo este email porque se inscreveu na newsletter da lutteros.
   })
 }
 
-export interface CampaignEmailPayload {
-  subject: string
-  previewText?: string
-  content: string
-  ctaText?: string
-  ctaUrl?: string
-}
-
-/**
- * Pure renderer for a campaign email body. Returns the per-recipient subject
- * + html + plain-text. Used by both the single-send path and the bulk batch
- * path (so we can pre-render all recipients and ship them via Resend's
- * batch.send endpoint).
- */
-export function renderCampaignEmail(
-  email: string,
-  campaign: CampaignEmailPayload,
-  unsubscribeToken?: string,
-): { to: string; subject: string; html: string; text: string } {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lutteros.com.br'
-  const unsubscribeUrl = unsubscribeToken
-    ? `${appUrl}/unsubscribe?token=${unsubscribeToken}`
-    : `${appUrl}/unsubscribe`
-    
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${campaign.subject}</title>
-  ${campaign.previewText ? `<meta name="x-apple-disable-message-reformatting"><meta name="description" content="${campaign.previewText}">` : ''}
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
-  ${campaign.previewText ? `<div style="display: none; max-height: 0; overflow: hidden;">${campaign.previewText}</div>` : ''}
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <!-- Header -->
-          <tr>
-            <td style="padding: 40px 40px 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #18181b;">
-                lutteros
-              </h1>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 20px 40px;">
-              <div style="font-size: 16px; line-height: 1.7; color: #3f3f46;">
-                ${campaign.content}
-              </div>
-            </td>
-          </tr>
-          
-          ${campaign.ctaText && campaign.ctaUrl ? `
-          <!-- CTA Button -->
-          <tr>
-            <td style="padding: 20px 40px 40px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td align="center">
-                    <a href="${campaign.ctaUrl}" 
-                       style="display: inline-block; padding: 14px 32px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">
-                      ${campaign.ctaText}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 20px 40px; background-color: #f4f4f5; border-radius: 0 0 12px 12px;">
-              <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #71717a; text-align: center;">
-                Você está recebendo este email porque se inscreveu na newsletter da lutteros.
-                <br>
-                <a href="${unsubscribeUrl}" 
-                   style="color: #71717a; text-decoration: underline;">
-                  Cancelar inscrição
-                </a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `
-
-  // Strip HTML for plain text version
-  const text = campaign.content
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\n\s*\n/g, '\n\n')
-    .trim()
-
-  return { to: email, subject: campaign.subject, html, text }
-}
+export { renderCampaignEmail, type CampaignEmailPayload }
 
 /**
  * Send campaign email to a single subscriber. Kept as a thin wrapper around

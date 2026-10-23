@@ -384,6 +384,34 @@ branch, defina `CONTACT_TEST_BASE_URL` (ex.: `http://localhost:3002`) e execute
 `AUTH_SECRET` (ou `NEXTAUTH_SECRET`) do servidor local para gerar sessões
 temporárias de teste, sem criar usuários ou alterar permissões no banco.
 
+## E-mails
+
+Todos os e-mails usam o mesmo layout de marca de `lib/email-layout.ts`, enviado pelo
+Resend (`RESEND_API_KEY`, `FROM_EMAIL`):
+
+- Logo, cartão branco sobre fundo marfim, título em Cardo e texto em DM Sans
+  (Georgia/Arial quando o cliente não carrega web fonts).
+- Rodapé com o broto (`public/images/brand/care-sprout.svg`), o slogan, o Instagram (`@lutteros`), o site, a razão
+  social e o CNPJ.
+- Modo escuro no Apple Mail e no iOS, com logo, broto e ícone em versões claras.
+- Botão que funciona no Outlook, link alternativo abaixo dele, prévia (preheader) e
+  versão em texto puro.
+
+| E-mail | Onde |
+| --- | --- |
+| Redefinição de senha | `lib/account-emails.ts`, enviado por `/api/auth/forgot-password` |
+| Boas-vindas da newsletter | `renderWelcomeEmail` em `lib/email.ts`, com o link de cancelamento por token |
+| Campanhas da newsletter | `lib/email-campaign.ts`, usado no envio, no teste e na pré-visualização do admin |
+| Perfil, matrícula, evento, certificado, compra e lembretes | `data/system-email-templates.ts` (`{{variáveis}}`) |
+
+Nos templates do sistema, os valores das variáveis são escapados no HTML, e `{{greeting}}`
+vira "Olá, <primeiro nome>". Uma cópia salva em Admin → E-mails do sistema substitui o
+padrão; use **Restaurar padrão** para voltar ao layout atual.
+
+As imagens ficam em `public/email/` e são geradas por `node scripts/build-email-assets.mjs`.
+Os e-mails apontam para `https://www.lutteros.com.br/email/...`; para testar com outro
+domínio, defina `EMAIL_ASSET_URL`. Testes: `npx tsx --test lib/email-layout.test.ts`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
