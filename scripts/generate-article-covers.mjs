@@ -16,7 +16,9 @@ const promptsFile = join(root, 'scripts', 'article-covers', 'prompts.json');
 const artDir = join(root, 'scripts', 'article-covers', 'art');
 const rawDir = join(root, '..', 'Luteros-backups', 'article-covers-raw');
 const outDir = join(root, 'public', 'images', 'articles');
-const VERSION = 'v2';
+// Each cover can override this with "version" in prompts.json; bump it when an image changes
+// so the new file gets a new URL (the site caches images by URL).
+const DEFAULT_VERSION = 'v2';
 // Covers that come from prepared art instead of the image API: the approved consultation
 // photo and the phases diagram (scripts/build-fases-cover.mjs draws its text from code).
 const ART_COVERS = new Set(['anamnese-estruturada', 'fases-resposta-sexual']);
@@ -79,8 +81,8 @@ async function buildOne(cover) {
   const info = await sharp(source)
     .resize({ width: WIDTH, height: HEIGHT, fit: 'cover', position: 'centre' })
     .webp({ quality: 84 })
-    .toFile(join(outDir, `${cover.id}-${VERSION}.webp`));
-  console.log(`built ${cover.id}-${VERSION}.webp ${Math.round(info.size / 1024)}KB`);
+    .toFile(join(outDir, `${cover.id}-${cover.version ?? DEFAULT_VERSION}.webp`));
+  console.log(`built ${cover.id}-${cover.version ?? DEFAULT_VERSION}.webp ${Math.round(info.size / 1024)}KB`);
 }
 
 await mkdir(rawDir, { recursive: true });

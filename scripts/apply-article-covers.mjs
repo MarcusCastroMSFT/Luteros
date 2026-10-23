@@ -17,7 +17,7 @@ import { neon } from '@neondatabase/serverless';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(join(root, '..', 'Luteros-backups', 'article-images-original', 'manifest.json'), 'utf8'));
 const { covers } = JSON.parse(readFileSync(join(root, 'scripts', 'article-covers', 'prompts.json'), 'utf8'));
-const VERSION = 'v2';
+const DEFAULT_VERSION = 'v2'; // a cover can override it with "version" in prompts.json
 const [mode = 'plan', only] = process.argv.slice(2);
 
 function databaseUrl() {
@@ -31,7 +31,7 @@ const sql = neon(databaseUrl());
 const originalBySlug = new Map(manifest.map((item) => [item.slug, item.originalImageUrl]));
 const rows = covers.filter((cover) => !only || cover.id === only).map((cover) => ({
   slug: cover.slug,
-  next: mode === 'revert' ? originalBySlug.get(cover.slug) : `/images/articles/${cover.id}-${VERSION}.webp`,
+  next: mode === 'revert' ? originalBySlug.get(cover.slug) : `/images/articles/${cover.id}-${cover.version ?? DEFAULT_VERSION}.webp`,
 }));
 
 let changed = 0;

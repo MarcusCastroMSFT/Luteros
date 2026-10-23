@@ -1,27 +1,119 @@
 {
   "style": "Realistic editorial photograph, natural soft light, refined and calm, shallow depth of field. Palette of deep teal, ivory, sage green and warm wood with a small touch of plum. Diverse adults of different ages, genders and ethnicities, natural expressions, always fully clothed, respectful and professional, safe for a health-education website. No readable text, no letters, no logos, no watermark, no nudity.",
   "covers": [
-    { "id": "tcc-trauma", "slug": "tcc-focada-no-trauma-para-mulheres-com-historico-de-abuso-sexual-na-infancia-aplicacao-do-modelo-practice", "prompt": "A female psychotherapist in a beige cardigan sitting in an armchair, listening with warm attention and a gentle expression, offering a box of tissues across a small table to a woman patient seen partly from behind, safe and supportive therapy room with plants and soft daylight." },
-    { "id": "menstruais", "slug": "dispositivos-menstruais-na-pratica-clinica-o-que-existe-alem-dos-absorventes-descartaveis", "prompt": "A male gynecologist in a white coat at his desk showing a young woman a teal silicone menstrual cup, reusable cloth pads and period underwear laid out on the desk between them, both smiling, bright consulting room." },
-    { "id": "dispositivos-sexuais", "slug": "dispositivos-sexuais-na-pratica-clinica-selecao-seguranca-e-aplicacoes-terapeuticas", "prompt": "Product-style editorial photo on a clinician's desk: a curated set of body-safe silicone sexual wellness devices in teal, plum and ivory (a smooth wand massager, a small bullet vibrator, a curved internal massager), neatly arranged on linen next to a sterilizing case and a clipboard, with a sex therapist's hands holding one device to explain it. Clinical, discreet, tasteful, non-explicit, no body parts shown other than hands." },
-    { "id": "sexo-antes-14", "slug": "sexo-antes-dos-14-anos-o-que-o-medico-deve-orientar-aos-adolescentes-e-seus-pais", "prompt": "A friendly male pediatrician in a light blue shirt talking calmly across a desk to a mother and her teenage daughter seen mostly from behind and the side, open and trusting conversation, warm consulting room with plants." },
-    { "id": "educacao-sexual-criancas", "slug": "educacao-sexual-para-criancas-o-que-os-pais-devem-ensinar", "prompt": "A mother and a father sitting together at a sunlit kitchen table, an open illustrated picture book about animals and plants between them and a notebook, talking calmly and thoughtfully about how to explain things to their child, warm home, soft morning light." },
-    { "id": "protocolo-anamnese", "slug": "protocolo-de-anamnese-em-sexologia-e-criterios-diagnosticos-das-disfuncoes-sexuais", "prompt": "An older male physician with grey hair and round glasses taking notes on a structured form on a clipboard while listening to a woman patient across the desk, attentive and unhurried, a stethoscope and a plant on the desk, warm office light." },
-    { "id": "violencia-infancia-mulher-adulta", "slug": "marcas-da-violencia-fisica-e-sexual-na-infancia-repercussoes-na-sexualidade-e-nos-relacionamentos-da-mulher-adulta", "prompt": "A woman in her thirties sitting pensively on a wide windowsill in a quiet room, wrapped in a soft knit cardigan, looking out at a misty garden in golden morning light, seen in side profile, a feeling of healing and resilience." },
-    { "id": "virgindade-himen", "slug": "virgindade-e-himen-o-que-a-ciencia-revela-sobre-um-mito-que-atravessa-geracoes", "prompt": "A male gynecologist explaining to a young woman using a plain white educational 3D model of the human pelvis on the desk, an open medical book beside it, both leaning in with curiosity, bright and respectful consulting room." },
-    { "id": "adversidade-infancia", "slug": "adversidade-e-violencia-na-infancia-marcas-que-atravessam-a-vida", "prompt": "A father in his forties and his teenage daughter, seen from behind, walking hand in hand along a sunlit garden path lined with ferns and soft mist, a feeling of protection and care, golden hour light." },
-    { "id": "autoerotismo", "slug": "autoerotismo", "prompt": "A woman in her thirties relaxing on a bright sunlit sofa at home on a quiet morning, wearing a comfortable knit sweater and leggings, smiling softly while holding a cup of tea, a book and a plum throw blanket beside her, a plant on the windowsill. Self-care, wellbeing and self-knowledge." },
-    { "id": "terapia-sexual", "slug": "tecnicas-de-terapia-sexual", "prompt": "A male sex therapist seated in an armchair taking notes while a couple sits close together on a sofa holding hands and looking at each other with relief, a calm therapy room with plants, tissues and a window with soft light." },
-    { "id": "dessensibilizacao", "slug": "dessensibilizacao-sistematica-solucao-para-varias-condicoes-clinicas", "prompt": "A female therapist guiding a male patient in his thirties through a relaxation exercise: he sits in an armchair with eyes closed and hands resting on his knees, breathing calmly, she sits beside him speaking softly, a quiet room with plants and warm light." },
-    { "id": "crencas-reestruturacao", "slug": "crencas-sexuais-disfuncionais-e-reestruturacao-cognitiva", "prompt": "A man in his forties at a wooden table by a window writing in a thought-record notebook, crossing out a line and writing a new one, a thoughtful and lightened expression, a cup of tea and a plant beside him." },
-    { "id": "candidiase", "slug": "sexo-oral-receptivo-e-fator-de-risco-para-candidiase-vulvovaginal", "prompt": "A male clinical researcher in a white lab coat and glasses looking into a microscope in a bright modern laboratory, glass slides and a petri dish on the bench, teal-toned lighting, focused and scientific." },
-    { "id": "excitacao-feminina", "slug": "a-excitacao-sexual-feminina", "prompt": "A woman in her thirties lying relaxed on ivory linen sheets with her eyes closed and a calm contented expression, covered up to the shoulders by a plum-coloured throw, warm window light, a few dried flowers on the pillow, sensorial and subtle, fully covered and tasteful." },
-    { "id": "fases-resposta-sexual", "slug": "fases-da-resposta-sexual-humana-e-disfuncoes-sexuais", "prompt": "A male lecturer at a seminar pointing to a large smooth wave-shaped curve with phases drawn on a whiteboard (no readable text), in front of a small mixed audience of attentive health professionals seated at a table with notebooks, bright training room." },
-    { "id": "anamnese-estruturada", "slug": "anamnese-estruturada-para-identifica-a-queixa-sexual", "prompt": "(reuses the approved consultation photograph in scripts/article-covers/art/anamnese-estruturada.webp)" },
-    { "id": "anatomia-clitoriana", "slug": "anatomia-clitoriana-revisao-para-a-pratica-clinica", "prompt": "A male doctor in a white coat studying a plain white anatomical model of the female pelvis held in his hands, with an open anatomy atlas on the desk and a reading lamp, concentrated and scholarly expression, library-like office with plants." },
-    { "id": "cirurgias-clitoris", "slug": "riscos-de-cirurgias-no-clitoris", "prompt": "A male surgeon in teal scrubs and a surgical cap standing in a clean hospital corridor looking thoughtfully at a clipboard, serious and careful expression, cool teal light, blurred operating room behind him." },
-    { "id": "depilacao", "slug": "cuidado-intimo-da-mulher-orientacoes-essenciais-sobre-remocao-dos-pelos-pubianos", "prompt": "A woman in a white bathrobe sitting on the edge of a bathtub in a bright bathroom, applying moisturiser to her calf, a metal safety razor, wax strips and a folded towel on a wooden stool beside her, relaxed and careful, covered and tasteful." },
-    { "id": "higiene-intima", "slug": "higiene-intima-feminina-orientacoes-baseadas-em-evidencias", "prompt": "A male pharmacist in a white coat counselling a woman customer across a bright counter, holding two plain unlabeled bottles and a leaflet, both attentive and smiling, soft teal and ivory interior with plants." },
-    { "id": "conceitos-sexologia", "slug": "termos-utilizados-em-sexologia", "prompt": "A diverse group of five health professionals discussing around a large wooden table covered with books and notebooks, one person gesturing while explaining, engaged and collaborative atmosphere, a bookcase and plants behind them, warm daylight." }
+    {
+      "id": "tcc-trauma",
+      "slug": "tcc-focada-no-trauma-para-mulheres-com-historico-de-abuso-sexual-na-infancia-aplicacao-do-modelo-practice",
+      "prompt": "A female psychotherapist in a beige cardigan sitting in an armchair, listening with warm attention and a gentle expression, offering a box of tissues across a small table to a woman patient seen partly from behind, safe and supportive therapy room with plants and soft daylight."
+    },
+    {
+      "id": "menstruais",
+      "slug": "dispositivos-menstruais-na-pratica-clinica-o-que-existe-alem-dos-absorventes-descartaveis",
+      "prompt": "A male gynecologist in a white coat at his desk showing a young woman a teal silicone menstrual cup, reusable cloth pads and period underwear laid out on the desk between them, both smiling, bright consulting room.",
+      "version": "v3"
+    },
+    {
+      "id": "dispositivos-sexuais",
+      "slug": "dispositivos-sexuais-na-pratica-clinica-selecao-seguranca-e-aplicacoes-terapeuticas",
+      "prompt": "Product-style editorial photo on a clinician's desk: a curated set of body-safe silicone sexual wellness devices in teal, plum and ivory (a smooth wand massager, a small bullet vibrator, a curved internal massager), neatly arranged on linen next to a sterilizing case and a clipboard, with a sex therapist's hands holding one device to explain it. Clinical, discreet, tasteful, non-explicit, no body parts shown other than hands."
+    },
+    {
+      "id": "sexo-antes-14",
+      "slug": "sexo-antes-dos-14-anos-o-que-o-medico-deve-orientar-aos-adolescentes-e-seus-pais",
+      "prompt": "A friendly male pediatrician in a light blue shirt talking calmly across a desk to a mother and her teenage daughter seen mostly from behind and the side, open and trusting conversation, warm consulting room with plants."
+    },
+    {
+      "id": "educacao-sexual-criancas",
+      "slug": "educacao-sexual-para-criancas-o-que-os-pais-devem-ensinar",
+      "prompt": "A mother and a father sitting together at a sunlit kitchen table, an open illustrated picture book about animals and plants between them and a notebook, talking calmly and thoughtfully about how to explain things to their child, warm home, soft morning light."
+    },
+    {
+      "id": "protocolo-anamnese",
+      "slug": "protocolo-de-anamnese-em-sexologia-e-criterios-diagnosticos-das-disfuncoes-sexuais",
+      "prompt": "An older male physician with grey hair and round glasses taking notes on a structured form on a clipboard while listening to a woman patient across the desk, attentive and unhurried, a stethoscope and a plant on the desk, warm office light."
+    },
+    {
+      "id": "violencia-infancia-mulher-adulta",
+      "slug": "marcas-da-violencia-fisica-e-sexual-na-infancia-repercussoes-na-sexualidade-e-nos-relacionamentos-da-mulher-adulta",
+      "prompt": "A woman in her thirties sitting pensively on a wide windowsill in a quiet room, wrapped in a soft knit cardigan, looking out at a misty garden in golden morning light, seen in side profile, a feeling of healing and resilience."
+    },
+    {
+      "id": "virgindade-himen",
+      "slug": "virgindade-e-himen-o-que-a-ciencia-revela-sobre-um-mito-que-atravessa-geracoes",
+      "prompt": "A male gynecologist explaining to a young woman using a plain white educational 3D model of the human pelvis on the desk, an open medical book beside it, both leaning in with curiosity, bright and respectful consulting room."
+    },
+    {
+      "id": "adversidade-infancia",
+      "slug": "adversidade-e-violencia-na-infancia-marcas-que-atravessam-a-vida",
+      "prompt": "A father in his forties and his teenage daughter, seen from behind, walking hand in hand along a sunlit garden path lined with ferns and soft mist, a feeling of protection and care, golden hour light.",
+      "version": "v3"
+    },
+    {
+      "id": "autoerotismo",
+      "slug": "autoerotismo",
+      "prompt": "A woman in her thirties relaxing on a bright sunlit sofa at home on a quiet morning, wearing a comfortable knit sweater and leggings, smiling softly while holding a cup of tea, a book and a plum throw blanket beside her, a plant on the windowsill. Self-care, wellbeing and self-knowledge."
+    },
+    {
+      "id": "terapia-sexual",
+      "slug": "tecnicas-de-terapia-sexual",
+      "prompt": "A male sex therapist seated in an armchair taking notes while a couple sits close together on a sofa holding hands and looking at each other with relief, a calm therapy room with plants, tissues and a window with soft light."
+    },
+    {
+      "id": "dessensibilizacao",
+      "slug": "dessensibilizacao-sistematica-solucao-para-varias-condicoes-clinicas",
+      "prompt": "A female therapist guiding a male patient in his thirties through a relaxation exercise: he sits in an armchair with eyes closed and hands resting on his knees, breathing calmly, she sits beside him speaking softly, a quiet room with plants and warm light."
+    },
+    {
+      "id": "crencas-reestruturacao",
+      "slug": "crencas-sexuais-disfuncionais-e-reestruturacao-cognitiva",
+      "prompt": "A man in his forties at a wooden table by a window writing in a thought-record notebook, crossing out a line and writing a new one, a thoughtful and lightened expression, a cup of tea and a plant beside him.",
+      "version": "v3"
+    },
+    {
+      "id": "candidiase",
+      "slug": "sexo-oral-receptivo-e-fator-de-risco-para-candidiase-vulvovaginal",
+      "prompt": "A male clinical researcher in a white lab coat and glasses looking into a microscope in a bright modern laboratory, glass slides and a petri dish on the bench, teal-toned lighting, focused and scientific."
+    },
+    {
+      "id": "excitacao-feminina",
+      "slug": "a-excitacao-sexual-feminina",
+      "prompt": "A woman in her thirties lying relaxed on ivory linen sheets with her eyes closed and a calm contented expression, covered up to the shoulders by a plum-coloured throw, warm window light, a few dried flowers on the pillow, sensorial and subtle, fully covered and tasteful."
+    },
+    {
+      "id": "fases-resposta-sexual",
+      "slug": "fases-da-resposta-sexual-humana-e-disfuncoes-sexuais",
+      "prompt": "A male lecturer at a seminar pointing to a large smooth wave-shaped curve with phases drawn on a whiteboard (no readable text), in front of a small mixed audience of attentive health professionals seated at a table with notebooks, bright training room."
+    },
+    {
+      "id": "anamnese-estruturada",
+      "slug": "anamnese-estruturada-para-identifica-a-queixa-sexual",
+      "prompt": "(reuses the approved consultation photograph in scripts/article-covers/art/anamnese-estruturada.webp)"
+    },
+    {
+      "id": "anatomia-clitoriana",
+      "slug": "anatomia-clitoriana-revisao-para-a-pratica-clinica",
+      "prompt": "A male doctor in a white coat studying a plain white anatomical model of the female pelvis held in his hands, with an open anatomy atlas on the desk and a reading lamp, concentrated and scholarly expression, library-like office with plants."
+    },
+    {
+      "id": "cirurgias-clitoris",
+      "slug": "riscos-de-cirurgias-no-clitoris",
+      "prompt": "A male surgeon in teal scrubs and a surgical cap standing in a clean hospital corridor looking thoughtfully at a clipboard, serious and careful expression, cool teal light, blurred operating room behind him."
+    },
+    {
+      "id": "depilacao",
+      "slug": "cuidado-intimo-da-mulher-orientacoes-essenciais-sobre-remocao-dos-pelos-pubianos",
+      "prompt": "A woman in a white bathrobe sitting on the edge of a bathtub in a bright bathroom, applying moisturiser to her calf, a metal safety razor, wax strips and a folded towel on a wooden stool beside her, relaxed and careful, covered and tasteful.",
+      "version": "v3"
+    },
+    {
+      "id": "higiene-intima",
+      "slug": "higiene-intima-feminina-orientacoes-baseadas-em-evidencias",
+      "prompt": "A male pharmacist in a white coat counselling a woman customer across a bright counter, holding two plain unlabeled bottles and a leaflet, both attentive and smiling, soft teal and ivory interior with plants."
+    },
+    {
+      "id": "conceitos-sexologia",
+      "slug": "termos-utilizados-em-sexologia",
+      "prompt": "A diverse group of five health professionals discussing around a large wooden table covered with books and notebooks, one person gesturing while explaining, engaged and collaborative atmosphere, a bookcase and plants behind them, warm daylight."
+    }
   ]
 }
