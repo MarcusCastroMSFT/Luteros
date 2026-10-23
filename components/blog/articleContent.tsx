@@ -1,4 +1,6 @@
 import React from 'react';
+import { formatArticleHtml } from '@/lib/article-html';
+import { ArticleImageZoom } from './article-image-zoom';
 
 interface ArticleContentProps {
   content?: string;
@@ -10,12 +12,12 @@ export function ArticleContent({
   className = ''
 }: ArticleContentProps) {
   return (
-    <div className={`prose prose-lg max-w-none ${className}`}>
+    <ArticleImageZoom className={`prose prose-lg max-w-none article-body ${className}`}>
       <div 
         className="text-gray-700 leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: formatArticleHtml(content) }}
       />
-    </div>
+    </ArticleImageZoom>
   );
 }
 

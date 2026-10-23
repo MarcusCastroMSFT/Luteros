@@ -180,6 +180,26 @@ volta à página da URL, sem misturar os lotes acumulados no mobile.
 
 Testes: `npx tsx --test lib/catalog-pagination.test.ts`.
 
+### Imagens e tabelas dentro dos artigos
+
+O HTML salvo pelo editor é ajustado na hora de exibir por `formatArticleHtml`
+(`lib/article-html.ts`), usado pelo `ArticleContent`. O conteúdo no banco não muda.
+
+- **Figuras:** o editor grava `<figure>` dentro de `<p>`, o que o navegador desfaz
+  (e perde o alinhamento). A figura sai do parágrafo, mantém o alinhamento escolhido
+  (esquerda, centro ou direita) e troca a largura fixa `!important` por uma largura
+  máxima responsiva.
+- **Ampliar imagem:** cada imagem vira um botão; ao clicar (ou Enter), abre em tela
+  cheia com a legenda (`components/blog/article-image-zoom.tsx`). Fecha com Esc,
+  no X ou clicando fora.
+- **Tabelas:** perdem as bordas pretas inline e recebem o visual da marca conforme o
+  número de colunas: 3 ou mais viram grade com a primeira linha como cabeçalho (e
+  rolagem lateral no celular); 2 colunas viram "rótulo + descrição"; 1 coluna vira
+  caixa de destaque. Células que o autor sombreou ficam em lilás.
+- **Caracteres do Word:** o "quadradinho" de checkbox colado do Word (U+009A) vira ☐.
+
+Estilos em `app/globals.css` (`.article-body`). Testes: `npx tsx --test lib/article-html.test.ts`.
+
 ### SEO e visibilidade em IA
 
 - **Rotas geradas:** `app/robots.ts`, `app/sitemap.ts`, `app/manifest.ts`,

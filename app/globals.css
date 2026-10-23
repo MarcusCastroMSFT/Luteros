@@ -367,6 +367,138 @@
   text-decoration-color: var(--primary);
 }
 
+/* Article figures and tables. Markup comes from lib/article-html.ts (formatArticleHtml). */
+.article-body .article-figure {
+  width: min(100%, var(--figure-width, 100%));
+  margin: 2.5rem 0;
+}
+.article-body .article-figure[data-align="center"] { margin-inline: auto; }
+.article-body .article-figure[data-align="end"] { margin-left: auto; }
+
+.article-body .article-figure-zoom {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0.875rem;
+  background: #e4eeeb;
+  overflow: hidden;
+  cursor: zoom-in;
+  box-shadow: 0 24px 60px -40px rgba(5, 38, 40, 0.55);
+}
+.article-body .article-figure-zoom:focus-visible {
+  outline: 3px solid #198189;
+  outline-offset: 3px;
+}
+.article-body .article-figure-zoom img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+.article-body .article-figure-hint {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: rgba(5, 38, 40, 0.72);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.article-body .article-figure-zoom:hover .article-figure-hint,
+.article-body .article-figure-zoom:focus-visible .article-figure-hint { opacity: 1; }
+@media (hover: none) {
+  .article-body .article-figure-hint { opacity: 1; }
+}
+.article-body .article-figure figcaption {
+  margin-top: 0.875rem;
+  color: #3d5c5e;
+  font-size: 0.9375rem;
+  font-style: italic;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.article-body .article-table {
+  margin: 2rem 0;
+  overflow-x: auto;
+  border: 1px solid rgba(5, 38, 40, 0.12);
+  border-radius: 1rem;
+  background: #faf9f6;
+}
+.article-body .article-table:focus-visible {
+  outline: 3px solid #198189;
+  outline-offset: 3px;
+}
+.article-body .article-table table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+.article-body .article-table th,
+.article-body .article-table td {
+  padding: 0.875rem 1.125rem;
+  border: 0;
+  border-bottom: 1px solid rgba(5, 38, 40, 0.08);
+  color: #334155;
+  text-align: left;
+  vertical-align: top;
+}
+.article-body .article-table th + th,
+.article-body .article-table td + td { border-left: 1px solid rgba(5, 38, 40, 0.08); }
+.article-body .article-table tbody tr:last-child td { border-bottom: 0; }
+.article-body .article-table th p,
+.article-body .article-table td p { margin: 0 0 0.5rem; line-height: 1.65; }
+.article-body .article-table th p:last-child,
+.article-body .article-table td p:last-child { margin-bottom: 0; }
+.article-body .article-table td ul,
+.article-body .article-table td ol { margin: 0.25rem 0 0.5rem; }
+.article-body .article-table td li { margin-bottom: 0.25rem; }
+.article-body .article-table [data-shade] { background: rgba(234, 223, 233, 0.55); }
+
+/* 3+ columns: titled grid that scrolls sideways on small screens */
+.article-body .article-table[data-kind="grid"] table { min-width: 36rem; }
+.article-body .article-table[data-kind="grid"] thead th {
+  background: #e4eeeb;
+  border-bottom: 2px solid #198189;
+  color: #052628;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.article-body .article-table[data-kind="grid"] tbody tr:nth-child(even) td:not([data-shade]) { background: rgba(228, 238, 235, 0.35); }
+
+/* 2 columns: label + description */
+.article-body .article-table[data-kind="pairs"] td:first-child {
+  width: 32%;
+  background: rgba(228, 238, 235, 0.55);
+  color: #052628;
+  font-weight: 600;
+}
+
+/* 1 column: highlight box */
+.article-body .article-table[data-kind="note"] {
+  border: 0;
+  border-left: 4px solid #198189;
+  border-radius: 0.75rem;
+  background: rgba(228, 238, 235, 0.6);
+}
+.article-body .article-table[data-kind="note"] td { padding: 1.25rem 1.5rem; border-bottom-color: rgba(25, 129, 137, 0.15); }
+
+@media (max-width: 640px) {
+  .article-body .article-table th,
+  .article-body .article-table td { padding: 0.75rem 0.875rem; }
+  .article-body .article-table[data-kind="pairs"] td:first-child { width: 38%; }
+}
+
 /* Audio player slider styling */
 input[type="range"].slider {
   appearance: none;
