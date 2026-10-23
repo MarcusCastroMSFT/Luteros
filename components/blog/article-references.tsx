@@ -8,6 +8,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { openLinksInNewTab } from '@/lib/article-html';
 
 interface ArticleReferencesProps {
   /** Pre-rendered HTML for the references section. */
@@ -56,7 +57,7 @@ export function ArticleReferences({ html, defaultOpen = false, className }: Arti
         <div className="border-t border-gray-200 px-5 py-5">
           <div
             className="prose prose-sm max-w-none prose-headings:font-cardo prose-a:text-primary prose-a:underline prose-a:break-words prose-li:my-1 prose-p:my-2"
-            dangerouslySetInnerHTML={{ __html: html }}
+            dangerouslySetInnerHTML={{ __html: openLinksInNewTab(html) }}
           />
         </div>
       </CollapsibleContent>

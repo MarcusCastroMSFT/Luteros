@@ -104,9 +104,22 @@ function formatTable(inner: string): string {
   return `<div class="article-table" data-kind="${kind}"><table><tbody>${body(rows)}</tbody></table></div>`
 }
 
+// Article and reference links open in a new tab so readers don't lose their place in the article.
+// In-page anchors, e-mail and phone links keep their normal behavior.
+export function openLinksInNewTab(html: string | null | undefined): string {
+  if (!html) return ''
+  return html.replace(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs: string, inner: string) => {
+    const href = getAttr(`<a${attrs}>`, 'href')?.trim() ?? ''
+    if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) return match
+    const cleaned = attrs.replace(/\s(target|rel)\s*=\s*"[^"]*"/gi, '')
+    const notice = /abre em nova aba/i.test(inner) ? '' : '<span class="sr-only"> (abre em nova aba)</span>'
+    return `<a${cleaned} target="_blank" rel="noopener noreferrer">${inner}${notice}</a>`
+  })
+}
+
 export function formatArticleHtml(html: string | null | undefined): string {
   if (!html) return ''
-  return unwrapFigures(html)
+  return openLinksInNewTab(unwrapFigures(html))
     // Text pasted from Word can carry C1 control characters; U+009A is its checkbox (☐ sim ☐ não).
     .replace(/[\u0080-\u009F]/g, (ch) => (ch === '\u009A' ? '☐' : ''))
     .replace(/<figure\b([^>]*)>([\s\S]*?)<\/figure>/gi, (_m, attrs: string, inner: string) => formatFigure(attrs, inner))

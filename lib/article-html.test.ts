@@ -62,6 +62,17 @@ test('turns pasted Word checkboxes into a visible symbol and drops other control
   assert.equal(formatArticleHtml('<p>Tem orgasmo? \u009Asim \u009Anão\u0085</p>'), '<p>Tem orgasmo? ☐sim ☐não</p>')
 })
 
+test('opens article links in a new tab, except anchors, e-mail and phone links', () => {
+  const html = formatArticleHtml(
+    '<p><a href="https://www.cdc.gov/x" class="text-blue-600">CDC</a> <a href="/downloads/ficha.pdf" target="_self" rel="nofollow">Ficha</a> <a href="#ref-1">1</a> <a href="mailto:contato@lutteros.com.br">e-mail</a></p>',
+  )
+  assert.match(html, /<a href="https:\/\/www\.cdc\.gov\/x" class="text-blue-600" target="_blank" rel="noopener noreferrer">CDC<span class="sr-only"> \(abre em nova aba\)<\/span><\/a>/)
+  assert.match(html, /<a href="\/downloads\/ficha\.pdf" target="_blank" rel="noopener noreferrer">Ficha/)
+  assert.doesNotMatch(html, /target="_self"|nofollow/)
+  assert.match(html, /<a href="#ref-1">1<\/a>/)
+  assert.match(html, /<a href="mailto:contato@lutteros\.com\.br">e-mail<\/a>/)
+})
+
 test('keeps spans and marks cells the author shaded', () => {
   const html = formatArticleHtml(
     `<table><tbody><tr><td colspan="2" style="background-color: rgb(229, 223, 236); border: 1px solid black;">A</td><td>B</td></tr></tbody></table>`,

@@ -197,6 +197,9 @@ O HTML salvo pelo editor é ajustado na hora de exibir por `formatArticleHtml`
   rolagem lateral no celular); 2 colunas viram "rótulo + descrição"; 1 coluna vira
   caixa de destaque. Células que o autor sombreou ficam em lilás.
 - **Caracteres do Word:** o "quadradinho" de checkbox colado do Word (U+009A) vira ☐.
+- **Links:** abrem em nova aba (`target="_blank"` + `rel="noopener noreferrer"`), no texto e nas
+  Referências, com o aviso "(abre em nova aba)" para leitores de tela. Âncoras (`#`), e-mail e
+  telefone continuam normais.
 
 Estilos em `app/globals.css` (`.article-body`). Testes: `npx tsx --test lib/article-html.test.ts`.
 
