@@ -15,32 +15,9 @@ import {
   focusFirstInvalid,
   isEmailFormat,
 } from './auth-ui'
+import { AuthErrorNotice } from './auth-error-notice'
+import { translateAuthError } from '@/lib/auth-errors'
 import styles from './auth-shell.module.css'
-
-function translateAuthError(code?: string, provider?: 'google' | 'credentials'): string {
-  switch (code) {
-    case 'CredentialsSignin':
-      return 'E-mail ou senha incorretos.'
-    case 'AccessDenied':
-      return 'Acesso negado.'
-    case 'Verification':
-      return 'Link de verificação inválido ou expirado.'
-    case 'OAuthAccountNotLinked':
-      return 'Este e-mail já está associado a outro método de login.'
-    case 'OAuthSignin':
-    case 'OAuthCallback':
-    case 'OAuthCreateAccount':
-      return 'Falha ao entrar com Google. Tente novamente.'
-    case 'Callback':
-      return 'Erro ao processar o login. Tente novamente.'
-    case 'Configuration':
-      return 'Erro de configuração do servidor. Contate o suporte.'
-    default:
-      return provider === 'google'
-        ? 'Falha ao entrar com Google. Tente novamente.'
-        : 'Falha ao entrar. Verifique seus dados e tente novamente.'
-  }
-}
 
 type LoginErrors = { email?: string; password?: string }
 
@@ -92,6 +69,8 @@ export function LoginForm() {
       <AuthHeading eyebrow="Sua conta" title="Bem-vindo de volta">
         Cursos, artigos e especialistas em saúde sexual, com o cuidado que você merece.
       </AuthHeading>
+
+      <AuthErrorNotice />
 
       <form ref={formRef} className={styles.form} onSubmit={handleSubmit} noValidate>
         <TextField

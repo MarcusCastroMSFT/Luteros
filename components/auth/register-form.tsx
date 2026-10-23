@@ -18,6 +18,8 @@ import {
   allPasswordRequirementsMet,
   focusFirstInvalid,
 } from './auth-ui'
+import { AuthErrorNotice } from './auth-error-notice'
+import { translateAuthError } from '@/lib/auth-errors'
 import styles from './auth-shell.module.css'
 
 type RegisterErrors = { fullName?: string; email?: string; password?: string; confirmPassword?: string }
@@ -73,7 +75,7 @@ export function RegisterForm() {
       await signInWithGoogle()
     } catch (error) {
       const err = error as { message?: string }
-      toast.error(err.message || 'Falha ao entrar com Google')
+      toast.error(translateAuthError(err.message, 'google'))
     }
   }
 
@@ -83,6 +85,8 @@ export function RegisterForm() {
       <AuthHeading eyebrow="Nova conta" title="Comece sua jornada" hideLeadWhenShort>
         Informação confiável sobre saúde sexual, no seu ritmo e com total discrição.
       </AuthHeading>
+
+      <AuthErrorNotice />
 
       <form ref={formRef} className={styles.form} onSubmit={handleSubmit} noValidate>
         <TextField

@@ -202,6 +202,7 @@
 .inlineLink:hover { color: var(--scene-plum); background: rgb(99 10 121 / 8%); }
 
 .error { margin: 0; color: #b42318; font-size: 13px; }
+.alert { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #f1b4ad; border-radius: 10px; background: #fff3f1; color: #912018; font-size: 14px; line-height: 1.55; }
 
 .requirements { display: grid; gap: 4px; margin: 2px 0 0; padding: 0; list-style: none; }
 .requirements li { display: flex; align-items: center; gap: 6px; color: #7a8d90; font-size: 13px; transition: color 160ms ease; }
