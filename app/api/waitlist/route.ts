@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, connection } from 'next/server'
 import { sql } from 'drizzle-orm'
+import { getAuthUser } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { subscriptionWaitlist } from '@/lib/db/schema'
 import { validateEmail } from '@/lib/email-validation'
@@ -50,9 +51,6 @@ export async function POST(request: NextRequest) {
 
     const { email, audience, consent } = (body ?? {}) as Record<string, unknown>
 
-    if (typeof email !== 'string' || !email.trim()) {
-      return NextResponse.json({ error: 'Informe seu e-mail.' }, { status: 400 })
-    }
     if (consent !== true) {
       return NextResponse.json(
         { error: 'Confirme que podemos usar seu e-mail para avisar sobre a assinatura.' },
@@ -60,10 +58,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const normalizedEmail = email.trim().toLowerCase()
-    const validation = validateEmail(normalizedEmail)
-    if (!validation.isValid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 })
+    // A signed-in user always joins with the e-mail of their account, never one sent by the client.
+    const user = await getAuthUser()
+    let normalizedEmail: string
+    if (user?.email) {
+      normalizedEmail = user.email.trim().toLowerCase()
+    } else {
+      if (typeof email !== 'string' || !email.trim()) {
+        return NextResponse.json({ error: 'Informe seu e-mail.' }, { status: 400 })
+      }
+      normalizedEmail = email.trim().toLowerCase()
+      const validation = validateEmail(normalizedEmail)
+      if (!validation.isValid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 })
+      }
     }
 
     const normalizedAudience: Audience | null =

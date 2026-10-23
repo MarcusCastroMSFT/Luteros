@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
+import { sendVerificationEmail } from '@/lib/email-verification'
 
 const registerSchema = z.object({
   email: z
@@ -70,7 +71,14 @@ export async function POST(request: NextRequest) {
       role: 'USER',
     })
 
-    return NextResponse.json({ success: true }, { status: 201 })
+    // The account stays inactive until the e-mail is confirmed. A failed send is
+    // not fatal: the user can request a new link from the login page.
+    const sent = await sendVerificationEmail({ email, name: name ?? null }).catch((error) => {
+      console.error('Verification email error:', error)
+      return { success: false }
+    })
+
+    return NextResponse.json({ success: true, requiresVerification: true, emailSent: sent.success }, { status: 201 })
   } catch (error) {
     console.error('Register error:', error)
     return NextResponse.json({ error: 'Erro interno do servidor.' }, { status: 500 })

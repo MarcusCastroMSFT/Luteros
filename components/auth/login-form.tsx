@@ -16,6 +16,7 @@ import {
   isEmailFormat,
 } from './auth-ui'
 import { AuthErrorNotice } from './auth-error-notice'
+import { ResendVerificationButton } from './resend-verification-button'
 import { translateAuthError } from '@/lib/auth-errors'
 import styles from './auth-shell.module.css'
 
@@ -28,6 +29,7 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<LoginErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,12 +45,17 @@ export function LoginForm() {
     }
 
     setIsSubmitting(true)
+    setUnverifiedEmail(null)
     try {
       await signIn(email.trim(), password)
       toast.success('Bem-vindo de volta!')
     } catch (error) {
       const err = error as { message?: string }
-      toast.error(translateAuthError(err.message))
+      if (err.message === 'email_not_verified') {
+        setUnverifiedEmail(email.trim())
+      } else {
+        toast.error(translateAuthError(err.message))
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -71,6 +78,13 @@ export function LoginForm() {
       </AuthHeading>
 
       <AuthErrorNotice />
+
+      {unverifiedEmail ? (
+        <div role="alert" className={styles.alert}>
+          {translateAuthError('email_not_verified')}
+          <ResendVerificationButton email={unverifiedEmail} />
+        </div>
+      ) : null}
 
       <form ref={formRef} className={styles.form} onSubmit={handleSubmit} noValidate>
         <TextField

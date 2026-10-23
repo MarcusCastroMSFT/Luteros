@@ -22,7 +22,7 @@ interface AuthContextType {
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
-  signUp: (email: string, password: string, metadata?: Record<string, string>) => Promise<void>
+  signUp: (email: string, password: string, metadata?: Record<string, string>) => Promise<{ emailSent: boolean }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -97,8 +97,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const data = await response.json()
       throw new Error(data.error || 'Failed to create account')
     }
-    await nextAuthSignIn('credentials', { email, password, redirect: false })
-    await update()
+    // New accounts stay inactive until the e-mail is confirmed, so there is no sign-in here.
+    const data = (await response.json().catch(() => ({}))) as { emailSent?: boolean }
+    return { emailSent: data.emailSent !== false }
   }
 
   const signOut = async () => {

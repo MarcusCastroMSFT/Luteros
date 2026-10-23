@@ -7,12 +7,19 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { users, accounts, sessions, verificationTokens } from '@/lib/db/schema'
 import { applyStoredSessionImage } from '@/lib/auth-session'
+import { requiresEmailVerification } from '@/lib/email-verification-policy'
 
 // Account exists but has no password (created with Google, or its unverified password was
 // dropped when Google was linked). The login form explains how to get in instead of
 // reporting a wrong password. The code ends up in the URL, so it carries no details.
 class PasswordNotSetError extends CredentialsSignin {
   code = 'password_not_set'
+}
+
+// Correct password, but the account was created after e-mail confirmation became
+// mandatory and the link was never opened. The login form offers to resend it.
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = 'email_not_verified'
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -52,6 +59,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: users.role,
             displayName: users.displayName,
             password: users.password,
+            emailVerified: users.emailVerified,
+            createdAt: users.createdAt,
           })
           .from(users)
           .where(sql`lower(${users.email}) = ${normalizedEmail}`)
@@ -66,9 +75,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.password
         )
         if (!isValid) return null
+        if (requiresEmailVerification(user)) throw new EmailNotVerifiedError()
 
         // Never pass the password hash into the NextAuth user object / JWT
-        const { password: _pw, ...safeUser } = user
+        const { password: _pw, emailVerified: _verified, createdAt: _created, ...safeUser } = user
         return safeUser
       },
     }),
@@ -105,8 +115,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   events: {
-    // Password sign-up does not verify the e-mail. If the account was never verified, whoever
-    // created it may not own the address, so Google proves ownership and the old password is dropped
+    // Password sign-up only becomes active after the e-mail is confirmed, but older accounts
+    // were never verified. If the account was never verified, whoever created it may not own the
+    // address, so Google proves ownership and the old password is dropped
     // (the real owner can set a new one with "Esqueci minha senha").
     async linkAccount({ user }) {
       if (!user.id) return

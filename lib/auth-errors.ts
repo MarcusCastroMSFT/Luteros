@@ -7,6 +7,12 @@ export function translateAuthError(code?: string | null, provider?: AuthProvider
       return 'E-mail ou senha incorretos.'
     case 'password_not_set':
       return 'Esta conta entra com o Google. Use "Continuar com Google" ou crie uma senha em "Esqueceu sua senha?".'
+    case 'email_not_verified':
+      return 'Confirme seu e-mail para entrar. Abra o link que enviamos para sua caixa de entrada.'
+    case 'verification_expired':
+      return 'O link de confirmação expirou. Entre com seu e-mail e senha para receber um novo.'
+    case 'verification_invalid':
+      return 'Link de confirmação inválido ou já usado. Se o e-mail ainda não foi confirmado, entre com seu e-mail e senha para receber um novo link.'
     case 'OAuthAccountNotLinked':
       return 'Já existe uma conta com este e-mail. Entre com seu e-mail e senha ou use "Esqueceu sua senha?" para criar uma nova.'
     case 'AccessDenied':

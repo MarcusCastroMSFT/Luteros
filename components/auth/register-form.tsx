@@ -1,11 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/auth-context'
 import { quickValidateEmail } from '@/lib/email-quick-validation'
-import { getPostLoginDestination } from '@/lib/auth-redirect'
 import {
   AuthDivider,
   AuthHeading,
@@ -19,6 +18,7 @@ import {
   focusFirstInvalid,
 } from './auth-ui'
 import { AuthErrorNotice } from './auth-error-notice'
+import { ResendVerificationButton } from './resend-verification-button'
 import { translateAuthError } from '@/lib/auth-errors'
 import styles from './auth-shell.module.css'
 
@@ -26,7 +26,6 @@ type RegisterErrors = { fullName?: string; email?: string; password?: string; co
 
 export function RegisterForm() {
   const { signUp, signInWithGoogle } = useAuth()
-  const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -34,6 +33,7 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState<RegisterErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState<{ address: string; sent: boolean } | null>(null)
 
   const clear = (field: keyof RegisterErrors) => setErrors((prev) => ({ ...prev, [field]: undefined }))
 
@@ -59,9 +59,9 @@ export function RegisterForm() {
 
     setIsSubmitting(true)
     try {
-      await signUp(email.trim(), password, { full_name: fullName.trim() })
-      toast.success('Conta criada! Seja bem-vindo(a).')
-      router.push(getPostLoginDestination(new URLSearchParams(window.location.search)))
+      const { emailSent } = await signUp(email.trim(), password, { full_name: fullName.trim() })
+      setPendingEmail({ address: email.trim(), sent: emailSent })
+      window.scrollTo({ top: 0 })
     } catch (error) {
       const err = error as { message?: string }
       toast.error(err.message || 'Falha ao criar a conta')
@@ -77,6 +77,32 @@ export function RegisterForm() {
       const err = error as { message?: string }
       toast.error(translateAuthError(err.message, 'google'))
     }
+  }
+
+  if (pendingEmail) {
+    return (
+      <div>
+        <AuthHeading eyebrow="Quase lá" title="Confirme seu e-mail">
+          Sua conta foi criada. Falta só confirmar que o e-mail é seu.
+        </AuthHeading>
+        <div className={styles.form} role="status">
+          <p className={styles.notice}>
+            {pendingEmail.sent ? 'Enviamos um link de confirmação para ' : 'Não conseguimos enviar o link agora para '}
+            <strong>{pendingEmail.address}</strong>
+            {pendingEmail.sent
+              ? '. Abra o e-mail e toque em “Confirmar e-mail” para ativar sua conta.'
+              : '. Use o botão abaixo para tentar de novo.'}
+          </p>
+          <p className={styles.noticeMuted}>
+            Não chegou em alguns minutos? Confira a pasta de spam ou de promoções. O link vale por 24 horas.
+          </p>
+          <ResendVerificationButton email={pendingEmail.address} className={styles.secondary} />
+          <p className={styles.switchLine}>
+            Já confirmou? <Link href="/login" className={styles.inlineLink}>Entrar</Link>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

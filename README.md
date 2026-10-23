@@ -29,8 +29,18 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 separada da newsletter: entrar na lista não é consentimento para newsletter e
 nenhum e-mail é enviado automaticamente. O envio exige o aceite do usuário, o
 e-mail é único e repetir o cadastro apenas atualiza o perfil escolhido, sem
-revelar se o e-mail já estava na lista. Os dados ficam só no banco; consulte a
-tabela para avisar os interessados.
+revelar se o e-mail já estava na lista. Os dados ficam só no banco.
+
+- **Quem está logado:** o formulário não pede o e-mail. O servidor usa sempre o e-mail da
+  conta (ignora o que vier no corpo da requisição) e `GET /api/waitlist/me` informa se ele
+  já está na lista. Nesse caso a página mostra "Você já está na lista" no lugar do formulário.
+- **Visitante sem login:** o navegador guarda que já entrou (`lutteros:waitlist-joined` no
+  `localStorage`) e mostra a mesma mensagem, com o botão "Cadastrar outro e-mail". O servidor
+  nunca confirma se um e-mail digitado já está na lista.
+- **Admin:** `/admin/waitlist` (só `ADMIN`, menu Administração → Lista de espera) mostra
+  totais por perfil, busca por e-mail e a lista paginada. **Exportar CSV**
+  (`/api/admin/waitlist/export`) baixa todos os cadastros em UTF-8, com `;` como separador
+  e proteção contra fórmulas de planilha.
 
 `/pricing` redireciona (temporário, 307) para `/waitlist` em `next.config.ts`, e
 o paywall dos artigos aponta para a lista de espera.
@@ -305,6 +315,28 @@ depois de reembolso.
 - Erros de login voltam para `/login?error=…` e aparecem no aviso acima do formulário
   (`lib/auth-errors.ts`).
 
+## Confirmação de e-mail
+
+Contas criadas com e-mail e senha só entram depois de confirmar o endereço.
+
+1. `POST /api/auth/register` cria a conta e envia "Confirme seu e-mail na lutteros"
+   (`lib/email-verification.ts`). O formulário mostra a tela "Confirme seu e-mail", sem login
+   automático.
+2. O link (`/api/auth/verify-email?token=…&email=…`) vale por **24 horas** e só funciona uma
+   vez; o banco guarda apenas o hash SHA-256 do token (`verificationTokens`, prefixo `verify:`).
+   Ao abrir, `emailVerified` é preenchido e a pessoa vai para `/login?verified=1`.
+3. Quem tenta entrar sem confirmar (com a senha certa) vê "Confirme seu e-mail para entrar" e o
+   botão **Reenviar e-mail de confirmação** (`POST /api/auth/resend-verification`, no máximo um
+   envio por minuto e sempre com resposta 200, para não revelar quais e-mails têm conta).
+
+- **Contas antigas:** quem se cadastrou antes de 23/10/2026
+  (`EMAIL_VERIFICATION_REQUIRED_SINCE` em `lib/email-verification-policy.ts`) continua entrando
+  sem confirmar.
+- Entrar com o Google ou redefinir a senha pelo link do e-mail também confirma o endereço.
+- O link usa `NEXT_PUBLIC_SITE_URL` (ou `https://www.lutteros.com.br`), nunca o Host da requisição.
+
+Testes: `npx tsx --test lib/email-verification-policy.test.ts lib/auth-errors.test.ts`.
+
 ## Pagamentos de cursos (Asaas)
 
 Cursos pagos são cobrados pelo [Asaas](https://docs.asaas.com). O botão **Comprar curso**
@@ -400,6 +432,7 @@ Resend (`RESEND_API_KEY`, `FROM_EMAIL`):
 | E-mail | Onde |
 | --- | --- |
 | Redefinição de senha | `lib/account-emails.ts`, enviado por `/api/auth/forgot-password` |
+| Confirmação de e-mail | `lib/account-emails.ts`, enviado no cadastro e pelo "Reenviar e-mail de confirmação" |
 | Boas-vindas da newsletter | `renderWelcomeEmail` em `lib/email.ts`, com o link de cancelamento por token |
 | Campanhas da newsletter | `lib/email-campaign.ts`, usado no envio, no teste e na pré-visualização do admin |
 | Perfil, matrícula, evento, certificado, compra e lembretes | `data/system-email-templates.ts` (`{{variáveis}}`) |

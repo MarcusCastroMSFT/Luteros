@@ -25,3 +25,9 @@ test('falls back to a message that matches the provider', () => {
   assert.match(translateAuthError(undefined, 'credentials'), /Verifique seus dados/)
   assert.match(translateAuthError(null), /Falha ao entrar/)
 })
+
+test('explains e-mail confirmation outcomes', () => {
+  assert.match(translateAuthError('email_not_verified'), /Confirme seu e-mail/)
+  assert.match(translateAuthError('verification_expired'), /expirou/)
+  assert.match(translateAuthError('verification_invalid'), /inválido ou já usado/)
+})

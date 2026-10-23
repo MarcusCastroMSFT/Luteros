@@ -107,7 +107,11 @@ export async function POST(request: NextRequest) {
 
     const hashed = await bcrypt.hash(password, 13)
 
-    await db.update(users).set({ password: hashed, updatedAt: new Date() }).where(eq(users.id, user.id))
+    // Opening the reset link proves ownership of the inbox, so it also confirms the e-mail.
+    await db
+      .update(users)
+      .set({ password: hashed, emailVerified: sql`coalesce(${users.emailVerified}, now())`, updatedAt: new Date() })
+      .where(eq(users.id, user.id))
 
     await db
       .delete(verificationTokens)

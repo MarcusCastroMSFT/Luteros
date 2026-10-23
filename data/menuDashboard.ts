@@ -144,6 +144,12 @@ export const sidebarData: SidebarData = {
       adminOnly: true,
     },
     {
+      name: "Lista de espera",
+      url: "/admin/waitlist",
+      icon: "IconHourglass",
+      adminOnly: true,
+    },
+    {
       name: "Usuários",
       url: "/admin/users",
       icon: "IconUsers",

@@ -56,3 +56,48 @@ ${emailTextFooter()}`
 
   return { subject, html, text }
 }
+
+export function renderEmailVerificationEmail({
+  name,
+  verifyUrl,
+}: {
+  name?: string | null
+  verifyUrl: string
+}): { subject: string; html: string; text: string } {
+  const subject = 'Confirme seu e-mail na lutteros'
+  const greeting = emailGreeting(name)
+
+  const html = renderEmailLayout({
+    title: subject,
+    preheader: 'Falta um passo: confirme seu e-mail para entrar na sua conta.',
+    content: [
+      emailEyebrow('Nova conta'),
+      emailHeading('Confirme seu e-mail'),
+      emailParagraph(`${escapeHtml(greeting)}. Que bom ter você na lutteros.`),
+      emailParagraph(
+        'Para ativar sua conta, confirme que este endereço é seu. O link vale por <strong>24 horas</strong>.',
+      ),
+      emailButton('Confirmar e-mail', verifyUrl),
+      emailFallbackLink(verifyUrl),
+      emailNote(
+        'Não criou uma conta na lutteros? Ignore este e-mail: sem a confirmação, a conta não é ativada.',
+      ),
+      emailSignoff(),
+    ].join('\n'),
+  })
+
+  const text = `${greeting}. Que bom ter você na lutteros.
+
+Para ativar sua conta, confirme que este endereço é seu. O link vale por 24 horas:
+
+${verifyUrl}
+
+Não criou uma conta na lutteros? Ignore este e-mail: sem a confirmação, a conta não é ativada.
+
+Com cuidado,
+Equipe lutteros
+
+${emailTextFooter()}`
+
+  return { subject, html, text }
+}

@@ -6,7 +6,16 @@ import { translateAuthError } from '@/lib/auth-errors'
 import styles from './auth-shell.module.css'
 
 function AuthErrorMessage() {
-  const code = useSearchParams().get('error')
+  const params = useSearchParams()
+  const code = params.get('error')
+
+  if (!code && params.get('verified') === '1') {
+    return (
+      <p role="status" className={styles.success}>
+        E-mail confirmado. Agora é só entrar com seu e-mail e senha.
+      </p>
+    )
+  }
   if (!code) return null
 
   // Social sign-in errors come back to this page as /login?error=<code>.

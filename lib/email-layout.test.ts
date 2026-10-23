@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { renderPasswordResetEmail } from './account-emails'
+import { renderEmailVerificationEmail, renderPasswordResetEmail } from './account-emails'
 import { htmlToPlainText, renderCampaignEmail } from './email-campaign'
 import { EMAIL_INSTAGRAM, emailGreeting, escapeHtml, renderEmailLayout } from './email-layout'
 import { renderEmailTemplate, systemEmailTemplates } from '../data/system-email-templates'
@@ -114,4 +114,13 @@ test('converts campaign HTML to readable plain text', () => {
     htmlToPlainText('<p>Um &amp; dois</p><ul><li>A</li><li>B</li></ul>'),
     'Um & dois\n\n• A\n\n• B',
   )
+})
+
+test('verification email links to the confirmation endpoint in the button, fallback and text part', () => {
+  const verifyUrl = 'https://www.lutteros.com.br/api/auth/verify-email?token=abc&email=a%40b.com'
+  const email = renderEmailVerificationEmail({ name: 'Ana Souza', verifyUrl })
+  assert.equal(email.subject, 'Confirme seu e-mail na lutteros')
+  assert.equal(email.html.split('verify-email?token=abc&amp;email=a%40b.com').length - 1, 3)
+  assert.match(email.html, /24 horas/)
+  assert.ok(email.text.includes(verifyUrl))
 })
