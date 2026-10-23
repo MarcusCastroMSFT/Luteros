@@ -3,7 +3,7 @@ import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
-import { sql } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { users, accounts, sessions, verificationTokens } from '@/lib/db/schema'
 import { applyStoredSessionImage } from '@/lib/auth-session'
@@ -22,6 +22,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Google only returns verified addresses, so a Google sign-in may attach to an existing
+      // account with the same e-mail. The linkAccount event below closes the pre-registration hole.
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       credentials: {
@@ -91,6 +94,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.image = token.image as string | null
       }
       return session
+    },
+  },
+  events: {
+    // Password sign-up does not verify the e-mail. If the account was never verified, whoever
+    // created it may not own the address, so Google proves ownership and the old password is dropped
+    // (the real owner can set a new one with "Esqueci minha senha").
+    async linkAccount({ user }) {
+      if (!user.id) return
+      await db
+        .update(users)
+        .set({ emailVerified: new Date(), password: null, updatedAt: new Date() })
+        .where(and(eq(users.id, user.id), isNull(users.emailVerified)))
     },
   },
   pages: {
