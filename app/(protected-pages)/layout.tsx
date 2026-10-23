@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ProtectedLayoutClient } from "./protected-layout-client";
@@ -8,7 +9,17 @@ interface ProtectedLayoutProps {
 
 const ALLOWED_ROLES = ['ADMIN', 'INSTRUCTOR'] as const;
 
-export default async function ProtectedLayout({ children }: ProtectedLayoutProps) {
+// The admin area is fully request-time (session cookies), so it streams inside its own
+// boundary. This replaces the app-wide <Suspense> that used to live in the root layout.
+export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
+  return (
+    <Suspense fallback={null}>
+      <ProtectedGate>{children}</ProtectedGate>
+    </Suspense>
+  );
+}
+
+async function ProtectedGate({ children }: ProtectedLayoutProps) {
   const session = await auth();
 
   // Middleware (proxy.ts) is the primary guard; this is defense-in-depth.

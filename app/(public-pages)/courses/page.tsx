@@ -33,7 +33,11 @@ interface CoursesPageProps {
   searchParams: Promise<{ page?: string; category?: string }>
 }
 
-async function CoursesContent({ page, category }: { page: number; category: string }) {
+async function CoursesContent({ searchParams }: CoursesPageProps) {
+  // Read the request params here, inside <Suspense>, so the page shell stays static.
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const category = sp.category ?? 'Todos'
   const data = await getCourses(page, CATALOG_PAGE_SIZE, category === 'Todos' ? undefined : category)
 
   return (
@@ -58,11 +62,7 @@ function CoursesPageFallback() {
   )
 }
 
-export default async function CoursesPage({ searchParams }: CoursesPageProps) {
-  const sp = await searchParams
-  const page = Math.max(1, parseInt(sp.page ?? '1'))
-  const category = sp.category ?? 'Todos'
-
+export default function CoursesPage({ searchParams }: CoursesPageProps) {
   return (
     <div className="min-h-screen">
       <PageHeader
@@ -76,8 +76,8 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
       />
 
       <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
-        <Suspense key={`${page}-${category}`} fallback={<CoursesPageFallback />}>
-          <CoursesContent page={page} category={category} />
+        <Suspense fallback={<CoursesPageFallback />}>
+          <CoursesContent searchParams={searchParams} />
         </Suspense>
       </div>
     </div>

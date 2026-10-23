@@ -1,6 +1,12 @@
 "use client";
 
-// A client component keeps the current year out of the prerendered (cached) HTML of server layouts.
+import { useSyncExternalStore } from "react";
+
+const subscribe = () => () => {};
+
+// Reads the clock only in the browser: with Cache Components, a client component that
+// calls `new Date()` while prerendering fails the build unless it sits under <Suspense>.
 export function CurrentYear() {
-  return <>{new Date().getFullYear()}</>;
+  const year = useSyncExternalStore(subscribe, () => new Date().getFullYear(), () => null);
+  return <>{year}</>;
 }

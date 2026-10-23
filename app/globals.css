@@ -248,7 +248,7 @@
 
 /* ─── Site motion (page entrance + scroll reveal) ───────────────────────────
    Hidden states only apply when scripting is on, so the content is always
-   readable without JavaScript. `PageMotion` adds `.is-visible` on scroll. */
+   readable without JavaScript. `PageMotion` sets `data-revealed` on scroll. */
 @keyframes heroRise {
   from { opacity: 0; transform: translateY(16px); }
 }
@@ -276,16 +276,18 @@
 }
 
 @media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
-  [data-reveal]:not(.is-visible),
-  [data-reveal-stagger]:not(.is-visible) > * {
+  /* PageMotion only sets `data-revealed` (never class/style) so React hydration, which
+     compares both, is not disturbed on streamed pages. Delays come from :nth-child. */
+  [data-reveal]:not([data-revealed]),
+  [data-reveal-stagger]:not([data-revealed]) > * {
     opacity: 0;
   }
-  [data-reveal-stagger].is-visible > * {
+  [data-reveal][data-revealed],
+  [data-reveal-stagger][data-revealed] > * {
     animation: revealUp 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0s) backwards;
   }
-  [data-reveal].is-visible {
-    animation: revealUp 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0s) backwards;
-  }
+  [data-reveal-stagger][data-revealed] > :nth-child(3n + 2) { --reveal-delay: 90ms; }
+  [data-reveal-stagger][data-revealed] > :nth-child(3n + 3) { --reveal-delay: 180ms; }
 }
 
 /* Reading-progress bar driven by `--scroll-progress` from `PageMotion`. */

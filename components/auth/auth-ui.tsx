@@ -28,9 +28,7 @@ export function focusFirstInvalid(form: HTMLFormElement | null) {
 }
 
 // Client-side so the layout can stay statically prerenderable (no Date in a Server Component).
-export function CurrentYear() {
-  return <>{new Date().getFullYear()}</>
-}
+export { CurrentYear } from '@/components/common/current-year'
 
 export function AuthNavigation({ active }: { active: 'login' | 'register' }) {
   return (

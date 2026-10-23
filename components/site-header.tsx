@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useId, useRef, useState } from "react"
+import { Suspense, useEffect, useId, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -69,8 +69,21 @@ const navLink =
   "inline-flex h-11 items-center rounded-lg px-3 text-[14.5px] font-medium text-[#0a2f33]/75 transition-colors duration-200 hover:bg-[#198189]/8 hover:text-[#146b71] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#198189] data-[active=true]:bg-[#198189]/8 data-[active=true]:text-[#146b71]"
 
 export function SiteHeader() {
+  // usePathname() is request data for dynamic routes without prerendered params, so the
+  // header renders without an active item until the path is known.
+  return (
+    <Suspense fallback={<SiteHeaderView pathname="" />}>
+      <SiteHeaderWithPath />
+    </Suspense>
+  )
+}
+
+function SiteHeaderWithPath() {
+  return <SiteHeaderView pathname={usePathname()} />
+}
+
+function SiteHeaderView({ pathname }: { pathname: string }) {
   const { user, userProfile, signOut } = useAuth()
-  const pathname = usePathname()
   const router = useRouter()
   const scrolled = useScrolled()
   const [mobileOpen, setMobileOpen] = useState(false)

@@ -1,6 +1,9 @@
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getArticles } from '@/lib/articles'
 import { CategoryFilter } from '@/components/blog/categoryFilter'
+import { CategoryFilterSkeleton } from '@/components/blog/categoryFilterSkeleton'
+import { ArticleListSkeleton } from '@/components/blog/articleSkeleton'
 import { CatalogList } from '@/components/common/catalog-list'
 import { CATALOG_PAGE_SIZE } from '@/lib/catalog-pagination'
 import { DEFAULT_SOCIAL_IMAGE } from '@/lib/social-images'
@@ -32,7 +35,11 @@ interface ArticlesPageProps {
   searchParams: Promise<{ page?: string; category?: string }>
 }
 
-async function ArticlesContent({ page, category }: { page: number; category: string }) {
+async function ArticlesContent({ searchParams }: ArticlesPageProps) {
+  // Read the request params here, inside <Suspense>, so the page shell stays static.
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const category = sp.category ?? 'Todos'
   const data = await getArticles(page, CATALOG_PAGE_SIZE, category === 'Todos' ? undefined : category)
   const { articles, pagination, categories } = data
 
@@ -77,11 +84,18 @@ async function ArticlesContent({ page, category }: { page: number; category: str
   )
 }
 
-export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
-  const sp = await searchParams
-  const page = Math.max(1, parseInt(sp.page ?? '1'))
-  const category = sp.category ?? 'Todos'
+function ArticlesPageFallback() {
+  return (
+    <>
+      <div className="mb-6 md:mb-8">
+        <CategoryFilterSkeleton />
+      </div>
+      <ArticleListSkeleton count={CATALOG_PAGE_SIZE} />
+    </>
+  )
+}
 
+export default function ArticlesPage({ searchParams }: ArticlesPageProps) {
   return (
     <div className="min-h-screen">
       <PageHeader
@@ -95,9 +109,9 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
       />
 
       <div className="mx-auto max-w-[1480px] px-6 pb-20 pt-6 sm:px-10 lg:px-12">
-        {/* Rendered directly (not streamed) so the LCP article image is present
-            in the initial HTML with its high-priority preload. */}
-        <ArticlesContent page={page} category={category} />
+        <Suspense fallback={<ArticlesPageFallback />}>
+          <ArticlesContent searchParams={searchParams} />
+        </Suspense>
       </div>
     </div>
   )

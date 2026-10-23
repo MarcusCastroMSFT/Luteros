@@ -89,8 +89,18 @@ layout das páginas públicas.
 Páginas com motion: home, Sobre, Contato, FAQ, Ajuda, Lista de espera, e as grades
 de artigos, cursos, produtos e eventos. Os estados escondidos só valem com
 JavaScript ativo e `prefers-reduced-motion: no-preference`; sem isso o conteúdo
-aparece normalmente. Evite `data-reveal` em elementos cuja classe o React altera,
-porque a classe `is-visible` é adicionada fora dele.
+aparece normalmente. O `PageMotion` só define o atributo `data-revealed`; ele nunca
+altera `class` ou `style`, porque o React compara os dois na hidratação e a página
+quebraria.
+
+### Streaming e páginas em branco
+
+O layout raiz não envolve o app em `<Suspense>`. Com Cache Components, esse boundary
+global fazia as páginas com conteúdo transmitido (artigos, cursos, eventos, produtos)
+abrirem em branco: o React descartava os trechos internos por chegarem antes do boundary
+raiz (erro `$RS ... parentNode` no console). Cada página que lê dados da requisição
+(`searchParams`, `params`, sessão) tem o próprio `<Suspense>` ou `loading.tsx`. Ao criar
+uma página nova desse tipo, faça o mesmo: o `npm run build` acusa quando falta.
 
 ### Imagens da marca
 

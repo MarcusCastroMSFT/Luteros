@@ -39,19 +39,14 @@ interface ProductsPageProps {
   }>
 }
 
-async function ProductsContent({
-  page,
-  search,
-  category,
-  availability,
-  featured,
-}: {
-  page: number
-  search: string
-  category: string
-  availability: string
-  featured: boolean
-}) {
+async function ProductsContent({ searchParams }: ProductsPageProps) {
+  // Read the request params here, inside <Suspense>, so the page shell stays static.
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const search = sp.search ?? ''
+  const category = sp.category ?? ''
+  const availability = sp.availability ?? ''
+  const featured = sp.featured === 'true'
   const data = await getProducts(page, PRODUCTS_PER_PAGE, {
     search: search || undefined,
     category: category || undefined,
@@ -78,14 +73,7 @@ function ProductsPageFallback() {
   )
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const sp = await searchParams
-  const page = Math.max(1, parseInt(sp.page ?? '1'))
-  const search = sp.search ?? ''
-  const category = sp.category ?? ''
-  const availability = sp.availability ?? ''
-  const featured = sp.featured === 'true'
-
+export default function ProductsPage({ searchParams }: ProductsPageProps) {
   return (
     <div className="min-h-screen">
       <PageHeader
@@ -98,17 +86,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         ]}
       />
 
-      <Suspense
-        key={`${page}-${search}-${category}-${availability}-${featured}`}
-        fallback={<ProductsPageFallback />}
-      >
-        <ProductsContent
-          page={page}
-          search={search}
-          category={category}
-          availability={availability}
-          featured={featured}
-        />
+      <Suspense fallback={<ProductsPageFallback />}>
+        <ProductsContent searchParams={searchParams} />
       </Suspense>
     </div>
   )

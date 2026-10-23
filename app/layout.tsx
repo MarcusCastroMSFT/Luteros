@@ -5,7 +5,6 @@ import { Providers } from "../components/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import { Suspense } from "react";
 import { JsonLd } from "@/components/seo/json-ld";
 import { DEFAULT_SOCIAL_IMAGE } from "@/lib/social-images";
 
@@ -129,14 +128,15 @@ export default function RootLayout({
             },
           ]}
         />
-        <Suspense>
-          <Providers>
-            {children}
-            <Toaster />
-            <SpeedInsights />
-            <Analytics />
-          </Providers>
-        </Suspense>
+        {/* No <Suspense> around the whole app: when this root boundary was postponed,
+            streamed pages flushed their inner boundaries before the root one and React
+            discarded them, leaving pages blank. Pages add their own <Suspense>. */}
+        <Providers>
+          {children}
+          <Toaster />
+          <SpeedInsights />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );

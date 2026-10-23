@@ -3,27 +3,14 @@
 import { useEffect, useRef } from "react";
 
 const TARGETS = "[data-reveal], [data-reveal-stagger]";
-const COLUMN_STEP_MS = 90;
-const MAX_COLUMNS = 4;
-
-/** Short cascade by column, so a grid enters left to right instead of all at once. */
-function staggerChildren(container: HTMLElement) {
-  let rowTop: number | null = null;
-  let column = 0;
-  for (const child of Array.from(container.children) as HTMLElement[]) {
-    const top = child.offsetTop;
-    if (rowTop === null || Math.abs(top - rowTop) > 8) {
-      rowTop = top;
-      column = 0;
-    }
-    child.style.setProperty("--reveal-delay", `${Math.min(column, MAX_COLUMNS - 1) * COLUMN_STEP_MS}ms`);
-    column += 1;
-  }
-}
 
 /**
- * Site-wide motion: reveals `[data-reveal]` / `[data-reveal-stagger]` elements
- * as they scroll into view and draws a thin reading-progress bar.
+ * Site-wide motion: reveals `[data-reveal]` / `[data-reveal-stagger]` elements as they
+ * scroll into view and draws a thin reading-progress bar.
+ *
+ * It only ever sets the `data-revealed` attribute on those elements. Never touch `class`
+ * or `style` here: React compares both during hydration, and pages that stream
+ * (Suspense) would fail to hydrate and render blank.
  * Hidden states live in `globals.css` and only apply with scripting on and
  * `prefers-reduced-motion: no-preference`.
  */
@@ -55,37 +42,35 @@ export function PageMotion() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const show = (element: HTMLElement) => {
-      if (element.hasAttribute("data-reveal-stagger")) staggerChildren(element);
-      element.classList.add("is-visible");
-    };
+    const show = (element: Element) => element.setAttribute("data-revealed", "");
 
     if (!("IntersectionObserver" in window)) {
-      document.querySelectorAll<HTMLElement>(TARGETS).forEach(show);
+      document.querySelectorAll(TARGETS).forEach(show);
       return;
     }
 
-    const observed = new WeakSet<Element>();
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          show(entry.target as HTMLElement);
+          show(entry.target);
           io.unobserve(entry.target);
         }
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0 },
     );
 
+    const seen = new WeakSet<Element>();
     const scan = () => {
-      document.querySelectorAll<HTMLElement>(TARGETS).forEach((element) => {
-        if (observed.has(element) || element.classList.contains("is-visible")) return;
-        observed.add(element);
+      document.querySelectorAll(TARGETS).forEach((element) => {
+        if (seen.has(element) || element.hasAttribute("data-revealed")) return;
+        seen.add(element);
         io.observe(element);
       });
     };
 
-    // Pages stream in and change on client navigation, so new targets keep appearing.
+    // Streamed pages and client navigations add targets later. Only observing and setting
+    // an attribute here, so it is safe to run while React is still swapping content in.
     let scanFrame = 0;
     const mutations = new MutationObserver(() => {
       if (!scanFrame) {

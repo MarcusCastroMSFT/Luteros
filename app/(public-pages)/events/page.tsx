@@ -33,7 +33,11 @@ interface EventsPageProps {
   searchParams: Promise<{ page?: string; search?: string }>
 }
 
-async function EventsContent({ page, search }: { page: number; search: string }) {
+async function EventsContent({ searchParams }: EventsPageProps) {
+  // Read the request params here, inside <Suspense>, so the page shell stays static.
+  const sp = await searchParams
+  const page = Math.max(1, parseInt(sp.page ?? '1'))
+  const search = sp.search ?? ''
   const data = await getEvents(page, EVENTS_PER_PAGE, search || undefined)
 
   return (
@@ -59,11 +63,7 @@ function EventsPageFallback() {
   )
 }
 
-export default async function EventsPage({ searchParams }: EventsPageProps) {
-  const sp = await searchParams
-  const page = Math.max(1, parseInt(sp.page ?? '1'))
-  const search = sp.search ?? ''
-
+export default function EventsPage({ searchParams }: EventsPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
@@ -76,8 +76,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         ]}
       />
 
-      <Suspense key={`${page}-${search}`} fallback={<EventsPageFallback />}>
-        <EventsContent page={page} search={search} />
+      <Suspense fallback={<EventsPageFallback />}>
+        <EventsContent searchParams={searchParams} />
       </Suspense>
     </div>
   )
