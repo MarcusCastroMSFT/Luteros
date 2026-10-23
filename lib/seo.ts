@@ -5,7 +5,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_BASE_URL || LUTTEROS_ENTITY.sit
 
 export const SITE_NAME = 'Lutteros'
 export const SITE_TAGLINE = 'Saúde sexual baseada em conhecimento científico'
-export const SUPPORT_EMAIL = 'contato@lutteros.com.br'
+export const SUPPORT_EMAIL = LUTTEROS_ENTITY.contactEmail
 
 export function absoluteUrl(pathOrUrl: string): string {
   return /^https?:\/\//i.test(pathOrUrl) ? pathOrUrl : `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`

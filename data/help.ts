@@ -1,6 +1,7 @@
 import type { HelpArticle, HelpCategory } from '@/types/help';
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity';
 
-export const SUPPORT_EMAIL = 'contato@lutteros.com.br';
+export const SUPPORT_EMAIL = LUTTEROS_ENTITY.contactEmail;
 
 const articles: HelpArticle[] = [
   {

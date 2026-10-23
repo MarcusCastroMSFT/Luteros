@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Para questões sobre o tratamento de dados pessoais, fale com nosso Encarregado pelo e-mail{' '}
-            <LegalLink href={`mailto:${entity.privacyEmail}`}>{entity.privacyEmail}</LegalLink>.
+            <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>.
           </p>
         </LegalSection>
 
@@ -93,6 +93,10 @@ export default function PrivacyPage() {
             </li>
             <li>Compras: CPF ou CNPJ, necessário para emitir a cobrança, e dados de contato;</li>
             <li>Inscrições em eventos, newsletter e preferências de comunicação;</li>
+            <li>
+              Lista de espera da assinatura: e-mail, o perfil escolhido (por exemplo, profissional de saúde) e o endereço IP do
+              envio, usado para evitar abusos;
+            </li>
             <li>Publicações na comunidade, comentários, avaliações e mensagens que você enviar;</li>
             <li>Contatos com o suporte.</li>
           </LegalList>
@@ -144,6 +148,7 @@ export default function PrivacyPage() {
             <li>Processar compras, emitir cobranças e liberar o acesso após a confirmação do pagamento;</li>
             <li>Enviar e-mails de serviço (confirmações, recuperação de senha, avisos importantes);</li>
             <li>Enviar newsletter e novidades, quando você optar por receber;</li>
+            <li>Avisar por e-mail quando a assinatura estiver disponível, para quem entrou na lista de espera;</li>
             <li>Moderar a comunidade e manter um ambiente respeitoso e seguro;</li>
             <li>Prevenir fraudes, uso indevido e compartilhamento de contas;</li>
             <li>Medir o desempenho do site e melhorar a Plataforma, de forma agregada;</li>
@@ -157,7 +162,7 @@ export default function PrivacyPage() {
               <strong>Execução de contrato</strong> (art. 7º, V): conta, acesso a cursos, compras e suporte;
             </li>
             <li>
-              <strong>Consentimento</strong> (arts. 7º, I, e 11, I): newsletter, comunicações de marketing e tratamento de dados
+              <strong>Consentimento</strong> (arts. 7º, I, e 11, I): newsletter, lista de espera da assinatura, comunicações de marketing e tratamento de dados
               sensíveis que você nos fornecer. Você pode revogá-lo a qualquer momento;
             </li>
             <li>
@@ -251,6 +256,10 @@ export default function PrivacyPage() {
             <li>
               <strong>Newsletter:</strong> até você cancelar a inscrição.
             </li>
+            <li>
+              <strong>Lista de espera da assinatura:</strong> até o aviso de abertura ser enviado ou até você pedir a remoção
+              pelo e-mail da seção 17.
+            </li>
           </LegalList>
         </LegalSection>
 
@@ -301,7 +310,7 @@ export default function PrivacyPage() {
           </LegalList>
           <p>
             Você também pode editar muitos dos seus dados diretamente no seu perfil. Para os demais pedidos, escreva para{' '}
-            <LegalLink href={`mailto:${entity.privacyEmail}`}>{entity.privacyEmail}</LegalLink>. Responderemos em até 15 dias e
+            <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>. Responderemos em até 15 dias e
             poderemos pedir informações para confirmar sua identidade. Você também pode reclamar à ANPD (gov.br/anpd).
           </p>
         </LegalSection>
@@ -337,8 +346,8 @@ export default function PrivacyPage() {
           <p>Para exercer seus direitos ou tirar dúvidas sobre privacidade:</p>
           <LegalList>
             <li>
-              <strong>Encarregado (DPO):</strong>{' '}
-              <LegalLink href={`mailto:${entity.privacyEmail}`}>{entity.privacyEmail}</LegalLink>
+              <strong>Encarregado (DPO) e privacidade:</strong>{' '}
+              <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>
             </li>
             <li>
               <strong>Empresa:</strong> {entity.legalName} — CNPJ {entity.cnpj}

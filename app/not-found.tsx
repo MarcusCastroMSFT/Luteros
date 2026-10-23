@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, MessagesSquare, Newspaper, Stethoscope, type LucideIcon } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 import { Footer } from '@/components/footer'
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity'
 import styles from './not-found.module.css'
 
 export const metadata: Metadata = {
@@ -98,7 +99,7 @@ export default function NotFound() {
 
             <p className={styles.support}>
               Ainda não achou? Veja a <Link href="/help">Central de Ajuda</Link> ou escreva para{' '}
-              <a href="mailto:suporte@lutteros.com.br">suporte@lutteros.com.br</a>.
+              <a href={`mailto:${LUTTEROS_ENTITY.contactEmail}`}>{LUTTEROS_ENTITY.contactEmail}</a>.
             </p>
           </div>
         </section>

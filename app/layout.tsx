@@ -7,6 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { JsonLd } from "@/components/seo/json-ld";
 import { DEFAULT_SOCIAL_IMAGE } from "@/lib/social-images";
+import { LUTTEROS_ENTITY } from "@/lib/legal-entity";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -129,7 +130,7 @@ export default function RootLayout({
                 {
                   "@type": "ContactPoint",
                   contactType: "customer support",
-                  email: "contato@lutteros.com.br",
+                  email: LUTTEROS_ENTITY.contactEmail,
                   availableLanguage: "pt-BR",
                   url: `${baseUrl}/contact`,
                 },

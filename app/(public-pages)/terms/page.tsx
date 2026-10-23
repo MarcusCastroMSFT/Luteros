@@ -167,7 +167,7 @@ export default function TermsPage() {
           </p>
           <LegalList>
             <li>
-              Para pedir, escreva para <LegalLink href={`mailto:${entity.legalEmail}`}>{entity.legalEmail}</LegalLink> usando o
+              Para pedir, escreva para <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink> usando o
               e-mail da sua conta e informando o curso;
             </li>
             <li>
@@ -309,11 +309,8 @@ export default function TermsPage() {
         <LegalSection id="contato" title="17. Contato">
           <LegalList>
             <li>
-              <strong>Jurídico e reembolsos:</strong> <LegalLink href={`mailto:${entity.legalEmail}`}>{entity.legalEmail}</LegalLink>
-            </li>
-            <li>
-              <strong>Privacidade e dados pessoais:</strong>{' '}
-              <LegalLink href={`mailto:${entity.privacyEmail}`}>{entity.privacyEmail}</LegalLink>
+              <strong>Suporte, jurídico, reembolsos e privacidade:</strong>{' '}
+              <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>
             </li>
             <li>
               <strong>Empresa:</strong> {entity.legalName} — CNPJ {entity.cnpj}

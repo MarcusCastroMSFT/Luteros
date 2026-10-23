@@ -52,7 +52,7 @@ export function Footer() {
                   <Instagram className="size-[18px]" aria-hidden="true" />
                 </a>
               ))}
-              <a href="mailto:suporte@lutteros.com.br" className={iconButton} aria-label="Escrever para o suporte">
+              <a href={`mailto:${entity.contactEmail}`} className={iconButton} aria-label="Escrever para a Lutteros">
                 <Mail className="size-[18px]" aria-hidden="true" />
               </a>
             </div>
