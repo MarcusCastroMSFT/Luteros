@@ -8,4 +8,4 @@ export const LUTTEROS_ENTITY = {
   siteUrl: 'https://www.lutteros.com.br',
 } as const
 
-export const LEGAL_LAST_UPDATED = '23 de outubro de 2026'
+export const LEGAL_LAST_UPDATED = '25 de outubro de 2026'

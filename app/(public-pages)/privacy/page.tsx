@@ -7,28 +7,27 @@ import { LEGAL_LAST_UPDATED, LUTTEROS_ENTITY as entity } from '@/lib/legal-entit
 export const metadata: Metadata = {
   title: 'Política de Privacidade',
   description:
-    'Saiba como a lutteros coleta, usa, armazena, compartilha e protege seus dados pessoais, quais são os seus direitos como titular e como exercê-los, conforme a LGPD.',
+    'Como a Lutteros coleta, usa, armazena, compartilha e protege dados pessoais, quais são os direitos do titular e como exercê-los, conforme a LGPD.',
   alternates: { canonical: `${entity.siteUrl}/privacy` },
 }
 
 const sections = [
   { id: 'introducao', title: '1. Introdução' },
   { id: 'controlador', title: '2. Controlador e Encarregado (DPO)' },
-  { id: 'dados-coletados', title: '3. Dados que Coletamos' },
+  { id: 'dados-coletados', title: '3. Dados Coletados' },
   { id: 'dados-sensiveis', title: '4. Dados Sensíveis e Saúde' },
-  { id: 'finalidades', title: '5. Finalidades do Tratamento' },
-  { id: 'base-legal', title: '6. Bases Legais' },
-  { id: 'pagamentos', title: '7. Pagamentos' },
-  { id: 'compartilhamento', title: '8. Compartilhamento de Dados' },
-  { id: 'comunidade', title: '9. Comunidade e Conteúdo Publicado' },
-  { id: 'retencao', title: '10. Retenção de Dados' },
-  { id: 'seguranca', title: '11. Segurança da Informação' },
-  { id: 'cookies', title: '12. Cookies e Tecnologias' },
-  { id: 'direitos', title: '13. Seus Direitos (LGPD)' },
-  { id: 'transferencia', title: '14. Transferência Internacional' },
-  { id: 'menores', title: '15. Crianças e Adolescentes' },
-  { id: 'alteracoes', title: '16. Alterações desta Política' },
-  { id: 'contato', title: '17. Contato' },
+  { id: 'base-legal', title: '5. Bases Legais' },
+  { id: 'pagamentos', title: '6. Pagamentos' },
+  { id: 'compartilhamento', title: '7. Compartilhamento de Dados' },
+  { id: 'retencao', title: '8. Retenção de Dados' },
+  { id: 'seguranca', title: '9. Segurança da Informação' },
+  { id: 'cookies', title: '10. Cookies e Tecnologias' },
+  { id: 'direitos', title: '11. Direitos do Titular (LGPD)' },
+  { id: 'transferencia', title: '12. Transferência Internacional' },
+  { id: 'menores', title: '13. Menores de 18 Anos' },
+  { id: 'casos-ficticios', title: '14. Casos Clínicos Fictícios' },
+  { id: 'alteracoes', title: '15. Alterações desta Política' },
+  { id: 'contato', title: '16. Contato' },
 ]
 
 export default function PrivacyPage() {
@@ -49,42 +48,42 @@ export default function PrivacyPage() {
         eyebrow="Privacidade e proteção de dados"
         eyebrowIcon={ShieldCheck}
         title="Política de Privacidade"
-        intro="Como a lutteros coleta, utiliza, armazena e protege dados pessoais, com atenção especial à natureza íntima da saúde sexual, em conformidade com a LGPD."
+        intro="Como a Lutteros coleta, utiliza, armazena e protege dados pessoais, com atenção especial à natureza íntima da saúde sexual, em conformidade com a LGPD."
         lastUpdated={LEGAL_LAST_UPDATED}
         sections={sections}
       >
         <LegalSection id="introducao" title="1. Introdução">
           <p>
-            A <strong>lutteros</strong> (&quot;nós&quot;, &quot;nosso&quot; ou &quot;Empresa&quot;) é uma plataforma de educação em saúde
-            sexual e bem-estar, com cursos, artigos, eventos, comunidade e indicação de especialistas. Sabemos que
-            informações ligadas à sexualidade são íntimas e merecem o mais alto nível de cuidado.
+            A <strong>Lutteros</strong> (a &quot;Empresa&quot;) é uma plataforma de educação em saúde sexual e bem-estar, com cursos
+            e artigos. A Lutteros reconhece que informações ligadas à sexualidade são íntimas e merecem o mais alto nível de
+            cuidado.
           </p>
           <p>
-            Esta Política de Privacidade (&quot;Política&quot;) explica como tratamos os dados pessoais de quem visita ou utiliza o
-            site <LegalLink href={entity.siteUrl}>lutteros.com.br</LegalLink> e seus serviços (em conjunto, a
-            &quot;Plataforma&quot;), em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD).
+            Esta Política de Privacidade (a &quot;Política&quot;) explica como a Lutteros trata os dados pessoais de quem visita ou
+            utiliza o site <LegalLink href={entity.siteUrl}>lutteros.com.br</LegalLink> e seus serviços (em conjunto, a
+            &quot;Plataforma&quot;), em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD). A
+            pessoa que visita ou utiliza a Plataforma é referida como o &quot;Usuário&quot;.
           </p>
-          <LegalCallout title="Nosso compromisso">
+          <LegalCallout title="Compromisso da Lutteros">
             <p>
-              Não vendemos dados pessoais e não os compartilhamos com anunciantes, corretoras de dados ou seguradoras.
-              Tratamos apenas o necessário para prestar os serviços que você escolheu usar.
+              A Lutteros não vende dados pessoais e não os compartilha com anunciantes, corretoras de dados ou seguradoras. Trata
+              apenas o necessário para prestar os serviços que o Usuário escolheu utilizar.
             </p>
           </LegalCallout>
         </LegalSection>
 
         <LegalSection id="controlador" title="2. Controlador e Encarregado (DPO)">
           <p>
-            O controlador dos seus dados pessoais é a <strong>{entity.legalName}</strong>, inscrita no CNPJ sob o nº{' '}
-            {entity.cnpj}.
+            O controlador dos dados pessoais é a <strong>{entity.legalName}</strong>, inscrita no CNPJ sob o nº {entity.cnpj}.
           </p>
           <p>
-            Para questões sobre o tratamento de dados pessoais, fale com nosso Encarregado pelo e-mail{' '}
-            <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>.
+            Para questões sobre o tratamento de dados pessoais, o Encarregado pelo tratamento de dados (DPO) da Lutteros atende
+            pelo e-mail <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>.
           </p>
         </LegalSection>
 
-        <LegalSection id="dados-coletados" title="3. Dados que Coletamos">
-          <LegalSub>3.1 Dados fornecidos por você</LegalSub>
+        <LegalSection id="dados-coletados" title="3. Dados Coletados">
+          <LegalSub>3.1 Dados fornecidos pelo Usuário</LegalSub>
           <LegalList>
             <li>Cadastro: nome, e-mail e senha (armazenada apenas de forma criptografada, nunca em texto aberto);</li>
             <li>
@@ -92,20 +91,19 @@ export default function PrivacyPage() {
               redes sociais;
             </li>
             <li>Compras: CPF ou CNPJ, necessário para emitir a cobrança, e dados de contato;</li>
-            <li>Inscrições em eventos, newsletter e preferências de comunicação;</li>
+            <li>Inscrição na newsletter e preferências de comunicação;</li>
             <li>
               Lista de espera da assinatura: e-mail, o perfil escolhido (por exemplo, profissional de saúde) e o endereço IP do
               envio, usado para evitar abusos;
             </li>
-            <li>Publicações na comunidade, comentários, avaliações e mensagens que você enviar;</li>
-            <li>Contatos com o suporte.</li>
+            <li>Mensagens enviadas pelo formulário de contato e demais contatos com a Lutteros.</li>
           </LegalList>
 
           <LegalSub>3.2 Dados obtidos de terceiros</LegalSub>
           <LegalList>
             <li>
-              Login com Google (opcional): nome, e-mail e foto de perfil informados pelo Google, conforme as permissões que você
-              autorizar;
+              Login com Google (opcional): nome, e-mail e foto de perfil informados pelo Google, conforme as permissões que o
+              Usuário autorizar;
             </li>
             <li>Confirmação de pagamento: status da cobrança informado pelo provedor de pagamentos.</li>
           </LegalList>
@@ -118,59 +116,51 @@ export default function PrivacyPage() {
               Registros de acesso a conteúdos pagos: endereço IP e navegador usados para assistir às aulas, para proteger o
               conteúdo contra compartilhamento indevido de contas;
             </li>
-            <li>Cookies essenciais de sessão (veja a seção 12).</li>
+            <li>Cookies essenciais de sessão (veja a seção 10).</li>
           </LegalList>
         </LegalSection>
 
         <LegalSection id="dados-sensiveis" title="4. Dados Sensíveis e Saúde">
           <p>
-            A Plataforma tem caráter <strong>educativo</strong>. Não solicitamos diagnósticos, exames, receitas ou histórico
-            clínico para você usar nossos cursos, artigos e eventos.
+            A Plataforma tem caráter <strong>educativo</strong>. A Lutteros não solicita diagnósticos, exames, receitas ou
+            histórico clínico para o uso de seus cursos e artigos.
           </p>
           <p>
             Ainda assim, informações sobre vida sexual e saúde são <strong>dados pessoais sensíveis</strong> (art. 5º, II, da
-            LGPD). Elas podem aparecer, por exemplo, em perguntas a especialistas ou em publicações na comunidade que você
-            decidir fazer, ou ser inferidas pelo seu interesse em determinados temas.
+            LGPD). Elas podem ser fornecidas pelo próprio Usuário, por exemplo em mensagens enviadas pelo formulário de contato,
+            ou ser inferidas a partir do interesse em determinados temas.
           </p>
           <LegalList>
-            <li>Tratamos esses dados somente com seu consentimento específico e destacado, ou nas demais hipóteses do art. 11 da LGPD;</li>
-            <li>Não os usamos para publicidade, perfilamento comercial ou decisões automatizadas que afetem você;</li>
             <li>
-              Recomendamos <strong>não</strong> expor informações de saúde que identifiquem você em áreas públicas da Plataforma.
+              A Lutteros trata esses dados somente com o consentimento específico e destacado do Usuário, ou nas demais hipóteses
+              do art. 11 da LGPD;
+            </li>
+            <li>
+              Não os utiliza para publicidade, perfilamento comercial ou decisões automatizadas que afetem o Usuário;
+            </li>
+            <li>
+              Recomenda-se que o Usuário <strong>não</strong> informe dados de saúde que o identifiquem além do estritamente
+              necessário em suas mensagens.
             </li>
           </LegalList>
         </LegalSection>
 
-        <LegalSection id="finalidades" title="5. Finalidades do Tratamento">
-          <LegalList>
-            <li>Criar e manter sua conta e autenticar seu acesso;</li>
-            <li>Disponibilizar cursos, artigos, eventos e demais conteúdos, e registrar seu progresso;</li>
-            <li>Processar compras, emitir cobranças e liberar o acesso após a confirmação do pagamento;</li>
-            <li>Enviar e-mails de serviço (confirmações, recuperação de senha, avisos importantes);</li>
-            <li>Enviar newsletter e novidades, quando você optar por receber;</li>
-            <li>Avisar por e-mail quando a assinatura estiver disponível, para quem entrou na lista de espera;</li>
-            <li>Moderar a comunidade e manter um ambiente respeitoso e seguro;</li>
-            <li>Prevenir fraudes, uso indevido e compartilhamento de contas;</li>
-            <li>Medir o desempenho do site e melhorar a Plataforma, de forma agregada;</li>
-            <li>Cumprir obrigações legais e regulatórias e exercer direitos em processos.</li>
-          </LegalList>
-        </LegalSection>
-
-        <LegalSection id="base-legal" title="6. Bases Legais">
+        <LegalSection id="base-legal" title="5. Bases Legais">
           <LegalList>
             <li>
               <strong>Execução de contrato</strong> (art. 7º, V): conta, acesso a cursos, compras e suporte;
             </li>
             <li>
-              <strong>Consentimento</strong> (arts. 7º, I, e 11, I): newsletter, lista de espera da assinatura, comunicações de marketing e tratamento de dados
-              sensíveis que você nos fornecer. Você pode revogá-lo a qualquer momento;
+              <strong>Consentimento</strong> (arts. 7º, I, e 11, I): newsletter, lista de espera da assinatura, comunicações de
+              marketing e tratamento de dados sensíveis fornecidos pelo Usuário. O consentimento pode ser revogado a qualquer
+              momento;
             </li>
             <li>
               <strong>Obrigação legal ou regulatória</strong> (art. 7º, II): guarda de registros fiscais e de acesso;
             </li>
             <li>
               <strong>Legítimo interesse</strong> (art. 7º, IX): segurança, prevenção a fraudes, proteção de conteúdo pago e
-              melhoria da Plataforma, sempre respeitando seus direitos e expectativas;
+              melhoria da Plataforma, sempre respeitados os direitos e as expectativas do Usuário;
             </li>
             <li>
               <strong>Exercício regular de direitos</strong> (art. 7º, VI): defesa em processos judiciais, administrativos ou
@@ -179,25 +169,28 @@ export default function PrivacyPage() {
           </LegalList>
         </LegalSection>
 
-        <LegalSection id="pagamentos" title="7. Pagamentos">
+        <LegalSection id="pagamentos" title="6. Pagamentos">
           <p>
-            Os pagamentos de cursos são processados pelo <strong>Asaas</strong>, instituição de pagamento. Você paga em uma
+            Os pagamentos de cursos são processados pelo <strong>Asaas</strong>, instituição de pagamento. O Usuário paga em uma
             página segura do Asaas, por Pix, boleto ou cartão de crédito.
           </p>
           <LegalList>
             <li>
-              <strong>A lutteros não recebe nem armazena</strong> número de cartão, código de segurança ou dados bancários;
+              <strong>A Lutteros não recebe nem armazena</strong> número de cartão, código de segurança ou dados bancários;
             </li>
             <li>
-              Guardamos apenas o necessário para a gestão da compra: CPF ou CNPJ, valor, identificador e status da cobrança e
-              data de confirmação;
+              A Lutteros guarda apenas o necessário para a gestão da compra: CPF ou CNPJ, valor, identificador e status da
+              cobrança e data de confirmação;
             </li>
-            <li>O Asaas trata seus dados como controlador independente, conforme a própria política de privacidade.</li>
+            <li>O Asaas trata os dados como controlador independente, conforme a própria política de privacidade.</li>
           </LegalList>
         </LegalSection>
 
-        <LegalSection id="compartilhamento" title="8. Compartilhamento de Dados">
-          <p>Compartilhamos dados apenas com quem precisa deles para operar a Plataforma, sob contrato e com dever de confidencialidade:</p>
+        <LegalSection id="compartilhamento" title="7. Compartilhamento de Dados">
+          <p>
+            A Lutteros compartilha dados apenas com quem precisa deles para operar a Plataforma, sob contrato e com dever de
+            confidencialidade:
+          </p>
           <LegalList>
             <li>
               <strong>Hospedagem e infraestrutura:</strong> Vercel (aplicação e métricas de desempenho), Neon (banco de dados) e
@@ -210,42 +203,30 @@ export default function PrivacyPage() {
               <strong>E-mails:</strong> Resend (e-mails de serviço e newsletter);
             </li>
             <li>
-              <strong>Login social:</strong> Google, apenas se você optar por entrar com a conta Google;
+              <strong>Login social:</strong> Google, apenas se o Usuário optar por entrar com a conta Google;
             </li>
             <li>
-              <strong>Autoridades:</strong> quando houver determinação legal ou judicial, ou para proteger direitos nossos e de
-              terceiros.
+              <strong>Autoridades:</strong> quando houver determinação legal ou judicial, ou para proteger direitos da Lutteros
+              e de terceiros.
             </li>
           </LegalList>
           <LegalCallout>
             <p>
-              Nunca vendemos seus dados e não compartilhamos informações sobre sua saúde ou vida sexual com empresas de
-              marketing, publicidade ou seguros.
+              A Lutteros nunca vende dados pessoais e não compartilha informações sobre a saúde ou a vida sexual do Usuário com
+              empresas de marketing, publicidade ou seguros.
             </p>
           </LegalCallout>
         </LegalSection>
 
-        <LegalSection id="comunidade" title="9. Comunidade e Conteúdo Publicado">
+        <LegalSection id="retencao" title="8. Retenção de Dados">
           <p>
-            Publicações, comentários e avaliações feitos em áreas públicas da Plataforma podem ser vistos por outros usuários e
-            pelo público. Pense antes de compartilhar informações pessoais.
+            A Lutteros mantém os dados apenas pelo tempo necessário para as finalidades descritas nesta Política, observados os
+            prazos legais:
           </p>
           <LegalList>
-            <li>Você pode escolher publicar de forma anônima para os demais usuários, quando essa opção estiver disponível;</li>
             <li>
-              Nossa equipe de moderação pode identificar o autor de uma publicação quando necessário para segurança, para
-              cumprir a lei ou para aplicar os Termos de Uso;
-            </li>
-            <li>Você pode pedir a remoção de conteúdo seu pelo e-mail indicado na seção 17.</li>
-          </LegalList>
-        </LegalSection>
-
-        <LegalSection id="retencao" title="10. Retenção de Dados">
-          <p>Mantemos os dados apenas pelo tempo necessário para as finalidades descritas, observados os prazos legais:</p>
-          <LegalList>
-            <li>
-              <strong>Dados de conta e perfil:</strong> enquanto a conta estiver ativa. Ao excluir a conta, eliminamos ou
-              anonimizamos os dados, salvo os que a lei nos obrigue a manter;
+              <strong>Dados de conta e perfil:</strong> enquanto a conta estiver ativa. Com a exclusão da conta, os dados são
+              eliminados ou anonimizados, salvo os que a lei obrigue a manter;
             </li>
             <li>
               <strong>Registros de compras e fiscais:</strong> por até 5 anos, conforme a legislação tributária e consumerista;
@@ -254,17 +235,17 @@ export default function PrivacyPage() {
               <strong>Registros de acesso à aplicação (logs):</strong> pelo prazo mínimo de 6 meses exigido pelo Marco Civil da Internet;
             </li>
             <li>
-              <strong>Newsletter:</strong> até você cancelar a inscrição.
+              <strong>Newsletter:</strong> até o cancelamento da inscrição pelo Usuário;
             </li>
             <li>
-              <strong>Lista de espera da assinatura:</strong> até o aviso de abertura ser enviado ou até você pedir a remoção
-              pelo e-mail da seção 17.
+              <strong>Lista de espera da assinatura:</strong> até o aviso de abertura ser enviado ou até o Usuário pedir a
+              remoção pelo e-mail da seção 16.
             </li>
           </LegalList>
         </LegalSection>
 
-        <LegalSection id="seguranca" title="11. Segurança da Informação">
-          <p>Adotamos medidas técnicas e organizacionais compatíveis com a sensibilidade dos dados, incluindo:</p>
+        <LegalSection id="seguranca" title="9. Segurança da Informação">
+          <p>A Lutteros adota medidas técnicas e organizacionais compatíveis com a sensibilidade dos dados, incluindo:</p>
           <LegalList>
             <li>Conexão criptografada (HTTPS) em toda a Plataforma;</li>
             <li>Senhas armazenadas com algoritmo de hash, nunca em texto aberto;</li>
@@ -273,80 +254,96 @@ export default function PrivacyPage() {
             <li>Acesso interno restrito a pessoas autorizadas e que precisam do dado para trabalhar.</li>
           </LegalList>
           <p>
-            Nenhum sistema é totalmente invulnerável. Em caso de incidente que possa gerar risco ou dano relevante, comunicaremos
-            você e a Autoridade Nacional de Proteção de Dados (ANPD) nos termos da lei.
+            Nenhum sistema é totalmente invulnerável. Em caso de incidente que possa gerar risco ou dano relevante, a Lutteros
+            comunicará o Usuário e a Autoridade Nacional de Proteção de Dados (ANPD) nos termos da lei.
           </p>
         </LegalSection>
 
-        <LegalSection id="cookies" title="12. Cookies e Tecnologias">
-          <p>Usamos poucas tecnologias de armazenamento no seu navegador:</p>
+        <LegalSection id="cookies" title="10. Cookies e Tecnologias">
+          <p>A Lutteros utiliza poucas tecnologias de armazenamento no navegador do Usuário:</p>
           <LegalList>
             <li>
-              <strong>Essenciais:</strong> mantêm você conectado e protegem a sessão. Sem eles, o login não funciona;
+              <strong>Essenciais:</strong> mantêm o Usuário conectado e protegem a sessão. Sem eles, o login não funciona;
             </li>
             <li>
               <strong>Preferências:</strong> lembram escolhas simples de uso;
             </li>
             <li>
               <strong>Métricas de uso e desempenho:</strong> Vercel Analytics e Speed Insights, que geram estatísticas agregadas
-              do site. Não usamos cookies de publicidade nem rastreamento entre sites.
+              do site. A Lutteros não utiliza cookies de publicidade nem rastreamento entre sites.
             </li>
           </LegalList>
-          <p>Você pode bloquear ou apagar cookies nas configurações do navegador, mas partes da Plataforma podem deixar de funcionar.</p>
+          <p>
+            O Usuário pode bloquear ou apagar cookies nas configurações do navegador, mas partes da Plataforma podem deixar de
+            funcionar.
+          </p>
         </LegalSection>
 
-        <LegalSection id="direitos" title="13. Seus Direitos (LGPD)">
-          <p>Nos termos do art. 18 da LGPD, você pode, a qualquer momento, solicitar:</p>
+        <LegalSection id="direitos" title="11. Direitos do Titular (LGPD)">
+          <p>Nos termos do art. 18 da LGPD, o titular dos dados pode, a qualquer momento, solicitar à Lutteros:</p>
           <LegalList>
-            <li>Confirmação de que tratamos seus dados e acesso a eles;</li>
+            <li>Confirmação de que a Lutteros trata seus dados e acesso a eles;</li>
             <li>Correção de dados incompletos, inexatos ou desatualizados;</li>
             <li>Anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade;</li>
             <li>Portabilidade dos dados a outro fornecedor;</li>
-            <li>Eliminação dos dados tratados com base no seu consentimento;</li>
-            <li>Informação sobre com quem compartilhamos seus dados;</li>
+            <li>Eliminação dos dados tratados com base no consentimento;</li>
+            <li>Informação sobre com quem a Lutteros compartilha os dados;</li>
             <li>Informação sobre a possibilidade de não consentir e suas consequências;</li>
             <li>Revogação do consentimento;</li>
             <li>Revisão de decisões tomadas apenas com base em tratamento automatizado.</li>
           </LegalList>
           <p>
-            Você também pode editar muitos dos seus dados diretamente no seu perfil. Para os demais pedidos, escreva para{' '}
-            <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>. Responderemos em até 15 dias e
-            poderemos pedir informações para confirmar sua identidade. Você também pode reclamar à ANPD (gov.br/anpd).
+            Muitos dados podem ser editados diretamente no perfil do Usuário. Para os demais pedidos, o titular deve escrever
+            para <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>. A Lutteros responde em
+            até 15 dias e pode solicitar informações para confirmar a identidade do titular. O titular também pode reclamar à
+            ANPD (gov.br/anpd).
           </p>
         </LegalSection>
 
-        <LegalSection id="transferencia" title="14. Transferência Internacional">
+        <LegalSection id="transferencia" title="12. Transferência Internacional">
           <p>
-            Alguns dos nossos fornecedores, como hospedagem, e-mail e login social, podem tratar dados em servidores fora do
+            Alguns fornecedores da Lutteros, como hospedagem, e-mail e login social, podem tratar dados em servidores fora do
             Brasil. Nesses casos, a transferência ocorre com as salvaguardas do art. 33 da LGPD, como cláusulas contratuais
             adequadas e fornecedores que adotam padrões reconhecidos de proteção de dados.
           </p>
         </LegalSection>
 
-        <LegalSection id="menores" title="15. Crianças e Adolescentes">
+        <LegalSection id="menores" title="13. Menores de 18 Anos">
           <p>
-            A Plataforma não se destina a menores de 13 anos, que não podem criar conta. Adolescentes de 13 a 17 anos só podem
-            usar os conteúdos educativos com o consentimento e a supervisão de pai, mãe ou responsável legal. Compras e
-            contratações são restritas a maiores de 18 anos.
+            A Plataforma não se destina a menores de 18 anos. Compras e contratações são restritas a maiores de 18 anos.
           </p>
           <p>
-            Se soubermos que coletamos dados de uma criança sem o devido consentimento, eliminaremos essas informações. Se você
-            for responsável e identificar essa situação, avise-nos pelo e-mail da seção 17.
+            Caso a Lutteros identifique que coletou dados de menor de 18 anos, eliminará essas informações. Quem for responsável
+            por um menor e identificar essa situação pode avisar a Lutteros pelo e-mail da seção 16.
           </p>
         </LegalSection>
 
-        <LegalSection id="alteracoes" title="16. Alterações desta Política">
+        <LegalSection id="casos-ficticios" title="14. Casos Clínicos Fictícios">
           <p>
-            Podemos atualizar esta Política para refletir mudanças legais ou na Plataforma. A data da última atualização está no
-            topo da página. Em mudanças relevantes, avisaremos por e-mail ou por aviso na Plataforma com antecedência razoável.
+            Os casos clínicos apresentados na Plataforma Lutteros são <strong>fictícios</strong> e foram elaborados com
+            finalidade exclusivamente educativa, com base na literatura científica sobre os fatores associados às disfunções
+            sexuais.
+          </p>
+          <p>
+            Eventual semelhança com situações, experiências ou pessoas reais é mera coincidência e não indica que o caso se
+            refira a paciente, usuário ou terceiro específico. Por se tratar de casos fictícios, eles não envolvem dados
+            pessoais de pacientes reais.
           </p>
         </LegalSection>
 
-        <LegalSection id="contato" title="17. Contato">
-          <p>Para exercer seus direitos ou tirar dúvidas sobre privacidade:</p>
+        <LegalSection id="alteracoes" title="15. Alterações desta Política">
+          <p>
+            A Lutteros pode atualizar esta Política para refletir mudanças legais ou na Plataforma. A data da última atualização
+            consta no topo da página. Em mudanças relevantes, a Lutteros avisa o Usuário por e-mail ou por aviso na Plataforma,
+            com antecedência razoável.
+          </p>
+        </LegalSection>
+
+        <LegalSection id="contato" title="16. Contato">
+          <p>Para exercer direitos ou tirar dúvidas sobre privacidade:</p>
           <LegalList>
             <li>
-              <strong>Encarregado (DPO) e privacidade:</strong>{' '}
+              <strong>E-mail de contato (inclui o Encarregado — DPO):</strong>{' '}
               <LegalLink href={`mailto:${entity.contactEmail}`}>{entity.contactEmail}</LegalLink>
             </li>
             <li>
