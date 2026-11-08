@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AsaasError, createAsaasClient, getAsaasConfig } from './asaas';
+import { AsaasError, createAsaasClient, getAsaasConfig, isAsaasInvalidCustomerError, isAsaasNotFoundError } from './asaas';
 
 test('getAsaasConfig selects the base URL from ASAAS_TYPE', () => {
   assert.equal(getAsaasConfig({ ASAAS_API_KEY: 'k', ASAAS_TYPE: 'sandbox' }).baseUrl, 'https://api-sandbox.asaas.com/v3');
@@ -65,4 +65,13 @@ test('API errors surface the Asaas description', async () => {
     assert.equal(error.message, 'Cliente inválido');
     return true;
   });
+});
+
+test('recognizes ids that belong to another Asaas environment', () => {
+  assert.equal(isAsaasNotFoundError(new AsaasError('x', 404)), true);
+  assert.equal(isAsaasNotFoundError(new AsaasError('x', 400)), false);
+  assert.equal(isAsaasNotFoundError(new Error('x')), false);
+  assert.equal(isAsaasInvalidCustomerError(new AsaasError('x', 400, [{ code: 'invalid_customer' }])), true);
+  assert.equal(isAsaasInvalidCustomerError(new AsaasError('x', 400, [{ code: 'invalid_value' }])), false);
+  assert.equal(isAsaasInvalidCustomerError(null), false);
 });

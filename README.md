@@ -380,6 +380,21 @@ de produção); para testar localmente, use um túnel (ex.: ngrok) e reative-o c
 Se a fila for interrompida por falhas, o
 Asaas avisa por e-mail e ela é retomada em Integrações → Webhooks.
 
+**Pix:** a fatura só oferece Pix (além de boleto, cartão, Google Pay e Apple Pay) se a conta
+tiver uma **chave Pix ativa** em Asaas → Pix → Minhas chaves. A conta de produção usa uma
+chave aleatória (EVP). Faturas criadas antes da chave existir passam a mostrar Pix depois.
+
+**Aparência da fatura:** `node scripts/asaas-invoice-branding.mjs --apply` envia ao Asaas de
+produção o logo da Lutteros e as cores (fundo do logo `#faf9f6`, dados da empresa `#0f5459`
+com texto branco). O Asaas aprova automaticamente (ver `paymentCheckoutConfig`). O e-mail, o
+telefone e o endereço exibidos no cabeçalho vêm do cadastro comercial da conta e só mudam no
+painel (Minha conta → Dados comerciais).
+
+**Ids de outro ambiente:** o servidor local (sandbox) usa o mesmo banco da produção, então
+ids de cliente e de cobrança do sandbox podem ficar salvos para usuários reais. O checkout se
+recupera sozinho: cobrança desconhecida (404) é descartada e criada de novo, e cliente
+desconhecido (`invalid_customer`) é recadastrado (`lib/course-payments.server.ts`).
+
 **Valor mínimo:** o Asaas recusa cobranças abaixo de **R$ 5,00** (`invalid_value`), então um
 curso pago não pode custar menos que isso (considerando o preço promocional). O formulário e a
 API de admin bloqueiam salvar/publicar abaixo do mínimo (`lib/course-pricing.ts`), e o

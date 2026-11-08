@@ -133,6 +133,16 @@ export function createAsaasClient(config: AsaasConfig, fetchImpl: AsaasFetch = f
 
 export type AsaasClient = ReturnType<typeof createAsaasClient>
 
+// Ids saved while another Asaas environment was active (e.g. sandbox ids written to a shared
+// database by local tests) do not exist in the current one. These two failures mean "stale id".
+export function isAsaasNotFoundError(error: unknown): boolean {
+  return error instanceof AsaasError && error.status === 404
+}
+
+export function isAsaasInvalidCustomerError(error: unknown): boolean {
+  return error instanceof AsaasError && error.errors.some((entry) => entry.code === 'invalid_customer')
+}
+
 let cachedClient: AsaasClient | null = null
 
 export function getAsaasClient(): AsaasClient {

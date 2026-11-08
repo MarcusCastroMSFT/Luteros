@@ -12,6 +12,7 @@ import { type Course as CourseType } from '@/lib/courses';
 import { summarizeCourseContent } from '@/lib/course-content-summary';
 import { formatCourseItemCount } from '@/lib/course-labels';
 import { formatLessonDuration, formatSectionDuration } from '@/lib/reading-time';
+import { showCheckoutInterstitial } from '@/lib/checkout-interstitial';
 import { CourseSection, Lesson } from '@/types/course';
 
 // Dynamic imports for non-critical components (below the fold)
@@ -143,11 +144,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     let checkoutTab: Window | null = null;
     if (course.price > 0 && !staffAccess && (cpfCnpj || hasCpfCnpj)) {
       checkoutTab = window.open('', '_blank');
-      if (checkoutTab) {
-        checkoutTab.opener = null;
-        checkoutTab.document.title = 'Pagamento';
-        checkoutTab.document.body.textContent = 'Preparando o pagamento...';
-      }
+      showCheckoutInterstitial(checkoutTab, window.location.origin);
     }
 
     setIsEnrolling(true);

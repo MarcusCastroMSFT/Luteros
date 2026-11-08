@@ -1,7 +1,13 @@
 import { and, eq, isNull, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { courses, enrollments, users } from '@/lib/db/schema'
-import { getAsaasClient, type AsaasClient, type AsaasPayment } from '@/lib/asaas'
+import {
+  getAsaasClient,
+  isAsaasInvalidCustomerError,
+  isAsaasNotFoundError,
+  type AsaasClient,
+  type AsaasPayment,
+} from '@/lib/asaas'
 import { MIN_CHARGE_AMOUNT, getCourseChargeAmount } from '@/lib/course-pricing'
 import { isValidCpfCnpj, normalizeCpfCnpj } from '@/lib/cpf-cnpj'
 import { mapAsaasStatus, type EnrollmentPaymentStatus } from '@/lib/payment-status'
@@ -115,11 +121,36 @@ export async function syncEnrollmentPayment(
   return status
 }
 
-async function ensureAsaasCustomer(
-  user: { id: string; name: string | null; displayName: string | null; email: string | null; cpfCnpj: string | null; asaasCustomerId: string | null },
-  cpfCnpjInput: string | undefined,
+interface CheckoutUser {
+  id: string
+  name: string | null
+  displayName: string | null
+  email: string | null
+  cpfCnpj: string | null
+  asaasCustomerId: string | null
+}
+
+async function createAsaasCustomerRecord(
+  user: CheckoutUser,
+  email: string,
+  cpfCnpj: string,
   client: AsaasClient,
 ): Promise<string> {
+  const customer = await client.createCustomer({
+    name: user.name || user.displayName || email,
+    email,
+    cpfCnpj,
+    externalReference: user.id,
+  })
+  await db.update(users).set({ cpfCnpj, asaasCustomerId: customer.id }).where(eq(users.id, user.id))
+  return customer.id
+}
+
+async function ensureAsaasCustomer(
+  user: CheckoutUser,
+  cpfCnpjInput: string | undefined,
+  client: AsaasClient,
+): Promise<{ id: string; email: string; cpfCnpj: string }> {
   const cpfCnpj = cpfCnpjInput ? normalizeCpfCnpj(cpfCnpjInput) : user.cpfCnpj
 
   if (!cpfCnpj) {
@@ -133,18 +164,11 @@ async function ensureAsaasCustomer(
   }
 
   if (user.asaasCustomerId && cpfCnpj === user.cpfCnpj) {
-    return user.asaasCustomerId
+    return { id: user.asaasCustomerId, email: user.email, cpfCnpj }
   }
 
   // A new or changed CPF/CNPJ needs a fresh Asaas customer, since the existing one keeps the old document.
-  const customer = await client.createCustomer({
-    name: user.name || user.displayName || user.email,
-    email: user.email,
-    cpfCnpj,
-    externalReference: user.id,
-  })
-  await db.update(users).set({ cpfCnpj, asaasCustomerId: customer.id }).where(eq(users.id, user.id))
-  return customer.id
+  return { id: await createAsaasCustomerRecord(user, user.email, cpfCnpj, client), email: user.email, cpfCnpj }
 }
 
 export interface CheckoutResult {
@@ -168,14 +192,20 @@ export async function startCoursePayment(
   const amount = getCourseChargeAmount(course)
 
   if (existing) {
+    // A charge Asaas does not know (404) was saved under another environment, so its link is useless.
+    let staleCharge = false
     const status = await syncEnrollmentPayment(existing, client).catch((error) => {
-      console.error('Could not sync pending Asaas payment:', error)
+      if (isAsaasNotFoundError(error)) {
+        staleCharge = true
+      } else {
+        console.error('Could not sync pending Asaas payment:', error)
+      }
       return null
     })
     if (status === 'COMPLETED') {
       return { enrollmentId: existing.id, paymentUrl: '', alreadyPaid: true }
     }
-    if ((status === 'PENDING' || status === null) && existing.paymentUrl) {
+    if ((status === 'PENDING' || status === null) && existing.paymentUrl && !staleCharge) {
       return { enrollmentId: existing.id, paymentUrl: existing.paymentUrl, alreadyPaid: false }
     }
   }
@@ -197,7 +227,7 @@ export async function startCoursePayment(
     .then((rows) => rows[0] ?? null)
   if (!user) throw new CheckoutError('Usuário não encontrado.', 'USER_NOT_FOUND', 404)
 
-  const customerId = await ensureAsaasCustomer(user, cpfCnpj, client)
+  const customer = await ensureAsaasCustomer(user, cpfCnpj, client)
 
   let enrollmentId = existing?.id ?? null
   let createdEnrollment = false
@@ -211,13 +241,22 @@ export async function startCoursePayment(
   }
 
   try {
-    const payment = await client.createPayment({
+    const createCharge = (customerId: string) => client.createPayment({
       customer: customerId,
       value: amount,
       dueDate: formatDueDate(now),
       description: `Curso: ${course.title}`.slice(0, 500),
       externalReference: enrollmentId,
     })
+
+    let payment: AsaasPayment
+    try {
+      payment = await createCharge(customer.id)
+    } catch (error) {
+      if (!isAsaasInvalidCustomerError(error)) throw error
+      // The stored customer does not exist in this Asaas environment: register the buyer again.
+      payment = await createCharge(await createAsaasCustomerRecord(user, customer.email, customer.cpfCnpj, client))
+    }
 
     if (!payment.invoiceUrl) {
       throw new Error('Asaas did not return an invoice URL')
