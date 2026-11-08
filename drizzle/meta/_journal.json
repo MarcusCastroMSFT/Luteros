@@ -78,6 +78,13 @@
       "when": 1792747099691,
       "tag": "0010_user_is_specialist",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794136922160,
+      "tag": "0011_user_welcome_email",
+      "breakpoints": true
     }
   ]
 }

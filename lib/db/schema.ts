@@ -66,6 +66,8 @@ export const users = pgTable('users', {
   name: text('name'),         // maps to fullName
   email: text('email').unique(),
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
+  // Set when the account welcome e-mail is claimed, so it goes out once per account.
+  welcomeEmailSentAt: timestamp('welcomeEmailSentAt', { mode: 'date' }),
   image: text('image'),       // maps to avatar/profile picture
   // Credentials auth (bcrypt hash)
   password: text('password'),

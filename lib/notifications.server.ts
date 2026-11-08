@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull } from 'drizzle-orm'
 import { renderCoursePurchaseEmail } from '@/lib/account-emails'
 import { contactPhoneLabel, contactReasonLabel, type ContactSubmission } from '@/lib/contact'
 import { db } from '@/lib/db'
@@ -6,6 +6,7 @@ import { courses, enrollments, users } from '@/lib/db/schema'
 import { sendEmail } from '@/lib/email'
 import { LUTTEROS_ENTITY } from '@/lib/legal-entity'
 import {
+  renderAccountWelcomeEmail,
   renderAdminContactEmail,
   renderAdminSaleEmail,
   renderCourseEnrollmentEmail,
@@ -30,7 +31,7 @@ async function deliver(
   to: string,
   message: RenderedEmail,
   extra: { replyTo?: string; context?: Record<string, unknown> } = {},
-): Promise<void> {
+): Promise<boolean> {
   const result = await sendEmail({
     to,
     subject: message.subject,
@@ -40,6 +41,7 @@ async function deliver(
     tags: [{ name: 'type', value: kind }],
   })
   if (!result.success) console.error(`E-mail ${kind} failed`, { ...extra.context, message: result.message })
+  return result.success
 }
 
 async function safely(kind: string, context: Record<string, unknown>, task: () => Promise<void>): Promise<void> {
@@ -131,6 +133,32 @@ export async function sendCourseEnrollmentEmail(enrollmentId: string): Promise<v
       courseUrl: `${baseUrl}/courses/${row.courseSlug}/lessons`,
       myCoursesUrl: `${baseUrl}/courses/my-courses`,
     }), { context: { enrollmentId } })
+  })
+}
+
+// Welcome for a new account, sent once it is usable: after the e-mail is confirmed (password
+// sign-up) or on the first Google sign-in. The claim below is atomic, so concurrent triggers
+// (confirmation link, password reset, Google link) can never send it twice, and accounts that
+// existed before the column was added were backfilled as already welcomed.
+export async function sendAccountWelcomeEmail(userId: string): Promise<void> {
+  await safely('account_welcome', { userId }, async () => {
+    const [user] = await db
+      .update(users)
+      .set({ welcomeEmailSentAt: new Date() })
+      .where(and(eq(users.id, userId), isNull(users.welcomeEmailSentAt), isNotNull(users.emailVerified), isNotNull(users.email)))
+      .returning({ email: users.email, name: users.name, displayName: users.displayName })
+    if (!user?.email) return
+
+    const baseUrl = siteUrl()
+    const sent = await deliver('account_welcome', user.email, renderAccountWelcomeEmail({
+      name: user.displayName || user.name,
+      coursesUrl: `${baseUrl}/courses`,
+      articlesUrl: `${baseUrl}/articles`,
+      myCoursesUrl: `${baseUrl}/courses/my-courses`,
+    }), { context: { userId } }).catch(() => false)
+
+    // Release the claim so a later trigger (e.g. a password reset) can try again.
+    if (!sent) await db.update(users).set({ welcomeEmailSentAt: null }).where(eq(users.id, userId))
   })
 }
 

@@ -9,6 +9,12 @@ import { users, accounts, sessions, verificationTokens } from '@/lib/db/schema'
 import { applyStoredSessionImage } from '@/lib/auth-session'
 import { requiresEmailVerification } from '@/lib/email-verification-policy'
 
+// Loaded on demand so the mail client is not pulled into every request that only needs auth.
+async function sendWelcome(userId: string) {
+  const { sendAccountWelcomeEmail } = await import('@/lib/notifications.server')
+  await sendAccountWelcomeEmail(userId)
+}
+
 // Account exists but has no password (created with Google, or its unverified password was
 // dropped when Google was linked). The login form explains how to get in instead of
 // reporting a wrong password. The code ends up in the URL, so it carries no details.
@@ -119,12 +125,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // were never verified. If the account was never verified, whoever created it may not own the
     // address, so Google proves ownership and the old password is dropped
     // (the real owner can set a new one with "Esqueci minha senha").
+    // Also welcomes the account: a brand-new Google user is created unverified, and this is the
+    // step that verifies it. The send is a no-op for anyone already welcomed.
     async linkAccount({ user }) {
       if (!user.id) return
       await db
         .update(users)
         .set({ emailVerified: new Date(), password: null, updatedAt: new Date() })
         .where(and(eq(users.id, user.id), isNull(users.emailVerified)))
+      await sendWelcome(user.id)
     },
   },
   pages: {

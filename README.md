@@ -487,6 +487,7 @@ Resend (`RESEND_API_KEY`, `FROM_EMAIL`):
 | Confirmação de e-mail | `lib/account-emails.ts`, enviado no cadastro e pelo "Reenviar e-mail de confirmação" |
 | Boas-vindas da newsletter | `renderWelcomeEmail` em `lib/email.ts`, com o link de cancelamento por token |
 | Campanhas da newsletter | `lib/email-campaign.ts`, usado no envio, no teste e na pré-visualização do admin |
+| Boas-vindas da conta | `renderAccountWelcomeEmail` em `lib/notification-emails.ts`, enviado uma única vez quando a conta fica válida: ao confirmar o e-mail (cadastro com senha, ou redefinição de senha) e no primeiro login com Google. Controlado por `users.welcomeEmailSentAt` (migração `0011`, que marca as contas existentes como já recebidas) |
 | Pagamento confirmado (aluno) e aviso de nova venda (equipe) | `renderCoursePurchaseEmail` em `lib/account-emails.ts`; enviados por `lib/notifications.server.ts` quando o Asaas confirma o pagamento (webhook ou consulta), uma única vez |
 | Reembolso confirmado | `lib/notification-emails.ts`, enviado quando um pagamento pago é estornado e o acesso é revogado |
 | Matrícula em curso gratuito | `lib/notification-emails.ts`, enviado por `POST /api/courses/{id}/enroll` (não para acesso de admin ou instrutor) |

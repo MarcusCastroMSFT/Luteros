@@ -5,6 +5,7 @@ import {
   emailFallbackLink,
   emailGreeting,
   emailHeading,
+  emailList,
   emailNote,
   emailParagraph,
   emailSignoff,
@@ -34,6 +35,58 @@ function formatDateTime(date: Date): string {
 
 function multiline(value: string): string {
   return escapeHtml(value).replace(/\r?\n/g, '<br>')
+}
+
+export function renderAccountWelcomeEmail({
+  name,
+  coursesUrl,
+  articlesUrl,
+  myCoursesUrl,
+}: {
+  name?: string | null
+  coursesUrl: string
+  articlesUrl: string
+  myCoursesUrl: string
+}): RenderedEmail {
+  const subject = 'Bem-vindo(a) à lutteros'
+  const greeting = emailGreeting(name)
+  const contact = LUTTEROS_ENTITY.contactEmail
+
+  const html = renderEmailLayout({
+    title: subject,
+    preheader: 'Sua conta está pronta. Veja por onde começar.',
+    content: [
+      emailEyebrow('Sua conta está pronta'),
+      emailHeading('Que bom ter você na lutteros'),
+      emailParagraph(`${escapeHtml(greeting)}. A lutteros reúne cursos e artigos de saúde sexual com base científica, em linguagem clara e sem tabu.`),
+      emailParagraph('Para começar:'),
+      emailList([
+        `<strong>Cursos</strong>: aprenda no seu ritmo, com especialistas. Os cursos que você compra ficam em <a href="${escapeHtml(myCoursesUrl)}" style="color:inherit;">Meus cursos</a>.`,
+        '<strong>Artigos</strong>: leituras confiáveis para estudar e consultar quando precisar.',
+      ]),
+      emailButton('Explorar os cursos', coursesUrl),
+      emailParagraph(`Prefere ler primeiro? <a href="${escapeHtml(articlesUrl)}" style="color:inherit;">Veja os artigos mais recentes</a>.`, { muted: true }),
+      emailNote(`Dúvidas? Responda este e-mail ou escreva para <a href="mailto:${contact}" style="color:inherit;">${contact}</a>.`),
+      emailSignoff(),
+    ].join('\n'),
+  })
+
+  const text = `${greeting}. A lutteros reúne cursos e artigos de saúde sexual com base científica, em linguagem clara e sem tabu.
+
+Para começar:
+- Cursos: aprenda no seu ritmo, com especialistas. Os cursos que você compra ficam em Meus cursos (${myCoursesUrl}).
+- Artigos: leituras confiáveis para estudar e consultar quando precisar (${articlesUrl}).
+
+Explorar os cursos: ${coursesUrl}
+
+Dúvidas? Responda este e-mail ou escreva para ${contact}.
+
+Com cuidado,
+Equipe lutteros
+
+${emailTextFooter()}`
+
+  return { subject, html, text }
 }
 
 export function renderCourseEnrollmentEmail({

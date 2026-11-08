@@ -1,12 +1,26 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  renderAccountWelcomeEmail,
   renderAdminContactEmail,
   renderAdminSaleEmail,
   renderCourseEnrollmentEmail,
   renderCourseRefundEmail,
   renderWaitlistConfirmationEmail,
 } from './notification-emails'
+
+test('account welcome greets by first name and points to courses', () => {
+  const { subject, html, text } = renderAccountWelcomeEmail({
+    name: 'Ana Souza',
+    coursesUrl: 'https://www.lutteros.com.br/courses',
+    articlesUrl: 'https://www.lutteros.com.br/articles',
+    myCoursesUrl: 'https://www.lutteros.com.br/courses/my-courses',
+  })
+  assert.match(subject, /Bem-vindo/)
+  assert.match(html, /Olá, Ana/)
+  assert.ok(html.includes('https://www.lutteros.com.br/courses') && text.includes('/courses/my-courses'))
+  assert.ok(!html.includes('{{'))
+})
 
 test('enrollment e-mail links straight to the lessons', () => {
   const url = 'https://www.lutteros.com.br/courses/x/lessons'

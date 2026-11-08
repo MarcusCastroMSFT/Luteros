@@ -11,6 +11,7 @@ import {
   verificationIdentifier,
 } from '@/lib/email-verification-policy'
 import { LUTTEROS_ENTITY } from '@/lib/legal-entity'
+import { sendAccountWelcomeEmail } from '@/lib/notifications.server'
 
 export * from '@/lib/email-verification-policy'
 
@@ -88,10 +89,13 @@ export async function consumeVerificationToken(email: string, token: string): Pr
   await db.delete(verificationTokens).where(eq(verificationTokens.identifier, identifier))
   if (row.expires.getTime() < Date.now()) return 'expired'
 
-  await db
+  const confirmed = await db
     .update(users)
     .set({ emailVerified: sql`coalesce(${users.emailVerified}, now())`, updatedAt: new Date() })
     .where(sql`lower(${users.email}) = ${normalizedEmail}`)
+    .returning({ id: users.id })
+
+  for (const { id } of confirmed) await sendAccountWelcomeEmail(id)
 
   return 'verified'
 }

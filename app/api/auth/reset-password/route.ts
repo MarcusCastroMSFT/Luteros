@@ -4,6 +4,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { users, verificationTokens } from '@/lib/db/schema'
+import { sendAccountWelcomeEmail } from '@/lib/notifications.server'
 
 const RESET_IDENTIFIER_PREFIX = 'pwreset:'
 
@@ -116,6 +117,8 @@ export async function POST(request: NextRequest) {
     await db
       .delete(verificationTokens)
       .where(eq(verificationTokens.identifier, identifier))
+
+    await sendAccountWelcomeEmail(user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {
