@@ -56,6 +56,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [isPaymentPending, setIsPaymentPending] = useState(false);
+  const [staffAccess, setStaffAccess] = useState<'ADMIN' | 'INSTRUCTOR' | null>(null);
   const [hasCpfCnpj, setHasCpfCnpj] = useState(false);
   const [showCpfDialog, setShowCpfDialog] = useState(false);
 
@@ -76,6 +77,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
 
         setIsEnrolled(!!data.isEnrolled);
         setIsPaymentPending(!!data.isPaymentPending);
+        setStaffAccess(data.staffAccess ?? null);
         setHasCpfCnpj(!!data.hasCpfCnpj);
 
         if (data.isPaymentPending) {
@@ -139,7 +141,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     // Paid checkout opens in a new tab. It must be opened inside the click handler,
     // before any await, or the browser's pop-up blocker will stop it.
     let checkoutTab: Window | null = null;
-    if (course.price > 0 && (cpfCnpj || hasCpfCnpj)) {
+    if (course.price > 0 && !staffAccess && (cpfCnpj || hasCpfCnpj)) {
       checkoutTab = window.open('', '_blank');
       if (checkoutTab) {
         checkoutTab.opener = null;
@@ -207,7 +209,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     } finally {
       setIsEnrolling(false);
     }
-  }, [isEnrolling, hasCpfCnpj, course.id, course.price, slug, router]);
+  }, [isEnrolling, hasCpfCnpj, staffAccess, course.id, course.price, slug, router]);
 
   const handleEnroll = useCallback(() => {
     if (isEnrolled) {
@@ -254,6 +256,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
                 isEnrolling={isEnrolling}
                 isEnrolled={isEnrolled}
                 isPaymentPending={isPaymentPending}
+                staffAccess={staffAccess}
                 contentSummary={contentSummary}
               />
               <CpfDialog

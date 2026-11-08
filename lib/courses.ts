@@ -9,6 +9,7 @@ import { resolveLessonDuration } from '@/lib/reading-time'
 import { resolveCourseImage } from '@/lib/course-image'
 import {
   getCourseInstructorProfiles,
+  getPublishedCourseCounts,
   type CourseInstructorProfile,
 } from '@/lib/course-instructors.server'
 
@@ -86,7 +87,7 @@ function formatDate(date: Date): string {
 }
 
 // Transform DB course row to frontend Course type
-function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number; articlesCount?: number }, assignedProfiles: CourseInstructorProfile[] = []): Course {
+function transformCourse(course: { id: string; slug: string; title: string; description: string; shortDescription: string | null; level: string; category: string; language: string; duration: number | null; thumbnail: string | null; coverImage: string | null; previewVideo: string | null; price: string | null; discountPrice: string | null; isFree: boolean; isPublished: boolean; publishedAt: Date | null; enrollmentCount: number; averageRating: string | null; reviewCount: number; createdAt: Date; updatedAt: Date; instructorId: string; instructorName: string | null; instructorDisplayName: string | null; instructorAvatar: string | null; instructorBio: string | null; lessonsCount: number; articlesCount?: number }, assignedProfiles: CourseInstructorProfile[] = [], courseCounts: Map<string, number> = new Map()): Course {
   const price = course.price ? parseFloat(course.price.toString()) : 0
   const discountPrice = course.discountPrice ? parseFloat(course.discountPrice.toString()) : null
   const rating = course.averageRating ? parseFloat(course.averageRating.toString()) : 0
@@ -105,7 +106,7 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
     rating: 0,
     reviewsCount: 0,
     studentsCount: 0,
-    coursesCount: 0,
+    coursesCount: courseCounts.get(course.instructorId) ?? 0,
   }
   const instructors = assignedProfiles.length > 0
     ? assignedProfiles.map((profile) => ({
@@ -118,7 +119,7 @@ function transformCourse(course: { id: string; slug: string; title: string; desc
         rating: 0,
         reviewsCount: 0,
         studentsCount: 0,
-        coursesCount: 0,
+        coursesCount: courseCounts.get(profile.id) ?? 0,
       }))
     : [primaryInstructor]
   
@@ -201,10 +202,15 @@ async function fetchCourses(page: number, limit: number, category?: string) {
     profiles.push(profile)
     instructorsByCourse.set(profile.courseId, profiles)
   }
+  const instructorCourseCounts = await getPublishedCourseCounts([
+    ...rows.map((r) => r.instructorId),
+    ...instructorProfiles.map((p) => p.id),
+  ])
 
   const transformedCourses = rows.map((r) => transformCourse(
     { ...r, lessonsCount: lessonCountMap.get(r.id) ?? 0, articlesCount: articleCountMap.get(r.id) ?? 0 },
     instructorsByCourse.get(r.id),
+    instructorCourseCounts,
   ))
   const totalCourses = Number(total)
   const totalPages = Math.ceil(totalCourses / limit)
@@ -282,16 +288,23 @@ async function fetchCourseBySlug(slug: string) {
     profiles.push(profile)
     instructorsByCourse.set(profile.courseId, profiles)
   }
+  const instructorCourseCounts = await getPublishedCourseCounts([
+    course.instructorId,
+    ...related.map((r) => r.instructorId),
+    ...instructorProfiles.map((p) => p.id),
+  ])
 
   return {
     course: transformCourse(
       { ...course, lessonsCount: courseLessons.length, articlesCount: courseLessons.filter((l) => l.type === 'article').length },
       instructorsByCourse.get(course.id),
+      instructorCourseCounts,
     ),
     lessons: safeLessons,
     relatedCourses: related.map((r) => transformCourse(
       { ...r, lessonsCount: relatedLessonCountMap.get(r.id) ?? 0, articlesCount: relatedArticleCountMap.get(r.id) ?? 0 },
       instructorsByCourse.get(r.id),
+      instructorCourseCounts,
     )),
   }
 }

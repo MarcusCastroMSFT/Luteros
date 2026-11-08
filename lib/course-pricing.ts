@@ -16,3 +16,14 @@ export function getCourseChargeAmount(course: CoursePricing): number {
   if (!Number.isFinite(amount) || amount <= 0) return 0
   return Math.round(amount * 100) / 100
 }
+
+// Asaas rejects any charge below R$ 5,00 ("invalid_value"), so a paid course cannot sell for less.
+export const MIN_CHARGE_AMOUNT = 5
+
+export const MIN_CHARGE_MESSAGE =
+  'O valor cobrado de um curso pago precisa ser de pelo menos R$ 5,00 (mínimo do Asaas). Ajuste o preço ou o preço promocional.'
+
+export function isBelowMinimumCharge(course: CoursePricing): boolean {
+  const amount = getCourseChargeAmount(course)
+  return amount > 0 && amount < MIN_CHARGE_AMOUNT
+}

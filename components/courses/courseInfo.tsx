@@ -55,6 +55,8 @@ interface CourseInfoProps {
   isEnrolling?: boolean;
   isEnrolled?: boolean;
   isPaymentPending?: boolean;
+  /** Admins (every course) and instructors (their own) enter without paying. */
+  staffAccess?: 'ADMIN' | 'INSTRUCTOR' | null;
   contentSummary: CourseContentSummaryItem[];
 }
 
@@ -65,9 +67,10 @@ const contentSummaryIcons = {
   section: ListTree,
 };
 
-export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false, isPaymentPending = false, contentSummary }: CourseInfoProps) {
+export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false, isPaymentPending = false, staffAccess = null, contentSummary }: CourseInfoProps) {
   const [showVideo, setShowVideo] = useState(false);
   const videoPosters = resolveVideoPosters(course.video, course.coverImage, course.image);
+  const staffEntry = !!staffAccess && !isEnrolled;
 
   const formatPrice = (price: number) => {
     if (price === 0) return 'Grátis';
@@ -160,6 +163,19 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
 
         {/* Action Buttons */}
         <div className="px-6 mb-6">
+          {staffEntry && (
+            <div role="note" className="mb-3 rounded-lg border border-brand-600/25 bg-[#e4eeeb]/70 px-4 py-3 text-sm leading-6 text-brand-900">
+              <p className="font-semibold">
+                {staffAccess === 'ADMIN' ? 'Acesso de administrador' : 'Acesso de instrutor'}
+              </p>
+              <p className="text-slate-600">
+                {staffAccess === 'ADMIN'
+                  ? 'Administradores entram em todos os cursos sem pagar.'
+                  : 'Você entra nos cursos em que é instrutor sem pagar.'}{' '}
+                Esse acesso não conta como venda nem como aluno.
+              </p>
+            </div>
+          )}
           <button 
             onClick={onEnroll}
             disabled={isEnrolling}
@@ -177,9 +193,9 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Inscrevendo...
+                {staffEntry ? 'Abrindo o curso...' : 'Inscrevendo...'}
               </>
-            ) : isEnrolled ? (
+            ) : isEnrolled || staffEntry ? (
               <>
                 Acessar Curso
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

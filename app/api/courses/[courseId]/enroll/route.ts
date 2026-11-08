@@ -4,6 +4,8 @@ import { and, eq, sql } from 'drizzle-orm';
 import { getAuthUser, requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { courses, enrollments, users } from '@/lib/db/schema';
+import { getStaffAccess, type StaffAccess } from '@/lib/course-access';
+import { getCourseInstructorIds } from '@/lib/course-instructors.server';
 import { getCourseChargeAmount } from '@/lib/course-pricing';
 import { CheckoutError, startCoursePayment, syncEnrollmentPayment } from '@/lib/course-payments.server';
 import { hasPaidAccess } from '@/lib/payment-status';
@@ -18,6 +20,37 @@ const enrollmentColumns = {
   paymentUrl: enrollments.paymentUrl,
   paidAmount: enrollments.paidAmount,
 };
+
+// Admins and the course's own instructors get in without paying. The enrollment is a plain
+// COMPLETED one with paidAmount 0 and is not counted in the course's student total.
+async function grantStaffEnrollment(userId: string, courseId: string, existing: { id: string } | null) {
+  if (existing) {
+    // Drop any unpaid charge so a late Asaas event cannot downgrade the staff access.
+    const [row] = await db
+      .update(enrollments)
+      .set({ paymentStatus: 'COMPLETED', paidAmount: '0', asaasPaymentId: null, paymentUrl: null })
+      .where(eq(enrollments.id, existing.id))
+      .returning();
+    return row;
+  }
+  const [row] = await db
+    .insert(enrollments)
+    .values({ userId, courseId, paidAmount: '0', paymentStatus: 'COMPLETED' })
+    .returning();
+  return row;
+}
+
+async function resolveStaffAccess(
+  user: Parameters<typeof getStaffAccess>[0],
+  courseId: string,
+  courseInstructorId?: string,
+): Promise<StaffAccess> {
+  if (user.role === 'ADMIN') return 'ADMIN';
+  if (user.role !== 'INSTRUCTOR') return null;
+  const instructorId = courseInstructorId
+    ?? await db.select({ id: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0]?.id);
+  return getStaffAccess(user, await getCourseInstructorIds(courseId, instructorId));
+}
 
 function isUniqueViolation(error: unknown): boolean {
   const pgError = error as { code?: string; cause?: { code?: string } } | null;
@@ -49,6 +82,18 @@ export async function POST(
     if (!course.isPublished) return NextResponse.json({ success: false, error: 'Este curso não está disponível' }, { status: 400 });
     if (existing && hasPaidAccess(existing.paymentStatus)) {
       return NextResponse.json({ success: false, error: 'Você já está inscrito neste curso' }, { status: 400 });
+    }
+
+    const staffAccess = await resolveStaffAccess(authUser, course.id, course.instructorId);
+    if (staffAccess) {
+      const enrollment = await grantStaffEnrollment(authUser.id, courseId, existing);
+      return NextResponse.json({
+        success: true,
+        requiresPayment: false,
+        staffAccess,
+        message: staffAccess === 'ADMIN' ? 'Acesso de administrador liberado.' : 'Acesso de instrutor liberado.',
+        enrollment: { id: enrollment.id, enrolledAt: enrollment.enrolledAt, courseId: enrollment.courseId, courseTitle: course.title, courseSlug: course.slug },
+      });
     }
 
     const amount = getCourseChargeAmount(course);
@@ -113,7 +158,7 @@ export async function GET(
     const { courseId } = await context.params;
 
     const authUser = await getAuthUser();
-    if (!authUser) return NextResponse.json({ success: true, isEnrolled: false, isPaymentPending: false, enrollment: null });
+    if (!authUser) return NextResponse.json({ success: true, isEnrolled: false, isPaymentPending: false, staffAccess: null, enrollment: null });
 
     let enrollment = await db.select(enrollmentColumns).from(enrollments).where(and(eq(enrollments.userId, authUser.id), eq(enrollments.courseId, courseId))).limit(1).then((r) => r[0] ?? null);
 
@@ -129,11 +174,13 @@ export async function GET(
     const isEnrolled = !!enrollment && hasPaidAccess(enrollment.paymentStatus);
     const isPaymentPending = !!enrollment && !isEnrolled && enrollment.paymentStatus === 'PENDING';
     const hasCpfCnpj = await db.select({ cpfCnpj: users.cpfCnpj }).from(users).where(eq(users.id, authUser.id)).limit(1).then((r) => !!r[0]?.cpfCnpj);
+    const staffAccess = await resolveStaffAccess(authUser, courseId);
 
     return NextResponse.json({
       success: true,
       isEnrolled,
       isPaymentPending,
+      staffAccess,
       hasCpfCnpj,
       paymentUrl: isPaymentPending ? enrollment?.paymentUrl ?? null : null,
       enrollment: enrollment && {

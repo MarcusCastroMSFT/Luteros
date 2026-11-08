@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AuthUser } from './auth-helpers';
-import { canManageCourse, requireCourseManager } from './course-access';
+import { canManageCourse, getStaffAccess, requireCourseManager } from './course-access';
 
 function user(role: AuthUser['role'], id: string): AuthUser {
   return {
@@ -62,4 +62,13 @@ test('returns a forbidden response for an instructor who does not own the course
     success: false,
     error: 'Forbidden: You cannot manage this course',
   });
+});
+
+test('staff access: admins enter every course, instructors only their own, everyone else pays', () => {
+  assert.equal(getStaffAccess(admin, 'other-user'), 'ADMIN');
+  assert.equal(getStaffAccess(admin, []), 'ADMIN');
+  assert.equal(getStaffAccess(instructor, [instructor.id, 'other-user']), 'INSTRUCTOR');
+  assert.equal(getStaffAccess(instructor, 'other-user'), null);
+  assert.equal(getStaffAccess(student, student.id), null);
+  assert.equal(getStaffAccess(professional, professional.id), null);
 });

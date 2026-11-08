@@ -2,7 +2,7 @@ import { and, eq, isNull, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { courses, enrollments, users } from '@/lib/db/schema'
 import { getAsaasClient, type AsaasClient, type AsaasPayment } from '@/lib/asaas'
-import { getCourseChargeAmount } from '@/lib/course-pricing'
+import { MIN_CHARGE_AMOUNT, getCourseChargeAmount } from '@/lib/course-pricing'
 import { isValidCpfCnpj, normalizeCpfCnpj } from '@/lib/cpf-cnpj'
 import { mapAsaasStatus, type EnrollmentPaymentStatus } from '@/lib/payment-status'
 
@@ -11,7 +11,7 @@ const PAYMENT_DUE_DAYS = 3
 export class CheckoutError extends Error {
   constructor(
     message: string,
-    readonly code: 'CPF_REQUIRED' | 'CPF_INVALID' | 'PAYMENT_PROVIDER_ERROR' | 'USER_NOT_FOUND',
+    readonly code: 'CPF_REQUIRED' | 'CPF_INVALID' | 'PAYMENT_PROVIDER_ERROR' | 'USER_NOT_FOUND' | 'AMOUNT_BELOW_MINIMUM',
     readonly status: number,
   ) {
     super(message)
@@ -178,6 +178,15 @@ export async function startCoursePayment(
     if ((status === 'PENDING' || status === null) && existing.paymentUrl) {
       return { enrollmentId: existing.id, paymentUrl: existing.paymentUrl, alreadyPaid: false }
     }
+  }
+
+  if (amount > 0 && amount < MIN_CHARGE_AMOUNT) {
+    console.error('Course charge is below the Asaas minimum; fix the course price', { courseId: course.id, amount })
+    throw new CheckoutError(
+      'Este curso não pode ser comprado no momento. Entre em contato com contato@lutteros.com.br.',
+      'AMOUNT_BELOW_MINIMUM',
+      422,
+    )
   }
 
   const user = await db

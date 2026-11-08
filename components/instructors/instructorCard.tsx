@@ -1,20 +1,10 @@
 import Image from 'next/image'
-import { Star, BookOpen, Facebook, Instagram, Linkedin, Globe } from 'lucide-react'
+import { BookOpen, Facebook, Instagram, Linkedin, Globe } from 'lucide-react'
 import { Instructor } from '@/types/course'
 
 interface InstructorCardProps {
   instructor: Instructor
   className?: string
-}
-
-const formatNumber = (num: number): string => {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`
-  }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(0)}k` 
-  }
-  return num.toString()
 }
 
 const getSocialIcon = (platform: string) => {
@@ -32,8 +22,6 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
     title,
     bio,
     image,
-    rating,
-    reviewsCount,
     coursesCount,
     socialLinks
   } = instructor
@@ -64,27 +52,13 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
               {title}
             </p>
             
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
-              {/* Rating */}
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium text-gray-900">{rating}</span>
-                <span>Avaliação</span>
-              </div>
-              
-              {/* Reviews */}
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-gray-400" />
-                <span>{formatNumber(reviewsCount)} Avaliações</span>
-              </div>
-              
-              {/* Courses */}
-              <div className="flex items-center gap-2">
+            {/* Courses */}
+            {coursesCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
                 <BookOpen className="w-4 h-4 text-gray-400" />
                 <span>{coursesCount} Curso{coursesCount !== 1 ? 's' : ''}</span>
               </div>
-            </div>
+            )}
             
             {/* Bio Section */}
             <p className="text-sm text-gray-700 leading-relaxed mb-4">

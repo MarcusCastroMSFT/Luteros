@@ -367,6 +367,30 @@ Configuração no painel do Asaas: cadastre o webhook apontando para
 os eventos de cobrança (`PAYMENT_*`). A migração `0005` adiciona as colunas/tabelas
 usadas (`pnpm db:migrate`).
 
+**Produção:** o webhook "Lutteros - Pagamentos de cursos" foi cadastrado via API
+(`POST /v3/webhooks`) em `https://www.lutteros.com.br/api/webhooks/asaas` (use o `www`: o
+domínio sem `www` responde 308 e o redirecionamento quebra o POST). Entrega
+`SEQUENTIALLY`, e-mail de alerta `contato@lutteros.com.br` e 21 eventos de cobrança (sem os
+de visualização de boleto/checkout nem os de split). O `authToken` é o `ASAAS_WEBHOOK_TOKEN`
+do `.env`, que precisa ser idêntico na Vercel. Use **tokens diferentes** em produção e no
+sandbox (o do `.env.local` é outro): o token é um segredo compartilhado escolhido por você,
+não pertence a um ambiente do Asaas, e separar evita que quem tiver o arquivo local consiga
+forjar chamadas para a produção. O webhook do sandbox está desativado (apontava para a URL
+de produção); para testar localmente, use um túnel (ex.: ngrok) e reative-o com a URL do túnel.
+Se a fila for interrompida por falhas, o
+Asaas avisa por e-mail e ela é retomada em Integrações → Webhooks.
+
+**Valor mínimo:** o Asaas recusa cobranças abaixo de **R$ 5,00** (`invalid_value`), então um
+curso pago não pode custar menos que isso (considerando o preço promocional). O formulário e a
+API de admin bloqueiam salvar/publicar abaixo do mínimo (`lib/course-pricing.ts`), e o
+checkout mostra uma mensagem clara em vez do erro genérico.
+
+**Acesso de staff:** administradores (em todos os cursos) e instrutores (nos cursos em que
+são instrutores) entram sem pagar. O card do curso mostra "Acesso de administrador/instrutor"
+e o botão "Acessar Curso"; `POST /api/courses/{id}/enroll` cria uma inscrição `COMPLETED` com
+`paidAmount = 0`, sem Asaas, e **não** incrementa `enrollmentCount` (não conta como venda nem
+como aluno). A regra é `getStaffAccess` em `lib/course-access.ts`.
+
 Proteção do conteúdo pago: o vídeo é entregue por URL assinada (SAS) de curta duração
 com `Content-Disposition: inline`, o player oculta o botão de download e o menu de
 contexto, e o limite de IPs acima dificulta o compartilhamento de contas. Não é DRM:

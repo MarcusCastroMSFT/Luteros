@@ -12,6 +12,7 @@ import { createOwnerFingerprint } from '@/lib/course-media-paths.server'
 import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { resolveCourseInstructorIdsForActor } from '@/lib/course-instructors'
 import { createCourseWithInstructors } from '@/lib/course-persistence'
+import { MIN_CHARGE_MESSAGE, isBelowMinimumCharge } from '@/lib/course-pricing'
 import {
   areValidCourseInstructorIds,
   getCourseInstructorProfiles,
@@ -231,6 +232,14 @@ export async function POST(request: NextRequest) {
       'Avançado': 'ADVANCED',
     }
     const dbLevel = levelMap[level] || level
+
+    if (isPublished && isBelowMinimumCharge({
+      price: price ? String(parseFloat(price)) : null,
+      discountPrice: discountPrice ? String(parseFloat(discountPrice)) : null,
+      isFree,
+    })) {
+      return NextResponse.json({ success: false, error: MIN_CHARGE_MESSAGE }, { status: 400 })
+    }
 
     const finalInstructorIds = resolveCourseInstructorIdsForActor(
       instructorIds ?? (instructorId ? [instructorId] : []),

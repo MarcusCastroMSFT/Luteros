@@ -12,6 +12,7 @@ import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { collectCourseMediaReferences, deleteCourseMediaReferences } from '@/lib/course-media-cleanup.server'
 import { normalizeCourseInstructorIds } from '@/lib/course-instructors'
 import { updateCourseWithInstructors } from '@/lib/course-persistence'
+import { MIN_CHARGE_MESSAGE, isBelowMinimumCharge } from '@/lib/course-pricing'
 import {
   areValidCourseInstructorIds,
   getCourseInstructorIds,
@@ -170,6 +171,14 @@ export async function PUT(
       Iniciante: 'BEGINNER', Intermediário: 'INTERMEDIATE', Avançado: 'ADVANCED',
     }
     const dbLevel = levelMap[level] || level
+
+    const finalPrice = price !== undefined ? (price ? String(parseFloat(price)) : null) : existing.price
+    const finalDiscountPrice = discountPrice !== undefined ? (discountPrice ? String(parseFloat(discountPrice)) : null) : existing.discountPrice
+    const finalIsFree = isFree !== undefined ? isFree : existing.isFree
+    const finalIsPublished = isPublished !== undefined ? isPublished : existing.isPublished
+    if (finalIsPublished && isBelowMinimumCharge({ price: finalPrice, discountPrice: finalDiscountPrice, isFree: finalIsFree })) {
+      return NextResponse.json({ success: false, error: MIN_CHARGE_MESSAGE }, { status: 400 })
+    }
 
     if (slug !== existing.slug) {
       const conflict = await db.select({ id: courses.id }).from(courses).where(eq(courses.slug, slug)).limit(1).then((r) => r[0] ?? null)

@@ -39,6 +39,7 @@ import { ImageUpload } from '@/components/common/image-upload';
 import { LessonsPanel } from '@/components/courses/lessons-panel';
 import { CourseInstructorSelector } from '@/components/courses/course-instructor-selector';
 import { calculateCourseCompletion } from '@/lib/course-completion';
+import { MIN_CHARGE_AMOUNT, isBelowMinimumCharge } from '@/lib/course-pricing';
 import { uploadCourseMedia } from '@/lib/course-media-upload';
 import type { CourseMediaKind } from '@/lib/course-media';
 import { cn } from '@/lib/utils';
@@ -356,6 +357,12 @@ export function CourseForm({ mode, courseId, initialData }: CourseFormProps) {
         if (discountNum >= priceNum) {
           newErrors.push({ field: 'discountPrice', message: 'Preço promocional deve ser menor que o preço original' });
         }
+      }
+      if (isBelowMinimumCharge({ price, discountPrice: discountPrice || null, isFree })) {
+        newErrors.push({
+          field: discountPrice ? 'discountPrice' : 'price',
+          message: `O valor cobrado precisa ser de pelo menos R$ ${MIN_CHARGE_AMOUNT.toFixed(2).replace('.', ',')} (mínimo do Asaas)`,
+        });
       }
     }
 
