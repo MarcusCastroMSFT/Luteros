@@ -69,7 +69,11 @@ const contentSummaryIcons = {
 
 export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled = false, isPaymentPending = false, staffAccess = null, contentSummary }: CourseInfoProps) {
   const [showVideo, setShowVideo] = useState(false);
-  const videoPosters = resolveVideoPosters(course.video, course.coverImage, course.image);
+  // The card leads with the course thumbnail (same image as the catalog); the video frame is only a fallback.
+  const videoPosters = [...new Set([
+    course.image,
+    ...resolveVideoPosters(course.video, course.coverImage, null),
+  ].filter((image): image is string => Boolean(image)))];
   const staffEntry = !!staffAccess && !isEnrolled;
 
   const formatPrice = (price: number) => {
@@ -130,8 +134,8 @@ export function CourseInfo({ course, onEnroll, isEnrolling = false, isEnrolled =
                   title={course.title}
                 />
                 {course.video && (
-                  <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-40 transition-colors">
-                    <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
+                    <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
                       <Play className="w-6 h-6 text-gray-800 ml-1" fill="currentColor" />
                     </div>
                   </div>
