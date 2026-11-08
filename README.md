@@ -112,6 +112,12 @@ raiz (erro `$RS ... parentNode` no console). Cada página que lê dados da requi
 (`searchParams`, `params`, sessão) tem o próprio `<Suspense>` ou `loading.tsx`. Ao criar
 uma página nova desse tipo, faça o mesmo: o `npm run build` acusa quando falta.
 
+**Página 404:** o conteúdo fica em `components/not-found-content.tsx`. URLs que não existem
+usam `app/not-found.tsx` (com cabeçalho e rodapé, pois o layout raiz não os tem); páginas
+públicas que chamam `notFound()` (curso ou evento inexistente ou despublicado) usam
+`app/(public-pages)/not-found.tsx`, que só renderiza o conteúdo porque o layout público já
+traz cabeçalho e rodapé. Colocar cabeçalho/rodapé nesse segundo caso os duplica.
+
 ### Imagens da marca
 
 **Capas dos artigos.** As 22 capas (foto realista, sem texto, em 16:10) ficam em
