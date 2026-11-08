@@ -4,6 +4,7 @@ import { renderEmailVerificationEmail, renderPasswordResetEmail } from './accoun
 import { htmlToPlainText, renderCampaignEmail } from './email-campaign'
 import { EMAIL_INSTAGRAM, emailGreeting, escapeHtml, renderEmailLayout } from './email-layout'
 import { renderEmailTemplate, systemEmailTemplates } from '../data/system-email-templates'
+import { LUTTEROS_ENTITY } from './legal-entity'
 
 const sampleValues: Record<string, string> = {
   name: 'Marina Costa',
@@ -44,7 +45,7 @@ test('layout carries the brand footer with Instagram, legal entity and reply gui
   assert.match(html, /https:\/\/cdn\.test\/email\/lutteros-logo\.png/)
   assert.ok(html.includes(EMAIL_INSTAGRAM.url))
   assert.match(html, /CNPJ 68\.635\.950\/0001-26/)
-  assert.match(html, /mailto:contato@lutteros\.com\.br/)
+  assert.ok(html.includes(`mailto:${LUTTEROS_ENTITY.contactEmail}`))
   assert.ok(html.includes('Prévia &lt;b&gt;'))
   assert.doesNotMatch(html, /Cancelar inscrição/)
 })

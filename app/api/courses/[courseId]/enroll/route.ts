@@ -8,6 +8,7 @@ import { getStaffAccess, type StaffAccess } from '@/lib/course-access';
 import { getCourseInstructorIds } from '@/lib/course-instructors.server';
 import { getCourseChargeAmount } from '@/lib/course-pricing';
 import { CheckoutError, startCoursePayment, syncEnrollmentPayment } from '@/lib/course-payments.server';
+import { sendCourseEnrollmentEmail } from '@/lib/notifications.server';
 import { hasPaidAccess } from '@/lib/payment-status';
 
 const enrollmentColumns = {
@@ -125,6 +126,7 @@ export async function POST(
 
     await db.update(courses).set({ enrollmentCount: sql`${courses.enrollmentCount} + 1` }).where(eq(courses.id, courseId));
 
+    await sendCourseEnrollmentEmail(enrollment.id);
     revalidateTag('courses');
     revalidateTag(`course-${course.slug}`);
 

@@ -3,7 +3,8 @@ export const LUTTEROS_ENTITY = {
   legalName: 'LUTTEROS SEXUAL HEALTH LTDA',
   cnpj: '68.635.950/0001-26',
   // Único canal de e-mail da Lutteros: suporte, privacidade (LGPD), jurídico e reembolsos.
-  contactEmail: 'contato@lutteros.com.br',
+  // Para trocar o endereço em todo o site, nos e-mails e nos avisos da equipe, altere só esta linha.
+  contactEmail: 'lutteroscontato@gmail.com',
   forumCity: 'Ribeirão Preto/SP',
   siteUrl: 'https://www.lutteros.com.br',
 } as const

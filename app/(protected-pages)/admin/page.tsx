@@ -5,6 +5,7 @@ import { getAdminOverview } from '@/lib/admin-dashboard';
 import { getAuthUser } from '@/lib/auth-helpers';
 import { KpiCard } from '@/components/admin/kpi-card';
 import { RecentContactMessages } from '@/components/admin/recent-contact-messages';
+import { CourseSalesSection } from '@/components/admin/course-sales-section';
 import { QuickActions } from '@/components/admin/quick-actions';
 import { TopArticlesPanel } from '@/components/admin/top-articles-panel';
 import { UpcomingEventsPanel } from '@/components/admin/upcoming-events-panel';
@@ -130,6 +131,13 @@ export default async function AdminDashboardPage() {
               tone="emerald"
             />
           </section>
+
+          {/* Course sales (admin only) */}
+          {user?.role === 'ADMIN' && (
+            <Suspense fallback={<div className="h-96 animate-pulse rounded-xl border border-gray-200 bg-white" aria-hidden="true" />}>
+              <CourseSalesSection />
+            </Suspense>
+          )}
 
           {/* Content health strip */}
           <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">

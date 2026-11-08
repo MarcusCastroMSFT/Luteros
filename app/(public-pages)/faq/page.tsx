@@ -11,6 +11,7 @@ import { JsonLd } from '@/components/seo/json-ld';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity';
 
 interface FAQItem {
   id: string;
@@ -98,7 +99,7 @@ const faqData: FAQItem[] = [
     id: 'contact',
     category: 'Suporte',
     question: 'Como falar com a equipe?',
-    answer: 'Envie sua mensagem pelo formulário de contato ou para contato@lutteros.com.br. O prazo de resposta é de até 48 horas úteis.',
+    answer: `Envie sua mensagem pelo formulário de contato ou para ${LUTTEROS_ENTITY.contactEmail}. O prazo de resposta é de até 48 horas úteis.`,
     link: { href: '/contact', label: 'Enviar uma mensagem' },
   },
   {
@@ -210,7 +211,7 @@ export default function FAQPage() {
               <Button asChild className="h-auto min-h-12 w-full whitespace-normal bg-brand-600 px-5 text-base shadow-none hover:bg-brand-700">
                 <Link href="/contact">Entre em contato</Link>
               </Button>
-              <a href="mailto:contato@lutteros.com.br" className="mt-5 block break-words text-center text-sm text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600">contato@lutteros.com.br</a>
+              <a href={`mailto:${LUTTEROS_ENTITY.contactEmail}`} className="mt-5 block break-words text-center text-sm text-brand-700 hover:text-brand-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600">{LUTTEROS_ENTITY.contactEmail}</a>
             </div>
             <div className="rounded-xl border border-[#630a79]/15 p-6 sm:p-8">
               <h3 className="mb-3 font-medium text-brand-900">Precisa de atendimento de saúde?</h3>

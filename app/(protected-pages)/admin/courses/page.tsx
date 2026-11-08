@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { ServerSideDataTable } from "@/components/common/server-side-data-table"
 import { CoursesStats } from "@/components/courses/courses-stats"
+import { CourseSalesLoader } from "@/components/admin/course-sales-loader"
 import { coursesColumns, type CourseRow } from "@/components/courses/courses-columns"
 import { useServerSideData } from "@/hooks/use-server-side-data"
 
@@ -113,6 +114,10 @@ export default function CoursesPage() {
             manualFiltering={true}
             meta={{ onDeleteRow: handleDeleteCourse }}
           />
+
+          <div className="px-4 lg:px-6">
+            <CourseSalesLoader />
+          </div>
         </div>
       </div>
     </div>

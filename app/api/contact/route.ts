@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { contactSubmissionSchema } from '@/lib/contact'
 import { saveContactMessage } from '@/lib/contact-persistence'
+import { sendContactNotificationEmail } from '@/lib/notifications.server'
 
 export async function POST(request: NextRequest) {
   const text = await request.text()
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
     if (result === 'conflict') {
       return NextResponse.json({ error: 'Este envio já foi registrado com outros dados. Atualize a página para enviar uma nova mensagem.' }, { status: 409 })
     }
+    if (result === 'created') await sendContactNotificationEmail(parsed.data)
     return NextResponse.json({ success: true }, { status: result === 'created' ? 201 : 200 })
   } catch (error) {
     console.error('Contact message persistence failed:', error instanceof Error ? error.name : 'Unknown error')

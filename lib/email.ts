@@ -30,7 +30,7 @@ function getResend(): Resend {
 // Email configuration
 export const EMAIL_CONFIG = {
   from: process.env.FROM_EMAIL || process.env.EMAIL_FROM || 'lutteros <noreply@lutteros.com.br>',
-  replyTo: process.env.EMAIL_REPLY_TO || process.env.TO_EMAIL || 'contato@lutteros.com.br',
+  replyTo: process.env.EMAIL_REPLY_TO || process.env.TO_EMAIL || LUTTEROS_ENTITY.contactEmail,
 }
 
 // Types

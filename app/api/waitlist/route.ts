@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 import { subscriptionWaitlist } from '@/lib/db/schema'
 import { validateEmail } from '@/lib/email-validation'
+import { sendWaitlistConfirmationEmail } from '@/lib/notifications.server'
 
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000
 const RATE_LIMIT_MAX = 5
@@ -80,7 +81,8 @@ export async function POST(request: NextRequest) {
         : null
 
     // A repeated signup keeps the original row and only refreshes the chosen interest.
-    await db
+    // `xmax = 0` is true only for a freshly inserted row, so the confirmation goes out once.
+    const [saved] = await db
       .insert(subscriptionWaitlist)
       .values({
         email: normalizedEmail,
@@ -95,6 +97,9 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date(),
         },
       })
+      .returning({ isNew: sql<boolean>`(xmax = 0)` })
+
+    if (saved?.isNew) await sendWaitlistConfirmationEmail(normalizedEmail)
 
     return NextResponse.json({
       success: true,

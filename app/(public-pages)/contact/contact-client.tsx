@@ -23,6 +23,7 @@ import { PageHeader } from '@/components/common/pageHeader';
 import { BrandIcon, type BrandIconName } from '@/components/brand/brand-icon';
 import { cn } from '@/lib/utils';
 import { formatBrazilianPhone } from '@/lib/phone';
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity';
 import { contactFormSchema, contactReasons } from '@/lib/contact';
 import Link from 'next/link';
 
@@ -35,8 +36,8 @@ const contactInfo: { icon: BrandIconName; title: string; description: string; va
     icon: 'contact',
     title: 'E-mail',
     description: 'Converse com a equipe',
-    value: 'contato@lutteros.com.br',
-    href: 'mailto:contato@lutteros.com.br',
+    value: LUTTEROS_ENTITY.contactEmail,
+    href: `mailto:${LUTTEROS_ENTITY.contactEmail}`,
   },
   {
     icon: 'discussion',

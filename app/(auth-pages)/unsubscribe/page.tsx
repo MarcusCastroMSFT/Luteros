@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Logo } from "@/components/common/logo"
+import { LUTTEROS_ENTITY } from "@/lib/legal-entity"
 import { 
   IconLoader2, 
   IconMailOff, 
@@ -243,8 +244,8 @@ function UnsubscribeContent() {
                   <p className="text-sm text-blue-800">
                     <strong>💡 Dica:</strong> Se você acha que está recebendo muitos emails, 
                     podemos reduzir a frequência. Entre em contato conosco em{' '}
-                    <a href="mailto:contato@lutteros.com.br" className="underline">
-                      contato@lutteros.com.br
+                    <a href={`mailto:${LUTTEROS_ENTITY.contactEmail}`} className="underline">
+                      {LUTTEROS_ENTITY.contactEmail}
                     </a>
                   </p>
                 </div>

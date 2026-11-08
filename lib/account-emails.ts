@@ -1,5 +1,6 @@
 import {
   emailButton,
+  emailDetails,
   emailEyebrow,
   emailFallbackLink,
   emailGreeting,
@@ -48,6 +49,65 @@ Recebemos um pedido para redefinir a senha da sua conta lutteros. Acesse o link 
 ${resetUrl}
 
 Não pediu essa alteração? Ignore este e-mail: sua senha atual continua valendo. Se você entra com o Google, a nova senha passa a funcionar junto com o login do Google.
+
+Com cuidado,
+Equipe lutteros
+
+${emailTextFooter()}`
+
+  return { subject, html, text }
+}
+
+export function renderCoursePurchaseEmail({
+  name,
+  courseTitle,
+  amount,
+  paidAt,
+  courseUrl,
+  myCoursesUrl,
+}: {
+  name?: string | null
+  courseTitle: string
+  amount: number
+  paidAt: Date
+  courseUrl: string
+  myCoursesUrl: string
+}): { subject: string; html: string; text: string } {
+  const subject = `Pagamento confirmado: ${courseTitle}`
+  const greeting = emailGreeting(name)
+  const total = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)
+  const date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeZone: 'America/Sao_Paulo' }).format(paidAt)
+
+  const html = renderEmailLayout({
+    title: subject,
+    preheader: `Seu acesso a ${courseTitle} já está liberado.`,
+    content: [
+      emailEyebrow('Pagamento confirmado'),
+      emailHeading('Seu curso já está liberado'),
+      emailParagraph(`${escapeHtml(greeting)}. Recebemos o seu pagamento e o acesso ao curso já está ativo na sua conta.`),
+      emailDetails([
+        { label: 'Curso', value: escapeHtml(courseTitle) },
+        { label: 'Data', value: escapeHtml(date) },
+        { label: 'Total pago', value: escapeHtml(total), emphasize: true },
+      ]),
+      emailButton('Acessar o curso', courseUrl),
+      emailFallbackLink(courseUrl),
+      emailNote(
+        `O curso fica em <a href="${escapeHtml(myCoursesUrl)}" style="color:inherit;">Meus cursos</a> sempre que você entrar com este e-mail. O acesso é pessoal: as aulas e os materiais são exclusivos para a sua conta.`,
+      ),
+      emailSignoff(),
+    ].join('\n'),
+  })
+
+  const text = `${greeting}. Recebemos o seu pagamento e o acesso ao curso já está ativo na sua conta.
+
+Curso: ${courseTitle}
+Data: ${date}
+Total pago: ${total}
+
+Acessar o curso: ${courseUrl}
+
+O curso fica em Meus cursos (${myCoursesUrl}) sempre que você entrar com este e-mail. O acesso é pessoal: as aulas e os materiais são exclusivos para a sua conta.
 
 Com cuidado,
 Equipe lutteros

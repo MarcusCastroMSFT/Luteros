@@ -10,6 +10,8 @@ import {
 } from '@/lib/asaas'
 import { MIN_CHARGE_AMOUNT, getCourseChargeAmount } from '@/lib/course-pricing'
 import { isValidCpfCnpj, normalizeCpfCnpj } from '@/lib/cpf-cnpj'
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity'
+import { sendCoursePurchaseEmails, sendCourseRefundEmail } from '@/lib/notifications.server'
 import { mapAsaasStatus, type EnrollmentPaymentStatus } from '@/lib/payment-status'
 
 const PAYMENT_DUE_DAYS = 3
@@ -117,7 +119,10 @@ export async function syncEnrollmentPayment(
   }
 
   const status = resolveEnrollmentStatus(payment)
-  await applyEnrollmentPaymentStatus(enrollment, status)
+  const changed = await applyEnrollmentPaymentStatus(enrollment, status)
+  // `changed` is true only for the call that moves the enrollment into this state, so each e-mail goes out once.
+  if (changed && status === 'COMPLETED') await sendCoursePurchaseEmails(enrollment.id)
+  if (changed && status === 'REFUNDED') await sendCourseRefundEmail(enrollment.id)
   return status
 }
 
@@ -213,7 +218,7 @@ export async function startCoursePayment(
   if (amount > 0 && amount < MIN_CHARGE_AMOUNT) {
     console.error('Course charge is below the Asaas minimum; fix the course price', { courseId: course.id, amount })
     throw new CheckoutError(
-      'Este curso não pode ser comprado no momento. Entre em contato com contato@lutteros.com.br.',
+      `Este curso não pode ser comprado no momento. Entre em contato com ${LUTTEROS_ENTITY.contactEmail}.`,
       'AMOUNT_BELOW_MINIMUM',
       422,
     )

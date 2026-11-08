@@ -26,8 +26,8 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 `/waitlist` recebe e-mails de quem quer assinar os artigos de acesso pago. A API
 `POST /api/waitlist` grava na tabela `subscription_waitlist` (migração `0009`),
-separada da newsletter: entrar na lista não é consentimento para newsletter e
-nenhum e-mail é enviado automaticamente. O envio exige o aceite do usuário, o
+separada da newsletter: entrar na lista não é consentimento para newsletter. Quem entra
+pela primeira vez recebe só um e-mail de confirmação; repetir o cadastro não reenvia nada. O envio exige o aceite do usuário, o
 e-mail é único e repetir o cadastro apenas atualiza o perfil escolhido, sem
 revelar se o e-mail já estava na lista. Os dados ficam só no banco.
 
@@ -72,8 +72,8 @@ conteúdos e aviso de acesso gratuito ou pago antes da leitura.
 O FAQ mantém respostas visíveis, busca e dados estruturados na mesma fonte,
 em `app/(public-pages)/faq/page.tsx`. Formas de pagamento e condições de acesso
 são consultadas no curso/checkout; regras de cancelamento remetem aos Termos
-de Uso. Os canais de contato são o formulário e `contato@lutteros.com.br`,
-com resposta em até 48 horas úteis.
+de Uso. Os canais de contato são o formulário e o e-mail de `LUTTEROS_ENTITY.contactEmail`
+(`lib/legal-entity.ts`), com resposta em até 48 horas úteis.
 
 A Central de ajuda (`/help`) é renderizada no servidor a partir de `data/help.ts`,
 sem API nem dados simulados. Cada guia descreve apenas recursos existentes, sem
@@ -370,7 +370,7 @@ usadas (`pnpm db:migrate`).
 **Produção:** o webhook "Lutteros - Pagamentos de cursos" foi cadastrado via API
 (`POST /v3/webhooks`) em `https://www.lutteros.com.br/api/webhooks/asaas` (use o `www`: o
 domínio sem `www` responde 308 e o redirecionamento quebra o POST). Entrega
-`SEQUENTIALLY`, e-mail de alerta `contato@lutteros.com.br` e 21 eventos de cobrança (sem os
+`SEQUENTIALLY`, e-mail de alerta igual ao e-mail de contato e 21 eventos de cobrança (sem os
 de visualização de boleto/checkout nem os de split). O `authToken` é o `ASAAS_WEBHOOK_TOKEN`
 do `.env`, que precisa ser idêntico na Vercel. Use **tokens diferentes** em produção e no
 sandbox (o do `.env.local` é outro): o token é um segredo compartilhado escolhido por você,
@@ -405,6 +405,13 @@ são instrutores) entram sem pagar. O card do curso mostra "Acesso de administra
 e o botão "Acessar Curso"; `POST /api/courses/{id}/enroll` cria uma inscrição `COMPLETED` com
 `paidAmount = 0`, sem Asaas, e **não** incrementa `enrollmentCount` (não conta como venda nem
 como aluno). A regra é `getStaffAccess` em `lib/course-access.ts`.
+
+**Painel de vendas (admin):** `/admin` e `/admin/courses` (abaixo da tabela) mostram vendas e
+receita do mês, o gráfico de cursos vendidos nos últimos 12 meses e as últimas 5 vendas
+(`components/admin/course-sales-panel.tsx`, dados em `lib/course-sales.server.ts`). Venda =
+inscrição `COMPLETED` com `asaasPaymentId`, então acessos gratuitos, de staff e reembolsos
+não contam. Os meses seguem o horário de Brasília. Só administradores veem: a API
+`GET /api/admin/course-sales` responde 403 para instrutores e o painel simplesmente não aparece.
 
 Proteção do conteúdo pago: o vídeo é entregue por URL assinada (SAS) de curta duração
 com `Content-Disposition: inline`, o player oculta o botão de download e o menu de
@@ -474,8 +481,22 @@ Resend (`RESEND_API_KEY`, `FROM_EMAIL`):
 | Confirmação de e-mail | `lib/account-emails.ts`, enviado no cadastro e pelo "Reenviar e-mail de confirmação" |
 | Boas-vindas da newsletter | `renderWelcomeEmail` em `lib/email.ts`, com o link de cancelamento por token |
 | Campanhas da newsletter | `lib/email-campaign.ts`, usado no envio, no teste e na pré-visualização do admin |
-| Perfil, matrícula, evento, certificado, compra e lembretes | `data/system-email-templates.ts` (`{{variáveis}}`) |
+| Pagamento confirmado (aluno) e aviso de nova venda (equipe) | `renderCoursePurchaseEmail` em `lib/account-emails.ts`; enviados por `lib/notifications.server.ts` quando o Asaas confirma o pagamento (webhook ou consulta), uma única vez |
+| Reembolso confirmado | `lib/notification-emails.ts`, enviado quando um pagamento pago é estornado e o acesso é revogado |
+| Matrícula em curso gratuito | `lib/notification-emails.ts`, enviado por `POST /api/courses/{id}/enroll` (não para acesso de admin ou instrutor) |
+| Confirmação da lista de espera | `lib/notification-emails.ts`, só na primeira entrada do e-mail |
+| Aviso de contato (equipe) | `lib/notification-emails.ts`, enviado por `POST /api/contact` com `replyTo` do remetente |
+| Perfil, evento, certificado, compra (modelo do admin) e lembretes | `data/system-email-templates.ts` (`{{variáveis}}`); ainda sem gatilho no código |
 
+Os avisos para a equipe vão para o e-mail de contato (`LUTTEROS_ENTITY.contactEmail`); defina
+`ADMIN_NOTIFICATION_EMAIL` para usar outro endereço. Falha de envio nunca derruba o
+webhook, a matrícula ou o formulário: só aparece no log.
+
+**Trocar o e-mail de contato:** altere `contactEmail` em `lib/legal-entity.ts`. É a única
+fonte: páginas (contato, FAQ, 404, privacidade, termos, rodapé), rodapé e respostas dos
+e-mails, avisos da equipe e dados estruturados (SEO) leem dali. Depois, atualize fora do
+código: o e-mail de alerta do webhook no Asaas (`scripts/asaas-webhook-alert-email.mjs --apply`),
+Minha conta → Dados comerciais no Asaas, e `ADMIN_NOTIFICATION_EMAIL` na Vercel, se estiver definida.
 Nos templates do sistema, os valores das variáveis são escapados no HTML, e `{{greeting}}`
 vira "Olá, <primeiro nome>". Uma cópia salva em Admin → E-mails do sistema substitui o
 padrão; use **Restaurar padrão** para voltar ao layout atual.

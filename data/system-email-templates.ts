@@ -22,6 +22,7 @@ import {
   escapeHtml,
   renderEmailLayout,
 } from '@/lib/email-layout'
+import { LUTTEROS_ENTITY } from '@/lib/legal-entity'
 
 export type SystemEmailCategory =
   | 'AUTHENTICATION'
@@ -44,7 +45,7 @@ export interface SystemEmailTemplate {
 
 const appUrl = '{{appUrl}}'
 const linkStyle = 'color:#198189;text-decoration:underline;'
-const contactLink = `<a href="mailto:contato@lutteros.com.br" class="lt-link" style="${linkStyle}">contato@lutteros.com.br</a>`
+const contactLink = `<a href="mailto:${LUTTEROS_ENTITY.contactEmail}" class="lt-link" style="${linkStyle}">${LUTTEROS_ENTITY.contactEmail}</a>`
 
 function link(label: string, href: string): string {
   return `<a href="${href}" class="lt-link" style="${linkStyle}">${label}</a>`
@@ -79,7 +80,7 @@ As informações do seu perfil na lutteros foram alteradas em {{updatedAt}}.
 
 Ver meu perfil: ${appUrl}/profile
 
-Foi você? Então está tudo certo. Se não reconhece essa alteração, redefina sua senha em ${appUrl}/forgot-password e escreva para contato@lutteros.com.br.`,
+Foi você? Então está tudo certo. Se não reconhece essa alteração, redefina sua senha em ${appUrl}/forgot-password e escreva para ${LUTTEROS_ENTITY.contactEmail}.`,
       { signoff: false },
     ),
     htmlContent: layout('Seu perfil foi atualizado', 'As informações do seu perfil foram alteradas em {{updatedAt}}.', [

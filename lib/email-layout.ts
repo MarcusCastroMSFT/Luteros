@@ -180,7 +180,7 @@ export function emailLink(label: string, href: string): string {
 // Document shell
 // ---------------------------------------------------------------------------
 
-export type EmailAudience = 'account' | 'newsletter'
+export type EmailAudience = 'account' | 'newsletter' | 'waitlist' | 'internal'
 
 export interface EmailLayoutOptions {
   /** Document title (shown by some clients and screen readers). */
@@ -262,7 +262,11 @@ export function renderEmailLayout(options: EmailLayoutOptions): string {
             ? ` <a href="${escapeHtml(unsubscribeUrl)}" target="_blank" class="lt-link" style="color:${C.muted};text-decoration:underline;">Cancelar inscrição</a>`
             : ''
         }`
-      : `Você recebeu este e-mail por causa de uma atividade na sua conta lutteros. Dúvidas? Responda esta mensagem ou escreva para <a href="mailto:${contact}" class="lt-link" style="color:${C.muted};text-decoration:underline;">${contact}</a>.`
+      : audience === 'waitlist'
+        ? `Você recebeu este e-mail porque entrou na lista de espera da assinatura da lutteros. Dúvidas? Responda esta mensagem ou escreva para <a href="mailto:${contact}" class="lt-link" style="color:${C.muted};text-decoration:underline;">${contact}</a>.`
+        : audience === 'internal'
+          ? 'Aviso automático do sistema da lutteros, enviado apenas à equipe.'
+          : `Você recebeu este e-mail por causa de uma atividade na sua conta lutteros. Dúvidas? Responda esta mensagem ou escreva para <a href="mailto:${contact}" class="lt-link" style="color:${C.muted};text-decoration:underline;">${contact}</a>.`
 
   // Padding after the preheader keeps inbox previews from pulling in body text.
   const preheaderBlock = preheader
@@ -334,7 +338,11 @@ export function emailTextFooter(
   const reason =
     audience === 'newsletter'
       ? `Você recebeu este e-mail porque assinou a newsletter da lutteros.${unsubscribeUrl ? `\nCancelar inscrição: ${unsubscribeUrl}` : ''}`
-      : `Você recebeu este e-mail por causa de uma atividade na sua conta lutteros.\nDúvidas? Responda esta mensagem ou escreva para ${LUTTEROS_ENTITY.contactEmail}.`
+      : audience === 'waitlist'
+        ? `Você recebeu este e-mail porque entrou na lista de espera da assinatura da lutteros.\nDúvidas? Responda esta mensagem ou escreva para ${LUTTEROS_ENTITY.contactEmail}.`
+        : audience === 'internal'
+          ? 'Aviso automático do sistema da lutteros, enviado apenas à equipe.'
+          : `Você recebeu este e-mail por causa de uma atividade na sua conta lutteros.\nDúvidas? Responda esta mensagem ou escreva para ${LUTTEROS_ENTITY.contactEmail}.`
 
   return `---
 lutteros · ${EMAIL_TAGLINE}
