@@ -4,8 +4,8 @@ export { revalidatePath } from 'next/cache'
 
 /**
  * Wrapper around Next.js 16 revalidateTag.
- * The built-in type requires 2 args; we default the profile to {}.
+ * Expire immediately so mutation responses never leave stale tagged data readable.
  */
 export function revalidateTag(tag: string): undefined {
-  return _revalidateTag(tag, {})
+  return _revalidateTag(tag, { expire: 0 })
 }

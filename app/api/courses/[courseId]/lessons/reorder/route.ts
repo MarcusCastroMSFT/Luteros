@@ -6,6 +6,7 @@ import { courses, lessons } from '@/lib/db/schema'
 import { and, asc, eq, inArray } from 'drizzle-orm'
 import { getCourseInstructorIds } from '@/lib/course-instructors.server'
 import { reorderCourseLessons } from '@/lib/course-persistence'
+import { revalidateTag } from '@/lib/cache'
 
 // PUT reorder lessons
 export async function PUT(
@@ -18,7 +19,7 @@ export async function PUT(
 
     const { courseId } = await context.params
 
-    const course = await db.select({ id: courses.id, instructorId: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
+    const course = await db.select({ id: courses.id, slug: courses.slug, instructorId: courses.instructorId }).from(courses).where(eq(courses.id, courseId)).limit(1).then((r) => r[0] ?? null)
     if (!course) {
       return NextResponse.json({ success: false, error: 'Course not found' }, { status: 404 })
     }
@@ -46,6 +47,10 @@ export async function PUT(
 
     // Two-phase reorder to avoid the (courseId, order) unique-index conflict.
     await reorderCourseLessons(db, lessonIds)
+
+    revalidateTag(`course-${course.slug}`)
+    revalidateTag('courses')
+    revalidateTag('courses-initial')
 
     const updatedLessons = await db
       .select({

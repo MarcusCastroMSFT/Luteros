@@ -25,11 +25,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Set cache headers for CDN and browser caching
-    // Course listings can be cached for a shorter time since they change more often
+    // Tagged server data is cached; a separate CDN cache cannot follow tag invalidation.
     response.headers.set(
       'Cache-Control',
-      'public, s-maxage=300, stale-while-revalidate=3600'
+      'no-store'
     );
 
     return response;

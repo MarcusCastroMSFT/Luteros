@@ -22,6 +22,21 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## Catálogo público
 
+### Atualização dos cursos
+
+Salvar, publicar, despublicar, excluir ou reordenar aulas expira o cache dos
+cursos imediatamente. As APIs `/api/courses-public` não mantêm um segundo
+cache HTTP/CDN: usam somente o cache do servidor, invalidado pelas edições.
+
+A página do curso e a sala de aulas consultam novamente o servidor ao abrir,
+a cada 15 segundos enquanto a aba está visível e online, e ao voltar à aba
+ou recuperar a conexão. Não há push em tempo real: uma página já aberta pode
+levar até o próximo ciclo, mais o tempo da requisição, para refletir uma edição.
+Abas ocultas atualizam ao voltar. A seleção da aula e o progresso são preservados;
+se a aula for removida ou despublicada, a sala passa para a primeira disponível.
+Somente aulas publicadas aparecem para os alunos. A troca da mídia reinicia
+o player, mas uma atualização sem troca da mídia não reinicia a reprodução.
+
 ### Assinatura: lista de espera
 
 `/waitlist` recebe e-mails de quem quer assinar os artigos de acesso pago. A API

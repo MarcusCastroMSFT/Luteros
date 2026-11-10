@@ -13,6 +13,8 @@ import { getCoursePath } from '@/lib/course-paths';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { useCourseRefresh } from '@/hooks/use-course-refresh';
+import { getCurrentCourseLesson, getLessonPlaybackKey, getLessonPlaybackUrl } from '@/lib/course-classroom';
 
 // Type for raw lessons from the API
 interface RawLesson {
@@ -38,6 +40,7 @@ interface CourseLessonsClientProps {
 }
 
 export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: CourseLessonsClientProps) {
+  useCourseRefresh();
   // Transform lessons into sections (memoized for performance)
   const sections = useMemo(() => {
     const sectionsMap = new Map<string, Lesson[]>();
@@ -49,9 +52,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
       }
 
       // Map Azure video to playback endpoint
-      const videoUrl = lesson.videoProvider === 'azure' && lesson.videoUrl
-        ? `/api/courses/${course.id}/lessons/${lesson.id}/media`
-        : lesson.videoUrl || undefined;
+      const videoUrl = getLessonPlaybackUrl(course.id, lesson);
 
       sectionsMap.get(sectionTitle)!.push({
         id: lesson.id,
@@ -65,6 +66,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         references: lesson.references || undefined,
         videoUrl,
         videoProvider: lesson.videoProvider || undefined,
+        mediaVersion: lesson.videoUrl || undefined,
       });
     });
     
@@ -83,25 +85,18 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     return result;
   }, [lessons, course.id]);
 
-  // Find initial lesson
-  const initialLesson = useMemo(() => {
-    if (initialLessonId) {
-      for (const section of sections) {
-        const lesson = section.lessons.find((l) => l.id === initialLessonId);
-        if (lesson) return lesson;
-      }
-    }
-    // Default to first lesson
-    if (sections.length > 0 && sections[0].lessons.length > 0) {
-      return sections[0].lessons[0];
-    }
-    return null;
-  }, [sections, initialLessonId]);
-
-  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(initialLesson);
+  const [selectedLessonId, setSelectedLessonId] = useState(initialLessonId);
+  const allLessons = useMemo(() => sections.flatMap(section => section.lessons), [sections]);
+  const currentLesson = getCurrentCourseLesson(allLessons, selectedLessonId);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const currentLessonId = currentLesson?.id;
+  useEffect(() => {
+    const query = currentLessonId ? `?lesson=${encodeURIComponent(currentLessonId)}` : '';
+    window.history.replaceState(window.history.state, '', `/courses/${slug}/lessons${query}`);
+  }, [currentLessonId, slug]);
 
   // Fetch initial progress from API
   useEffect(() => {
@@ -130,12 +125,9 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
   }, [course.id]);
 
   const handleLessonSelect = useCallback((lesson: Lesson) => {
-    setCurrentLesson(lesson);
+    setSelectedLessonId(lesson.id);
     setIsMobileSidebarOpen(false); // Close mobile sidebar on selection
-    // Update URL without navigation for better UX
-    const newUrl = `/courses/${slug}/lessons?lesson=${lesson.id}`;
-    window.history.replaceState({}, '', newUrl);
-  }, [slug]);
+  }, []);
 
   const markLessonComplete = useCallback(async (lessonId: string) => {
     if (isUpdatingProgress) return;
@@ -218,16 +210,13 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     }
   }, [course.id, isUpdatingProgress, completedLessons]);
 
-  // Memoize allLessons to prevent recalculation on every render
-  const allLessons = useMemo(() => {
-    return sections.flatMap(section => section.lessons);
-  }, [sections]);
+  const completedLessonsCount = allLessons.filter(lesson => completedLessons.has(lesson.id)).length;
 
   // Calculate progress percentage (memoized)
   const progressPercent = useMemo(() => {
     if (allLessons.length === 0) return 0;
-    return Math.round((completedLessons.size / allLessons.length) * 100);
-  }, [completedLessons.size, allLessons.length]);
+    return Math.round((completedLessonsCount / allLessons.length) * 100);
+  }, [completedLessonsCount, allLessons.length]);
 
   // Memoize current lesson index
   const currentLessonIndex = useMemo(() => {
@@ -244,12 +233,9 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     }
     
     if (newLesson) {
-      setCurrentLesson(newLesson);
-      // Update URL
-      const newUrl = `/courses/${slug}/lessons?lesson=${newLesson.id}`;
-      window.history.replaceState({}, '', newUrl);
+      setSelectedLessonId(newLesson.id);
     }
-  }, [currentLessonIndex, allLessons, slug]);
+  }, [currentLessonIndex, allLessons]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -283,7 +269,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                   />
                 </div>
                 <span className="text-xs text-gray-600 shrink-0">
-                  {completedLessons.size}/{allLessons.length}
+                  {completedLessonsCount}/{allLessons.length}
                 </span>
               </div>
             </div>
@@ -292,7 +278,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
             <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{progressPercent}% completo</p>
-                <p className="text-xs text-gray-500">{completedLessons.size} de {allLessons.length} itens</p>
+                <p className="text-xs text-gray-500">{completedLessonsCount} de {allLessons.length} itens</p>
               </div>
               <div className="w-12 h-12 relative">
                 <svg className="w-12 h-12 transform -rotate-90">
@@ -392,6 +378,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
             <div className="p-3 sm:p-6">
               {currentLesson ? (
                 <LessonViewer
+                  key={getLessonPlaybackKey(currentLesson)}
                   lesson={currentLesson}
                   isCompleted={completedLessons.has(currentLesson.id)}
                   onMarkComplete={() => markLessonComplete(currentLesson.id)}

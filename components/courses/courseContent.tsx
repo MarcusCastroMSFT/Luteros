@@ -185,17 +185,16 @@ export function CourseContent({
     showAllSections ? new Set(sections.map((_, index) => index)) : new Set([0])
   )
   const [showAllSectionsState, setShowAllSectionsState] = useState(showAllSections)
-  const [previewLesson, setPreviewLesson] = useState<Lesson | null>(null)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewLessonId, setPreviewLessonId] = useState<string | null>(null)
+  const previewLesson = sections.flatMap(section => section.lessons)
+    .find(lesson => lesson.id === previewLessonId && lesson.isPreview) ?? null
   
   const handlePreviewClick = (lesson: Lesson) => {
-    setPreviewLesson(lesson)
-    setIsPreviewOpen(true)
+    setPreviewLessonId(lesson.id)
   }
   
   const closePreview = () => {
-    setIsPreviewOpen(false)
-    setPreviewLesson(null)
+    setPreviewLessonId(null)
   }
   
   const toggleSection = (index: number) => {
@@ -250,8 +249,9 @@ export function CourseContent({
       </div>
       
       <PreviewDialog
+        key={`${previewLesson?.id}:${previewLesson?.type}:${previewLesson?.videoUrl ?? ''}`}
         lesson={previewLesson}
-        isOpen={isPreviewOpen}
+        isOpen={previewLesson !== null}
         onClose={closePreview}
       />
     </>

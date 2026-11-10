@@ -33,11 +33,10 @@ export async function GET(request: NextRequest, { params }: Props) {
       },
     });
 
-    // Set cache headers for CDN and browser caching
-    // stale-while-revalidate allows serving stale content while fetching fresh data
+    // Tagged server data is cached; a separate CDN cache cannot follow tag invalidation.
     response.headers.set(
       'Cache-Control',
-      'public, s-maxage=3600, stale-while-revalidate=86400'
+      'no-store'
     );
 
     return response;

@@ -14,6 +14,7 @@ import { formatCourseItemCount } from '@/lib/course-labels';
 import { formatLessonDuration, formatSectionDuration } from '@/lib/reading-time';
 import { showCheckoutInterstitial } from '@/lib/checkout-interstitial';
 import { CourseSection, Lesson } from '@/types/course';
+import { useCourseRefresh } from '@/hooks/use-course-refresh';
 
 // Dynamic imports for non-critical components (below the fold)
 const CourseContent = dynamic(
@@ -53,6 +54,7 @@ interface CourseDetailClientProps {
 }
 
 export function CourseDetailClient({ course, lessons, slug }: CourseDetailClientProps) {
+  useCourseRefresh();
   const router = useRouter();
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);

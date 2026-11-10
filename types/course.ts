@@ -29,6 +29,7 @@ export interface Lesson {
   references?: string;
   videoUrl?: string; // Optional video URL for video lessons
   videoProvider?: string;
+  mediaVersion?: string;
 }
 
 export interface CourseSection {
