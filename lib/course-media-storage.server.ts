@@ -3,12 +3,15 @@ import {
   generateBlobSASQueryParameters,
   BlobSASPermissions,
   SASProtocol,
+  type UserDelegationKey,
 } from '@azure/storage-blob';
 import { createUploadSasPolicy, createReadSasPolicy } from './course-media-sas';
 import type { ParsedCourseMediaReference } from './course-media-paths.server';
 import { getBlobServiceClient } from './azure-credential.server';
 
 const COURSE_MEDIA_CONTAINERS = new Set(['course-images', 'course-videos']);
+const DELEGATION_KEY_LIFETIME_MS = 12 * 60 * 60 * 1000;
+const DELEGATION_KEY_CLOCK_SKEW_MS = 10 * 60 * 1000;
 
 function requireCourseMediaContainer(containerName: string): void {
   if (!COURSE_MEDIA_CONTAINERS.has(containerName)) {
@@ -64,6 +67,36 @@ export function createCourseMediaStorage(
   blobEndpoint: string,
   getNow: () => Date = () => new Date(),
 ): CourseMediaStorage {
+  let cachedDelegationKey: {
+    startsOn: Date;
+    expiresOn: Date;
+    key: Promise<UserDelegationKey>;
+  } | null = null;
+
+  // Requesting a delegation key is a network round trip; reusing it keeps playback redirects fast.
+  function getDelegationKey(startsOn: Date, expiresOn: Date, now: Date): Promise<UserDelegationKey> {
+    if (
+      cachedDelegationKey
+      && cachedDelegationKey.startsOn <= startsOn
+      && cachedDelegationKey.expiresOn >= expiresOn
+    ) {
+      return cachedDelegationKey.key;
+    }
+
+    const keyStartsOn = new Date(Math.min(startsOn.getTime(), now.getTime() - DELEGATION_KEY_CLOCK_SKEW_MS));
+    const keyExpiresOn = new Date(Math.max(expiresOn.getTime(), now.getTime() + DELEGATION_KEY_LIFETIME_MS));
+    const entry = {
+      startsOn: keyStartsOn,
+      expiresOn: keyExpiresOn,
+      key: client.getUserDelegationKey(keyStartsOn, keyExpiresOn),
+    };
+    cachedDelegationKey = entry;
+    entry.key.catch(() => {
+      if (cachedDelegationKey === entry) cachedDelegationKey = null;
+    });
+    return entry.key;
+  }
+
   async function generateSasUrl(
     containerName: string,
     blobName: string,
@@ -76,10 +109,7 @@ export function createCourseMediaStorage(
       ? createUploadSasPolicy(containerName, blobName, now)
       : createReadSasPolicy(containerName, blobName, now);
 
-    const userDelegationKey = await client.getUserDelegationKey(
-      policy.startsOn,
-      policy.expiresOn,
-    );
+    const userDelegationKey = await getDelegationKey(policy.startsOn, policy.expiresOn, now);
 
     const sasToken = generateBlobSASQueryParameters(
       {

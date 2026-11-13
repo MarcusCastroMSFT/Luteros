@@ -29,7 +29,7 @@ interface LessonItemProps {
 }
 
 const LessonTypeIcon = ({ type }: { type: Lesson['type'] }) => {
-  const iconProps = { size: 16, className: "text-muted-foreground" }
+  const iconProps = { size: 16, className: "mt-0.5 shrink-0 text-muted-foreground" }
   
   switch (type) {
     case 'video':
@@ -63,16 +63,16 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
   
   return (
     <div 
-      className={`flex items-center justify-between py-2.5 md:py-3 px-3 md:px-4 transition-colors cursor-pointer ${
+      className={`flex items-start justify-between py-2.5 md:py-3 px-3 md:px-4 transition-colors cursor-pointer ${
         isActive 
           ? 'bg-brand-50 border-l-2 md:border-l-0 md:border-r-2 border-brand-500' 
           : 'hover:bg-gray-50'
       }`}
       onClick={handleClick}
     >
-      <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+      <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
         <LessonTypeIcon type={type} />
-        <span className={`text-sm font-medium truncate ${
+        <span className={`text-sm font-medium leading-snug break-words ${
           isActive 
             ? 'text-brand-700' 
             : isCompleted
@@ -82,7 +82,7 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
           {title}
         </span>
         {isCompleted && (
-          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="mt-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
             <Check size={10} className="text-white" />
           </div>
         )}
@@ -125,30 +125,30 @@ const SectionItem = ({ section, isExpanded, onToggle, onLessonSelect, currentLes
         onClick={onToggle}
         className="w-full px-3 md:px-4 py-3 md:py-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer"
       >
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+        <div className="flex min-w-0 flex-1 items-start gap-2 md:gap-3">
           {isExpanded ? (
-            <ChevronUp size={18} className="text-gray-400 shrink-0 md:w-5 md:h-5" />
+            <ChevronUp size={18} className="mt-0.5 text-gray-400 shrink-0 md:w-5 md:h-5" />
           ) : (
-            <ChevronDown size={18} className="text-gray-400 shrink-0 md:w-5 md:h-5" />
+            <ChevronDown size={18} className="mt-0.5 text-gray-400 shrink-0 md:w-5 md:h-5" />
           )}
-          <span className="font-medium text-gray-900 text-sm md:text-base truncate">{title}</span>
-          {/* Section progress indicator */}
-          {completedLessons && completedCount > 0 && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full shrink-0 ${
-              completedCount === lessonsCount 
-                ? 'bg-green-100 text-green-700' 
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {completedCount}/{lessonsCount}
-            </span>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-500 shrink-0 ml-2">
-          <span className="hidden sm:inline">{lessonsCount} aula{lessonsCount !== 1 ? 's' : ''}</span>
-          <span className="sm:hidden">{lessonsCount}</span>
-          <span className="hidden sm:inline">•</span>
-          <span>{totalDuration}</span>
+          <div className="min-w-0 flex-1 text-left">
+            <span className="block break-words font-medium leading-snug text-gray-900 text-sm md:text-base">{title}</span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+              <span>{lessonsCount} aula{lessonsCount !== 1 ? 's' : ''}</span>
+              <span aria-hidden="true">•</span>
+              <span>{totalDuration}</span>
+              {/* Section progress indicator */}
+              {completedLessons && completedCount > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-full ${
+                  completedCount === lessonsCount
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {completedCount}/{lessonsCount}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </button>
       

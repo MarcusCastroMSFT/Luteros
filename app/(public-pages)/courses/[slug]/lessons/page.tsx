@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { preconnect } from 'react-dom';
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCourseMetadata, getEnrolledCourseBySlug } from '@/lib/courses';
@@ -9,6 +10,15 @@ import { CourseLessonsSkeleton } from '@/components/lessons/courseLessonsSkeleto
 interface LessonsPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ lesson?: string }>;
+}
+
+function getCourseMediaOrigin(): string | null {
+  try {
+    const endpoint = process.env.AZURE_STORAGE_BLOB_ENDPOINT;
+    return endpoint ? new URL(endpoint).origin : null;
+  } catch {
+    return null;
+  }
 }
 
 // Generate metadata for SEO
@@ -59,6 +69,12 @@ async function LessonsContent({ slug, initialLessonId }: { slug: string; initial
   
   if (!courseData) {
     redirect(`/courses/${slug}`);
+  }
+
+  // Videos redirect to Azure Blob Storage; opening that connection early shortens time to first frame.
+  const mediaOrigin = getCourseMediaOrigin();
+  if (mediaOrigin) {
+    preconnect(mediaOrigin);
   }
   
   return (

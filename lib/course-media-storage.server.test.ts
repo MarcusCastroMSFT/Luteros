@@ -673,6 +673,60 @@ describe('courseMediaStorage.createReadUrl', () => {
 
     assert.equal(new URL(url).searchParams.get('sip'), '200.10.20.30');
   });
+
+  test('reuses the user delegation key across playback redirects', async () => {
+    let now = new Date('2026-08-31T12:00:00Z');
+    const keyRequests: Array<{ start: Date; expiry: Date }> = [];
+    const fakeClient = createFakeClient();
+    const baseGetKey = fakeClient.getUserDelegationKey;
+    fakeClient.getUserDelegationKey = async (start, expiry) => {
+      keyRequests.push({ start, expiry });
+      return baseGetKey(start, expiry);
+    };
+    const storage = createCourseMediaStorage(
+      fakeClient as unknown as BlobServiceClient,
+      'https://test.blob.core.windows.net',
+      () => now,
+    );
+
+    await Promise.all([
+      storage.createReadUrl('course-videos', 'courses/123/lesson-video/a.mp4'),
+      storage.createReadUrl('course-videos', 'courses/123/lesson-video/b.mp4'),
+    ]);
+    now = new Date('2026-08-31T21:00:00Z');
+    await storage.createReadUrl('course-videos', 'courses/123/lesson-video/c.mp4');
+
+    assert.equal(keyRequests.length, 1);
+    assert.equal(keyRequests[0]!.expiry.toISOString(), '2026-09-01T00:00:00.000Z');
+
+    // The 2h SAS would outlive the cached key, so a fresh key is required.
+    now = new Date('2026-08-31T22:30:00Z');
+    await storage.createReadUrl('course-videos', 'courses/123/lesson-video/d.mp4');
+    assert.equal(keyRequests.length, 2);
+  });
+
+  test('requests a new delegation key after a failed request', async () => {
+    let calls = 0;
+    const fakeClient = createFakeClient();
+    const baseGetKey = fakeClient.getUserDelegationKey;
+    fakeClient.getUserDelegationKey = async (start, expiry) => {
+      calls += 1;
+      if (calls === 1) throw new Error('temporary failure');
+      return baseGetKey(start, expiry);
+    };
+    const storage = createCourseMediaStorage(
+      fakeClient as unknown as BlobServiceClient,
+      'https://test.blob.core.windows.net',
+      () => new Date('2026-08-31T12:00:00Z'),
+    );
+
+    await assert.rejects(
+      storage.createReadUrl('course-videos', 'courses/123/lesson-video/a.mp4'),
+      /temporary failure/,
+    );
+    await storage.createReadUrl('course-videos', 'courses/123/lesson-video/a.mp4');
+    assert.equal(calls, 2);
+  });
 });
 
 function createFakeClient(options: {

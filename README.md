@@ -440,6 +440,14 @@ contexto, e o limite de IPs acima dificulta o compartilhamento de contas. Não �
 quem consegue assistir ainda pode capturar a tela, e vídeos hospedados em YouTube/Vimeo
 dependem das proteções dessas plataformas.
 
+Entrega dos vídeos: o arquivo enviado é servido como está, sem recompressão nem
+transcodificação. A qualidade final é a do arquivo exportado, e o navegador baixa o MP4
+progressivamente por *range requests*, sem streaming adaptativo (HLS/DASH). Para o vídeo
+começar rápido, exporte em MP4 (H.264 + AAC) com a opção *Fast Start*/"otimizar para web"
+(índice `moov` no início do arquivo); 1080p com cerca de 4–6 Mbps é um bom equilíbrio.
+A chave de delegação usada para assinar as URLs é reutilizada por até 12 horas em cada
+instância do servidor, e a página de aulas faz `preconnect` ao Blob Storage.
+
 ## Mensagens de contato
 
 O formulário em `/contact` envia os dados para `POST /api/contact`. A API valida
