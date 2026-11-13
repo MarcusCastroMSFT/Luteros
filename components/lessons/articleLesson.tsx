@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Lesson } from '@/types/course';
 import { BookOpen, Type, Bookmark, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ArticleReferences } from '@/components/blog/article-references';
+import { ArticleImageZoom } from '@/components/blog/article-image-zoom';
+import { formatArticleHtml } from '@/lib/article-html';
 
 interface ArticleLessonProps {
   lesson: Lesson;
@@ -13,6 +15,7 @@ interface ArticleLessonProps {
 export function ArticleLesson({ lesson }: ArticleLessonProps) {
   const [fontSize, setFontSize] = useState('base');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const contentHtml = useMemo(() => formatArticleHtml(lesson.content), [lesson.content]);
 
   const fontSizeClasses = {
     sm: 'text-sm',
@@ -65,13 +68,15 @@ export function ArticleLesson({ lesson }: ArticleLessonProps) {
       </div>
 
       {/* Article Content */}
-      {lesson.content ? (
-        <div className={`prose prose-gray max-w-none ${fontSizeClasses[fontSize as keyof typeof fontSizeClasses]}`}>
+      {contentHtml ? (
+        <ArticleImageZoom
+          className={`prose prose-gray max-w-none article-body ${fontSizeClasses[fontSize as keyof typeof fontSizeClasses]}`}
+        >
           <div
-            className="article-content"
-            dangerouslySetInnerHTML={{ __html: lesson.content }}
+            className="text-gray-700 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
           />
-        </div>
+        </ArticleImageZoom>
       ) : (
         <p className="py-8 text-center text-sm text-gray-500">Conteúdo indisponível.</p>
       )}

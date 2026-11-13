@@ -214,7 +214,8 @@ Testes: `npx tsx --test lib/catalog-pagination.test.ts`.
 ### Imagens e tabelas dentro dos artigos
 
 O HTML salvo pelo editor é ajustado na hora de exibir por `formatArticleHtml`
-(`lib/article-html.ts`), usado pelo `ArticleContent`. O conteúdo no banco não muda.
+(`lib/article-html.ts`), usado pelo `ArticleContent` e pelas aulas em texto (`ArticleLesson`),
+para que artigos e aulas tenham o mesmo visual. O conteúdo no banco não muda.
 
 - **Figuras:** o editor grava `<figure>` dentro de `<p>`, o que o navegador desfaz
   (e perde o alinhamento). A figura sai do parágrafo, mantém o alinhamento escolhido
