@@ -35,7 +35,7 @@ function alignFrom(style: string | null): 'start' | 'center' | 'end' {
 }
 
 // <p style="text-align:center"><figure>…</figure></p>  ->  <figure data-align="center">…</figure>
-function unwrapFigures(html: string): string {
+export function normalizeArticleFigures(html: string): string {
   return html.replace(
     /<p\b([^>]*)>\s*((?:<figure\b[\s\S]*?<\/figure>\s*)+)<\/p>/gi,
     (_match, pAttrs: string, figures: string) => {
@@ -119,7 +119,7 @@ export function openLinksInNewTab(html: string | null | undefined): string {
 
 export function formatArticleHtml(html: string | null | undefined): string {
   if (!html) return ''
-  return openLinksInNewTab(unwrapFigures(html))
+  return openLinksInNewTab(normalizeArticleFigures(html))
     // Text pasted from Word can carry C1 control characters; U+009A is its checkbox (☐ sim ☐ não).
     .replace(/[\u0080-\u009F]/g, (ch) => (ch === '\u009A' ? '☐' : ''))
     .replace(/<figure\b([^>]*)>([\s\S]*?)<\/figure>/gi, (_m, attrs: string, inner: string) => formatFigure(attrs, inner))
