@@ -222,7 +222,8 @@ alinhamento e estilos seguros necessários para esse layout.
 - **Figuras:** o editor grava `<figure>` dentro de `<p>`, o que o navegador desfaz
   (e perde o alinhamento). A figura sai do parágrafo, mantém o alinhamento escolhido
   (esquerda, centro ou direita) e troca a largura fixa `!important` por uma largura
-  máxima responsiva.
+  máxima responsiva. Figuras com uma única imagem e legenda em texto mantêm a
+  legenda e o alinhamento ao serem reabertas e salvas no editor.
 - **Ampliar imagem:** cada imagem vira um botão; ao clicar (ou Enter), abre em tela
   cheia com a legenda (`components/blog/article-image-zoom.tsx`). Fecha com Esc,
   no X ou clicando fora.

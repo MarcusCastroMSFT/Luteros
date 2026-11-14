@@ -2,7 +2,9 @@
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
+  $createParagraphNode,
   $getSelection,
+  $isElementNode,
   $isRangeSelection,
   COMMAND_PRIORITY_CRITICAL,
   createCommand,
@@ -44,6 +46,15 @@ export type SerializedImageNode = Spread<
   },
   SerializedLexicalNode
 >;
+
+function getImagePayload(element: HTMLImageElement): ImagePayload {
+  return {
+    src: element.src,
+    alt: element.alt,
+    width: element.width || undefined,
+    height: element.height || undefined,
+  };
+}
 
 export class ImageNode extends DecoratorNode<ReactElement> {
   __src: string;
@@ -105,7 +116,14 @@ export class ImageNode extends DecoratorNode<ReactElement> {
     const container = document.createElement('figure');
     container.setAttribute('itemScope', '');
     container.setAttribute('itemType', 'https://schema.org/ImageObject');
-    
+
+    // Keep alignment when the browser reparses a figure outside its paragraph.
+    const parent = this.getParent();
+    const alignment = $isElementNode(parent) ? parent.getFormatType() : '';
+    if (alignment === 'left' || alignment === 'center' || alignment === 'right' || alignment === 'start' || alignment === 'end') {
+      container.style.textAlign = alignment;
+    }
+
     // Set container width to match image width
     if (this.__width) {
       container.style.width = `${this.__width}px`;
@@ -178,19 +196,49 @@ export class ImageNode extends DecoratorNode<ReactElement> {
 
   static importDOM(): DOMConversionMap | null {
     return {
+      figure: (element: HTMLElement) => {
+        const children = Array.from(element.children);
+        const images = children.filter((child): child is HTMLImageElement => child instanceof HTMLImageElement);
+        const captions = children.filter((child) => child.tagName.toLowerCase() === 'figcaption');
+        const hasOtherContent = Array.from(element.childNodes).some(
+          (child) => child.nodeType !== Node.ELEMENT_NODE && Boolean(child.textContent?.trim()),
+        );
+
+        if (
+          images.length !== 1 ||
+          captions.length > 1 ||
+          children.length !== images.length + captions.length ||
+          captions[0]?.children.length ||
+          hasOtherContent
+        ) {
+          return null;
+        }
+
+        const caption = captions[0]?.textContent ?? undefined;
+        const alignment = element.getAttribute('data-align') || element.style.textAlign;
+        const format = alignment === 'center' ? 'center'
+          : alignment === 'end' || alignment === 'right' ? 'right'
+            : alignment === 'start' || alignment === 'left' ? 'left'
+              : undefined;
+
+        return {
+          conversion: () => {
+            const image = $createImageNode({ ...getImagePayload(images[0]), caption });
+            if (!format) return { node: image, forChild: () => null };
+
+            const paragraph = $createParagraphNode();
+            paragraph.setFormat(format);
+            paragraph.append(image);
+            return { node: paragraph, forChild: () => null };
+          },
+          priority: 1,
+        };
+      },
       img: () => ({
         conversion: (element: HTMLElement) => {
           if (element instanceof HTMLImageElement) {
-            const { src, alt } = element;
-            const width = element.width ? element.width : undefined;
-            const height = element.height ? element.height : undefined;
             return {
-              node: $createImageNode({
-                src,
-                alt,
-                width,
-                height,
-              }),
+              node: $createImageNode(getImagePayload(element)),
             };
           }
           return null;
