@@ -83,11 +83,23 @@ function formatTable(inner: string): string {
   const rows = [...inner.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => m[1])
   if (rows.length === 0) return `<table>${inner}</table>`
 
+  const firstRowCells = [...rows[0].matchAll(CELL)]
   const columns = Math.max(
     ...rows.map((row) =>
       [...row.matchAll(CELL)].reduce((sum, cell) => sum + (Number(getAttr(`<td${cell[2]}>`, 'colspan')) || 1), 0),
     ),
   )
+
+  if (rows.length === 1 && firstRowCells.length === 1 && columns === 1) {
+    const content = firstRowCells[0][3]
+    const label = content.match(/^\s*<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? ''
+    const hasTitle = /<h[23]\b[^>]*>[\s\S]*?<\/h[23]>/i.test(content)
+    const hasDocumentLink = /<a\b[^>]*\shref="(?:https?:\/\/|\/(?!\/))[^"]+"[^>]*>/i.test(content)
+    if (textOf(label).toLowerCase() === 'material de apoio' && hasTitle && hasDocumentLink) {
+      return `<section class="article-support" aria-label="Materiais de apoio">${content}</section>`
+    }
+  }
+
   const kind = columns >= 3 ? 'grid' : columns === 2 ? 'pairs' : 'note'
 
   const body = (list: string[]) =>

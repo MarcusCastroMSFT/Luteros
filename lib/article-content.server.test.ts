@@ -101,6 +101,20 @@ test('preserves safe article typography, highlighted cells and PDF links', () =>
   assert.doesNotMatch(clean, /position|border/);
 });
 
+test('preserves editable support cards through lesson sanitization', () => {
+  const clean = sanitizeArticleContent(
+    '<table><tbody><tr><td><p><strong>Material de apoio</strong></p>' +
+    '<h2>Roteiro de anamnese</h2><p>Para consulta e impressão.</p>' +
+    '<p><a href="/downloads/roteiro.pdf">Abrir roteiro</a></p></td></tr></tbody></table>',
+  );
+  const rendered = formatArticleHtml(clean);
+
+  assert.match(rendered, /<section class="article-support" aria-label="Materiais de apoio">/);
+  assert.match(rendered, /<h2>Roteiro de anamnese<\/h2>/);
+  assert.match(rendered, /href="\/downloads\/roteiro\.pdf" target="_blank" rel="noopener noreferrer"/);
+  assert.doesNotMatch(rendered, /<table|<td/);
+});
+
 test('rejects unsafe figure alignment and CSS even when safe styles are enabled', () => {
   const clean = sanitizeArticleContent(
     '<figure data-align="center&quot; onmouseover=&quot;alert(1)" style="width: expression(alert(1)); background: url(https://evil.example/x)">' +

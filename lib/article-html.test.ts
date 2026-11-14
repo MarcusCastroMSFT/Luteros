@@ -58,6 +58,35 @@ test('classifies two-column and single-column tables', () => {
   assert.match(note, /data-kind="note"/)
 })
 
+test('renders an editable material table as a semantic support card', () => {
+  const html = formatArticleHtml(
+    '<table><tbody><tr><td><p><strong>Material de apoio</strong></p>' +
+    '<h2>Roteiro de anamnese</h2><p>Para consulta e impressão.</p>' +
+    '<p><a href="/downloads/roteiro.pdf">Abrir roteiro</a> <a href="https://example.com/ficha.pdf">Ficha</a></p>' +
+    '</td></tr></tbody></table>',
+  )
+
+  assert.match(html, /^<section class="article-support" aria-label="Materiais de apoio">/)
+  assert.match(html, /<h2>Roteiro de anamnese<\/h2>/)
+  assert.match(html, /href="\/downloads\/roteiro\.pdf" target="_blank" rel="noopener noreferrer"/)
+  assert.match(html, /href="https:\/\/example\.com\/ficha\.pdf" target="_blank" rel="noopener noreferrer"/)
+  assert.doesNotMatch(html, /<table|<td/)
+  assert.match(html, /abre em nova aba/)
+})
+
+test('leaves ordinary or incomplete single-cell tables as notes', () => {
+  for (const content of [
+    '<p>Outro destaque</p><h2>Título</h2><p><a href="/ficha.pdf">Ficha</a></p>',
+    '<p>Material de apoio</p><p><a href="/ficha.pdf">Ficha</a></p>',
+    '<p>Material de apoio</p><h2>Título</h2><p>Sem link.</p>',
+    '<p>Material de apoio</p><h2>Título</h2><p><a href="javascript:alert(1)">Ficha</a></p>',
+  ]) {
+    const html = formatArticleHtml(`<table><tr><td>${content}</td></tr></table>`)
+    assert.match(html, /data-kind="note"/)
+    assert.doesNotMatch(html, /class="article-support"/)
+  }
+})
+
 test('turns pasted Word checkboxes into a visible symbol and drops other control characters', () => {
   assert.equal(formatArticleHtml('<p>Tem orgasmo? \u009Asim \u009Anão\u0085</p>'), '<p>Tem orgasmo? ☐sim ☐não</p>')
 })

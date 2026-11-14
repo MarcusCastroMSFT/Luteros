@@ -230,6 +230,15 @@ alinhamento e estilos seguros necessários para esse layout.
   número de colunas: 3 ou mais viram grade com a primeira linha como cabeçalho (e
   rolagem lateral no celular); 2 colunas viram "rótulo + descrição"; 1 coluna vira
   caixa de destaque. Células que o autor sombreou ficam em lilás.
+- **Material de apoio:** uma tabela de uma célula cujo primeiro parágrafo é
+  “Material de apoio”, seguida de um H2/H3 e de pelo menos um link HTTP(S) ou
+  relativo, vira um cartão acessível. O texto e os links permanecem editáveis
+  no conteúdo; os documentos precisam estar publicados em URLs acessíveis.
+  O editor ainda não tem upload de documentos nem botão para criar esses cartões,
+  e videoaulas não oferecem anexos.
+- **Roteiro de anamnese:** o PDF em `public/downloads` pode ser regenerado por
+  `node scripts/build-anamnese-roteiro.mjs`; requer Microsoft Edge e usa as
+  fontes em `scripts/fonts`.
 - **Caracteres do Word:** o "quadradinho" de checkbox colado do Word (U+009A) vira ☐.
 - **Links:** abrem em nova aba (`target="_blank"` + `rel="noopener noreferrer"`), no texto e nas
   Referências, com o aviso "(abre em nova aba)" para leitores de tela. Âncoras (`#`), e-mail e

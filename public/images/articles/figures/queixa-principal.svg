@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="970" viewBox="0 0 1200 970" role="img" aria-labelledby="title description">
+  <title id="title">Queixa principal</title>
+  <desc id="description">Pergunta sobre desejo, excitação e orgasmo, com destaque separado para a investigação de dor na relação sexual.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#f8faf5"/>
+      <stop offset="1" stop-color="#e4efea"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#198189" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#5a4164" stop-opacity=".12"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="970" rx="26" fill="url(#paper)"/>
+  <path d="M1010 -42c-174 88-172 210-40 291 94 58 124 120 77 218" fill="none" stroke="url(#ribbon)" stroke-width="92" stroke-linecap="round"/>
+  <path d="M1100 -32c-177 91-164 202-48 279 102 68 123 135 60 226" fill="none" stroke="#286f72" stroke-opacity=".24" stroke-width="3"/>
+  <path d="M975 -36c-164 84-174 205-55 285 103 69 122 131 68 224" fill="none" stroke="#76577c" stroke-opacity=".22" stroke-width="3"/>
+  <circle cx="1071" cy="362" r="7" fill="#198189" opacity=".6"/>
+  <circle cx="1019" cy="415" r="4" fill="#76577c" opacity=".5"/>
+  <path d="M76 104h42" stroke="#198189" stroke-width="7" stroke-linecap="round"/>
+  <text x="137" y="113" fill="#176d72" font-family="Arial, sans-serif" font-size="29" font-weight="700" letter-spacing="3">QUEIXA PRINCIPAL</text>
+  <text x="76" y="205" fill="#0b3436" font-family="Georgia, serif" font-size="67">
+    <tspan x="76" dy="0">Qual a fase da sua</tspan>
+    <tspan x="76" dy="82">resposta sexual está</tspan>
+    <tspan x="76" dy="82">comprometida?</tspan>
+  </text>
+  <rect x="76" y="448" width="330" height="132" rx="20" fill="#fff" fill-opacity=".92" stroke="#b6d2c9" stroke-width="2"/>
+  <rect x="435" y="448" width="330" height="132" rx="20" fill="#fff" fill-opacity=".92" stroke="#b6d2c9" stroke-width="2"/>
+  <rect x="794" y="448" width="330" height="132" rx="20" fill="#fff" fill-opacity=".92" stroke="#b6d2c9" stroke-width="2"/>
+  <text x="241" y="532" text-anchor="middle" fill="#124b4e" font-family="Georgia, serif" font-size="60">Desejo</text>
+  <text x="600" y="532" text-anchor="middle" fill="#124b4e" font-family="Georgia, serif" font-size="60">Excitação</text>
+  <text x="959" y="532" text-anchor="middle" fill="#124b4e" font-family="Georgia, serif" font-size="60">Orgasmo</text>
+  <rect x="76" y="636" width="1048" height="246" rx="20" fill="#49354f"/>
+  <path d="M113 674v170" stroke="#bdded5" stroke-width="5" stroke-linecap="round"/>
+  <text x="143" y="706" fill="#fff" font-family="Arial, sans-serif" font-size="58">
+    <tspan x="143" dy="0">Adicionalmente, é preciso</tspan>
+    <tspan x="143" dy="70">perguntar se existe dor</tspan>
+    <tspan x="143" dy="70">na relação sexual.</tspan>
+  </text>
+</svg>
