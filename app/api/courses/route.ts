@@ -90,7 +90,10 @@ export async function GET(request: NextRequest) {
       ? await db
           .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int` })
           .from(lessons)
-          .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
+          .where(and(
+            inArray(lessons.courseId, courseIds),
+            or(eq(lessons.isPublished, true), eq(lessons.isComingSoon, true)),
+          ))
           .groupBy(lessons.courseId)
       : []
     const lessonCountMap = new Map(lessonCounts.map((c) => [c.courseId, c.count]))

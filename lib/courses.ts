@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
 import { courses, enrollments, lessons, users } from '@/lib/db/schema'
@@ -7,6 +7,7 @@ import { hasPaidAccess } from '@/lib/payment-status'
 import { sanitizeArticleContent } from '@/lib/article-content.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
 import { resolveCourseImage } from '@/lib/course-image'
+import { hideComingSoonContent } from '@/lib/lesson-visibility'
 import {
   getCourseInstructorProfiles,
   getPublishedCourseCounts,
@@ -189,7 +190,10 @@ async function fetchCourses(page: number, limit: number, category?: string) {
       ? db
           .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int`, articles: sql<number>`(count(*) filter (where ${lessons.type} = 'article'))::int` })
           .from(lessons)
-          .where(and(inArray(lessons.courseId, courseIds), eq(lessons.isPublished, true)))
+          .where(and(
+            inArray(lessons.courseId, courseIds),
+            or(eq(lessons.isPublished, true), eq(lessons.isComingSoon, true)),
+          ))
           .groupBy(lessons.courseId)
       : [],
     getCourseInstructorProfiles(courseIds),
@@ -252,14 +256,14 @@ async function fetchCourseBySlug(slug: string) {
   if (!course) return null
 
   const [courseLessons, related] = await Promise.all([
-    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, type: lessons.type, content: lessons.content, videoUrl: lessons.videoUrl, videoProvider: lessons.videoProvider }).from(lessons).where(and(eq(lessons.courseId, course.id), eq(lessons.isPublished, true))).orderBy(asc(lessons.order)),
+    db.select({ id: lessons.id, title: lessons.title, description: lessons.description, duration: lessons.duration, order: lessons.order, sectionTitle: lessons.sectionTitle, isFree: lessons.isFree, isComingSoon: lessons.isComingSoon, type: lessons.type, content: lessons.content, videoUrl: lessons.videoUrl, videoProvider: lessons.videoProvider }).from(lessons).where(and(eq(lessons.courseId, course.id), or(eq(lessons.isPublished, true), eq(lessons.isComingSoon, true)))).orderBy(asc(lessons.order)),
     db.select(courseCols).from(courses).innerJoin(instructor, eq(courses.instructorId, instructor.id)).where(and(eq(courses.category, course.category), ne(courses.slug, slug), eq(courses.isPublished, true))).orderBy(desc(courses.enrollmentCount)).limit(3),
   ])
 
   // Only expose video URLs for free/preview lessons — paid lesson videos must
   // never leak into the public payload (or into structured data).
   // Azure-hosted videos remain private even for free previews.
-  const safeLessons = courseLessons.map(({ content, ...l }) => {
+  const safeLessons = courseLessons.map(hideComingSoonContent).map(({ content, ...l }) => {
     const isAzure = l.videoProvider === 'azure'
     return {
       ...l,
@@ -275,7 +279,10 @@ async function fetchCourseBySlug(slug: string) {
     ? await db
         .select({ courseId: lessons.courseId, count: sql<number>`count(*)::int`, articles: sql<number>`(count(*) filter (where ${lessons.type} = 'article'))::int` })
         .from(lessons)
-        .where(and(inArray(lessons.courseId, relatedIds), eq(lessons.isPublished, true)))
+        .where(and(
+          inArray(lessons.courseId, relatedIds),
+          or(eq(lessons.isPublished, true), eq(lessons.isComingSoon, true)),
+        ))
         .groupBy(lessons.courseId)
     : []
   const relatedLessonCountMap = new Map(relatedLessonCounts.map((c) => [c.courseId, c.count]))
@@ -345,6 +352,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
       order: lessons.order,
       sectionTitle: lessons.sectionTitle,
       isFree: lessons.isFree,
+      isComingSoon: lessons.isComingSoon,
       type: lessons.type,
       content: lessons.content,
       references: lessons.references,
@@ -354,18 +362,21 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
     .from(lessons)
     .where(and(
       eq(lessons.courseId, courseData.course.id),
-      eq(lessons.isPublished, true),
+      or(eq(lessons.isPublished, true), eq(lessons.isComingSoon, true)),
     ))
     .orderBy(asc(lessons.order))
 
   return {
     ...courseData,
-    lessons: enrolledLessons.map((lesson) => ({
-      ...lesson,
-      duration: resolveLessonDuration(lesson),
-      content: sanitizeArticleContent(lesson.content),
-      references: sanitizeArticleContent(lesson.references),
-    })),
+    lessons: enrolledLessons.map((row) => {
+      const lesson = hideComingSoonContent(row)
+      return {
+        ...lesson,
+        duration: resolveLessonDuration(lesson),
+        content: sanitizeArticleContent(lesson.content),
+        references: sanitizeArticleContent(lesson.references),
+      }
+    }),
   }
 }
 

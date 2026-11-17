@@ -49,6 +49,7 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
   const pathname = usePathname()
   
   const handleClick = () => {
+    if (lesson.isComingSoon && !onSelect) return
     if (isPreview && pathname.includes('/courses/') && !pathname.includes('/lessons')) {
       // We're on the course page and this is a preview lesson - open in dialog
       onPreviewClick?.(lesson)
@@ -62,44 +63,55 @@ const LessonItem = ({ lesson, onSelect, isActive, isCompleted, courseSlug, onPre
   }
   
   return (
-    <div 
-      className={`flex items-start justify-between py-2.5 md:py-3 px-3 md:px-4 transition-colors cursor-pointer ${
+    <button
+      type="button"
+      disabled={lesson.isComingSoon && !onSelect}
+      className={`w-full text-left flex items-start justify-between py-2.5 md:py-3 px-3 md:px-4 transition-colors ${lesson.isComingSoon && !onSelect ? '' : 'cursor-pointer'} ${
         isActive 
           ? 'bg-brand-50 border-l-2 md:border-l-0 md:border-r-2 border-brand-500' 
           : 'hover:bg-gray-50'
       }`}
       onClick={handleClick}
     >
-      <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
+      <span className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
         <LessonTypeIcon type={type} />
-        <span className={`text-sm font-medium leading-snug break-words ${
-          isActive 
-            ? 'text-brand-700' 
-            : isCompleted
-              ? 'text-gray-600'
-              : 'text-gray-700'
-        }`}>
-          {title}
+        <span className="min-w-0">
+          <span className={`text-sm font-medium leading-snug break-words ${
+            isActive
+              ? 'text-brand-700'
+              : isCompleted
+                ? 'text-gray-600'
+                : 'text-gray-700'
+          }`}>
+            {title}
+          </span>
+          {lesson.isComingSoon && (
+            <span className="block mt-1 text-xs text-gray-500">Esta aula ainda está sendo preparada pelos nossos especialistas.</span>
+          )}
         </span>
-        {isCompleted && (
-          <div className="mt-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+        {isCompleted && !lesson.isComingSoon && (
+          <span className="mt-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
             <Check size={10} className="text-white" />
-          </div>
+          </span>
         )}
-      </div>
+      </span>
       
-      <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0 ml-2">
-        <span className="text-xs md:text-sm text-gray-500">{duration}</span>
+      <span className="flex items-center gap-1.5 md:gap-2 flex-shrink-0 ml-2">
+        {!lesson.isComingSoon && <span className="text-xs md:text-sm text-gray-500">{duration}</span>}
         
-        {isPreview ? (
+        {lesson.isComingSoon ? (
+          <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50 text-[10px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5 whitespace-nowrap">
+            Em breve
+          </Badge>
+        ) : isPreview ? (
           <Badge variant="outline" className="text-brand-600 border-brand-200 bg-brand-50 text-[10px] md:text-xs px-1.5 md:px-2 py-0 md:py-0.5">
             Prévia
           </Badge>
         ) : (
           <Lock size={12} className="text-gray-400 md:w-3.5 md:h-3.5" />
         )}
-      </div>
-    </div>
+      </span>
+    </button>
   )
 }
 
@@ -117,7 +129,8 @@ interface SectionProps {
 const SectionItem = ({ section, isExpanded, onToggle, onLessonSelect, currentLessonId, completedLessons, courseSlug, onPreviewClick }: SectionProps) => {
   const { title, lessons, totalDuration } = section
   const lessonsCount = lessons.length
-  const completedCount = lessons.filter(l => completedLessons?.has(l.id)).length
+  const availableCount = lessons.filter(l => !l.isComingSoon).length
+  const completedCount = lessons.filter(l => !l.isComingSoon && completedLessons?.has(l.id)).length
   
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -135,16 +148,15 @@ const SectionItem = ({ section, isExpanded, onToggle, onLessonSelect, currentLes
             <span className="block break-words font-medium leading-snug text-gray-900 text-sm md:text-base">{title}</span>
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
               <span>{lessonsCount} aula{lessonsCount !== 1 ? 's' : ''}</span>
-              <span aria-hidden="true">•</span>
-              <span>{totalDuration}</span>
+              {totalDuration && <><span aria-hidden="true">•</span><span>{totalDuration}</span></>}
               {/* Section progress indicator */}
               {completedLessons && completedCount > 0 && (
                 <span className={`px-1.5 py-0.5 rounded-full ${
-                  completedCount === lessonsCount
+                  completedCount === availableCount
                     ? 'bg-green-100 text-green-700'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {completedCount}/{lessonsCount}
+                  {completedCount}/{availableCount}
                 </span>
               )}
             </div>
@@ -187,7 +199,7 @@ export function CourseContent({
   const [showAllSectionsState, setShowAllSectionsState] = useState(showAllSections)
   const [previewLessonId, setPreviewLessonId] = useState<string | null>(null)
   const previewLesson = sections.flatMap(section => section.lessons)
-    .find(lesson => lesson.id === previewLessonId && lesson.isPreview) ?? null
+    .find(lesson => lesson.id === previewLessonId && lesson.isPreview && !lesson.isComingSoon) ?? null
   
   const handlePreviewClick = (lesson: Lesson) => {
     setPreviewLessonId(lesson.id)

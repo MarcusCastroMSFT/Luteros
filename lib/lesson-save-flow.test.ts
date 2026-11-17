@@ -65,6 +65,28 @@ test('creates an unpublished lesson before uploading and then persists the Azure
   assert.equal(result.mediaUploaded, true);
 });
 
+test('keeps a deferred upload hidden until its coming-soon status is saved', async () => {
+  const requests: Record<string, unknown>[] = [];
+  await saveLessonWithDeferredMedia({
+    courseId: 'course-1',
+    payload: {
+      title: 'Em breve', type: 'video', description: null, content: null,
+      videoUrl: null, videoProvider: 'azure', duration: null, sectionTitle: null,
+      isPublished: false, isComingSoon: true, isFree: false,
+    },
+    mediaFile: new File([new Uint8Array(12)], 'lesson.mp4', { type: 'video/mp4' }),
+    fetchImpl: async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)));
+      return jsonResponse({ success: true, data: { id: 'lesson-1' } });
+    },
+    uploadImpl: async () => ({
+      kind: 'lesson-video', blobName: 'video.mp4', videoProvider: 'azure',
+    }),
+  });
+  assert.equal(requests[0].isComingSoon, false);
+  assert.equal(requests[1].isComingSoon, true);
+});
+
 test('reports the created lesson when its deferred video upload fails', async () => {
   const fetchImpl: typeof fetch = async () => jsonResponse({
     success: true,

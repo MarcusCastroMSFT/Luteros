@@ -42,6 +42,7 @@ interface RawLesson {
   order: number;
   sectionTitle: string | null;
   isFree: boolean;
+  isComingSoon: boolean;
   type: 'video' | 'article' | 'audio';
   videoUrl: string | null;
   videoProvider: string | null;
@@ -117,6 +118,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
         type: lesson.type || 'video',
         duration: formatLessonDuration(lesson.type || 'video', lesson.duration || 0),
         isPreview: lesson.isFree,
+        isComingSoon: lesson.isComingSoon,
         order: lesson.order,
         videoUrl: lesson.videoUrl || undefined,
         videoProvider: lesson.videoProvider || undefined,
@@ -126,12 +128,12 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     const result: CourseSection[] = [];
     let sectionIndex = 0;
     sectionsMap.forEach((sectionLessons, title) => {
-      const sectionItems = lessons.filter((l) => (l.sectionTitle || 'Lições') === title);
+      const sectionItems = lessons.filter((l) => !l.isComingSoon && (l.sectionTitle || 'Lições') === title);
       result.push({
         id: `section-${sectionIndex++}`,
         title,
         lessons: sectionLessons.sort((a, b) => a.order - b.order),
-        totalDuration: formatSectionDuration(sectionItems),
+        totalDuration: sectionItems.length ? formatSectionDuration(sectionItems) : '',
       });
     });
     
@@ -228,7 +230,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
     originalPrice: course.originalPrice ?? undefined,
     sections: sections,
   }), [course, sections]);
-  const contentSummary = useMemo(() => summarizeCourseContent(lessons), [lessons]);
+  const contentSummary = useMemo(() => summarizeCourseContent(lessons.filter(lesson => !lesson.isComingSoon)), [lessons]);
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -14,6 +14,7 @@ export interface LessonSavePayload {
   duration: number | null;
   sectionTitle: string | null;
   isPublished: boolean;
+  isComingSoon?: boolean;
   isFree: boolean;
 }
 
@@ -88,7 +89,7 @@ export async function saveLessonWithDeferredMedia({
   }
 
   const createPayload = deferredFile
-    ? { ...payload, videoUrl: null, isPublished: false }
+    ? { ...payload, videoUrl: null, isPublished: false, isComingSoon: false }
     : payload;
   const created = await mutateLesson(fetchImpl, baseUrl, 'POST', createPayload);
   const createdLessonId = created.data?.id;

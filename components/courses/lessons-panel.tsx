@@ -115,6 +115,7 @@ interface Lesson {
   order: number;
   sectionTitle: string | null;
   isPublished: boolean;
+  isComingSoon: boolean;
   isFree: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -136,6 +137,7 @@ interface LessonFormData {
   duration: string;
   sectionTitle: string;
   isPublished: boolean;
+  isComingSoon: boolean;
   isFree: boolean;
 }
 
@@ -150,6 +152,7 @@ const emptyFormData: LessonFormData = {
   duration: '',
   sectionTitle: '',
   isPublished: false,
+  isComingSoon: false,
   isFree: false,
 };
 
@@ -354,6 +357,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
       duration: lesson.duration?.toString() || '',
       sectionTitle: lesson.sectionTitle || '',
       isPublished: lesson.isPublished,
+      isComingSoon: lesson.isComingSoon,
       isFree: lesson.isFree,
     });
     setDialogOpen(true);
@@ -478,6 +482,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
         duration: formData.duration ? parseInt(formData.duration) : null,
         sectionTitle: formData.sectionTitle.trim() || null,
         isPublished: formData.isPublished,
+        isComingSoon: formData.isComingSoon,
         isFree: formData.isFree,
       };
 
@@ -651,7 +656,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
 
       setLessons(prev => 
         prev.map(l => 
-          l.id === lesson.id ? { ...l, isPublished: !l.isPublished } : l
+          l.id === lesson.id ? { ...l, isPublished: !l.isPublished, isComingSoon: false } : l
         )
       );
       toast.success(lesson.isPublished ? 'Aula ocultada' : 'Aula publicada');
@@ -736,14 +741,11 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
             )}
           </span>
           <span className={cn(
-            "text-xs",
-            lesson.isPublished ? "text-green-600" : "text-muted-foreground"
+            "text-xs flex items-center gap-1",
+            lesson.isPublished ? "text-green-600" : lesson.isComingSoon ? "text-amber-700" : "text-muted-foreground"
           )}>
-            {lesson.isPublished ? (
-              <IconEye className="h-3 w-3" />
-            ) : (
-              <IconEyeOff className="h-3 w-3" />
-            )}
+            {lesson.isPublished ? <IconEye className="h-3 w-3" /> : <IconEyeOff className="h-3 w-3" />}
+            {lesson.isPublished ? 'Publicada' : lesson.isComingSoon ? 'Em breve' : 'Oculta'}
           </span>
         </div>
       </div>
@@ -1456,7 +1458,7 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                     Aula Gratuita
                   </span>
                   <p className="text-xs text-muted-foreground">
-                    Disponível como preview para não matriculados
+                    Quando publicada, disponível como prévia para não matriculados
                   </p>
                 </div>
                 <Switch
@@ -1467,25 +1469,27 @@ export function LessonsPanel({ courseId }: LessonsPanelProps) {
                 />
               </label>
 
-              <label
-                htmlFor="lesson-published"
-                className="flex items-center justify-between p-4 rounded-lg border bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors"
-              >
-                <div className="space-y-0.5">
-                  <span className="text-sm font-medium">
-                    Publicar Aula
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    Se desativado, a aula ficará oculta para os alunos
-                  </p>
-                </div>
-                <Switch
-                  id="lesson-published"
-                  checked={formData.isPublished}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPublished: checked }))}
-                  className="cursor-pointer"
-                />
-              </label>
+              <div className="space-y-2 p-4 rounded-lg border bg-muted/50">
+                <Label htmlFor="lesson-visibility">Status da aula</Label>
+                <Select
+                  value={formData.isPublished ? 'published' : formData.isComingSoon ? 'coming-soon' : 'draft'}
+                  onValueChange={(value) => setFormData(prev => ({
+                    ...prev,
+                    isPublished: value === 'published',
+                    isComingSoon: value === 'coming-soon',
+                  }))}
+                >
+                  <SelectTrigger id="lesson-visibility"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Oculta</SelectItem>
+                    <SelectItem value="coming-soon">Em breve</SelectItem>
+                    <SelectItem value="published">Publicada</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Em breve mostra o título no curso, mas mantém o conteúdo indisponível até a publicação.
+                </p>
+              </div>
             </div>
           </div>
 

@@ -40,7 +40,9 @@ export async function GET(
         completedLessonIds,
         completedLessons: completedLessonIds.length,
         totalLessons: Number(totalLessons),
-        progressPercent: progress?.progressPercent || 0,
+        progressPercent: Number(totalLessons) > 0
+          ? Math.round((completedLessonIds.length / Number(totalLessons)) * 100)
+          : 0,
         lastAccessedAt: progress?.lastAccessedAt?.toISOString() || null,
       },
     });

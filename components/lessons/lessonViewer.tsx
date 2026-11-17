@@ -44,6 +44,14 @@ export function LessonViewer({
   totalLessons = 1,
 }: LessonViewerProps) {
   const renderLessonContent = () => {
+    if (lesson.isComingSoon) {
+      return (
+        <div className="py-12 text-center" role="status">
+          <p className="text-lg font-semibold text-gray-900">Em breve</p>
+          <p className="mt-2 text-sm text-gray-600">Esta aula ainda está sendo preparada pelos nossos especialistas.</p>
+        </div>
+      );
+    }
     switch (lesson.type) {
       case 'video':
         return <VideoLesson lesson={lesson} />;
@@ -74,8 +82,7 @@ export function LessonViewer({
           </span>
           <span>•</span>
           <span>Aula {currentIndex + 1} de {totalLessons}</span>
-          <span>•</span>
-          <span>{lesson.duration}</span>
+          {!lesson.isComingSoon && <><span>•</span><span>{lesson.duration}</span></>}
         </div>
         
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -83,7 +90,7 @@ export function LessonViewer({
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">
               {lesson.title}
             </h1>
-            {lesson.description && (
+            {!lesson.isComingSoon && lesson.description && (
               <p className="text-sm md:text-base text-gray-600 line-clamp-2 md:line-clamp-none">
                 {lesson.description}
               </p>
@@ -91,7 +98,7 @@ export function LessonViewer({
           </div>
           
           {/* Complete Button - Smaller on mobile */}
-          <Button
+          {!lesson.isComingSoon && <Button
             onClick={isCompleted ? onMarkIncomplete : onMarkComplete}
             variant={isCompleted ? "default" : "outline"}
             size="sm"
@@ -114,7 +121,7 @@ export function LessonViewer({
                 <span className="sm:hidden">Concluir</span>
               </>
             )}
-          </Button>
+          </Button>}
         </div>
       </div>
 

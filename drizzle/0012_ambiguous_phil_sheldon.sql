@@ -1,0 +1,1 @@
+ALTER TABLE "lessons" ADD COLUMN "isComingSoon" boolean DEFAULT false NOT NULL;

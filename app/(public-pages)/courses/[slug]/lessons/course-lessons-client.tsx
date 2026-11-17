@@ -25,6 +25,7 @@ interface RawLesson {
   order: number;
   sectionTitle: string | null;
   isFree: boolean;
+  isComingSoon: boolean;
   type: 'video' | 'article' | 'audio';
   content: string | null;
   references: string | null;
@@ -61,6 +62,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
         type: lesson.type || 'video',
         duration: formatLessonDuration(lesson.type || 'video', lesson.duration || 0),
         isPreview: lesson.isFree,
+        isComingSoon: lesson.isComingSoon,
         order: lesson.order,
         content: lesson.content || undefined,
         references: lesson.references || undefined,
@@ -73,12 +75,12 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     const result: CourseSection[] = [];
     let sectionIndex = 0;
     sectionsMap.forEach((sectionLessons, title) => {
-      const sectionItems = lessons.filter((l) => (l.sectionTitle || 'Lições') === title);
+      const sectionItems = lessons.filter((l) => !l.isComingSoon && (l.sectionTitle || 'Lições') === title);
       result.push({
         id: `section-${sectionIndex++}`,
         title,
         lessons: sectionLessons.sort((a, b) => a.order - b.order),
-        totalDuration: formatSectionDuration(sectionItems),
+        totalDuration: sectionItems.length ? formatSectionDuration(sectionItems) : '',
       });
     });
     
@@ -122,7 +124,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     fetchProgress();
 
     return () => abortController.abort();
-  }, [course.id]);
+  }, [course.id, lessons]);
 
   const handleLessonSelect = useCallback((lesson: Lesson) => {
     setSelectedLessonId(lesson.id);
@@ -210,13 +212,14 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
     }
   }, [course.id, isUpdatingProgress, completedLessons]);
 
-  const completedLessonsCount = allLessons.filter(lesson => completedLessons.has(lesson.id)).length;
+  const availableLessons = useMemo(() => allLessons.filter(lesson => !lesson.isComingSoon), [allLessons]);
+  const completedLessonsCount = availableLessons.filter(lesson => completedLessons.has(lesson.id)).length;
 
   // Calculate progress percentage (memoized)
   const progressPercent = useMemo(() => {
-    if (allLessons.length === 0) return 0;
-    return Math.round((completedLessonsCount / allLessons.length) * 100);
-  }, [completedLessonsCount, allLessons.length]);
+    if (availableLessons.length === 0) return 0;
+    return Math.round((completedLessonsCount / availableLessons.length) * 100);
+  }, [completedLessonsCount, availableLessons.length]);
 
   // Memoize current lesson index
   const currentLessonIndex = useMemo(() => {
@@ -269,7 +272,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
                   />
                 </div>
                 <span className="text-xs text-gray-600 shrink-0">
-                  {completedLessonsCount}/{allLessons.length}
+                  {completedLessonsCount}/{availableLessons.length}
                 </span>
               </div>
             </div>
@@ -278,7 +281,7 @@ export function CourseLessonsClient({ course, lessons, slug, initialLessonId }: 
             <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{progressPercent}% completo</p>
-                <p className="text-xs text-gray-500">{completedLessonsCount} de {allLessons.length} itens</p>
+                <p className="text-xs text-gray-500">{completedLessonsCount} de {availableLessons.length} itens disponíveis</p>
               </div>
               <div className="w-12 h-12 relative">
                 <svg className="w-12 h-12 transform -rotate-90">

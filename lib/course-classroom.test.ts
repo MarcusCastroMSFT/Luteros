@@ -32,6 +32,14 @@ test('selection survives additions and reordering; deleted or unpublished lesson
   assert.equal(getCurrentCourseLesson([], 'selected'), null);
 });
 
+test('coming-soon lessons can be selected but available lessons are preferred initially', () => {
+  const soon = lesson('soon', { isComingSoon: true });
+  const available = lesson('available');
+  assert.equal(getCurrentCourseLesson([soon, available]), available);
+  assert.equal(getCurrentCourseLesson([soon, available], 'soon'), soon);
+  assert.equal(getCurrentCourseLesson([soon]), soon);
+});
+
 test('Azure playback URLs stay compatible with the player and do not expose blob names', () => {
   const courseId = '550e8400-e29b-41d4-a716-446655440000';
   const azureLesson = {

@@ -24,6 +24,7 @@ export interface Lesson {
   type: 'video' | 'article' | 'audio';
   duration: string; // e.g., "15:30" for 15 minutes 30 seconds
   isPreview?: boolean;
+  isComingSoon?: boolean;
   order: number;
   content?: string;
   references?: string;

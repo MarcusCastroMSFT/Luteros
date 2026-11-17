@@ -59,7 +59,7 @@ export async function GET(
         reviewCount: courses.reviewCount, createdAt: courses.createdAt, updatedAt: courses.updatedAt,
         instructorId: instructor.id, instructorName: instructor.name,
         instructorDisplayName: instructor.displayName, instructorAvatar: instructor.image,
-        lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id})`,
+        lessonsCount: sql<number>`(SELECT COUNT(*)::int FROM "lessons" l WHERE l."courseId" = ${courses.id} AND (l."isPublished" = true OR l."isComingSoon" = true))`,
       })
       .from(courses)
       .innerJoin(instructor, eq(courses.instructorId, instructor.id))

@@ -15,6 +15,7 @@ import { getCourseMediaStorage } from '@/lib/course-media-storage.server'
 import { getCourseInstructorIds } from '@/lib/course-instructors.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
 import { lessonReferencesSchema, resolveLessonReferences } from '@/lib/lesson-references'
+import { resolveLessonVisibility } from '@/lib/lesson-visibility'
 
 // GET a single lesson
 export async function GET(
@@ -71,7 +72,12 @@ export async function PUT(
     if (forbidden) return forbidden
 
     const body = await request.json()
-    const { title, type, description, content, videoUrl, videoProvider, duration, sectionTitle, isPublished, isFree } = body
+    const { title, type, description, content, videoUrl, videoProvider, duration, sectionTitle, isFree } = body
+
+    const visibility = resolveLessonVisibility(body, existingLesson)
+    if (!visibility) {
+      return NextResponse.json({ success: false, error: 'Status da aula inválido.' }, { status: 400 })
+    }
 
     const references = lessonReferencesSchema.safeParse(body.references)
     if (!references.success) {
@@ -94,7 +100,9 @@ export async function PUT(
     if (videoProvider !== undefined) updateData.videoProvider = videoProvider || null
     if (duration !== undefined) updateData.duration = duration ? parseInt(duration) : null
     if (sectionTitle !== undefined) updateData.sectionTitle = sectionTitle?.trim() || null
-    if (isPublished !== undefined) updateData.isPublished = isPublished
+    if (body.isPublished !== undefined || body.isComingSoon !== undefined) {
+      Object.assign(updateData, visibility)
+    }
     if (isFree !== undefined) updateData.isFree = isFree
 
     const nextType = type !== undefined ? type : existingLesson.type

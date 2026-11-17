@@ -55,9 +55,10 @@ export async function PUT(
     const updatedLessons = await db
       .select({
         id: lessons.id, title: lessons.title, type: lessons.type,
-        description: lessons.description, duration: lessons.duration,
+        description: lessons.description, content: lessons.content, references: lessons.references,
+        videoUrl: lessons.videoUrl, videoProvider: lessons.videoProvider, duration: lessons.duration,
         order: lessons.order, sectionTitle: lessons.sectionTitle,
-        isPublished: lessons.isPublished, isFree: lessons.isFree,
+        isPublished: lessons.isPublished, isComingSoon: lessons.isComingSoon, isFree: lessons.isFree,
       })
       .from(lessons)
       .where(eq(lessons.courseId, courseId))

@@ -33,9 +33,13 @@ a cada 15 segundos enquanto a aba está visível e online, e ao voltar à aba
 ou recuperar a conexão. Não há push em tempo real: uma página já aberta pode
 levar até o próximo ciclo, mais o tempo da requisição, para refletir uma edição.
 Abas ocultas atualizam ao voltar. A seleção da aula e o progresso são preservados;
-se a aula for removida ou despublicada, a sala passa para a primeira disponível.
-Somente aulas publicadas aparecem para os alunos. A troca da mídia reinicia
-o player, mas uma atualização sem troca da mídia não reinicia a reprodução.
+se a aula for removida ou ficar oculta, a sala passa para a primeira disponível.
+Na edição da aula, o status **Oculta** não aparece aos alunos; **Em breve**
+mostra o título e um aviso na página do curso e na sala, sem liberar o conteúdo,
+prévia ou mídia; **Publicada** libera a aula normalmente. Aulas em breve não
+contam para o progresso até serem publicadas. A migração `0012` adiciona esse
+status e preserva as aulas existentes. A troca da mídia reinicia o player, mas
+uma atualização sem troca da mídia não reinicia a reprodução.
 
 ### Assinatura: lista de espera
 

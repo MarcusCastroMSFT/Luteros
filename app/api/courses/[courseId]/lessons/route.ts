@@ -8,6 +8,7 @@ import { asc, eq, sql } from 'drizzle-orm'
 import { getCourseInstructorIds } from '@/lib/course-instructors.server'
 import { resolveLessonDuration } from '@/lib/reading-time'
 import { lessonReferencesSchema, resolveLessonReferences } from '@/lib/lesson-references'
+import { resolveLessonVisibility } from '@/lib/lesson-visibility'
 
 export async function GET(
   request: NextRequest,
@@ -50,6 +51,7 @@ export async function GET(
         order: lessons.order,
         sectionTitle: lessons.sectionTitle,
         isPublished: lessons.isPublished,
+        isComingSoon: lessons.isComingSoon,
         isFree: lessons.isFree,
         createdAt: lessons.createdAt,
         updatedAt: lessons.updatedAt,
@@ -118,9 +120,13 @@ export async function POST(
       videoProvider,
       duration,
       sectionTitle,
-      isPublished = false,
       isFree = false,
     } = body
+
+    const visibility = resolveLessonVisibility(body)
+    if (!visibility) {
+      return NextResponse.json({ success: false, error: 'Status da aula inválido.' }, { status: 400 })
+    }
 
     const references = lessonReferencesSchema.safeParse(body.references)
     if (!references.success) {
@@ -162,7 +168,7 @@ export async function POST(
         }) || null,
         sectionTitle: sectionTitle?.trim() || null,
         order: nextOrder,
-        isPublished,
+        ...visibility,
         isFree,
       })
       .returning()

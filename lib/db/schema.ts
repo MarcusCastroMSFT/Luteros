@@ -407,6 +407,7 @@ export const lessons = pgTable('lessons', {
   order: integer('order').notNull(),
   sectionTitle: text('sectionTitle'),
   isPublished: boolean('isPublished').default(false).notNull(),
+  isComingSoon: boolean('isComingSoon').default(false).notNull(),
   isFree: boolean('isFree').default(false).notNull(),
   type: lessonTypeEnum('type').default('video').notNull(),
   videoProvider: text('videoProvider'),

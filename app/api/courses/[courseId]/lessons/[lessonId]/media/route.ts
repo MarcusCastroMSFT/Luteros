@@ -45,7 +45,8 @@ export async function GET(
         eq(enrollments.userId, userId)
       ))
       .where(and(
-        eq(lessons.id, lessonId)
+        eq(lessons.id, lessonId),
+        eq(lessons.isPublished, true),
       ))
       .limit(1);
 

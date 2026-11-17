@@ -1,7 +1,10 @@
 import type { Lesson } from '@/types/course';
 
 export function getCurrentCourseLesson(lessons: Lesson[], selectedLessonId?: string): Lesson | null {
-  return lessons.find(lesson => lesson.id === selectedLessonId) ?? lessons[0] ?? null;
+  return lessons.find(lesson => lesson.id === selectedLessonId)
+    ?? lessons.find(lesson => !lesson.isComingSoon)
+    ?? lessons[0]
+    ?? null;
 }
 
 export function getLessonPlaybackUrl(

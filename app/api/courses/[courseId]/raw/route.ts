@@ -50,6 +50,7 @@ export async function GET(
         order: lessons.order,
         sectionTitle: lessons.sectionTitle,
         isPublished: lessons.isPublished,
+        isComingSoon: lessons.isComingSoon,
         isFree: lessons.isFree,
       })
       .from(lessons)
