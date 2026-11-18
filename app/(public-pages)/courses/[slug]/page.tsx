@@ -116,8 +116,6 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
       siteName: 'lutteros',
       images: [{
         url: imageUrl,
-        width: 1200,
-        height: 630,
         alt: metadata.title,
       }],
       type: 'website',

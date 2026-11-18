@@ -383,7 +383,7 @@ export async function getEnrolledCourseBySlug(slug: string, userId: string) {
 async function fetchCourseMetadata(slug: string) {
   const instructor = alias(users, 'instructor')
   const row = await db
-    .select({ title: courses.title, description: courses.description, shortDescription: courses.shortDescription, thumbnail: courses.thumbnail, category: courses.category, level: courses.level, publishedAt: courses.publishedAt, instructorName: instructor.name, instructorDisplayName: instructor.displayName })
+    .select({ title: courses.title, description: courses.description, shortDescription: courses.shortDescription, thumbnail: courses.thumbnail, coverImage: courses.coverImage, category: courses.category, level: courses.level, publishedAt: courses.publishedAt, instructorName: instructor.name, instructorDisplayName: instructor.displayName })
     .from(courses)
     .innerJoin(instructor, eq(courses.instructorId, instructor.id))
     .where(and(eq(courses.slug, slug), eq(courses.isPublished, true)))
@@ -395,7 +395,7 @@ async function fetchCourseMetadata(slug: string) {
   return {
     title: row.title,
     description: row.shortDescription || row.description,
-    image: row.thumbnail,
+    image: resolveCourseImage(row.thumbnail, row.coverImage),
     category: row.category,
     level: row.level || 'Iniciante',
     date: row.publishedAt?.toISOString(),

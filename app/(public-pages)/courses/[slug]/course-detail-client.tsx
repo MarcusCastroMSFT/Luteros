@@ -328,7 +328,7 @@ export function CourseDetailClient({ course, lessons, slug }: CourseDetailClient
             {/* Instructors Section */}
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Instrutor
+                {course.instructors.length > 1 ? 'Instrutores' : 'Instrutor'}
               </h2>
               <div className="space-y-8">
                 {course.instructors.slice(0, 1).map((instructor) => (

@@ -28,22 +28,22 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
 
   return (
     <div className={`cursor-pointer ${className}`}>
-        <div className="flex gap-6 items-start">
+        <div className="flex flex-col items-start gap-6 sm:flex-row">
           {/* Instructor Image */}
           <div className="flex-shrink-0">
-            <div className="relative w-58 h-58 rounded-lg overflow-hidden">
+            <div className="relative h-40 w-40 overflow-hidden rounded-lg sm:h-58 sm:w-58">
               <Image
                 src={image}
                 alt={name}
                 fill
                 className="object-cover"
-                sizes="232px"
+                sizes="(max-width: 639px) 160px, 232px"
               />
             </div>
           </div>
           
           {/* Instructor Info */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 w-full flex-1">
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               {name}
             </h3>
@@ -67,7 +67,7 @@ export function InstructorCard({ instructor, className }: InstructorCardProps) {
             
             {/* Social Links */}
             {socialLinks && Object.keys(socialLinks).length > 0 && (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 {Object.entries(socialLinks).map(([platform, url]) => (
                   <a
                     key={platform}
