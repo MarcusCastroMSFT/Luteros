@@ -11,13 +11,13 @@ export function CourseCard({ course, showInstructor = true, priority = false }: 
     <div className="overflow-hidden">
       {/* Course Image */}
       <Link href={`/courses/${course.slug}`}>
-        <div className="relative aspect-[25/12] overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg">
+        <div className="relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-lg">
           <Image
             src={course.image || COURSE_PLACEHOLDER_IMAGE}
             alt={course.title}
             width={400}
-            height={192}
-            className="h-full w-full object-contain"
+            height={225}
+            className="block h-auto w-full"
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 400px"
             quality={85}
             priority={priority}

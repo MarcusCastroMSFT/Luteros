@@ -17,13 +17,12 @@ test('returns an empty string when the course has no image', () => {
   assert.equal(resolveCourseImage(undefined, undefined), '');
 });
 
-test('catalog images use the detail preview proportions without cropping or hover zoom', () => {
+test('catalog images fill the card width at their natural proportions', () => {
   const card = readFileSync(new URL('../components/courses/courseCard.tsx', import.meta.url), 'utf8');
 
-  assert.match(card, /aspect-\[25\/12\]/);
-  assert.match(card, /width=\{400\}\s+height=\{192\}/);
-  assert.match(card, /className="h-full w-full object-contain"/);
-  assert.doesNotMatch(card, /object-cover|h-48|group-hover:scale/);
+  assert.match(card, /width=\{400\}\s+height=\{225\}/);
+  assert.match(card, /className="block h-auto w-full"/);
+  assert.doesNotMatch(card, /aspect-\[|object-cover|object-contain|h-48|group-hover:scale/);
 });
 
 test('course social metadata uses the thumbnail or cover without assuming image dimensions', () => {
